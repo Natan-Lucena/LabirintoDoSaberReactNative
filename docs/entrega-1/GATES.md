@@ -97,7 +97,7 @@ Decididas pelo usuário em 2026-09-24, em resposta às perguntas da sessão Clau
 | G-22 | **Vitest** no lugar do Jest (pedido do usuário durante a T-101). Validado no spike: Vitest 5 + `vitest-native` + RNTL 14, 4 testes com React Native real, código 0. | PROJECT §3 atualizado; T-104 reescrita; Jest fica documentado como plano B (COMPATIBILIDADE A-11). |
 | G-23 | **TypeScript 6** (fixado pelo template do Expo SDK 57), no lugar do "5.x" do PROJECT. | PROJECT §3 atualizado; ajustes A-05 e A-06. |
 | G-24 | A T-102 instala **só as bibliotecas usadas na Entrega 1**; as demais da stack entram com a funcionalidade, nas versões já validadas. | T-102 R5. |
-| G-25 | **Mover o repositório para fora do OneDrive**, em caminho curto, antes da T-102 (ação do usuário). | Evita sincronizar `node_modules` e o limite de 260 caracteres (A-07). |
+| G-25 | **Revisto no mesmo dia:** o repositório **segue no local atual** (OneDrive), por decisão do usuário. (Decisão anterior, substituída: mover para fora do OneDrive.) | Risco aceito: sincronização de `node_modules` pelo OneDrive e limite de 260 caracteres (A-07). O caminho atual tem 49 caracteres, o mesmo comprimento validado no spike. |
 | G-21 | Proposta aprovada: cronômetros pausam em segundo plano e com o app fechado; sair pelo voltar (com confirmação) guarda a sessão sem `finish`; ao reabrir, "Retomar" ou "Encerrar agora"; sem expiração automática; descartar localmente só com confirmação. | AC-801-04, AC-802-05, AC-803-04. |
 
 ## Não objetivos propostos (precisam de confirmação, não bloqueiam)
@@ -148,3 +148,4 @@ Decididas pelo usuário em 2026-09-24, em resposta às perguntas da sessão Clau
 - 2026-09-24: durante a T-101, o usuário decidiu G-22 (Vitest), G-23 (TypeScript 6),
   G-24 (instalar só o usado na Entrega 1) e G-25 (repositório fora do OneDrive).
   Também pediu que build nativo e emulador só rodem com autorização dele no momento.
+- 2026-09-24: G-25 revisto pelo usuário antes da T-102: seguir no OneDrive. T-101 concluída (merge do PR #2).

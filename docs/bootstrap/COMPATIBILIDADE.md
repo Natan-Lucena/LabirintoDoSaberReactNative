@@ -121,7 +121,7 @@ Para comparação, o Jest (`jest-expo` 57 + Jest 29) também passou nos mesmos t
 | A-02 | O MMKV v4 depende de `react-native-nitro-modules`, que não vem junto | Instalar `react-native-nitro-modules` diretamente | T-102 |
 | A-03 | NativeWind 4 + pnpm isolado: o bundle falha com `Unable to resolve module react-native-css-interop/jsx-runtime` ([nativewind#1849](https://github.com/nativewind/nativewind/issues/1849), [#701](https://github.com/nativewind/nativewind/issues/701)) | `react-native-css-interop@0.2.7` como dependência direta. Não usar `node-linker=hoisted` | T-102, T-201 |
 | A-04 | Com `babel.config.js` próprio (NativeWind), o Gradle não encontra `babel-preset-expo` | `babel-preset-expo` como dependência direta de desenvolvimento | T-102 |
-| A-05 | O TypeScript 6 passou a exigir declaração para `import "*.css"`; ela vem de `expo-env.d.ts`, que o template ignora no git e que só o `expo start` gera | O script `typecheck` precisa funcionar sem `expo start` (por exemplo, gerar ou versionar o `expo-env.d.ts`); a T-102 decide e documenta | T-102 |
+| A-05 | O TypeScript 6 passou a exigir declaração para `import "*.css"`; ela vem de `expo-env.d.ts`, que o template ignora no git e que só o `expo start` gera | **Resolvido na T-102:** `app-env.d.ts` versionado com `/// <reference types="expo/types" />`. Versionar o `expo-env.d.ts` não funciona: o `expo start` o reescreve e o recoloca no `.gitignore`. Typecheck validado com e sem ele | T-102 |
 | A-06 | O TypeScript 6 não inclui tipos globais de runner automaticamente | Importar `describe/test/expect/vi` de `vitest` explicitamente (validado), ou declarar `types` no tsconfig | T-104 |
 | A-07 | O limite de 260 caracteres do Windows quebrou o bundle numa pasta de 274 caracteres (`hermesc.exe ENOENT`) | Repositório em caminho curto e **fora do OneDrive** (G-25). Opcional: o usuário ativar `LongPathsEnabled` | Antes de T-102 (usuário) |
 | A-08 | Build Android falhou em `ExtractAarTransform` do `react-android-0.86.3-release.aar` no cache do Gradle | Causa não isolada (trava de arquivo ou cache corrompido são hipóteses). Repetir no caminho definitivo; se persistir, limpar só a entrada desse `.aar` no cache do Gradle e registrar | T-108 |
@@ -133,6 +133,8 @@ Para comparação, o Jest (`jest-expo` 57 + Jest 29) também passou nos mesmos t
 | A-14 | No RNTL 14, `render` é assíncrono | `await render(...)` em todos os testes de componente | T-104 e todas as tarefas com `CT` |
 | A-15 | Plugins do `babel.config.js` (NativeWind) não rodam no Vitest: o JSX passa pelo Oxc do Vite 8 | Testes não verificam estilo por `className`; contraste e tokens são testados pelos valores de `src/theme` (AC-201-02) | T-104, T-201 |
 | A-16 | Maestro roda no Windows (Java 17+); iOS exige macOS/Xcode; a documentação lista APIs Android 29–34 ([docs.maestro.dev](https://docs.maestro.dev/get-started/supported-platform/android)) | E2E no AVD `Pixel_3a_API_34`; instalar o Maestro na T-105 | T-105 |
+| A-18 | pnpm 11 recusa versões publicadas há pouco tempo (`minimumReleaseAge`) e grava exceções em `minimumReleaseAgeExclude` no `pnpm-workspace.yaml`, reescrevendo o arquivo (comentários somem) | Deixar a lista sob gestão do pnpm e revisar no diff; comentários sobre `allowBuilds` ficam neste documento, não no YAML | T-102 e toda instalação |
+| A-19 | Sem `react-dom`, o `pnpm peers check` falha: o `expo-router` traz componentes web (Radix, vaul) que o exigem | Manter `react-dom` 19.2.3 (sem alvo web; `react-native-web` fica fora) | T-102 |
 | A-17 | `@babel/core` latest é 8.x; `@types/jest`/`jest` latest (30) não servem ao `jest-expo` 57 | Seguir as fixações da §3; não aceitar sugestões "is available" do pnpm sem repetir o spike | Todas |
 
 ## 6. Respostas aos requisitos da T-101
@@ -176,6 +178,12 @@ npx expo export --platform android
 A T-104 acrescenta: `pnpm add -D vitest@5.0.1 vitest-native@0.13.0 vite@8.3.0
 @react-native/babel-preset@0.86.3 @babel/core@^7.29.0 @testing-library/react-native@14.0.1
 test-renderer@~1.2.0`. Depois de cada instalação, rodar `pnpm peers check`.
+
+## 7.1 Aplicação na T-102 (2026-09-24)
+
+O template gerado nesse dia trouxe patches mais novos dentro do SDK 57 (`expo` ~57.0.25,
+`expo-router` ~57.0.23, `expo-linking` ~57.0.11, `babel-preset-expo` 57.0.13), dentro da
+faixa `~57.0` e aprovados pelo `expo-doctor`. As demais versões são as da §3.
 
 ## 8. Limpeza
 
