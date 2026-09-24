@@ -13,8 +13,10 @@ O projeto é identificado no README como `LabirintoDoSaberReactNative`. Sua arqu
 mobile está definida em [Documentação do projeto](docs/PROJECT.md), que reúne a
 arquitetura React Native + TypeScript e a referência global da API fornecida pelo
 usuário. **Leia esse documento antes de planejar ou implementar funcionalidades.**
-A base ainda não contém aplicação, manifesto de dependências ou testes: decisões
-documentadas não equivalem a recursos implementados.
+Desde a T-102 (2026-09-24) existe o projeto Expo SDK 57 com as dependências da
+Entrega 1, ainda sem telas reais nem testes: decisões documentadas não equivalem a
+recursos implementados. O estado atual e o handoff estão no
+[TRACKING](docs/entrega-1/TRACKING.md) (§0 e seção Handoff).
 
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind, SecureStore e MMKV. Consulte a
@@ -32,8 +34,13 @@ documentadas não equivalem a recursos implementados.
 - Necessidades novas de API são dependências explícitas a negociar. Não invente
   endpoints ou campos para acomodar o cliente; consulte as pendências de integração
   do documento antes de implementar sessão, reenvio ou recuperação de senha.
-- Ainda não existem comandos de instalação, execução, build ou teste comprovados.
-  Depois do bootstrap, documente os comandos reais no README e atualize esta seção.
+- Comandos comprovados até agora (detalhes e evidências no TRACKING, seção Handoff):
+  `pnpm install --frozen-lockfile`, `pnpm run typecheck`, `npx expo-doctor`,
+  `pnpm peers check`, `npx expo export --platform android` e `npx expo start`.
+  Ainda não existem `test` (T-104), `lint` (T-103) nem build nativo (T-108); a T-107
+  documenta todos no README.
+- CI no GitHub Actions (`.github/workflows/ci.yml`): documentação (espaços e links) e
+  app (instalação, typecheck, testes quando existirem, bundle Android). Mantenha-o verde.
 - A branch atual observada era `main`, com remoto `origin` configurado. Confira o
   estado real antes de operações Git; isso não autoriza commit nem push.
 - Não importe regras de Next.js, WhatsApp ou caminhos de outros projetos.
