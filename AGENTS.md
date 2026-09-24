@@ -20,7 +20,10 @@ documentadas não equivalem a recursos implementados.
   Zustand, Axios, React Hook Form/Zod, NativeWind, SecureStore e MMKV. Consulte a
   lista completa no documento; confirme versões e compatibilidade no bootstrap.
 - Confirme gerenciador de pacotes, scripts e configuração instalada no discovery;
-  não reabra escolhas documentadas sem evidência ou pedido do usuário.
+  não reabra escolhas documentadas sem evidência ou pedido do usuário. Decisões de
+  2026-09-24 (detalhes em `docs/entrega-1/GATES.md`): **pnpm**; development build
+  Expo para Android e iOS via EAS (não Expo Go); backend **local** com dados fictícios
+  nos testes; fuso fixo `America/Sao_Paulo`.
 - O backend é externo a este repositório. Sua referência fornecida descreve o
   contrato de integração; não alegue validação contra seu código ou produção sem
   evidência. Preserve métodos, caminhos, formatos e erros, inclusive peculiaridades.
@@ -38,6 +41,50 @@ não podem ser inferidas. A configuração mínima do ambiente de testes pode pr
 a primeira execução de testes, mas não a definição dos critérios de aceite.
 
 ## 2. Hierarquia: orquestrador → líderes técnicos → executores
+
+### Planejamento obrigatório da primeira entrega
+
+Antes de iniciar qualquer implementação desta entrega, leia nesta ordem:
+
+1. [Documentação do projeto](docs/PROJECT.md): arquitetura e contrato da API.
+2. [Roadmap da primeira entrega](docs/entrega-1/ROADMAP.md): escopo, sequência e marcos.
+3. [Referências do design](docs/entrega-1/DESIGN.md): telas 01–07, chaves do
+   protótipo, componentes e diferenças entre design e dados disponíveis.
+4. [Backlog de US e tarefas](docs/entrega-1/BACKLOG.md): critérios de aceite,
+   dependências, propriedade e verificações da tarefa selecionada.
+5. [Tracking da entrega](docs/entrega-1/TRACKING.md): estado atual, bloqueios,
+   responsável e próximo passo. **Este é o registro canônico do progresso.**
+
+O backlog define o trabalho; o tracking registra sua execução. Planejamento
+documentado não equivale a implementação concluída. Respeite os gates e decisões
+pendentes: recomendações não são aprovações do usuário, e mock não prova integração.
+Use os IDs do backlog em contratos, dispatches, evidências e relatos de handoff.
+Consulte também [Gates e decisões](docs/entrega-1/GATES.md), a
+[Matriz API × telas](docs/entrega-1/API-TELAS.md) e as
+[Perguntas ao backend](docs/entrega-1/PERGUNTAS-BACKEND.md) antes de integrar cada fluxo.
+
+**Atualização obrigatória do tracking:**
+
+- Antes de começar: confira dependências e gates; registre responsável, estado,
+  etapa do fluxo, arquivos sob sua propriedade e identidade do dispatch, se houver.
+- Durante o trabalho: registre transições de etapa, evidências de testes, bloqueios,
+  decisões necessárias e próximo passo. Não espere o encerramento da conversa.
+- Ao bloquear: explicite motivo, responsável pela resolução e condição de desbloqueio;
+  avance apenas em tarefas independentes liberadas.
+- Ao entregar: registre arquivos, comandos reais, códigos de saída, resultados,
+  plataformas observadas e limitações; encaminhe à revisão antes de concluir.
+- Ao encerrar ou transferir contexto: atualize o próximo passo e o histórico;
+  conclusão exige aceite, revisão e verificações aplicáveis, não apenas código escrito.
+
+O orquestrador é o único escritor do tracking em ondas com vários workers;
+executores enviam suas atualizações para consolidação imediata. Em execução isolada,
+o agente responsável atualiza diretamente. Não permitir edições concorrentes desse
+arquivo. Alterações de escopo/dependências precisam atualizar roadmap/backlog e
+contratos afetados, preservando IDs e histórico, antes de novos dispatches.
+
+O planejamento não substitui os contratos de implementação em `docs/contracts/`
+nem o fluxo de testes antes da implementação. No bootstrap, confirmar versões,
+gerenciador e scripts reais; atualizar README e o contexto deste AGENTS com evidências.
 
 A metodologia é agnóstica ao modelo do orquestrador. Astra é uma escolha prevista,
 não um requisito. O papel deve continuar funcionando se outro modelo o assumir.
