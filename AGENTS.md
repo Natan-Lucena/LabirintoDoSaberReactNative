@@ -126,6 +126,47 @@ e o grafo de dependências; o orquestrador realiza os dispatches em seu nome, ma
 a revisão técnica no líder. Se delegação estiver indisponível, informe o bloqueio
 e peça autorização para execução direta, sem fingir que houve workers.
 
+### Comandos Orca
+
+Use estes comandos como referência operacional quando Orca estiver disponível:
+
+```bash
+# criar o Run (uma vez por objetivo)
+orca orchestration run-create --objective "<objetivo>" --json
+
+# criar task (repita por task)
+orca orchestration task-create --json \
+  --task-title "T1 <titulo curto>" \
+  --display-name "T1 <label>" \
+  --deps '["task_xxx"]' \
+  --spec "<spec completa e auto-contida>"
+
+# disparar worker
+orca orchestration worker-start --task <task_id> \
+  --worktree current --agent claude --model <haiku|sonnet|opus> \
+  --timeout-ms 180000 --json
+
+# esperar mensagens
+orca orchestration check --wait --timeout-ms 540000 --json
+orca orchestration check --ack <delivery_id> --wait --timeout-ms 540000 --json
+
+# responder pergunta de worker
+orca orchestration reply --id <msg_id> --body "<resposta>"
+
+# liberar worker settled
+orca orchestration worker-release --dispatch <dispatch_id> --json
+
+# estado
+orca orchestration task-list --json
+orca orchestration dispatch-show --task <task_id> --json
+```
+
+Sempre passe `--timeout-ms 180000` ao executar `worker-start`. O timeout padrão de
+60 segundos é insuficiente e pode gerar `agent_prompt_stalled` quando dois workers
+sobem juntos. Nesse caso, libere o dispatch morto com `worker-release` e redispare
+o worker com `--retry-of <dispatch_id>`, após confirmar que o dispatch está em estado
+terminal.
+
 ## 4. Fluxo obrigatório e gates
 
 **Receber tarefa → discovery → refino → escrita de contratos → escrita de testes →
