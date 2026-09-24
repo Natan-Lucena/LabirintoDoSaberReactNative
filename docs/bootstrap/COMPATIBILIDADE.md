@@ -8,15 +8,15 @@
 
 ## 1. Resumo
 
-| Tema | Decisão / resultado |
-|---|---|
-| Base | **Expo SDK 57** (`expo` 57.0.24), React Native 0.86.3, React 19.2.3, Hermes, New Architecture |
-| Expo Go | **Não usar.** Development build obrigatório (MMKV v4 via Nitro Modules é código nativo) |
-| Gerenciador | **pnpm 11** em modo isolado (padrão), com `allowBuilds` explícito em `pnpm-workspace.yaml` |
-| TypeScript | **6.0.3** (fixado pelo template do SDK 57; decisão do usuário em 2026-09-24, G-23) |
-| Testes | **Vitest 5 + `vitest-native` + React Native Testing Library 14** (decisão do usuário, G-22). Jest foi validado e descartado |
-| Estilo | **NativeWind 4.2.7 + Tailwind CSS 3.4.19**; `react-native-css-interop` 0.2.7 como dependência direta |
-| Verificado | `expo-doctor` 21/21, `typecheck`, testes, bundle Android com bytecode Hermes e `prebuild` Android: todos com código 0 |
+| Tema               | Decisão / resultado                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Base               | **Expo SDK 57** (`expo` 57.0.24), React Native 0.86.3, React 19.2.3, Hermes, New Architecture                                                  |
+| Expo Go            | **Não usar.** Development build obrigatório (MMKV v4 via Nitro Modules é código nativo)                                                        |
+| Gerenciador        | **pnpm 11** em modo isolado (padrão), com `allowBuilds` explícito em `pnpm-workspace.yaml`                                                     |
+| TypeScript         | **6.0.3** (fixado pelo template do SDK 57; decisão do usuário em 2026-09-24, G-23)                                                             |
+| Testes             | **Vitest 5 + `vitest-native` + React Native Testing Library 14** (decisão do usuário, G-22). Jest foi validado e descartado                    |
+| Estilo             | **NativeWind 4.2.7 + Tailwind CSS 3.4.19**; `react-native-css-interop` 0.2.7 como dependência direta                                           |
+| Verificado         | `expo-doctor` 21/21, `typecheck`, testes, bundle Android com bytecode Hermes e `prebuild` Android: todos com código 0                          |
 | **Não verificado** | Build nativo, execução no emulador e `Intl`/MMKV/SecureStore **em runtime Hermes**: adiados por pedido do usuário; entram em T-108 (AC-108-03) |
 
 ## 2. Ambiente observado
@@ -39,48 +39,48 @@ no spike para resolver conflito, com o motivo em §5.
 
 ### Runtime — Entrega 1
 
-| Pacote | Versão | Como |
-|---|---|---|
-| `expo` | ~57.0.24 | template SDK 57 |
-| `react` / `react-native` | 19.2.3 / 0.86.3 | template |
-| `expo-router` | ~57.0.22 | template |
-| `expo-font`, `expo-splash-screen`, `expo-status-bar`, `expo-constants`, `expo-linking`, `expo-system-ui`, `expo-image` | 57.0.x (template) | template |
-| `react-native-reanimated` / `react-native-worklets` | 4.5.1 / 0.10.1 | template |
-| `react-native-gesture-handler` | ~2.32.0 | template (a 3.x existe, mas não é a do SDK) |
-| `react-native-safe-area-context` / `react-native-screens` | ~5.7.0 / ~4.26.0 | template |
-| `expo-secure-store` | ~57.0.4 | SDK |
-| `react-native-mmkv` | 4.3.2 | latest |
-| `react-native-nitro-modules` | 0.37.1 | latest — **obrigatório** para o MMKV v4 (peer não instalado automaticamente) |
-| `@shopify/flash-list` | 2.0.2 | SDK (a 2.3.2 existe, mas não é a do SDK) |
-| `react-native-calendars` | 1.1314.0 | latest |
-| `@react-native-community/netinfo` | 12.0.1 | SDK (G-03) |
-| `expo-audio` + `expo-asset` | ~57.0.5 + ~57.0.18 | SDK (G-03); `expo-asset` é peer obrigatório do `expo-audio` |
-| `@react-native-community/datetimepicker` | 9.1.0 | SDK (G-03) |
-| `@expo-google-fonts/nunito` / `roboto` / `roboto-mono` | 0.4.2 / 0.4.3 / 0.4.2 | latest (G-03) |
-| `@tanstack/react-query` | 5.103.2 | latest |
-| `zustand` | 5.0.15 | latest |
-| `axios` | 1.20.0 | latest |
-| `react-hook-form` + `@hookform/resolvers` | 7.88.0 + 5.9.1 | latest |
-| `zod` | 4.6.5 | latest (Zod 4; o backend usa Zod — conferir mensagens de erro na T-301) |
-| `nativewind` | 4.2.7 | fixada: última estável; a 5.0 está em release candidate |
-| `react-native-css-interop` | 0.2.7 | fixada: exatamente a dependência do `nativewind` 4.2.7 (§5, A-03) |
-| `tailwindcss` | 3.4.19 | fixada: o NativeWind 4 exige Tailwind `~3`; a 4.x não serve |
+| Pacote                                                                                                                 | Versão                | Como                                                                         |
+| ---------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| `expo`                                                                                                                 | ~57.0.24              | template SDK 57                                                              |
+| `react` / `react-native`                                                                                               | 19.2.3 / 0.86.3       | template                                                                     |
+| `expo-router`                                                                                                          | ~57.0.22              | template                                                                     |
+| `expo-font`, `expo-splash-screen`, `expo-status-bar`, `expo-constants`, `expo-linking`, `expo-system-ui`, `expo-image` | 57.0.x (template)     | template                                                                     |
+| `react-native-reanimated` / `react-native-worklets`                                                                    | 4.5.1 / 0.10.1        | template                                                                     |
+| `react-native-gesture-handler`                                                                                         | ~2.32.0               | template (a 3.x existe, mas não é a do SDK)                                  |
+| `react-native-safe-area-context` / `react-native-screens`                                                              | ~5.7.0 / ~4.26.0      | template                                                                     |
+| `expo-secure-store`                                                                                                    | ~57.0.4               | SDK                                                                          |
+| `react-native-mmkv`                                                                                                    | 4.3.2                 | latest                                                                       |
+| `react-native-nitro-modules`                                                                                           | 0.37.1                | latest — **obrigatório** para o MMKV v4 (peer não instalado automaticamente) |
+| `@shopify/flash-list`                                                                                                  | 2.0.2                 | SDK (a 2.3.2 existe, mas não é a do SDK)                                     |
+| `react-native-calendars`                                                                                               | 1.1314.0              | latest                                                                       |
+| `@react-native-community/netinfo`                                                                                      | 12.0.1                | SDK (G-03)                                                                   |
+| `expo-audio` + `expo-asset`                                                                                            | ~57.0.5 + ~57.0.18    | SDK (G-03); `expo-asset` é peer obrigatório do `expo-audio`                  |
+| `@react-native-community/datetimepicker`                                                                               | 9.1.0                 | SDK (G-03)                                                                   |
+| `@expo-google-fonts/nunito` / `roboto` / `roboto-mono`                                                                 | 0.4.2 / 0.4.3 / 0.4.2 | latest (G-03)                                                                |
+| `@tanstack/react-query`                                                                                                | 5.103.2               | latest                                                                       |
+| `zustand`                                                                                                              | 5.0.15                | latest                                                                       |
+| `axios`                                                                                                                | 1.20.0                | latest                                                                       |
+| `react-hook-form` + `@hookform/resolvers`                                                                              | 7.88.0 + 5.9.1        | latest                                                                       |
+| `zod`                                                                                                                  | 4.6.5                 | latest (Zod 4; o backend usa Zod — conferir mensagens de erro na T-301)      |
+| `nativewind`                                                                                                           | 4.2.7                 | fixada: última estável; a 5.0 está em release candidate                      |
+| `react-native-css-interop`                                                                                             | 0.2.7                 | fixada: exatamente a dependência do `nativewind` 4.2.7 (§5, A-03)            |
+| `tailwindcss`                                                                                                          | 3.4.19                | fixada: o NativeWind 4 exige Tailwind `~3`; a 4.x não serve                  |
 
 ### Desenvolvimento
 
-| Pacote | Versão | Como |
-|---|---|---|
-| `typescript` | ~6.0.3 | template (G-23) |
-| `@types/react` | ~19.2.2 | template |
-| `vitest` / `vite` | 5.0.1 / 8.3.0 | latest (G-22) |
-| `vitest-native` | 0.13.0 | latest; suporta Vitest 4–5, RNTL 12–14, RN 0.81–0.87 |
-| `@testing-library/react-native` | 14.0.1 | latest |
-| `test-renderer` | ~1.2.0 | fixada: a 1.3 puxa `react-reconciler` que exige React 19.3 |
-| `@react-native/babel-preset` | 0.86.3 | fixada: igual ao minor do React Native (exigido pelo `vitest-native`) |
-| `@babel/core` | ^7.29.7 | fixada: o `latest` é 8.x, mas o ecossistema RN continua no Babel 7 |
-| `babel-preset-expo` | ^57.0.12 | SDK; obrigatório como dependência direta quando existe `babel.config.js` |
-| `eslint-config-expo` | 57.0.2 | linha do SDK (T-103; não instalado no spike) |
-| `eslint` / `prettier` / `husky` / `lint-staged` | 10.11.0 / 3.9.9 / 9.1.7 / 17.5.1 | latest em 2026-09-24 (T-103 confirma) |
+| Pacote                                          | Versão                          | Como                                                                                                                              |
+| ----------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `typescript`                                    | ~6.0.3                          | template (G-23)                                                                                                                   |
+| `@types/react`                                  | ~19.2.2                         | template                                                                                                                          |
+| `vitest` / `vite`                               | 5.0.1 / 8.3.0                   | latest (G-22)                                                                                                                     |
+| `vitest-native`                                 | 0.13.0                          | latest; suporta Vitest 4–5, RNTL 12–14, RN 0.81–0.87                                                                              |
+| `@testing-library/react-native`                 | 14.0.1                          | latest                                                                                                                            |
+| `test-renderer`                                 | ~1.2.0                          | fixada: a 1.3 puxa `react-reconciler` que exige React 19.3                                                                        |
+| `@react-native/babel-preset`                    | 0.86.3                          | fixada: igual ao minor do React Native (exigido pelo `vitest-native`)                                                             |
+| `@babel/core`                                   | ^7.29.7                         | fixada: o `latest` é 8.x, mas o ecossistema RN continua no Babel 7                                                                |
+| `babel-preset-expo`                             | ^57.0.12                        | SDK; obrigatório como dependência direta quando existe `babel.config.js`                                                          |
+| `eslint-config-expo`                            | 57.0.2                          | linha do SDK (T-103; não instalado no spike)                                                                                      |
+| `eslint` / `prettier` / `husky` / `lint-staged` | 9.39.5 / 3.9.9 / 9.1.7 / 17.5.1 | ESLint 9.39.5 fixado na T-103: `eslint-config-expo@57.0.2` publica peer `eslint >=8.10`; `eslint-plugin-react@7.37.5` publica `^3 |     | ^4  |     | ^5  |     | ^6  |     | ^7  |     | ^8  |     | ^9.7`. Consulta ao registry e `pnpm run lint` com codigo 0 em 2026-09-24 |
 
 ### Fora da Entrega 1 (validadas, não instalar agora — G-24)
 
@@ -98,44 +98,44 @@ Remover do template na T-102, por não serem usados: `@expo/ui`, `expo-glass-eff
 Todas no projeto descartável `C:\Users\zerog\spike-t101\labirintoDoSaberMobile`
 (caminho com o mesmo comprimento do repositório), exceto a primeira linha.
 
-| # | Comando | Código | Resultado |
-|---|---|---|---|
-| 1 | `pnpm create expo-app@latest labirinto-spike --template default --yes` | 0 | Projeto SDK 57 em 2 min 10 s |
-| 2 | `npx expo install <runtime da stack>` | 0 | Versões da §3 |
-| 3 | `pnpm peers check` | 0 | Sem conflitos, após as fixações da §3 |
-| 4 | `npx expo-doctor` | 0 | 21/21 (antes do `expo-asset`: 20/21, código 1) |
-| 5 | `pnpm run typecheck` (`tsc --noEmit`) | 0 | Após A-05 e A-06 (antes: código 2) |
-| 6 | `pnpm test` (`vitest run`) | 0 | 2 arquivos, 4 testes, ~5 s: RNTL, `Intl` pt-BR com `America/Sao_Paulo` (Node), MMKV em teste e **tela inteira** com FlashList, calendars, Reanimated, SecureStore simulado e MMKV, com React Native real (plataforma Android) |
-| 7 | `npx expo export --platform android` | 0 | Bundle com bytecode Hermes, 4,7 MB |
-| 8 | `npx expo prebuild --platform android --no-install` | 0 | `newArchEnabled=true`, `hermesEnabled=true` |
-| 9 | `gradlew assembleRelease -PreactNativeArchitectures=x86_64` | 1 | **Falhou** (A-08). Não repetido: o usuário pediu para só compilar quando ele liberar |
+| #   | Comando                                                                | Código | Resultado                                                                                                                                                                                                                     |
+| --- | ---------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `pnpm create expo-app@latest labirinto-spike --template default --yes` | 0      | Projeto SDK 57 em 2 min 10 s                                                                                                                                                                                                  |
+| 2   | `npx expo install <runtime da stack>`                                  | 0      | Versões da §3                                                                                                                                                                                                                 |
+| 3   | `pnpm peers check`                                                     | 0      | Sem conflitos, após as fixações da §3                                                                                                                                                                                         |
+| 4   | `npx expo-doctor`                                                      | 0      | 21/21 (antes do `expo-asset`: 20/21, código 1)                                                                                                                                                                                |
+| 5   | `pnpm run typecheck` (`tsc --noEmit`)                                  | 0      | Após A-05 e A-06 (antes: código 2)                                                                                                                                                                                            |
+| 6   | `pnpm test` (`vitest run`)                                             | 0      | 2 arquivos, 4 testes, ~5 s: RNTL, `Intl` pt-BR com `America/Sao_Paulo` (Node), MMKV em teste e **tela inteira** com FlashList, calendars, Reanimated, SecureStore simulado e MMKV, com React Native real (plataforma Android) |
+| 7   | `npx expo export --platform android`                                   | 0      | Bundle com bytecode Hermes, 4,7 MB                                                                                                                                                                                            |
+| 8   | `npx expo prebuild --platform android --no-install`                    | 0      | `newArchEnabled=true`, `hermesEnabled=true`                                                                                                                                                                                   |
+| 9   | `gradlew assembleRelease -PreactNativeArchitectures=x86_64`            | 1      | **Falhou** (A-08). Não repetido: o usuário pediu para só compilar quando ele liberar                                                                                                                                          |
 
 Para comparação, o Jest (`jest-expo` 57 + Jest 29) também passou nos mesmos testes
 (3/3, código 0), antes da troca pedida pelo usuário.
 
 ## 5. Achados e requisitos para as próximas tarefas
 
-| ID | Achado | Requisito | Tarefa |
-|---|---|---|---|
-| A-01 | pnpm 11 bloqueia scripts de build de dependências e falha com `ERR_PNPM_IGNORED_BUILDS` | `pnpm-workspace.yaml` com `allowBuilds` explícito. No spike: `'@parcel/watcher': false` e `unrs-resolver: false` (usam binários pré-compilados; os testes passaram assim). Novos pacotes com script exigem decisão registrada | T-102 |
-| A-02 | O MMKV v4 depende de `react-native-nitro-modules`, que não vem junto | Instalar `react-native-nitro-modules` diretamente | T-102 |
-| A-03 | NativeWind 4 + pnpm isolado: o bundle falha com `Unable to resolve module react-native-css-interop/jsx-runtime` ([nativewind#1849](https://github.com/nativewind/nativewind/issues/1849), [#701](https://github.com/nativewind/nativewind/issues/701)) | `react-native-css-interop@0.2.7` como dependência direta. Não usar `node-linker=hoisted` | T-102, T-201 |
-| A-04 | Com `babel.config.js` próprio (NativeWind), o Gradle não encontra `babel-preset-expo` | `babel-preset-expo` como dependência direta de desenvolvimento | T-102 |
-| A-05 | O TypeScript 6 passou a exigir declaração para `import "*.css"`; ela vem de `expo-env.d.ts`, que o template ignora no git e que só o `expo start` gera | **Resolvido na T-102:** `app-env.d.ts` versionado com `/// <reference types="expo/types" />`. Versionar o `expo-env.d.ts` não funciona: o `expo start` o reescreve e o recoloca no `.gitignore`. Typecheck validado com e sem ele | T-102 |
-| A-06 | O TypeScript 6 não inclui tipos globais de runner automaticamente | Importar `describe/test/expect/vi` de `vitest` explicitamente (validado), ou declarar `types` no tsconfig | T-104 |
-| A-07 | O limite de 260 caracteres do Windows quebrou o bundle numa pasta de 274 caracteres (`hermesc.exe ENOENT`) | G-25 foi revisto: o repositório permanece no OneDrive, com o risco aceito. Manter caminhos temporários curtos; opcionalmente, o usuário pode ativar `LongPathsEnabled` | T-108 e instalações futuras |
-| A-08 | Build Android falhou em `ExtractAarTransform` do `react-android-0.86.3-release.aar` no cache do Gradle | Causa não isolada (trava de arquivo ou cache corrompido são hipóteses). Repetir no caminho definitivo; se persistir, limpar só a entrada desse `.aar` no cache do Gradle e registrar | T-108 |
-| A-09 | O template do SDK 57 usa `src/app/` para as rotas; o PROJECT e o BACKLOG usam `app/` na raiz | Manter `app/` na raiz (decisão documentada; o Expo Router aceita as duas). A T-102 move as rotas e mantém o alias `@/` → `src/` | T-102 |
-| A-10 | O template liga `experiments.reactCompiler` e `typedRoutes` | Manter os dois (typedRoutes atende "parâmetros tipados" do PROJECT). O React Compiler é padrão do SDK; se atrapalhar, desligar com registro | T-102 |
-| A-11 | `vitest-native` é recente (março de 2026), ainda antes da 1.0 e tem um mantenedor | Risco aceito com a escolha do Vitest. Fixar a versão; se o projeto for abandonado, o Jest continua validado (§4) como plano B | T-104 |
-| A-12 | Pacotes com JSX sem compilar (`react-native-calendars` e dependências) quebram no Vitest | `reactNative({ platform: "android", transform: ["react-native-calendars", "recyclerlistview", "react-native-swipe-gestures"] })`. `setPlatform()` só existe no motor `mock`; no motor nativo a plataforma vai na config | T-104 |
-| A-13 | O MMKV v4 importa os Nitro Modules no carregamento; em teste não há módulo nativo | Mock mínimo no setup: `vi.mock("react-native-nitro-modules", () => ({ NitroModules: { createHybridObject: vi.fn() } }))`. O MMKV devolve instância em memória sozinho em ambiente de teste | T-104 |
-| A-14 | No RNTL 14, `render` é assíncrono | `await render(...)` em todos os testes de componente | T-104 e todas as tarefas com `CT` |
-| A-15 | Plugins do `babel.config.js` (NativeWind) não rodam no Vitest: o JSX passa pelo Oxc do Vite 8 | Testes não verificam estilo por `className`; contraste e tokens são testados pelos valores de `src/theme` (AC-201-02) | T-104, T-201 |
-| A-16 | Maestro roda no Windows (Java 17+); iOS exige macOS/Xcode; a documentação lista APIs Android 29–34 ([docs.maestro.dev](https://docs.maestro.dev/get-started/supported-platform/android)) | E2E no AVD `Pixel_3a_API_34`; instalar o Maestro na T-105 | T-105 |
-| A-18 | pnpm 11 recusa versões publicadas há pouco tempo (`minimumReleaseAge`) e grava exceções em `minimumReleaseAgeExclude` no `pnpm-workspace.yaml`, reescrevendo o arquivo (comentários somem) | Deixar a lista sob gestão do pnpm e revisar no diff; comentários sobre `allowBuilds` ficam neste documento, não no YAML | T-102 e toda instalação |
-| A-19 | Sem `react-dom`, o `pnpm peers check` falha: o `expo-router` traz componentes web (Radix, vaul) que o exigem | Manter `react-dom` 19.2.3 (sem alvo web; `react-native-web` fica fora) | T-102 |
-| A-17 | `@babel/core` latest é 8.x; `@types/jest`/`jest` latest (30) não servem ao `jest-expo` 57 | Seguir as fixações da §3; não aceitar sugestões "is available" do pnpm sem repetir o spike | Todas |
+| ID   | Achado                                                                                                                                                                                                                                                 | Requisito                                                                                                                                                                                                                         | Tarefa                            |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| A-01 | pnpm 11 bloqueia scripts de build de dependências e falha com `ERR_PNPM_IGNORED_BUILDS`                                                                                                                                                                | `pnpm-workspace.yaml` com `allowBuilds` explícito. No spike: `'@parcel/watcher': false` e `unrs-resolver: false` (usam binários pré-compilados; os testes passaram assim). Novos pacotes com script exigem decisão registrada     | T-102                             |
+| A-02 | O MMKV v4 depende de `react-native-nitro-modules`, que não vem junto                                                                                                                                                                                   | Instalar `react-native-nitro-modules` diretamente                                                                                                                                                                                 | T-102                             |
+| A-03 | NativeWind 4 + pnpm isolado: o bundle falha com `Unable to resolve module react-native-css-interop/jsx-runtime` ([nativewind#1849](https://github.com/nativewind/nativewind/issues/1849), [#701](https://github.com/nativewind/nativewind/issues/701)) | `react-native-css-interop@0.2.7` como dependência direta. Não usar `node-linker=hoisted`                                                                                                                                          | T-102, T-201                      |
+| A-04 | Com `babel.config.js` próprio (NativeWind), o Gradle não encontra `babel-preset-expo`                                                                                                                                                                  | `babel-preset-expo` como dependência direta de desenvolvimento                                                                                                                                                                    | T-102                             |
+| A-05 | O TypeScript 6 passou a exigir declaração para `import "*.css"`; ela vem de `expo-env.d.ts`, que o template ignora no git e que só o `expo start` gera                                                                                                 | **Resolvido na T-102:** `app-env.d.ts` versionado com `/// <reference types="expo/types" />`. Versionar o `expo-env.d.ts` não funciona: o `expo start` o reescreve e o recoloca no `.gitignore`. Typecheck validado com e sem ele | T-102                             |
+| A-06 | O TypeScript 6 não inclui tipos globais de runner automaticamente                                                                                                                                                                                      | Importar `describe/test/expect/vi` de `vitest` explicitamente (validado), ou declarar `types` no tsconfig                                                                                                                         | T-104                             |
+| A-07 | O limite de 260 caracteres do Windows quebrou o bundle numa pasta de 274 caracteres (`hermesc.exe ENOENT`)                                                                                                                                             | G-25 foi revisto: o repositório permanece no OneDrive, com o risco aceito. Manter caminhos temporários curtos; opcionalmente, o usuário pode ativar `LongPathsEnabled`                                                            | T-108 e instalações futuras       |
+| A-08 | Build Android falhou em `ExtractAarTransform` do `react-android-0.86.3-release.aar` no cache do Gradle                                                                                                                                                 | Causa não isolada (trava de arquivo ou cache corrompido são hipóteses). Repetir no caminho definitivo; se persistir, limpar só a entrada desse `.aar` no cache do Gradle e registrar                                              | T-108                             |
+| A-09 | O template do SDK 57 usa `src/app/` para as rotas; o PROJECT e o BACKLOG usam `app/` na raiz                                                                                                                                                           | Manter `app/` na raiz (decisão documentada; o Expo Router aceita as duas). A T-102 move as rotas e mantém o alias `@/` → `src/`                                                                                                   | T-102                             |
+| A-10 | O template liga `experiments.reactCompiler` e `typedRoutes`                                                                                                                                                                                            | Manter os dois (typedRoutes atende "parâmetros tipados" do PROJECT). O React Compiler é padrão do SDK; se atrapalhar, desligar com registro                                                                                       | T-102                             |
+| A-11 | `vitest-native` é recente (março de 2026), ainda antes da 1.0 e tem um mantenedor                                                                                                                                                                      | Risco aceito com a escolha do Vitest. Fixar a versão; se o projeto for abandonado, o Jest continua validado (§4) como plano B                                                                                                     | T-104                             |
+| A-12 | Pacotes com JSX sem compilar (`react-native-calendars` e dependências) quebram no Vitest                                                                                                                                                               | `reactNative({ platform: "android", transform: ["react-native-calendars", "recyclerlistview", "react-native-swipe-gestures"] })`. `setPlatform()` só existe no motor `mock`; no motor nativo a plataforma vai na config           | T-104                             |
+| A-13 | O MMKV v4 importa os Nitro Modules no carregamento; em teste não há módulo nativo                                                                                                                                                                      | Mock mínimo no setup: `vi.mock("react-native-nitro-modules", () => ({ NitroModules: { createHybridObject: vi.fn() } }))`. O MMKV devolve instância em memória sozinho em ambiente de teste                                        | T-104                             |
+| A-14 | No RNTL 14, `render` é assíncrono                                                                                                                                                                                                                      | `await render(...)` em todos os testes de componente                                                                                                                                                                              | T-104 e todas as tarefas com `CT` |
+| A-15 | Plugins do `babel.config.js` (NativeWind) não rodam no Vitest: o JSX passa pelo Oxc do Vite 8                                                                                                                                                          | Testes não verificam estilo por `className`; contraste e tokens são testados pelos valores de `src/theme` (AC-201-02)                                                                                                             | T-104, T-201                      |
+| A-16 | Maestro roda no Windows (Java 17+); iOS exige macOS/Xcode; a documentação lista APIs Android 29–34 ([docs.maestro.dev](https://docs.maestro.dev/get-started/supported-platform/android))                                                               | E2E no AVD `Pixel_3a_API_34`; instalar o Maestro na T-105                                                                                                                                                                         | T-105                             |
+| A-18 | pnpm 11 recusa versões publicadas há pouco tempo (`minimumReleaseAge`) e grava exceções em `minimumReleaseAgeExclude` no `pnpm-workspace.yaml`, reescrevendo o arquivo (comentários somem)                                                             | Deixar a lista sob gestão do pnpm e revisar no diff; comentários sobre `allowBuilds` ficam neste documento, não no YAML                                                                                                           | T-102 e toda instalação           |
+| A-19 | Sem `react-dom`, o `pnpm peers check` falha: o `expo-router` traz componentes web (Radix, vaul) que o exigem                                                                                                                                           | Manter `react-dom` 19.2.3 (sem alvo web; `react-native-web` fica fora)                                                                                                                                                            | T-102                             |
+| A-17 | `@babel/core` latest é 8.x; `@types/jest`/`jest` latest (30) não servem ao `jest-expo` 57                                                                                                                                                              | Seguir as fixações da §3; não aceitar sugestões "is available" do pnpm sem repetir o spike                                                                                                                                        | Todas                             |
 
 ## 6. Respostas aos requisitos da T-101
 
@@ -201,14 +201,27 @@ export const SAMPLE = new Date("2026-04-03T02:30:00Z"); // 02/04/2026 23:30 em S
 
 export function formatLongDate(d: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
-    timeZone: SP, weekday: "long", day: "2-digit", month: "long", year: "numeric",
+    timeZone: SP,
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
   }).format(d); // esperado: "quinta-feira, 02 de abril de 2026"
 }
 export function formatTime(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: SP, hour: "2-digit", minute: "2-digit" }).format(d); // "23:30"
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: SP,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d); // "23:30"
 }
 export function dayKey(d: Date) {
-  const p = new Intl.DateTimeFormat("en-CA", { timeZone: SP, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d);
+  const p = new Intl.DateTimeFormat("en-CA", {
+    timeZone: SP,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
   const get = (t: string) => p.find((x) => x.type === t)?.value;
   return `${get("year")}-${get("month")}-${get("day")}`; // "2026-04-02"
 }
