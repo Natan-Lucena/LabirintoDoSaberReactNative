@@ -12,7 +12,7 @@
 | # | Ação | Responsável | Condição de conclusão |
 |---|---|---|---|
 | 1 | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07; P4 opcional) | Usuário ou orquestrador | Data de envio registrada lá e no histórico (§7). **G-06 está no caminho crítico** (tela 05, onda 9) |
-| 2 | Aceitar a T-101 (revisão da COMPATIBILIDADE) e mover o repositório para fora do OneDrive (G-25) antes da T-102 | Usuário | Linha de T-101 em `implementação` com dispatch registrado; ficha aberta em §4.1 |
+| 2 | T-102 em andamento; depois T-103, T-104, T-106 e T-108 (esta só com build autorizado) | Líder (execução direta) | Linha de T-101 em `implementação` com dispatch registrado; ficha aberta em §4.1 |
 | 3 | Providenciar conta Apple Developer e aparelho iOS para o dev build EAS (G-01) | Usuário | Disponíveis antes de T-108 (onda 3); senão, AC-108-02 vira pendência registrada |
 | 4 | Deixar o backend local rodando com dados fictícios e acessível pela rede (G-19) | Usuário | Necessário a partir de T-401 (onda 9) para testes manuais; testes UT/CT usam mock |
 
@@ -80,7 +80,7 @@ resolvidos; **abertos G-05, G-06 e G-07** (backend).
 | G-22 | Runner de testes | Usuário | **resolvido** | Vitest + `vitest-native` + RNTL, no lugar do Jest | Usuário / 2026-09-24 | Pedido na conversa; COMPATIBILIDADE §4 |
 | G-23 | Versão do TypeScript | Usuário | **resolvido** | TypeScript 6 do SDK 57 | Usuário / 2026-09-24 | Conversa; COMPATIBILIDADE §3 |
 | G-24 | Escopo de instalação | Usuário | **resolvido** | Só o usado na Entrega 1 | Usuário / 2026-09-24 | Conversa |
-| G-25 | Local do repositório | Usuário | **resolvido** | Fora do OneDrive, caminho curto, antes da T-102 (ação do usuário) | Usuário / 2026-09-24 | Conversa; COMPATIBILIDADE A-07 |
+| G-25 | Local do repositório | Usuário | **resolvido (revisto)** | Revisto: seguir no local atual (OneDrive), com o risco aceito | Usuário / 2026-09-24 | Conversa ("Siga por aqui"); COMPATIBILIDADE A-07 |
 
 ## 3. Recursos compartilhados
 
@@ -114,8 +114,8 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 
 | ID | Título | Onda | Estado | Motivo | Responsável (papel/modelo confirmado) | Run / task / dispatch | Evidências | Atualizado |
 |---|---|---|---|---|---|---|---|---|
-| T-101 | Spike de compatibilidade | 1 | revisão | Aguarda aceite do usuário; runtime Hermes movido para AC-108-03 | Líder classe C · Claude Code · `claude-opus-5-5` · esforço alto | Execução direta, sem Orca (pedido do usuário na sessão) | `docs/bootstrap/COMPATIBILIDADE.md` §4 | 2026-09-24 |
-| T-102 | Criar projeto Expo | 2 | aguardando | T-101 | — | — | — | 2026-09-24 |
+| T-101 | Spike de compatibilidade | 1 | concluída | Aceite do usuário pelo merge do PR #2 (2026-09-24 11:25 UTC); runtime Hermes segue em AC-108-03 | Líder classe C · Claude Code · `claude-opus-5-5` · esforço alto | Execução direta, sem Orca (pedido do usuário na sessão) | `docs/bootstrap/COMPATIBILIDADE.md` §4 | 2026-09-24 |
+| T-102 | Criar projeto Expo | 2 | revisão | Aguarda CI do PR e aceite do usuário; AC-102-02 `MAN` pendente de build autorizado | Executor · Claude Code · `claude-opus-5-5` · esforço médio | Execução direta, sem Orca (pedido do usuário) | Ficha §4.1 | 2026-09-24 |
 | T-103 | Qualidade de código | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
 | T-104 | Runner Vitest/RNTL | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
 | T-105 | Runner Maestro | 4 | aguardando | T-102, T-108 | — | — | — | 2026-09-24 |
@@ -171,16 +171,21 @@ estar bloqueada ([GATES, regra 5](GATES.md#regras)).
 Ao sair de `aguardando`/`bloqueada` para `pronta`, a tarefa ganha uma ficha aqui,
 mantida até a conclusão.
 
-#### T-101 — Spike de compatibilidade da stack
-- Estado / etapa do fluxo: revisão (checagem objetiva no lugar de testes: spike documental)
-- Responsável: líder classe C · Claude Code · `claude-opus-5-5` · esforço alto
+#### T-102 — Criar projeto Expo com TypeScript strict e Expo Router
+- Estado / etapa do fluxo: revisão (checagem objetiva: configuração)
+- Responsável: Claude Code · `claude-opus-5-5` (modelo desta sessão; a classe prevista era B) · esforço médio
 - Orca: não usado; execução direta a pedido do usuário
-- Arquivos entregues: `docs/bootstrap/COMPATIBILIDADE.md`; PROJECT §3, AGENTS §1/§7, BACKLOG (T-102, T-104, T-108), GATES e este TRACKING atualizados com as decisões G-22 a G-25
-- Recursos reservados (§3): nenhum
-- Evidências: COMPATIBILIDADE §4 — `pnpm create expo-app` 0; `expo install` 0; `pnpm peers check` 0; `expo-doctor` 21/21 0; `typecheck` 0; `vitest run` 4/4 0; `expo export --platform android` 0; `expo prebuild --platform android` 0; `gradlew assembleRelease` **1** (A-08, não repetido por pedido do usuário). Plataforma: Windows 11, sem execução em emulador
-- Limitações: `Intl`/MMKV/SecureStore em runtime Hermes não verificados; viraram AC-108-03. Projetos descartáveis apagados
-- Bloqueio atual: nenhum; a conclusão depende do aceite do usuário
-- Próximo passo concreto: usuário revisa a COMPATIBILIDADE e aceita a T-101; mover o repositório para fora do OneDrive (G-25); então T-102
+- Arquivos: `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `app.json`, `babel.config.js`, `metro.config.js`, `tailwind.config.js`, `global.css`, `nativewind-env.d.ts`, `app-env.d.ts`, `app/_layout.tsx`, `app/index.tsx`, `.gitignore`, `src/**/.gitkeep`, `assets/` (ícones e splash provisórios do template); `.github/workflows/ci.yml` (passo de testes com `--if-present`)
+- Recursos reservados (§3): R-01, R-02, R-03, R-06, R-14
+- Evidências (Windows 11, repositório no OneDrive): `pnpm install` 0; `npx expo install` (libs da Entrega 1) 0; `pnpm peers check` 0; `npx expo-doctor` 21/21 0; `pnpm run typecheck` 0 (com e sem `expo-env.d.ts`); `npx expo export --platform android` 0 (Hermes 3,8 MB); `npx expo start --port 8081` com `/status` = `packager-status:running` e bundle Android de desenvolvimento HTTP 200 contendo a rota inicial; Metro encerrado (PID 7872 e filho 23952)
+- AC: 102-01 ✓; 102-02 `CMD` ✓, `MAN` **pendente** (renderizar em emulador exige build nativo autorizado pelo usuário; verificar junto da T-108); 102-03 ✓ (nenhum segredo em `app.json`/configs); 102-04 ✓; 102-05 ✓; 102-06 depende do CI do PR
+- Pendências registradas: ícones e splash provisórios do Expo (sem arte da marca); `android.package`/`ios.bundleIdentifier` a decidir na T-108; achados A-18 e A-19 na COMPATIBILIDADE
+- Bloqueio atual: nenhum
+- Próximo passo concreto: abrir o PR, conferir o job `app` do CI (AC-102-06) e pedir revisão ao usuário
+
+#### T-101 — Spike de compatibilidade da stack (concluída)
+- Concluída em 2026-09-24: aceite do usuário pelo merge do PR #2; evidências em `docs/bootstrap/COMPATIBILIDADE.md` §4
+- Pendência transferida: runtime Hermes (`Intl`, MMKV, SecureStore) é o AC-108-03
 
 ```markdown
 #### T-NNN — <título>
@@ -273,3 +278,7 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | T-101 | `pronta` → `implementação`; execução direta por Claude Code / claude-opus-5-5 a pedido do usuário, sem dispatch Orca | Claude Code / claude-opus-5-5 | Ficha §4.1 |
 | 2026-09-24 | T-101 | `implementação` → `revisão`. Spike concluído com evidências (COMPATIBILIDADE §4). Usuário decidiu G-22 (Vitest), G-23 (TS 6), G-24 e G-25 e pediu build nativo só com autorização dele; runtime Hermes movido para AC-108-03 | Claude Code / claude-opus-5-5 | `docs/bootstrap/COMPATIBILIDADE.md` |
 | 2026-09-24 | CI | A pedido do usuário, CI no GitHub Actions: job `docs` (espaços em branco e links/âncoras via `scripts/check-docs.py`) e job `app` (pnpm, typecheck, Vitest e bundle Android), pulado até existir `package.json` (T-102, AC-102-06). Build nativo fora do CI | Claude Code / claude-opus-5-5 | `.github/workflows/ci.yml` |
+| 2026-09-24 | T-101 | `revisão` → `concluída`: aceite do usuário pelo merge do PR #2 | Claude Code / claude-opus-5-5 | PR #2 |
+| 2026-09-24 | G-25 | Revisto pelo usuário: o repositório segue no OneDrive; risco de sincronização e de caminho aceito | Claude Code / claude-opus-5-5 | Conversa |
+| 2026-09-24 | T-102 | `aguardando` → `implementação` (checagem objetiva), execução direta | Claude Code / claude-opus-5-5 | Ficha §4.1 |
+| 2026-09-24 | T-102 | `implementação` → `revisão`: projeto Expo SDK 57 criado; checagens com código 0 (ficha §4.1); AC-102-02 `MAN` pendente de build; A-05 resolvido com `app-env.d.ts`; achados A-18 e A-19 | Claude Code / claude-opus-5-5 | Ficha §4.1 |

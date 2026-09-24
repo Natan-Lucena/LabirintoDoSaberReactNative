@@ -144,8 +144,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Parada:** conflito de versão sem solução documentada → escalar antes de T-102.
 
 #### T-102 — Criar projeto Expo com TypeScript strict e Expo Router
-- **Depende:** T-101. **Pré-requisito do usuário (G-25):** repositório movido para fora do
-  OneDrive, em caminho curto (sugestão: `C:\dev\labirintoDoSaberMobile`).
+- **Depende:** T-101. (G-25 revisto: o repositório segue no local atual.)
 - **Fonte obrigatória:** [COMPATIBILIDADE](../bootstrap/COMPATIBILIDADE.md) §3, §5 e §7 (versões, achados A-01 a A-10 e comandos validados).
 - **Arquivos:** `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` (`allowBuilds`), `tsconfig.json`,
   `app.json` ou `app.config.ts`, `babel.config.js`, `metro.config.js`, `app/_layout.tsx` (mínimo),
