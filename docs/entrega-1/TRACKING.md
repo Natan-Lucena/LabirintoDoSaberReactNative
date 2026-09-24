@@ -16,7 +16,7 @@ que dependem do backend); **M1 em andamento** com T-101 e T-102 concluídas. Lei
 
 | # | Ação | Responsável | Condição de conclusão |
 |---|---|---|---|
-| 1 | T-104 (Vitest + RNTL): abrir PR, acompanhar CI e aguardar merge do usuário; só então concluir a tarefa e liberar dependentes | Orquestrador → usuário | PR da T-104 verde, revisado e aceito pelo merge do usuário |
+| 1 | T-104 (Vitest + RNTL): entregue no [PR #5](https://github.com/Natan-Lucena/LabirintoDoSaberReactNative/pull/5), aguardando merge do usuário; acompanhamento do CI interrompido a pedido dele. Só após o merge concluir a tarefa e liberar dependentes | Usuário → próximo orquestrador | Aceite pelo merge do usuário; resultado final do CI ainda não observado nesta sessão |
 | 2 | T-103 (ESLint, Prettier, Husky, lint-staged), em paralelo com a T-104 **só se** os arquivos forem disjuntos: as duas tocam `package.json` e o lockfile (R-01); instalações não podem rodar ao mesmo tempo | Próximo líder/executor | T-103 `concluída` |
 | 3 | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07; P4 opcional) — ainda **não enviadas**. G-06 está no caminho crítico (tela 05, onda 9) | Usuário | Data de envio registrada lá e em §7 |
 | 4 | T-108 (dev build Android + iOS via EAS) quando o usuário liberar a máquina; inclui AC-102-02 `MAN` (rota inicial no emulador), AC-108-03 (Hermes: `Intl`, MMKV, SecureStore) e a reinvestigação do achado A-08 | Líder, com autorização do usuário | T-108 `concluída` ou pendência registrada |
@@ -26,24 +26,23 @@ Atualize esta tabela sempre que um item for concluído ou o próximo passo mudar
 
 ## Handoff para o próximo modelo
 
-Registro de 2026-09-24, ao fim da sessão Claude Code / `claude-opus-5-5`. O usuário vai
+Registro de 2026-09-24, atualizado ao fim da retomada OpenCode / `openai/gpt-6-astra`. O usuário vai
 seguir a implementação com outro modelo. Este bloco resume o que não está óbvio nos
 outros documentos; em caso de conflito, valem BACKLOG, GATES e esta página.
 
 ### Estado
 
-- Base da retomada: `main` atualizada de `33f5ad9` para `e1226ee` com fast-forward e árvore limpa. Branch atual da tarefa: `feat/t-104-vitest-rntl`; discovery e atualizações documentais em andamento, ainda sem PR da T-104. O CI verde citado na ficha T-102 é evidência histórica, não uma nova execução nesta sessão.
+- Base da retomada: `main` em `e1226ee`. Continuar na branch `feat/t-104-vitest-rntl`, implementação publicada no commit `77e7f97`, [PR #5](https://github.com/Natan-Lucena/LabirintoDoSaberReactNative/pull/5). Código revisado e validações locais verdes; não reiniciar a implementação. O CI verde citado na ficha T-102 é evidência histórica.
 - Concluídas: T-101 (spike) e T-102 (projeto Expo). Cancelada: T-109 (Sentry, G-20).
-- Prontas: T-103 e T-108 (esta só com build autorizado). T-104 em revisão com validação local verde, aguardando CI e merge. As demais aguardam
+- Prontas: T-103 e T-108 (esta só com build autorizado). T-104 em revisão, aguardando merge. Última observação do CI (run `36031631751`): Documentação passou, App pendente; usuário interrompeu `gh pr checks 5 --watch --interval 20` e dispensou continuar acompanhando. Não declarar CI integralmente verde. As demais aguardam
   dependências; T-404, T-703, T-704 e T-802 também aguardam G-05, G-06 ou G-07.
 - Gates: 22 resolvidos; abertos G-05, G-06 e G-07 (backend). Perguntas prontas e ainda não enviadas.
-- Nenhum processo da sessão ficou ativo (Metro e Gradle encerrados; projetos descartáveis apagados).
+- Workers criados nesta retomada encerrados, com `ptyKilled: true`; nenhum build nativo ou emulador iniciado. Terminais preexistentes do usuário e de outras sessões não foram encerrados.
 
 ### Como a sessão trabalhou (e o que o próximo modelo deve saber)
 
-- Retomada OpenCode / `openai/gpt-6-astra`: usuário pediu prioridade a modelos OpenAI, uma tarefa por vez e atualização contínua da documentação. Autorizou corrigir registros desatualizados; contratos, AGENTS e decisões de GATES continuam exigindo autorização específica. Nenhum worker disparado até aqui.
-- **Execução direta, sem Orca**, a pedido do usuário, com exceção registrada em cada
-  tarefa. Se o próximo modelo usar Orca/workers, siga AGENTS §3–§6 normalmente.
+- Retomada OpenCode / `openai/gpt-6-astra`: prioridade a modelos OpenAI, economia e documentação atualizada. T-104 delegada a dois executores `openai/gpt-5.6-terra`, runner e documentação em paralelo com arquivos disjuntos; orquestrador dono exclusivo do TRACKING. Contrato T-104 e YAML do pnpm expressamente autorizados. Demais alterações de contratos, AGENTS e decisões de GATES exigem autorização específica.
+- **Orca supervisionado nesta retomada:** run `run_8d21709c445e`, tasks/dispatches na ficha T-104, todos os workers finalizados. Modelo OpenCode escolhido por `terminal create --command "opencode --model openai/gpt-5.6-terra"`, seguido de `task-create` e `worker-start --terminal ... --timeout-ms 180000`. Revisão do vermelho por `ask/reply`; `check --ack` após tratar entregas. `worker-release` retornou `external_terminal`; os terminais próprios foram fechados após conclusão confirmada. Mini foi recusado pela autenticação ChatGPT apesar de listado; Terra funcionou. Execução direta sem Orca refere-se somente à sessão anterior de T-101/T-102.
 - **Cards sempre atualizados**: o usuário pediu explicitamente que o estado das tarefas
   neste TRACKING seja atualizado a cada passo (início, evidências, revisão, conclusão).
 - **Aceite = merge do PR pelo usuário.** Cada tarefa foi entregue num PR próprio a partir
@@ -180,7 +179,7 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 | T-101 | Spike de compatibilidade | 1 | concluída | Aceite do usuário pelo merge do PR #2 (2026-09-24 11:25 UTC); runtime Hermes segue em AC-108-03 | Líder classe C · Claude Code · `claude-opus-5-5` · esforço alto | Execução direta, sem Orca (pedido do usuário na sessão) | `docs/bootstrap/COMPATIBILIDADE.md` §4 | 2026-09-24 |
 | T-102 | Criar projeto Expo | 2 | concluída | Aceite do usuário pelo merge do PR #3 (2026-09-24 11:42 UTC); AC-102-02 `MAN` transferido para a T-108 | Executor · Claude Code · `claude-opus-5-5` · esforço médio | Execução direta, sem Orca (pedido do usuário) | Ficha §4.1 | 2026-09-24 |
 | T-103 | Qualidade de código | 3 | pronta | Dependências concluídas; aguarda dispatch | — | — | — | 2026-09-24 |
-| T-104 | Runner Vitest/RNTL | 3 | revisão | Diff revisado; 4 testes e validações locais verdes; aguarda PR/CI e merge do usuário | Executor · OpenCode · `openai/gpt-5.6-terra`; revisão `openai/gpt-6-astra` | Run `run_8d21709c445e`; runner `ctx_8474bcfb134c`, correção `ctx_f03dcfa62b39` | Ficha §4.1: vermelho 1; testes/typecheck/peers/frozen install/export 0 | 2026-09-24 |
+| T-104 | Runner Vitest/RNTL | 3 | revisão | [PR #5](https://github.com/Natan-Lucena/LabirintoDoSaberReactNative/pull/5) aberto; aguarda merge; acompanhamento do CI dispensado pelo usuário | Executor · OpenCode · `openai/gpt-5.6-terra`; revisão `openai/gpt-6-astra` | Run `run_8d21709c445e`; runner `ctx_8474bcfb134c`, correção `ctx_f03dcfa62b39` | Commit `77e7f97`; ficha §4.1: 4 testes/typecheck/peers/frozen install/export 0 | 2026-09-24 |
 | T-105 | Runner Maestro | 4 | aguardando | T-108 | — | — | — | 2026-09-24 |
 | T-106 | Configuração de ambiente | 4 | aguardando | T-104 | — | — | — | 2026-09-24 |
 | T-107 | Documentar comandos | 5 | aguardando | T-103, T-104, T-106 | — | — | — | 2026-09-24 |
@@ -241,7 +240,7 @@ mantida até a conclusão.
 - Pendências registradas: ícones e splash provisórios do Expo; `android.package`/`ios.bundleIdentifier` a decidir antes da T-108
 
 #### T-104 — Runner Vitest/RNTL (revisão)
-- Estado / etapa: `revisão`; implementação e correções revisadas, aguardando CI/PR e aceite pelo merge do usuário.
+- Estado / etapa: `revisão`; implementação e correções publicadas no commit `77e7f97`, [PR #5](https://github.com/Natan-Lucena/LabirintoDoSaberReactNative/pull/5); aguardando aceite pelo merge do usuário.
 - Responsável: orquestrador · OpenCode · `openai/gpt-6-astra` · esforço médio (configuração e isolamento dos mocks).
 - Orca: run `run_8d21709c445e`; runner `task_ec52977fb9e6`, documentação `task_c7a49c787e04`; dispatches registrados abaixo após recibo. Dois executores OpenCode `openai/gpt-5.4-mini` (médio para runner, baixo para documentação); modelos listados e OpenAI OAuth confirmado. Comando explícito `opencode --model openai/gpt-5.4-mini` em terminais novos no mesmo checkout, pois `worker-start --model` não seleciona modelo do OpenCode nesta versão.
 - Dispatches aceitos (`worker-start` → 0, estado `ready`): runner `ctx_b01ceceeb245`; documentação `ctx_08c39e13300d`. Concorrência 2; timeout de início 180000 ms; nenhuma instalação concorrente.
@@ -260,7 +259,9 @@ mantida até a conclusão.
 - Verde integrado (Windows, Node; Android configurado no runner): `pnpm install --frozen-lockfile` → 0; `pnpm run test` → 0 (4 testes, 1 arquivo); `pnpm run typecheck` → 0; `pnpm peers check` → 0. `pnpm exec expo export --platform android --output-dir dist-android` → 0 (1670 módulos; bundle Hermes de 3,8 MB, sem Gradle). Runtime nativo não executado.
 - Revisão do código encontrou duas operações RNTL 14 assíncronas sem await (`cleanup` e `fireEvent.press`), confirmadas nos tipos instalados. Correção pontual no mesmo executor: `task_987fb9450d92` / `ctx_f03dcfa62b39`; nenhuma nova dependência ou mudança de escopo.
 - Correção final entregue: `await cleanup()` e `await fireEvent.press(...)`; README documenta async/reset. `pnpm run test` → 0 (4 testes); `pnpm run typecheck` → 0 após a correção. Diff do código, manifesto, lockfile e docs revisado; dependências diretas limitadas à receita validada. `python scripts/check-docs.py` → 0; `git diff --check` → 0.
-- Próximo passo: abrir PR com CI verde e aguardar merge. `lint` ainda não existe (T-103). Testes não comprovam runtime nativo, criptografia MMKV ou navegação real; build/emulador permanecem na T-108 com autorização. Tempo ativo não cronometrado; timestamps Orca abrangem pausas da sessão, não representam horas de execução contínua.
+- CI observado: run `36031631751`, Documentação passou (5 s), App pendente na última consulta. `gh pr checks 5 --watch --interval 20` interrompido pelo usuário, que dispensou continuar acompanhando. Resultado final não observado; não afirmar aprovação integral.
+- Handoff: todos os workers desta sessão finalizados e terminais próprios encerrados; última delivery reconhecida `delivery_bba5df520d93`. Não há correção de código conhecida pendente. `git commit`, `git push` e `gh pr create` → 0.
+- Próximo passo: aguardar merge do PR #5; depois atualizar conclusão/dependentes e seguir para T-103. Não retomar acompanhamento do CI automaticamente, conforme pedido do usuário. `lint` ainda não existe (T-103). Testes não comprovam runtime nativo, criptografia MMKV ou navegação real; build/emulador permanecem na T-108 com autorização. Tempo ativo não cronometrado; timestamps Orca abrangem pausas da sessão, não representam horas de execução contínua.
 
 #### T-101 — Spike de compatibilidade da stack (concluída)
 - Concluída em 2026-09-24: aceite do usuário pelo merge do PR #2; evidências em `docs/bootstrap/COMPATIBILIDADE.md` §4
@@ -373,3 +374,4 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | T-104 | `testes` → `vermelho-revisado` → `implementação`: asserção deliberada falhou pelo motivo correto; reprodução independente e autorização para remoção. Revisão pediu isolamento de overrides dos mocks e provas pelas interfaces públicas | Orquestrador | `pnpm run test` → 1, 2 verdes e 1 falha deliberada; pergunta `msg_80134f1d9f5f` |
 | 2026-09-24 | T-104 | `implementação` → `revisão` → `implementação`: verde de 4 testes, typecheck, peers, frozen install e export confirmados pelo orquestrador; revisão pediu await em duas operações RNTL antes do PR | Orquestrador | Comandos e códigos na ficha; correção `ctx_f03dcfa62b39` |
 | 2026-09-24 | T-104 | `implementação` → `revisão`: awaits corrigidos, 4 testes/typecheck verdes e documentação revisada; R-01/R-04 liberados. Dependentes continuam aguardando merge | Orquestrador | `msg_40a1664bfbe9`; validações integradas na ficha |
+| 2026-09-24 | T-104 / Handoff | Implementação publicada no PR #5 (`77e7f97`); workers encerrados. Usuário pediu troca de modelo, dispensou acompanhar CI e autorizou atualizar somente documentação necessária. Próximo passo, card e ficha corrigidos; tarefa segue em revisão | OpenCode / `openai/gpt-6-astra` | PR #5; run CI `36031631751`: Documentação verde, App pendente na última observação |
