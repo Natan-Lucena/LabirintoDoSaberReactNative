@@ -47,6 +47,10 @@ observação com Pular/Salvar → Home, sem "Continuar sessão" (G-16 resolvido)
 
 ## 3. Marcos
 
+Estado em 2026-09-24: M0 concluído, exceto G-05 a G-07 (backend); M1 em andamento
+(T-101 e T-102 concluídas; T-103, T-104 e T-108 prontas). Detalhe no
+[TRACKING](TRACKING.md#0-próximo-passo-global).
+
 | Marco | Objetivo | Tarefas | Gates que precisam estar resolvidos | Saída verificável |
 |---|---|---|---|---|
 | M0 — Decisões | Destravar bootstrap e caminho crítico | — | Concluído em 2026-09-24, exceto G-05–G-07 (backend) | Decisões em GATES e TRACKING; perguntas ao backend enviadas |

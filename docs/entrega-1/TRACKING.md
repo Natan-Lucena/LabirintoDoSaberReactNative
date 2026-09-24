@@ -9,14 +9,75 @@
 
 ## 0. Próximo passo global
 
+Estado em 2026-09-24, após o merge do PR #3: **M0 concluído** (exceto G-05, G-06 e G-07,
+que dependem do backend); **M1 em andamento** com T-101 e T-102 concluídas. Leia o
+[handoff](#handoff-para-o-próximo-modelo) antes de continuar.
+
 | # | Ação | Responsável | Condição de conclusão |
 |---|---|---|---|
-| 1 | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07; P4 opcional) | Usuário ou orquestrador | Data de envio registrada lá e no histórico (§7). **G-06 está no caminho crítico** (tela 05, onda 9) |
-| 2 | T-102 em andamento; depois T-103, T-104, T-106 e T-108 (esta só com build autorizado) | Líder (execução direta) | Linha de T-101 em `implementação` com dispatch registrado; ficha aberta em §4.1 |
-| 3 | Providenciar conta Apple Developer e aparelho iOS para o dev build EAS (G-01) | Usuário | Disponíveis antes de T-108 (onda 3); senão, AC-108-02 vira pendência registrada |
-| 4 | Deixar o backend local rodando com dados fictícios e acessível pela rede (G-19) | Usuário | Necessário a partir de T-401 (onda 9) para testes manuais; testes UT/CT usam mock |
+| 1 | T-104 (Vitest + RNTL): é a base de todas as tarefas com `UT`/`CT` e destrava T-106, T-201, T-301, T-302, T-305 e T-306 | Próximo líder/executor | T-104 `concluída` com evidências na ficha |
+| 2 | T-103 (ESLint, Prettier, Husky, lint-staged), em paralelo com a T-104 **só se** os arquivos forem disjuntos: as duas tocam `package.json` e o lockfile (R-01); instalações não podem rodar ao mesmo tempo | Próximo líder/executor | T-103 `concluída` |
+| 3 | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07; P4 opcional) — ainda **não enviadas**. G-06 está no caminho crítico (tela 05, onda 9) | Usuário | Data de envio registrada lá e em §7 |
+| 4 | T-108 (dev build Android + iOS via EAS) quando o usuário liberar a máquina; inclui AC-102-02 `MAN` (rota inicial no emulador), AC-108-03 (Hermes: `Intl`, MMKV, SecureStore) e a reinvestigação do achado A-08 | Líder, com autorização do usuário | T-108 `concluída` ou pendência registrada |
+| 5 | Decidir `android.package` e `ios.bundleIdentifier` (identidade nas lojas) antes da T-108 | Usuário | Registrado em GATES |
 
 Atualize esta tabela sempre que um item for concluído ou o próximo passo mudar.
+
+## Handoff para o próximo modelo
+
+Registro de 2026-09-24, ao fim da sessão Claude Code / `claude-opus-5-5`. O usuário vai
+seguir a implementação com outro modelo. Este bloco resume o que não está óbvio nos
+outros documentos; em caso de conflito, valem BACKLOG, GATES e esta página.
+
+### Estado
+
+- `main` em `33f5ad9` (merge do PR #3), CI verde. Não há PR aberto nem trabalho local pendente.
+- Concluídas: T-101 (spike) e T-102 (projeto Expo). Cancelada: T-109 (Sentry, G-20).
+- Prontas: T-103, T-104 e T-108 (esta só com build autorizado). As demais aguardam
+  dependências; T-404, T-703, T-704 e T-802 também aguardam G-05, G-06 ou G-07.
+- Gates: 22 resolvidos; abertos G-05, G-06 e G-07 (backend). Perguntas prontas e ainda não enviadas.
+- Nenhum processo da sessão ficou ativo (Metro e Gradle encerrados; projetos descartáveis apagados).
+
+### Como a sessão trabalhou (e o que o próximo modelo deve saber)
+
+- **Execução direta, sem Orca**, a pedido do usuário, com exceção registrada em cada
+  tarefa. Se o próximo modelo usar Orca/workers, siga AGENTS §3–§6 normalmente.
+- **Cards sempre atualizados**: o usuário pediu explicitamente que o estado das tarefas
+  neste TRACKING seja atualizado a cada passo (início, evidências, revisão, conclusão).
+- **Aceite = merge do PR pelo usuário.** Cada tarefa foi entregue num PR próprio a partir
+  de uma branch (`docs/...` ou `feat/...`); a tarefa só vira `concluída` após o merge.
+- **Build nativo e emulador só com autorização do usuário no momento** (AGENTS §7): ele
+  libera a máquina antes. Sem autorização, avance no que não exige compilação nativa.
+- **Referência de versões**: `docs/bootstrap/COMPATIBILIDADE.md` (§3 versões, §5 achados
+  A-01 a A-19, §7 comandos). Não aceite sugestões "is available" do pnpm sem repetir a
+  checagem e registrar. A T-104 tem a receita completa do Vitest em §7 e nos achados A-06 e A-11 a A-15.
+
+### Comandos reais comprovados (Windows 11, pnpm 11.8.0, Node 22.22.3)
+
+| Comando | Uso | Última evidência |
+|---|---|---|
+| `pnpm install --frozen-lockfile` | instalar (CI usa este) | código 0 no CI |
+| `pnpm run typecheck` | `tsc --noEmit` | código 0 local e no CI |
+| `npx expo-doctor` | saúde do projeto | 21/21, código 0 |
+| `pnpm peers check` | conflitos de peer | código 0 |
+| `npx expo export --platform android --output-dir dist-android` | bundle JS/Hermes, sem Gradle | código 0 local e no CI |
+| `npx expo start --port 8081` | Metro (encerrar ao terminar; conferir a porta antes) | status `running` |
+| `python scripts/check-docs.py` | links e âncoras dos Markdown | código 0 |
+
+Ainda **não existem**: `test` (T-104), `lint`/`format` (T-103) e build nativo (T-108).
+O README só será atualizado com esses comandos na T-107.
+
+### Armadilhas já encontradas
+
+- O repositório está no OneDrive (G-25 revisto) e o Windows tem `LongPathsEnabled = 0`:
+  evite pastas temporárias com caminho longo para projetos Expo (A-07).
+- pnpm 11: `allowBuilds` exige decisão explícita (A-01) e o `pnpm-workspace.yaml` é
+  reescrito pelo próprio pnpm (`minimumReleaseAgeExclude`, A-18).
+- `expo-env.d.ts` é do Expo e fica ignorado; o typecheck usa `app-env.d.ts` (A-05).
+- A action `pnpm/action-setup` falha se a versão do pnpm vier do workflow e do
+  `packageManager` ao mesmo tempo; a fonte única é o `packageManager`.
+- No Git Bash do Windows, prefira arquivos de script a heredocs longos com aspas mistas;
+  a saída do `npx` pode trazer ruído do `cmd` ("LSE não é reconhecido"), sem efeito no resultado.
 
 ## 1. Estados
 
@@ -115,27 +176,27 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 | ID | Título | Onda | Estado | Motivo | Responsável (papel/modelo confirmado) | Run / task / dispatch | Evidências | Atualizado |
 |---|---|---|---|---|---|---|---|---|
 | T-101 | Spike de compatibilidade | 1 | concluída | Aceite do usuário pelo merge do PR #2 (2026-09-24 11:25 UTC); runtime Hermes segue em AC-108-03 | Líder classe C · Claude Code · `claude-opus-5-5` · esforço alto | Execução direta, sem Orca (pedido do usuário na sessão) | `docs/bootstrap/COMPATIBILIDADE.md` §4 | 2026-09-24 |
-| T-102 | Criar projeto Expo | 2 | revisão | CI verde no PR #3; aguarda aceite do usuário; AC-102-02 `MAN` pendente de build autorizado | Executor · Claude Code · `claude-opus-5-5` · esforço médio | Execução direta, sem Orca (pedido do usuário) | Ficha §4.1 | 2026-09-24 |
-| T-103 | Qualidade de código | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
-| T-104 | Runner Vitest/RNTL | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
-| T-105 | Runner Maestro | 4 | aguardando | T-102, T-108 | — | — | — | 2026-09-24 |
-| T-106 | Configuração de ambiente | 4 | aguardando | T-102, T-104 | — | — | — | 2026-09-24 |
+| T-102 | Criar projeto Expo | 2 | concluída | Aceite do usuário pelo merge do PR #3 (2026-09-24 11:42 UTC); AC-102-02 `MAN` transferido para a T-108 | Executor · Claude Code · `claude-opus-5-5` · esforço médio | Execução direta, sem Orca (pedido do usuário) | Ficha §4.1 | 2026-09-24 |
+| T-103 | Qualidade de código | 3 | pronta | Dependências concluídas; aguarda dispatch | — | — | — | 2026-09-24 |
+| T-104 | Runner Vitest/RNTL | 3 | pronta | Dependências concluídas; aguarda dispatch | — | — | — | 2026-09-24 |
+| T-105 | Runner Maestro | 4 | aguardando | T-108 | — | — | — | 2026-09-24 |
+| T-106 | Configuração de ambiente | 4 | aguardando | T-104 | — | — | — | 2026-09-24 |
 | T-107 | Documentar comandos | 5 | aguardando | T-103, T-104, T-106 | — | — | — | 2026-09-24 |
-| T-108 | Development build nativo | 3 | aguardando | T-101, T-102 | — | — | — | 2026-09-24 |
+| T-108 | Development build nativo | 3 | pronta | Só executar com build autorizado pelo usuário no momento; AC-108-02 exige conta Apple e aparelho iOS | — | — | — | 2026-09-24 |
 | T-109 | Sentry | — | cancelada | Redução de escopo decidida pelo usuário (G-20), 2026-09-24 | — | — | — | 2026-09-24 |
-| T-201 | Tokens, tema e fontes | 4 | aguardando | T-102, T-104 | — | — | — | 2026-09-24 |
+| T-201 | Tokens, tema e fontes | 4 | aguardando | T-104 | — | — | — | 2026-09-24 |
 | T-202 | Primitivos de conteúdo | 5 | aguardando | T-201 | — | — | — | 2026-09-24 |
 | T-203 | Primitivos de layout e ícones | 5 | aguardando | T-201 | — | — | — | 2026-09-24 |
 | T-204 | Sobreposições | 5 | aguardando | T-201 | — | — | — | 2026-09-24 |
 | T-205 | Estados comuns | 6 | aguardando | T-202 | — | — | — | 2026-09-24 |
 | T-301 | Cliente HTTP e erros | 5 | aguardando | T-104, T-106 | — | — | — | 2026-09-24 |
 | T-302 | Token seguro e auth store | 4 | aguardando | T-104 | — | — | — | 2026-09-24 |
-| T-303 | MMKV criptografado | 5 | aguardando | T-101, T-104, T-302 | — | — | — | 2026-09-24 |
+| T-303 | MMKV criptografado | 5 | aguardando | T-104, T-302 | — | — | — | 2026-09-24 |
 | T-304 | QueryClient e conectividade | 6 | aguardando | T-301, T-303 | — | — | — | 2026-09-24 |
-| T-305 | Tipos e módulos de API | 6 | aguardando | T-102, T-104, T-301 | — | — | — | 2026-09-24 |
+| T-305 | Tipos e módulos de API | 6 | aguardando | T-104, T-301 | — | — | — | 2026-09-24 |
 | T-306 | Datas e fuso | 4 | aguardando | T-104 | — | — | — | 2026-09-24 |
 | T-401 | Login | 9 | aguardando | T-202, T-205, T-301, T-302, T-304, T-305, T-502 | — | — | — | 2026-09-24 |
-| T-402 | Guarda de rotas e 401 | 7 | aguardando | T-102, T-301, T-302, T-304 | — | — | — | 2026-09-24 |
+| T-402 | Guarda de rotas e 401 | 7 | aguardando | T-301, T-302, T-304 | — | — | — | 2026-09-24 |
 | T-403 | Recuperação: Email e Código | 9 | aguardando | T-202, T-203, T-205, T-304, T-305, T-502 | — | — | — | 2026-09-24 |
 | T-404 | Recuperação: Senha | 10 | bloqueada | G-05 (backend); T-403 | — | — | — | 2026-09-24 |
 | T-501 | Tabs, header e destinos | 9 | aguardando | T-203, T-205, T-502 | — | — | — | 2026-09-24 |
@@ -160,10 +221,10 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 | T-1002 | Acessibilidade e layout | 14 | aguardando | T-401, T-403, T-404, T-603, T-702, T-703, T-804, T-903, T-904, T-905 | — | — | — | 2026-09-24 |
 | T-1003 | Homologação e relatório | 15 | aguardando | T-108, T-1001, T-1002 | — | — | — | 2026-09-24 |
 
-Totais em 2026-09-24, após as decisões do usuário: 45 tarefas; 1 `pronta` (T-101),
-39 `aguardando`, 4 `bloqueada` (só por G-05, G-06 ou G-07), 1 `cancelada` (T-109),
-0 em execução, 0 `concluída`. A coluna "Motivo" lista só gates abertos e dependências; os gates
-resolvidos continuam valendo como decisão (ver GATES). Nenhuma tarefa sai do escopo por
+Totais em 2026-09-24, após o merge do PR #3: 45 tarefas; 2 `concluída` (T-101, T-102),
+3 `pronta` (T-103, T-104, T-108), 35 `aguardando`, 4 `bloqueada` (por G-05, G-06 ou G-07),
+1 `cancelada` (T-109). A coluna "Motivo" lista só gates abertos e dependências ainda não
+concluídas. Os gates resolvidos continuam valendo como decisão (ver GATES). Nenhuma tarefa sai do escopo por
 estar bloqueada ([GATES, regra 5](GATES.md#regras)).
 
 ### 4.1 Fichas de execução
@@ -171,17 +232,11 @@ estar bloqueada ([GATES, regra 5](GATES.md#regras)).
 Ao sair de `aguardando`/`bloqueada` para `pronta`, a tarefa ganha uma ficha aqui,
 mantida até a conclusão.
 
-#### T-102 — Criar projeto Expo com TypeScript strict e Expo Router
-- Estado / etapa do fluxo: revisão (checagem objetiva: configuração)
-- Responsável: Claude Code · `claude-opus-5-5` (modelo desta sessão; a classe prevista era B) · esforço médio
-- Orca: não usado; execução direta a pedido do usuário
-- Arquivos: `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `app.json`, `babel.config.js`, `metro.config.js`, `tailwind.config.js`, `global.css`, `nativewind-env.d.ts`, `app-env.d.ts`, `app/_layout.tsx`, `app/index.tsx`, `.gitignore`, `src/**/.gitkeep`, `assets/` (ícones e splash provisórios do template); `.github/workflows/ci.yml` (passo de testes com `--if-present`)
-- Recursos reservados (§3): R-01, R-02, R-03, R-06, R-14
-- Evidências (Windows 11, repositório no OneDrive): `pnpm install` 0; `npx expo install` (libs da Entrega 1) 0; `pnpm peers check` 0; `npx expo-doctor` 21/21 0; `pnpm run typecheck` 0 (com e sem `expo-env.d.ts`); `npx expo export --platform android` 0 (Hermes 3,8 MB); `npx expo start --port 8081` com `/status` = `packager-status:running` e bundle Android de desenvolvimento HTTP 200 contendo a rota inicial; Metro encerrado (PID 7872 e filho 23952)
-- AC: 102-01 ✓; 102-02 `CMD` ✓, `MAN` **pendente** (renderizar em emulador exige build nativo autorizado pelo usuário; verificar junto da T-108); 102-03 ✓ (nenhum segredo em `app.json`/configs); 102-04 ✓; 102-05 ✓; 102-06 ✓ (CI run 35994354897: install, typecheck, testes `--if-present` e bundle Hermes executados; a 1ª tentativa falhou por versão do pnpm duplicada no workflow, corrigida)
-- Pendências registradas: ícones e splash provisórios do Expo (sem arte da marca); `android.package`/`ios.bundleIdentifier` a decidir na T-108; achados A-18 e A-19 na COMPATIBILIDADE
-- Bloqueio atual: nenhum
-- Próximo passo concreto: revisão e merge do PR #3 pelo usuário; depois T-103, T-104 e T-106 (paralelizáveis após a T-102)
+#### T-102 — Criar projeto Expo com TypeScript strict e Expo Router (concluída)
+- Concluída em 2026-09-24: aceite do usuário pelo merge do PR #3; CI verde no PR (run 35994354897) e na `main` (run 35994637473)
+- Evidências: `pnpm install`, `npx expo install`, `pnpm peers check`, `npx expo-doctor` 21/21, `pnpm run typecheck` (com e sem `expo-env.d.ts`) e `npx expo export --platform android` com código 0; Metro `packager-status:running` e bundle Android de desenvolvimento HTTP 200 (Windows 11)
+- Pendência transferida: AC-102-02 `MAN` (rota inicial renderizada em emulador) passa para a T-108, que precisa de build autorizado
+- Pendências registradas: ícones e splash provisórios do Expo; `android.package`/`ios.bundleIdentifier` a decidir antes da T-108
 
 #### T-101 — Spike de compatibilidade da stack (concluída)
 - Concluída em 2026-09-24: aceite do usuário pelo merge do PR #2; evidências em `docs/bootstrap/COMPATIBILIDADE.md` §4
@@ -283,3 +338,6 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | T-102 | `aguardando` → `implementação` (checagem objetiva), execução direta | Claude Code / claude-opus-5-5 | Ficha §4.1 |
 | 2026-09-24 | T-102 | `implementação` → `revisão`: projeto Expo SDK 57 criado; checagens com código 0 (ficha §4.1); AC-102-02 `MAN` pendente de build; A-05 resolvido com `app-env.d.ts`; achados A-18 e A-19 | Claude Code / claude-opus-5-5 | Ficha §4.1 |
 | 2026-09-24 | T-102 | CI do PR #3 verde (run 35994354897); AC-102-06 atendido | Claude Code / claude-opus-5-5 | PR #3 |
+| 2026-09-24 | T-102 | `revisão` → `concluída`: aceite do usuário pelo merge do PR #3; CI da `main` verde (run 35994637473) | Claude Code / claude-opus-5-5 | PR #3 |
+| 2026-09-24 | T-103, T-104, T-108 | `aguardando` → `pronta` (dependências concluídas; T-108 só com build autorizado) | Claude Code / claude-opus-5-5 | Grafo do BACKLOG |
+| 2026-09-24 | Handoff | §0 e seção Handoff atualizados para a troca de modelo pedida pelo usuário | Claude Code / claude-opus-5-5 | Seção Handoff |
