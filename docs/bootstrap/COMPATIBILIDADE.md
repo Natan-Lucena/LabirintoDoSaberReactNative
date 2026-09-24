@@ -123,7 +123,7 @@ Para comparação, o Jest (`jest-expo` 57 + Jest 29) também passou nos mesmos t
 | A-04 | Com `babel.config.js` próprio (NativeWind), o Gradle não encontra `babel-preset-expo` | `babel-preset-expo` como dependência direta de desenvolvimento | T-102 |
 | A-05 | O TypeScript 6 passou a exigir declaração para `import "*.css"`; ela vem de `expo-env.d.ts`, que o template ignora no git e que só o `expo start` gera | **Resolvido na T-102:** `app-env.d.ts` versionado com `/// <reference types="expo/types" />`. Versionar o `expo-env.d.ts` não funciona: o `expo start` o reescreve e o recoloca no `.gitignore`. Typecheck validado com e sem ele | T-102 |
 | A-06 | O TypeScript 6 não inclui tipos globais de runner automaticamente | Importar `describe/test/expect/vi` de `vitest` explicitamente (validado), ou declarar `types` no tsconfig | T-104 |
-| A-07 | O limite de 260 caracteres do Windows quebrou o bundle numa pasta de 274 caracteres (`hermesc.exe ENOENT`) | Repositório em caminho curto e **fora do OneDrive** (G-25). Opcional: o usuário ativar `LongPathsEnabled` | Antes de T-102 (usuário) |
+| A-07 | O limite de 260 caracteres do Windows quebrou o bundle numa pasta de 274 caracteres (`hermesc.exe ENOENT`) | G-25 foi revisto: o repositório permanece no OneDrive, com o risco aceito. Manter caminhos temporários curtos; opcionalmente, o usuário pode ativar `LongPathsEnabled` | T-108 e instalações futuras |
 | A-08 | Build Android falhou em `ExtractAarTransform` do `react-android-0.86.3-release.aar` no cache do Gradle | Causa não isolada (trava de arquivo ou cache corrompido são hipóteses). Repetir no caminho definitivo; se persistir, limpar só a entrada desse `.aar` no cache do Gradle e registrar | T-108 |
 | A-09 | O template do SDK 57 usa `src/app/` para as rotas; o PROJECT e o BACKLOG usam `app/` na raiz | Manter `app/` na raiz (decisão documentada; o Expo Router aceita as duas). A T-102 move as rotas e mantém o alias `@/` → `src/` | T-102 |
 | A-10 | O template liga `experiments.reactCompiler` e `typedRoutes` | Manter os dois (typedRoutes atende "parâmetros tipados" do PROJECT). O React Compiler é padrão do SDK; se atrapalhar, desligar com registro | T-102 |
@@ -176,7 +176,7 @@ npx expo export --platform android
 ```
 
 A T-104 acrescenta: `pnpm add -D vitest@5.0.1 vitest-native@0.13.0 vite@8.3.0
-@react-native/babel-preset@0.86.3 @babel/core@^7.29.0 @testing-library/react-native@14.0.1
+@react-native/babel-preset@0.86.3 @babel/core@^7.29.7 @testing-library/react-native@14.0.1
 test-renderer@~1.2.0`. Depois de cada instalação, rodar `pnpm peers check`.
 
 ## 7.1 Aplicação na T-102 (2026-09-24)

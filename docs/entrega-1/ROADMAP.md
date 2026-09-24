@@ -8,6 +8,9 @@
 
 ## 1. Situação de partida
 
+Esta tabela registra o discovery anterior ao bootstrap, em 2026-09-24. Para o
+estado atual, consulte [§3](#3-marcos) e o [TRACKING](TRACKING.md).
+
 | Fato | Evidência | Impacto |
 |---|---|---|
 | Não há aplicação, manifesto, lockfile nem testes | Árvore do repositório em 2026-09-24: README, AGENTS, `docs/` | Tudo começa pelo bootstrap; nenhum comando do app existe ainda |
@@ -48,8 +51,8 @@ observação com Pular/Salvar → Home, sem "Continuar sessão" (G-16 resolvido)
 ## 3. Marcos
 
 Estado em 2026-09-24: M0 concluído, exceto G-05 a G-07 (backend); M1 em andamento
-(T-101 e T-102 concluídas; T-103, T-104 e T-108 prontas). Detalhe no
-[TRACKING](TRACKING.md#0-próximo-passo-global).
+(T-101 e T-102 concluídas; T-103 e T-108 prontas; T-104 em execução). Para a etapa
+atual da T-104, consulte o [TRACKING](TRACKING.md#0-próximo-passo-global).
 
 | Marco | Objetivo | Tarefas | Gates que precisam estar resolvidos | Saída verificável |
 |---|---|---|---|---|
@@ -114,7 +117,7 @@ e gates resolvidos; gates abertos podem empurrá-la para ondas posteriores.
 
 | Onda | Tarefas | Observação |
 |---|---|---|
-| 1 | T-101 | Única; decide versões; **pronta** |
+| 1 | T-101 | Única; versões validadas; concluída |
 | 2 | T-102 | Única; cria manifesto (R-01) e instala a stack |
 | 3 | T-103, T-104, T-108 | Instalações serializadas por R-01; T-108 exige G-01 |
 | 4 | T-105, T-106, T-201, T-302, T-306 | |

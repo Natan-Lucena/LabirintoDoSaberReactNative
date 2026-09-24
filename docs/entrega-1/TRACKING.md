@@ -4,8 +4,9 @@
 > das tarefas: [BACKLOG](BACKLOG.md). Decisões: [GATES](GATES.md). Visão geral:
 > [ROADMAP](ROADMAP.md).
 >
-> Em 2026-09-24 **nenhuma tarefa de implementação foi iniciada**. A conclusão do
-> planejamento documental não torna nenhuma tarefa pronta, em andamento ou concluída.
+> Estado atualizado em 2026-09-24: T-101 e T-102 concluídas por merge do usuário;
+> T-104 em revisão, com testes e validações locais verdes; aceite depende do merge do usuário.
+> Planejamento documental não equivale a implementação concluída.
 
 ## 0. Próximo passo global
 
@@ -15,7 +16,7 @@ que dependem do backend); **M1 em andamento** com T-101 e T-102 concluídas. Lei
 
 | # | Ação | Responsável | Condição de conclusão |
 |---|---|---|---|
-| 1 | T-104 (Vitest + RNTL): é a base de todas as tarefas com `UT`/`CT` e destrava T-106, T-201, T-301, T-302, T-305 e T-306 | Próximo líder/executor | T-104 `concluída` com evidências na ficha |
+| 1 | T-104 (Vitest + RNTL): abrir PR, acompanhar CI e aguardar merge do usuário; só então concluir a tarefa e liberar dependentes | Orquestrador → usuário | PR da T-104 verde, revisado e aceito pelo merge do usuário |
 | 2 | T-103 (ESLint, Prettier, Husky, lint-staged), em paralelo com a T-104 **só se** os arquivos forem disjuntos: as duas tocam `package.json` e o lockfile (R-01); instalações não podem rodar ao mesmo tempo | Próximo líder/executor | T-103 `concluída` |
 | 3 | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07; P4 opcional) — ainda **não enviadas**. G-06 está no caminho crítico (tela 05, onda 9) | Usuário | Data de envio registrada lá e em §7 |
 | 4 | T-108 (dev build Android + iOS via EAS) quando o usuário liberar a máquina; inclui AC-102-02 `MAN` (rota inicial no emulador), AC-108-03 (Hermes: `Intl`, MMKV, SecureStore) e a reinvestigação do achado A-08 | Líder, com autorização do usuário | T-108 `concluída` ou pendência registrada |
@@ -31,15 +32,16 @@ outros documentos; em caso de conflito, valem BACKLOG, GATES e esta página.
 
 ### Estado
 
-- `main` em `33f5ad9` (merge do PR #3), CI verde. Não há PR aberto nem trabalho local pendente.
+- Base da retomada: `main` atualizada de `33f5ad9` para `e1226ee` com fast-forward e árvore limpa. Branch atual da tarefa: `feat/t-104-vitest-rntl`; discovery e atualizações documentais em andamento, ainda sem PR da T-104. O CI verde citado na ficha T-102 é evidência histórica, não uma nova execução nesta sessão.
 - Concluídas: T-101 (spike) e T-102 (projeto Expo). Cancelada: T-109 (Sentry, G-20).
-- Prontas: T-103, T-104 e T-108 (esta só com build autorizado). As demais aguardam
+- Prontas: T-103 e T-108 (esta só com build autorizado). T-104 em revisão com validação local verde, aguardando CI e merge. As demais aguardam
   dependências; T-404, T-703, T-704 e T-802 também aguardam G-05, G-06 ou G-07.
 - Gates: 22 resolvidos; abertos G-05, G-06 e G-07 (backend). Perguntas prontas e ainda não enviadas.
 - Nenhum processo da sessão ficou ativo (Metro e Gradle encerrados; projetos descartáveis apagados).
 
 ### Como a sessão trabalhou (e o que o próximo modelo deve saber)
 
+- Retomada OpenCode / `openai/gpt-6-astra`: usuário pediu prioridade a modelos OpenAI, uma tarefa por vez e atualização contínua da documentação. Autorizou corrigir registros desatualizados; contratos, AGENTS e decisões de GATES continuam exigindo autorização específica. Nenhum worker disparado até aqui.
 - **Execução direta, sem Orca**, a pedido do usuário, com exceção registrada em cada
   tarefa. Se o próximo modelo usar Orca/workers, siga AGENTS §3–§6 normalmente.
 - **Cards sempre atualizados**: o usuário pediu explicitamente que o estado das tarefas
@@ -64,7 +66,7 @@ outros documentos; em caso de conflito, valem BACKLOG, GATES e esta página.
 | `npx expo start --port 8081` | Metro (encerrar ao terminar; conferir a porta antes) | status `running` |
 | `python scripts/check-docs.py` | links e âncoras dos Markdown | código 0 |
 
-Ainda **não existem**: `test` (T-104), `lint`/`format` (T-103) e build nativo (T-108).
+Na branch da T-104 já existe `pnpm run test` (4 testes verdes; ficha §4.1), ainda aguardando aceite/merge. Ainda **não existem**: `lint`/`format` (T-103) e build nativo (T-108).
 O README só será atualizado com esses comandos na T-107.
 
 ### Armadilhas já encontradas
@@ -150,10 +152,10 @@ registrado aqui (pelo escritor do tracking) antes da edição e liberado na revi
 
 | Recurso | Arquivos | Dono padrão | Detentor atual |
 |---|---|---|---|
-| R-01 | `package.json`, `pnpm-lock.yaml`, `.npmrc` | T-102; depois, por pedido | livre (arquivos não existem) |
+| R-01 | `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.npmrc` | T-102; depois, por pedido | livre; T-104 em revisão, sem instalação ativa |
 | R-02 | `app.json` / `app.config.ts`, `eas.json` | T-102 → T-106 → T-108 | livre |
 | R-03 | `babel.config.js`, `metro.config.js`, `tailwind.config.js`, `global.css` | T-102, depois T-201 | livre |
-| R-04 | `vitest.config.mts`, `vitest.setup.ts`, `src/test-utils/` | T-104; `src/test-utils/render.tsx` depois T-304 (serial) | livre |
+| R-04 | `vitest.config.mts`, `vitest.setup.ts`, `src/test-utils/` | T-104; `src/test-utils/render.tsx` depois T-304 (serial) | livre; T-104 em revisão |
 | R-05 | `README.md` | T-107, depois T-1003 | livre |
 | R-06 | `app/_layout.tsx` | T-102 (mínimo) → **T-502 (dono da integração)** → T-803 (serial, só para montar o prompt de retomada) | livre |
 | R-07 | `app/(tabs)/_layout.tsx` | T-501 | livre |
@@ -178,7 +180,7 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 | T-101 | Spike de compatibilidade | 1 | concluída | Aceite do usuário pelo merge do PR #2 (2026-09-24 11:25 UTC); runtime Hermes segue em AC-108-03 | Líder classe C · Claude Code · `claude-opus-5-5` · esforço alto | Execução direta, sem Orca (pedido do usuário na sessão) | `docs/bootstrap/COMPATIBILIDADE.md` §4 | 2026-09-24 |
 | T-102 | Criar projeto Expo | 2 | concluída | Aceite do usuário pelo merge do PR #3 (2026-09-24 11:42 UTC); AC-102-02 `MAN` transferido para a T-108 | Executor · Claude Code · `claude-opus-5-5` · esforço médio | Execução direta, sem Orca (pedido do usuário) | Ficha §4.1 | 2026-09-24 |
 | T-103 | Qualidade de código | 3 | pronta | Dependências concluídas; aguarda dispatch | — | — | — | 2026-09-24 |
-| T-104 | Runner Vitest/RNTL | 3 | pronta | Dependências concluídas; aguarda dispatch | — | — | — | 2026-09-24 |
+| T-104 | Runner Vitest/RNTL | 3 | revisão | Diff revisado; 4 testes e validações locais verdes; aguarda PR/CI e merge do usuário | Executor · OpenCode · `openai/gpt-5.6-terra`; revisão `openai/gpt-6-astra` | Run `run_8d21709c445e`; runner `ctx_8474bcfb134c`, correção `ctx_f03dcfa62b39` | Ficha §4.1: vermelho 1; testes/typecheck/peers/frozen install/export 0 | 2026-09-24 |
 | T-105 | Runner Maestro | 4 | aguardando | T-108 | — | — | — | 2026-09-24 |
 | T-106 | Configuração de ambiente | 4 | aguardando | T-104 | — | — | — | 2026-09-24 |
 | T-107 | Documentar comandos | 5 | aguardando | T-103, T-104, T-106 | — | — | — | 2026-09-24 |
@@ -221,8 +223,8 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 | T-1002 | Acessibilidade e layout | 14 | aguardando | T-401, T-403, T-404, T-603, T-702, T-703, T-804, T-903, T-904, T-905 | — | — | — | 2026-09-24 |
 | T-1003 | Homologação e relatório | 15 | aguardando | T-108, T-1001, T-1002 | — | — | — | 2026-09-24 |
 
-Totais em 2026-09-24, após o merge do PR #3: 45 tarefas; 2 `concluída` (T-101, T-102),
-3 `pronta` (T-103, T-104, T-108), 35 `aguardando`, 4 `bloqueada` (por G-05, G-06 ou G-07),
+Totais em 2026-09-24, na retomada: 45 tarefas; 2 `concluída` (T-101, T-102),
+2 `pronta` (T-103, T-108), 1 `revisão` (T-104), 35 `aguardando`, 4 `bloqueada` (por G-05, G-06 ou G-07),
 1 `cancelada` (T-109). A coluna "Motivo" lista só gates abertos e dependências ainda não
 concluídas. Os gates resolvidos continuam valendo como decisão (ver GATES). Nenhuma tarefa sai do escopo por
 estar bloqueada ([GATES, regra 5](GATES.md#regras)).
@@ -237,6 +239,28 @@ mantida até a conclusão.
 - Evidências: `pnpm install`, `npx expo install`, `pnpm peers check`, `npx expo-doctor` 21/21, `pnpm run typecheck` (com e sem `expo-env.d.ts`) e `npx expo export --platform android` com código 0; Metro `packager-status:running` e bundle Android de desenvolvimento HTTP 200 (Windows 11)
 - Pendência transferida: AC-102-02 `MAN` (rota inicial renderizada em emulador) passa para a T-108, que precisa de build autorizado
 - Pendências registradas: ícones e splash provisórios do Expo; `android.package`/`ios.bundleIdentifier` a decidir antes da T-108
+
+#### T-104 — Runner Vitest/RNTL (revisão)
+- Estado / etapa: `revisão`; implementação e correções revisadas, aguardando CI/PR e aceite pelo merge do usuário.
+- Responsável: orquestrador · OpenCode · `openai/gpt-6-astra` · esforço médio (configuração e isolamento dos mocks).
+- Orca: run `run_8d21709c445e`; runner `task_ec52977fb9e6`, documentação `task_c7a49c787e04`; dispatches registrados abaixo após recibo. Dois executores OpenCode `openai/gpt-5.4-mini` (médio para runner, baixo para documentação); modelos listados e OpenAI OAuth confirmado. Comando explícito `opencode --model openai/gpt-5.4-mini` em terminais novos no mesmo checkout, pois `worker-start --model` não seleciona modelo do OpenCode nesta versão.
+- Dispatches aceitos (`worker-start` → 0, estado `ready`): runner `ctx_b01ceceeb245`; documentação `ctx_08c39e13300d`. Concorrência 2; timeout de início 180000 ms; nenhuma instalação concorrente.
+- Recuperação de ambiente: mini recusado pela autenticação ChatGPT em ambos os terminais antes de qualquer trabalho. Dispatches abandonados e terminais criados nesta sessão fechados com `ptyKilled: true`; não houve alteração de arquivos pelos minis. `openai/gpt-5.6-terra` confirmado por chamada real (código 0, resposta OK), substitui mini nas duas frentes. O catálogo sozinho não foi evidência suficiente de acesso.
+- Dispatches atuais Terra aceitos: runner `ctx_8474bcfb134c`, docs `ctx_c16c2ae5e283` (`worker-start --retry-of ... --timeout-ms 180000` → 0 em ambos).
+- Frente documental entregue e diff revisado; correções adicionais solicitadas nas introduções históricas e nas pendências de versões do PROJECT. Follow-up `task_a39c92fd301d` / `ctx_31a4e17ba0ad` (tentativa anterior `ctx_9d36b3a9e51d` falhou por `agent_prompt_stalled`, estado terminal confirmado e release solicitado antes do retry). Checagens documentais do executor: `python scripts/check-docs.py` → 0; `git diff --check` → 0.
+- Arquivos previstos: `package.json`, `pnpm-lock.yaml` (R-01), `vitest.config.mts`, `vitest.setup.ts`, `src/test-utils/` e `src/test-utils/__tests__/smoke.test.tsx` (R-04). `TRACKING.md` tem como único escritor o orquestrador.
+- Recursos: R-01 e R-04 reservados exclusivamente ao executor do runner. Inclui `pnpm-workspace.yaml`, autorizado pelo usuário. Documentação tem propriedade disjunta: `docs/PROJECT.md`, `docs/entrega-1/ROADMAP.md`, `docs/entrega-1/BACKLOG.md`, `docs/bootstrap/COMPATIBILIDADE.md`.
+- Bloqueio anterior resolvido pelo usuário: contrato e YAML autorizados, com pedido de delegação econômica e paralelismo. Contrato aprovado: [T-104](../contracts/t-104-runner-testes.md). Sem bloqueio atual.
+- Discovery: leitura integral dos documentos solicitados; manifesto confirma ausência de runner e script `test`; workflow já chama `pnpm run --if-present test`; nenhuma instrução AGENTS adicional encontrada.
+- Evidências: `git checkout main` → 0; `git pull --ff-only` → 0 (de `33f5ad9` para `e1226ee`); `git status` → 0 (árvore limpa); `git switch -c feat/t-104-vitest-rntl` → 0. Ambiente observado: Windows/PowerShell; nenhum build nativo ou emulador iniciado.
+- Processo: ordem de leitura seguiu o pedido explícito do usuário (AGENTS → TRACKING → PROJECT → demais documentos), em substituição à ordem padrão do AGENTS; modelos OpenAI prioritários nesta sessão.
+- Validação documental do discovery: `python scripts/check-docs.py` → 0 (zero problemas de links/âncoras); `git diff --check` → 0 (somente aviso de conversão LF/CRLF).
+- Vermelho AC-104-02 revisado: `pnpm run test` → 1, confirmado pelo executor e reproduzido pelo orquestrador em Windows (2026-09-24 09:22 local). Resultado: 2 testes passam e 1 falha por `AssertionError`, exclusivamente na asserção deliberada `expect(screen.getByText("Pronto para testar")).toBeNull()`. RN 0.86.3, engine native, plataforma Android simulada no Node; não é erro de import/sintaxe. Remoção desse teste provisório autorizada.
+- Documentação factual revisada após follow-up; worker encerrado (`terminal close` → 0, `ptyKilled: true`, após primeira tentativa com timeout).
+- Verde integrado (Windows, Node; Android configurado no runner): `pnpm install --frozen-lockfile` → 0; `pnpm run test` → 0 (4 testes, 1 arquivo); `pnpm run typecheck` → 0; `pnpm peers check` → 0. `pnpm exec expo export --platform android --output-dir dist-android` → 0 (1670 módulos; bundle Hermes de 3,8 MB, sem Gradle). Runtime nativo não executado.
+- Revisão do código encontrou duas operações RNTL 14 assíncronas sem await (`cleanup` e `fireEvent.press`), confirmadas nos tipos instalados. Correção pontual no mesmo executor: `task_987fb9450d92` / `ctx_f03dcfa62b39`; nenhuma nova dependência ou mudança de escopo.
+- Correção final entregue: `await cleanup()` e `await fireEvent.press(...)`; README documenta async/reset. `pnpm run test` → 0 (4 testes); `pnpm run typecheck` → 0 após a correção. Diff do código, manifesto, lockfile e docs revisado; dependências diretas limitadas à receita validada. `python scripts/check-docs.py` → 0; `git diff --check` → 0.
+- Próximo passo: abrir PR com CI verde e aguardar merge. `lint` ainda não existe (T-103). Testes não comprovam runtime nativo, criptografia MMKV ou navegação real; build/emulador permanecem na T-108 com autorização. Tempo ativo não cronometrado; timestamps Orca abrangem pausas da sessão, não representam horas de execução contínua.
 
 #### T-101 — Spike de compatibilidade da stack (concluída)
 - Concluída em 2026-09-24: aceite do usuário pelo merge do PR #2; evidências em `docs/bootstrap/COMPATIBILIDADE.md` §4
@@ -341,3 +365,11 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | T-102 | `revisão` → `concluída`: aceite do usuário pelo merge do PR #3; CI da `main` verde (run 35994637473) | Claude Code / claude-opus-5-5 | PR #3 |
 | 2026-09-24 | T-103, T-104, T-108 | `aguardando` → `pronta` (dependências concluídas; T-108 só com build autorizado) | Claude Code / claude-opus-5-5 | Grafo do BACKLOG |
 | 2026-09-24 | Handoff | §0 e seção Handoff atualizados para a troca de modelo pedida pelo usuário | Claude Code / claude-opus-5-5 | Seção Handoff |
+| 2026-09-24 | Retomada / T-104 | Usuário autorizou corrigir registros desatualizados; introdução, base Git e R-01 corrigidos. Discovery concluído; T-104 `pronta` → `impedida` aguardando autorização de contrato e propriedade do YAML do pnpm. Nenhuma instalação ou implementação iniciada | OpenCode / `openai/gpt-6-astra` | Ficha T-104; branch `feat/t-104-vitest-rntl` |
+| 2026-09-24 | T-104 | Atualização documental do discovery verificada: links/âncoras sem problemas e diff sem erros de espaços | OpenCode / `openai/gpt-6-astra` | `python scripts/check-docs.py` → 0; `git diff --check` → 0 |
+| 2026-09-24 | T-104 | `impedida` → `testes`: usuário autorizou contrato/YAML e pediu agentes menores em paralelo; contrato criado, R-01/R-04 reservados; dois executores mini com arquivos disjuntos | Orquestrador OpenCode / `openai/gpt-6-astra` | Contrato T-104; `opencode models openai` → 0; `opencode auth list` → 0; Orca run `run_8d21709c445e` |
+| 2026-09-24 | T-104 | Mini recusado pela conta ChatGPT antes de editar; tentativas encerradas. Troca operacional para Terra, com chamada real validada; sem mudança de escopo | Orquestrador | Ficha T-104; `opencode run --model openai/gpt-5.6-terra` → 0 |
+| 2026-09-24 | T-104 | Revisão parcial documental: diff conferido, correções pontuais solicitadas ao mesmo executor; runner continua em testes | Orquestrador | `git diff -- docs/PROJECT.md docs/entrega-1/ROADMAP.md docs/entrega-1/BACKLOG.md docs/bootstrap/COMPATIBILIDADE.md` → 0; follow-up `ctx_31a4e17ba0ad` |
+| 2026-09-24 | T-104 | `testes` → `vermelho-revisado` → `implementação`: asserção deliberada falhou pelo motivo correto; reprodução independente e autorização para remoção. Revisão pediu isolamento de overrides dos mocks e provas pelas interfaces públicas | Orquestrador | `pnpm run test` → 1, 2 verdes e 1 falha deliberada; pergunta `msg_80134f1d9f5f` |
+| 2026-09-24 | T-104 | `implementação` → `revisão` → `implementação`: verde de 4 testes, typecheck, peers, frozen install e export confirmados pelo orquestrador; revisão pediu await em duas operações RNTL antes do PR | Orquestrador | Comandos e códigos na ficha; correção `ctx_f03dcfa62b39` |
+| 2026-09-24 | T-104 | `implementação` → `revisão`: awaits corrigidos, 4 testes/typecheck verdes e documentação revisada; R-01/R-04 liberados. Dependentes continuam aguardando merge | Orquestrador | `msg_40a1664bfbe9`; validações integradas na ficha |

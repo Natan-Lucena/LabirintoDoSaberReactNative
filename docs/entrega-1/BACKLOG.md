@@ -5,8 +5,10 @@
 > [DESIGN](DESIGN.md) e [API-TELAS](API-TELAS.md). O estado de cada tarefa **não**
 > fica aqui: fica no [TRACKING](TRACKING.md).
 >
-> Nada neste backlog está implementado. Caminhos de arquivo, scripts e rotas são
-> **previstos** e só se tornam fatos quando o bootstrap (T-101/T-102) os confirmar.
+> Este backlog descreve escopo e requisitos planejados; o estado factual de cada
+> item, incluindo as T-101 e T-102 concluídas, fica no [TRACKING](TRACKING.md).
+> Caminhos de arquivo, scripts e rotas são **previstos** até a tarefa correspondente
+> registrá-los como confirmados.
 
 ## 1. Convenções
 
@@ -177,9 +179,12 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Depende:** T-102. **Recurso:** R-01.
 - **Decisão (G-22):** Vitest 5 + `vitest-native` (motor `native`, plataforma Android) + RNTL 14.
   Versões e configuração validadas em [COMPATIBILIDADE](../bootstrap/COMPATIBILIDADE.md) §3, §5 (A-06, A-11 a A-15) e §7.
-- **Arquivos:** `vitest.config.mts`, `vitest.setup.ts`, `src/test-utils/` (render com wrapper
-  extensível, mocks de Nitro Modules/MMKV, SecureStore e Expo Router), `src/test-utils/__tests__/smoke.test.tsx`.
-  O provider de queries é acrescentado depois por T-304 (R-04, serial).
+- **Arquivos:** `package.json`, `pnpm-lock.yaml` e `pnpm-workspace.yaml` (R-01,
+  autorizados pelo [contrato da T-104](../contracts/t-104-runner-testes.md));
+  `vitest.config.mts`, `vitest.setup.ts`, `src/test-utils/` (render com wrapper
+  extensível, mocks de Nitro Modules/MMKV, SecureStore e Expo Router),
+  `src/test-utils/__tests__/smoke.test.tsx`. O provider de queries é acrescentado
+  depois por T-304 (R-04, serial).
 - **Requisitos:** `transform` para pacotes com JSX sem compilar (A-12); mock de Nitro (A-13);
   `await render` (A-14); imports explícitos de `vitest` (A-06).
 - **Aceite:**
