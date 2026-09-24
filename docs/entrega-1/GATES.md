@@ -65,6 +65,10 @@ fica em [Decisões registradas](#decisões-registradas). Nos gates resolvidos, a
 | G-19 | Ambiente de backend e dados de teste | Usuário |  **Resolvido** — T-1001, T-1003 (e testes manuais contra API) | Não usar produção com dados reais de crianças para testes. Homologação não tem URL informada; `localhost` do computador não é o do aparelho. Fornecer ambiente e conta de teste, ou autorizar explicitamente outro arranjo. |
 | G-20 | Observabilidade (Sentry) | Usuário |  **Resolvido** — T-109 | Stack prevê Sentry; falta projeto/DSN e política de dados (sem PII de crianças em eventos). Não bloqueia as telas, mas T-109 faz parte da entrega: adiá-la exige decisão de redução de escopo (regra 5). |
 | G-21 | Política temporal e de abandono da sessão | Usuário |  **Resolvido** — T-803; conclusão de AC-801-04 e AC-802-05 | Nada aprovado. Proposta: cronômetros da atividade e total pausam em segundo plano e com o app fechado, e voltam a contar na retomada; sair do player (voltar do Android, após confirmação) mantém a sessão local para retomada, sem chamar `finish`; ao reabrir o app, oferecer "Retomar" e "Encerrar agora" (que executa o encerramento de T-804 com as respostas já confirmadas); sem expiração automática no cliente; descartar localmente só com confirmação e sem apagar nada no servidor. |
+| G-22 | Runner de testes | Usuário |  **Resolvido** — T-104 | Vitest no lugar do Jest (pedido do usuário). |
+| G-23 | Versão do TypeScript | Usuário |  **Resolvido** — T-102 | TypeScript 6 do SDK 57. |
+| G-24 | Escopo de instalação na T-102 | Usuário |  **Resolvido** — T-102 | Só o que a Entrega 1 usa. |
+| G-25 | Local do repositório | Usuário |  **Resolvido** — T-102 | Fora do OneDrive, em caminho curto. |
 
 ## Decisões registradas
 
@@ -90,6 +94,10 @@ Decididas pelo usuário em 2026-09-24, em resposta às perguntas da sessão Clau
 | G-18 | Login, formulário de agendamento, confirmação e folha de observação são **montados com os primitivos e tokens**; aceite visual pelo usuário ao ver no app. | Aceite visual feito com o app rodando. |
 | G-19 | **Backend local** na máquina de desenvolvimento, com dados fictícios. | App acessa pelo IP da rede ou `10.0.2.2`; HTTP só no perfil dev (T-106). Nenhum dado real de criança. |
 | G-20 | **Adiar Sentry: redução de escopo.** | T-109 cancelada; sai da homologação. |
+| G-22 | **Vitest** no lugar do Jest (pedido do usuário durante a T-101). Validado no spike: Vitest 5 + `vitest-native` + RNTL 14, 4 testes com React Native real, código 0. | PROJECT §3 atualizado; T-104 reescrita; Jest fica documentado como plano B (COMPATIBILIDADE A-11). |
+| G-23 | **TypeScript 6** (fixado pelo template do Expo SDK 57), no lugar do "5.x" do PROJECT. | PROJECT §3 atualizado; ajustes A-05 e A-06. |
+| G-24 | A T-102 instala **só as bibliotecas usadas na Entrega 1**; as demais da stack entram com a funcionalidade, nas versões já validadas. | T-102 R5. |
+| G-25 | **Mover o repositório para fora do OneDrive**, em caminho curto, antes da T-102 (ação do usuário). | Evita sincronizar `node_modules` e o limite de 260 caracteres (A-07). |
 | G-21 | Proposta aprovada: cronômetros pausam em segundo plano e com o app fechado; sair pelo voltar (com confirmação) guarda a sessão sem `finish`; ao reabrir, "Retomar" ou "Encerrar agora"; sem expiração automática; descartar localmente só com confirmação. | AC-801-04, AC-802-05, AC-803-04. |
 
 ## Não objetivos propostos (precisam de confirmação, não bloqueiam)
@@ -137,3 +145,6 @@ Decididas pelo usuário em 2026-09-24, em resposta às perguntas da sessão Clau
 - 2026-09-24: protótipo conferido no fonte da versão Offline ([DESIGN §7](DESIGN.md#7-verificação-contra-o-protótipo-2026-09-24)).
   Todas as dúvidas se confirmaram. Decisões do usuário a partir disso: G-09 revisto
   ("Em breve"); G-11 e G-12 complementados; conflitos C-15 a C-17 registrados.
+- 2026-09-24: durante a T-101, o usuário decidiu G-22 (Vitest), G-23 (TypeScript 6),
+  G-24 (instalar só o usado na Entrega 1) e G-25 (repositório fora do OneDrive).
+  Também pediu que build nativo e emulador só rodem com autorização dele no momento.

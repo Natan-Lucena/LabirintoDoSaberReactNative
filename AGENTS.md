@@ -23,7 +23,9 @@ documentadas não equivalem a recursos implementados.
   não reabra escolhas documentadas sem evidência ou pedido do usuário. Decisões de
   2026-09-24 (detalhes em `docs/entrega-1/GATES.md`): **pnpm**; development build
   Expo para Android e iOS via EAS (não Expo Go); backend **local** com dados fictícios
-  nos testes; fuso fixo `America/Sao_Paulo`.
+  nos testes; fuso fixo `America/Sao_Paulo`; **Expo SDK 57, TypeScript 6 e Vitest**
+  (versões validadas em `docs/bootstrap/COMPATIBILIDADE.md`, que é a referência de
+  versões da T-102 em diante).
 - O backend é externo a este repositório. Sua referência fornecida descreve o
   contrato de integração; não alegue validação contra seu código ou produção sem
   evidência. Preserve métodos, caminhos, formatos e erros, inclusive peculiaridades.
@@ -364,6 +366,9 @@ copy factual, regras de negócio ou testes para mascarar falhas.
   não copie sintaxe Bash como se fosse compatível.
 - Use o gerenciador indicado pelo lockfile e scripts reais do projeto. Se ainda
   não existirem, sua escolha faz parte do refino do bootstrap.
+- **Build nativo e emulador só com autorização do usuário no momento.** Ele libera
+  a máquina (só o Android Studio aberto) antes. Sem essa autorização, avance no que não
+  exige compilação nativa e registre a pendência.
 - Antes de subir um servidor, confira portas e processos. Registre PID e comando;
   ao encerrar, verifique processos filhos e não mate processos de outro projeto.
 - Confirme que o runtime observado corresponde a este repositório. Em conexões
