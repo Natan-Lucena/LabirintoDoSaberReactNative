@@ -12,7 +12,7 @@
 | # | Ação | Responsável | Condição de conclusão |
 |---|---|---|---|
 | 1 | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07; P4 opcional) | Usuário ou orquestrador | Data de envio registrada lá e no histórico (§7). **G-06 está no caminho crítico** (tela 05, onda 9) |
-| 2 | Dispatch de T-101 (spike de compatibilidade, pnpm, `Intl`/fuso no Hermes) | Orquestrador → líder (classe C) | Linha de T-101 em `implementação` com dispatch registrado; ficha aberta em §4.1 |
+| 2 | Aceitar a T-101 (revisão da COMPATIBILIDADE) e mover o repositório para fora do OneDrive (G-25) antes da T-102 | Usuário | Linha de T-101 em `implementação` com dispatch registrado; ficha aberta em §4.1 |
 | 3 | Providenciar conta Apple Developer e aparelho iOS para o dev build EAS (G-01) | Usuário | Disponíveis antes de T-108 (onda 3); senão, AC-108-02 vira pendência registrada |
 | 4 | Deixar o backend local rodando com dados fictícios e acessível pela rede (G-19) | Usuário | Necessário a partir de T-401 (onda 9) para testes manuais; testes UT/CT usam mock |
 
@@ -51,7 +51,7 @@ motivo no histórico; nunca se cria outro ID para a mesma entrega.
 ## 2. Gates
 
 Detalhe em [GATES](GATES.md#tabela-de-gates) e decisões completas em
-[GATES — Decisões registradas](GATES.md#decisões-registradas). Em 2026-09-24: 18
+[GATES — Decisões registradas](GATES.md#decisões-registradas). Em 2026-09-24: 22
 resolvidos; **abertos G-05, G-06 e G-07** (backend).
 
 | Gate | Assunto | Decide | Estado | Decisão registrada | Decisor / data | Evidência |
@@ -77,6 +77,10 @@ resolvidos; **abertos G-05, G-06 e G-07** (backend).
 | G-19 | Ambiente e dados de teste | Usuário | **resolvido** | Backend local com dados fictícios | Usuário / 2026-09-24 | Conversa Claude Code; GATES § Decisões registradas |
 | G-20 | Sentry | Usuário | **resolvido** | Adiar: redução de escopo; T-109 cancelada | Usuário / 2026-09-24 | Conversa Claude Code; GATES § Decisões registradas |
 | G-21 | Política temporal e de abandono | Usuário | **resolvido** | Proposta aprovada: pausa em 2º plano; sair guarda a sessão; reabrir oferece Retomar/Encerrar agora | Usuário / 2026-09-24 | Conversa Claude Code; GATES § Decisões registradas |
+| G-22 | Runner de testes | Usuário | **resolvido** | Vitest + `vitest-native` + RNTL, no lugar do Jest | Usuário / 2026-09-24 | Pedido na conversa; COMPATIBILIDADE §4 |
+| G-23 | Versão do TypeScript | Usuário | **resolvido** | TypeScript 6 do SDK 57 | Usuário / 2026-09-24 | Conversa; COMPATIBILIDADE §3 |
+| G-24 | Escopo de instalação | Usuário | **resolvido** | Só o usado na Entrega 1 | Usuário / 2026-09-24 | Conversa |
+| G-25 | Local do repositório | Usuário | **resolvido** | Fora do OneDrive, caminho curto, antes da T-102 (ação do usuário) | Usuário / 2026-09-24 | Conversa; COMPATIBILIDADE A-07 |
 
 ## 3. Recursos compartilhados
 
@@ -88,7 +92,7 @@ registrado aqui (pelo escritor do tracking) antes da edição e liberado na revi
 | R-01 | `package.json`, `pnpm-lock.yaml`, `.npmrc` | T-102; depois, por pedido | livre (arquivos não existem) |
 | R-02 | `app.json` / `app.config.ts`, `eas.json` | T-102 → T-106 → T-108 | livre |
 | R-03 | `babel.config.js`, `metro.config.js`, `tailwind.config.js`, `global.css` | T-102, depois T-201 | livre |
-| R-04 | `jest.config.*`, `jest.setup.ts`, `src/test-utils/` | T-104; `src/test-utils/render.tsx` depois T-304 (serial) | livre |
+| R-04 | `vitest.config.mts`, `vitest.setup.ts`, `src/test-utils/` | T-104; `src/test-utils/render.tsx` depois T-304 (serial) | livre |
 | R-05 | `README.md` | T-107, depois T-1003 | livre |
 | R-06 | `app/_layout.tsx` | T-102 (mínimo) → **T-502 (dono da integração)** → T-803 (serial, só para montar o prompt de retomada) | livre |
 | R-07 | `app/(tabs)/_layout.tsx` | T-501 | livre |
@@ -109,10 +113,10 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 
 | ID | Título | Onda | Estado | Motivo | Responsável (papel/modelo confirmado) | Run / task / dispatch | Evidências | Atualizado |
 |---|---|---|---|---|---|---|---|---|
-| T-101 | Spike de compatibilidade | 1 | pronta | Dependências e gates atendidos; aguarda dispatch | — | — | — | 2026-09-24 |
+| T-101 | Spike de compatibilidade | 1 | revisão | Aguarda aceite do usuário; runtime Hermes movido para AC-108-03 | Líder classe C · Claude Code · `claude-opus-5-5` · esforço alto | Execução direta, sem Orca (pedido do usuário na sessão) | `docs/bootstrap/COMPATIBILIDADE.md` §4 | 2026-09-24 |
 | T-102 | Criar projeto Expo | 2 | aguardando | T-101 | — | — | — | 2026-09-24 |
 | T-103 | Qualidade de código | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
-| T-104 | Runner Jest/RNTL | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
+| T-104 | Runner Vitest/RNTL | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
 | T-105 | Runner Maestro | 4 | aguardando | T-102, T-108 | — | — | — | 2026-09-24 |
 | T-106 | Configuração de ambiente | 4 | aguardando | T-102, T-104 | — | — | — | 2026-09-24 |
 | T-107 | Documentar comandos | 5 | aguardando | T-103, T-104, T-106 | — | — | — | 2026-09-24 |
@@ -164,7 +168,18 @@ estar bloqueada ([GATES, regra 5](GATES.md#regras)).
 ### 4.1 Fichas de execução
 
 Ao sair de `aguardando`/`bloqueada` para `pronta`, a tarefa ganha uma ficha aqui,
-mantida até a conclusão. Nenhuma ficha aberta em 2026-09-24.
+mantida até a conclusão.
+
+#### T-101 — Spike de compatibilidade da stack
+- Estado / etapa do fluxo: revisão (checagem objetiva no lugar de testes: spike documental)
+- Responsável: líder classe C · Claude Code · `claude-opus-5-5` · esforço alto
+- Orca: não usado; execução direta a pedido do usuário
+- Arquivos entregues: `docs/bootstrap/COMPATIBILIDADE.md`; PROJECT §3, AGENTS §1/§7, BACKLOG (T-102, T-104, T-108), GATES e este TRACKING atualizados com as decisões G-22 a G-25
+- Recursos reservados (§3): nenhum
+- Evidências: COMPATIBILIDADE §4 — `pnpm create expo-app` 0; `expo install` 0; `pnpm peers check` 0; `expo-doctor` 21/21 0; `typecheck` 0; `vitest run` 4/4 0; `expo export --platform android` 0; `expo prebuild --platform android` 0; `gradlew assembleRelease` **1** (A-08, não repetido por pedido do usuário). Plataforma: Windows 11, sem execução em emulador
+- Limitações: `Intl`/MMKV/SecureStore em runtime Hermes não verificados; viraram AC-108-03. Projetos descartáveis apagados
+- Bloqueio atual: nenhum; a conclusão depende do aceite do usuário
+- Próximo passo concreto: usuário revisa a COMPATIBILIDADE e aceita a T-101; mover o repositório para fora do OneDrive (G-25); então T-102
 
 ```markdown
 #### T-NNN — <título>
@@ -254,3 +269,5 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | Todos | Revisão corretiva do orquestrador (Orca `msg_3462ead39480`, `msg_f6414a044ad2`) aplicada: dependências T-106/T-305/T-402 corrigidas; T-502 criada como dona da integração do root; edições seriais R-04, R-06, R-10–R-13 declaradas; G-16 resolvido (sem "Continuar sessão"); G-21 criado; reconciliação de `start`/`finish`/`observation`/agendamentos especificada; isolamento entre educadores (G-04); `react-native-calendars` mantido; critérios de busca e preservação em T-703; escopo de T-404/T-109 não é reduzido por gate; próximo passo global e ficha por tarefa | Claude Code / claude-opus-5-5, execução direta a pedido do usuário (exceção ao fluxo Orca: o dispatch `ctx_c7dec7851dc4` parou por limite de uso) | §6; scripts de verificação |
 | 2026-09-24 | Gates | Usuário decidiu G-01–G-04, G-08–G-15, G-17–G-21 (G-16 já resolvido). G-20 = redução de escopo: T-109 `cancelada`. T-101 → `pronta`. Só G-05, G-06, G-07 abertos; perguntas redigidas em PERGUNTAS-BACKEND. BACKLOG, ROADMAP, DESIGN e AGENTS atualizados com as decisões | Claude Code / claude-opus-5-5 (execução direta a pedido do usuário) | GATES § Decisões registradas; §6 |
 | 2026-09-24 | Design | Protótipo conferido no fonte da versão Offline local (DESIGN §7): todas as dúvidas confirmadas. Usuário reviu G-09 ("Em breve"; AC-702-04 removido; T-905 deixa de depender de T-702) e complementou G-11 ("Atividades Recentes" no estado 03; `ContentCard` passa para T-602, T-703 depende de T-602) e G-12 (status e `color.success`). Conflitos C-15 a C-17 | Claude Code / claude-opus-5-5 | DESIGN §7; GATES histórico |
+| 2026-09-24 | T-101 | `pronta` → `implementação`; execução direta por Claude Code / claude-opus-5-5 a pedido do usuário, sem dispatch Orca | Claude Code / claude-opus-5-5 | Ficha §4.1 |
+| 2026-09-24 | T-101 | `implementação` → `revisão`. Spike concluído com evidências (COMPATIBILIDADE §4). Usuário decidiu G-22 (Vitest), G-23 (TS 6), G-24 e G-25 e pediu build nativo só com autorização dele; runtime Hermes movido para AC-108-03 | Claude Code / claude-opus-5-5 | `docs/bootstrap/COMPATIBILIDADE.md` |

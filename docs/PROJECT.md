@@ -97,7 +97,7 @@ documento registra a primeira, não afirma a segunda.
 
 | Camada | Tecnologia | Motivo |
 |---|---|---|
-| Linguagem | TypeScript 5.x em modo `strict` | Alinhamento com o backend e prevenção de erros em telas ricas em dados |
+| Linguagem | TypeScript 6.x em modo `strict` (versão fixada pelo Expo SDK 57; decisão de 2026-09-24, ver `docs/bootstrap/COMPATIBILIDADE.md`) | Alinhamento com o backend e prevenção de erros em telas ricas em dados |
 | Plataforma | React Native com Expo (managed workflow) | Build, atualização e acesso a APIs nativas sem manter código nativo Android/iOS à mão (toolchain pode ser necessário) |
 | Navegação | Expo Router sobre React Navigation | Roteamento por arquivos, deep links e parâmetros tipados |
 | Estado de servidor | TanStack Query | Cache, revalidação, retry e estados de loading/erro padronizados |
@@ -114,7 +114,7 @@ documento registra a primeira, não afirma a segunda.
 | Notificações | expo-notifications | Lembrete local primeiro; push via backend é fase posterior |
 | Calendário | react-native-calendars | Equivalente móvel do `MiniCalendar` da web |
 | Observabilidade | Sentry para React Native | Captura de exceções e sessões travadas em aparelhos reais |
-| Testes | Jest + React Native Testing Library + Maestro | Unidade, componentes e ponta a ponta |
+| Testes | Vitest (com `vitest-native`) + React Native Testing Library + Maestro (decisão do usuário em 2026-09-24, substitui o Jest) | Unidade, componentes e ponta a ponta |
 | Qualidade | ESLint, Prettier, Husky, lint-staged | Padrão de código garantido antes de cada commit |
 | Distribuição | EAS Build, EAS Submit, EAS Update | Build em nuvem, publicação nas lojas e atualizações OTA |
 

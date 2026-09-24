@@ -13,8 +13,8 @@
 - **IDs estáveis.** `US-NN` para histórias, `T-NNN` para tarefas (centena = épico),
   `AC-NNN-NN` para critérios de aceite da tarefa, `G-NN` para gates. IDs não são
   reutilizados; tarefa removida fica marcada como cancelada no TRACKING.
-- **Tipos de verificação.** `UT` unidade (Jest), `CT` componente (React Native
-  Testing Library), `E2E` (Maestro), `CMD` comando com código de saída, `MAN`
+- **Tipos de verificação.** `UT` unidade (Vitest), `CT` componente (React Native
+  Testing Library sobre Vitest com `vitest-native`), `E2E` (Maestro), `CMD` comando com código de saída, `MAN`
   observação manual em emulador/aparelho registrada com plataforma e alvo, `REV`
   revisão de diff/documento pelo líder.
 - **`<pm>`** é `pnpm` (G-02, decidido em 2026-09-24). Mantido como marcador para
@@ -124,7 +124,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 #### T-101 — Spike de compatibilidade da stack
 - **Propósito:** confirmar versões compatíveis de Expo SDK, Expo Router, React Native,
   NativeWind, react-native-mmkv (criptografia), Reanimated, Gesture Handler,
-  FlashList, SecureStore, TanStack Query, Jest/RNTL, e a necessidade de development
+  FlashList, SecureStore, TanStack Query, o runner de testes com RNTL, e a necessidade de development
   build (PROJECT: não prometer Expo Go).
 - **Depende:** G-02.
 - **Arquivos:** `docs/bootstrap/COMPATIBILIDADE.md` (novo). Qualquer experimento
@@ -144,18 +144,25 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Parada:** conflito de versão sem solução documentada → escalar antes de T-102.
 
 #### T-102 — Criar projeto Expo com TypeScript strict e Expo Router
-- **Depende:** T-101.
-- **Arquivos:** `package.json`, `pnpm-lock.yaml`, `.npmrc` (se T-101 exigir), `tsconfig.json`, `app.json` ou `app.config.ts`,
-  `babel.config.js`, `metro.config.js`, `app/_layout.tsx` (mínimo), `app/index.tsx`
-  (mínimo), `.gitignore`, `src/` (estrutura vazia do PROJECT §4 com `.gitkeep`).
+- **Depende:** T-101. **Pré-requisito do usuário (G-25):** repositório movido para fora do
+  OneDrive, em caminho curto (sugestão: `C:\dev\labirintoDoSaberMobile`).
+- **Fonte obrigatória:** [COMPATIBILIDADE](../bootstrap/COMPATIBILIDADE.md) §3, §5 e §7 (versões, achados A-01 a A-10 e comandos validados).
+- **Arquivos:** `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` (`allowBuilds`), `tsconfig.json`,
+  `app.json` ou `app.config.ts`, `babel.config.js`, `metro.config.js`, `app/_layout.tsx` (mínimo),
+  `app/index.tsx` (mínimo), `.gitignore`, `src/` (estrutura vazia do PROJECT §4 com `.gitkeep`).
 - **Requisitos:** R1 `strict: true`; R2 alias de import `@/` para `src/`; R3 scripts
-  `start`, `android`, `ios`, `typecheck`; R4 estrutura de pastas do PROJECT §4;
-  R5 instala as bibliotecas de runtime da stack (PROJECT §3) nas versões fixadas por
-  T-101, sob a autorização de G-02. Dependências extras dependem de G-03.
+  `start`, `android`, `ios`, `typecheck`; R4 estrutura de pastas do PROJECT §4, com as rotas
+  em `app/` na raiz (A-09); R5 instala **só as bibliotecas de runtime usadas na Entrega 1**
+  (G-24), nas versões da COMPATIBILIDADE §3, e remove do template o que não é usado;
+  R6 dependências diretas exigidas pelo pnpm isolado: `react-native-nitro-modules`,
+  `react-native-css-interop@0.2.7` e `babel-preset-expo` (A-02 a A-04); R7 `allowBuilds`
+  explícito (A-01); R8 `typecheck` funciona sem `expo start` (A-05).
 - **Aceite:**
   - AC-102-01 `<pm> run typecheck` termina com código 0. — `CMD`
   - AC-102-02 o bundler inicia sem erro e a rota inicial renderiza em emulador Android (ou web só como fumaça, registrado como tal). — `CMD` + `MAN`
   - AC-102-03 nenhum segredo em `app.config`/variáveis públicas. — `REV`
+  - AC-102-04 `npx expo-doctor` e `pnpm peers check` terminam com código 0. — `CMD`
+  - AC-102-05 `npx expo export --platform android` termina com código 0 (bundle Hermes). — `CMD`
 - **Classe/esforço:** B, médio. **Parada:** comando de criação divergente do T-101.
 
 #### T-103 — Qualidade de código
@@ -166,13 +173,17 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
   - AC-103-02 hook de pre-commit roda lint-staged em arquivo alterado (testado com commit em repositório temporário, **não** neste). — `CMD`
 - **Classe/esforço:** A/B, baixo.
 
-#### T-104 — Runner de testes unitários e de componente
+#### T-104 — Runner de testes unitários e de componente (Vitest)
 - **Depende:** T-102. **Recurso:** R-01.
-- **Arquivos:** `jest.config.*`, `jest.setup.ts`, `src/test-utils/` (render com wrapper
-  extensível, mocks de SecureStore, MMKV e Expo Router), `src/test-utils/__tests__/smoke.test.tsx`.
+- **Decisão (G-22):** Vitest 5 + `vitest-native` (motor `native`, plataforma Android) + RNTL 14.
+  Versões e configuração validadas em [COMPATIBILIDADE](../bootstrap/COMPATIBILIDADE.md) §3, §5 (A-06, A-11 a A-15) e §7.
+- **Arquivos:** `vitest.config.mts`, `vitest.setup.ts`, `src/test-utils/` (render com wrapper
+  extensível, mocks de Nitro Modules/MMKV, SecureStore e Expo Router), `src/test-utils/__tests__/smoke.test.tsx`.
   O provider de queries é acrescentado depois por T-304 (R-04, serial).
+- **Requisitos:** `transform` para pacotes com JSX sem compilar (A-12); mock de Nitro (A-13);
+  `await render` (A-14); imports explícitos de `vitest` (A-06).
 - **Aceite:**
-  - AC-104-01 teste fumaça de componente passa com `<pm> run test`. — `CMD`
+  - AC-104-01 teste fumaça de componente passa com `<pm> run test` (`vitest run`). — `CMD`
   - AC-104-02 um teste deliberadamente falho é detectado (código ≠ 0) e depois removido. — `CMD`
   - AC-104-03 mocks nativos documentados para as próximas tarefas. — `REV`
 - **Classe/esforço:** B, médio.
@@ -218,6 +229,9 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Aceite:**
   - AC-108-01 dev build Android instalado e aberto no emulador e no aparelho, com versão do SO e modelo registrados. — `CMD` + `MAN`
   - AC-108-02 dev build iOS gerado pelo EAS, instalado e aberto em aparelho iOS, com versão do SO e modelo registrados. — `CMD` + `MAN`
+  - AC-108-03 no Hermes do aparelho, a verificação do [COMPATIBILIDADE](../bootstrap/COMPATIBILIDADE.md) (Apêndice A) confirma: `Intl` pt-BR com `timeZone: 'America/Sao_Paulo'` ("quinta-feira, 02 de abril de 2026", "23:30", `2026-04-02`), MMKV AES-256 com `isEncrypted === true` e SecureStore gravando e lendo. Se o `Intl` falhar, a T-306 passa a usar a lib de datas autorizada em G-03. — `MAN`
+- **Execução:** só quando o usuário autorizar o build (ele libera a máquina). Achado A-08
+  (falha `ExtractAarTransform` no spike) deve ser reinvestigado aqui.
 - **Classe/esforço:** B, médio. **Parada:** sem conta Apple Developer ou aparelho iOS → registrar pendência de AC-108-02 e escalar; não simular.
 
 #### T-109 — Observabilidade (Sentry) — **cancelada**
