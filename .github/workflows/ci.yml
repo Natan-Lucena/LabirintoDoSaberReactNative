@@ -47,8 +47,8 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         if: steps.detect.outputs.has_app == 'true'
+        # A versão vem de "packageManager" no package.json (fonte única).
         with:
-          version: 11
           cache: true
 
       - uses: actions/setup-node@v7
