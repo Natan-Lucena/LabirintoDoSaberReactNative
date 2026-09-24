@@ -9,12 +9,24 @@ específicas de subdiretórios complementam estas regras no respectivo escopo.
 
 ## 1. Contexto real do projeto
 
-O projeto é identificado no README como `LabirintoDoSaberReactNative` e tem como
-direção uma aplicação mobile React Native. Na criação deste documento, a base
-continha somente o README, sem aplicação, manifesto de dependências ou testes.
+O projeto é identificado no README como `LabirintoDoSaberReactNative`. Sua arquitetura
+mobile está definida em [Documentação do projeto](docs/PROJECT.md), que reúne a
+arquitetura React Native + TypeScript e a referência global da API fornecida pelo
+usuário. **Leia esse documento antes de planejar ou implementar funcionalidades.**
+A base ainda não contém aplicação, manifesto de dependências ou testes: decisões
+documentadas não equivalem a recursos implementados.
 
-- Não presuma Expo, React Native CLI, TypeScript, navegação, backend, banco,
-  gerenciador de pacotes ou biblioteca de testes: confirme no discovery.
+- A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
+  Zustand, Axios, React Hook Form/Zod, NativeWind, SecureStore e MMKV. Consulte a
+  lista completa no documento; confirme versões e compatibilidade no bootstrap.
+- Confirme gerenciador de pacotes, scripts e configuração instalada no discovery;
+  não reabra escolhas documentadas sem evidência ou pedido do usuário.
+- O backend é externo a este repositório. Sua referência fornecida descreve o
+  contrato de integração; não alegue validação contra seu código ou produção sem
+  evidência. Preserve métodos, caminhos, formatos e erros, inclusive peculiaridades.
+- Necessidades novas de API são dependências explícitas a negociar. Não invente
+  endpoints ou campos para acomodar o cliente; consulte as pendências de integração
+  do documento antes de implementar sessão, reenvio ou recuperação de senha.
 - Ainda não existem comandos de instalação, execução, build ou teste comprovados.
   Depois do bootstrap, documente os comandos reais no README e atualize esta seção.
 - A branch atual observada era `main`, com remoto `origin` configurado. Confira o
