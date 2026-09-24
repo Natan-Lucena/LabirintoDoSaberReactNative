@@ -43,14 +43,22 @@
     "zustand": "5.0.15"
   },
   "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@react-native/babel-preset": "0.86.3",
+    "@testing-library/react-native": "14.0.1",
     "@types/react": "~19.2.2",
     "babel-preset-expo": "^57.0.13",
-    "typescript": "~6.0.3"
+    "test-renderer": "~1.2.0",
+    "typescript": "~6.0.3",
+    "vite": "8.3.0",
+    "vitest": "5.0.1",
+    "vitest-native": "0.13.0"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "private": true,

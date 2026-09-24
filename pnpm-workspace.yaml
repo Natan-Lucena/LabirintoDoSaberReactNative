@@ -9,3 +9,6 @@ minimumReleaseAgeExclude:
   - expo-modules-jsi@57.1.1
   - expo-router@57.0.23
   - expo@57.0.25
+allowBuilds:
+  '@parcel/watcher': false
+  unrs-resolver: false

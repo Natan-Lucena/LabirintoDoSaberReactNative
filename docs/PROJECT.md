@@ -66,9 +66,11 @@ Os recursos expostos pelo backend, na forma de prefixos de rota, são:
 - `/appointment`
 - `/ai-task`
 
-**Status local no momento deste documento:** a arquitetura está definida e
-aprovada pelo usuário; a aplicação mobile **ainda não foi iniciada** — não há
-código, dependências instaladas nem build configurado neste repositório.
+**Status local (2026-09-24):** T-101 validou a compatibilidade e a T-102 criou
+o projeto Expo SDK 57 com o manifesto, dependências da Entrega 1 e rotas mínimas
+de bootstrap. As telas de produto ainda não foram implementadas; runner de testes,
+lint e development builds seguem nas T-104, T-103 e T-108, respectivamente (ver
+[TRACKING](entrega-1/TRACKING.md#0-próximo-passo-global)).
 
 ## 2. Visão de produto
 
@@ -91,9 +93,10 @@ profissional ao lado da criança durante o atendimento. A proposta de produto é
 ## 3. Stack técnica
 
 Todas as tecnologias abaixo são **decisões já tomadas pelo usuário para a
-arquitetura**, mas **nenhuma delas está instalada ainda** neste repositório.
-Decisão de stack e instalação de dependências são coisas distintas: este
-documento registra a primeira, não afirma a segunda.
+arquitetura**. As versões validadas no spike e usadas no bootstrap estão em
+[COMPATIBILIDADE §3](bootstrap/COMPATIBILIDADE.md#3-versões-validadas); o
+manifesto instalado está em [`package.json`](../package.json). Validação em
+runtime Hermes e development builds continuam pendentes da T-108.
 
 | Camada | Tecnologia | Motivo |
 |---|---|---|
@@ -245,11 +248,12 @@ Parte II).
 - **Biometria é opcional** ao abrir o app, dado que o app lida com dados
   sensíveis de crianças.
 - **Requisito, não propriedade automática:** nenhum dado clínico deve ser
-  gravado em texto puro fora do cache MMKV criptografado. Isto precisa ser
-  garantido ativamente pela implementação — o MMKV não criptografa por padrão
-  apenas por ser usado. A chave de criptografia e o ciclo de limpeza do cache
-  **ainda precisam ser definidos** no contrato de implementação (fase de
-  bootstrap), e não estão decididos por este documento.
+  gravado em texto puro fora do cache MMKV criptografado. A política já foi
+  decidida em [G-04](entrega-1/GATES.md#decisões-registradas): chave aleatória
+  no SecureStore; logout limpa token e cache (sessão ativa só após confirmação);
+  401 preserva a sessão criptografada do mesmo educador; entrada de outro
+  educador apaga os dados persistidos anteriores. A implementação e a validação
+  dessa política continuam pendentes da T-303.
 - A base URL da API é configurada por variável de ambiente Expo, com valores
   distintos para desenvolvimento, homologação e produção.
 - **Não incluir segredos em variáveis públicas do Expo** (variáveis com prefixo
@@ -279,9 +283,11 @@ comportamento documentado do backend.
 - O reenvio/retomada de sessão depende de reconciliar o estado por meio da
   **listagem de sessões do aluno** (`GET /task-notebook-session/student/:studentId`),
   pois **não há um endpoint de GET de sessão individual documentado**.
-- Compatibilidade de versões entre Expo, MMKV, NativeWind e demais bibliotecas,
-  bem como a necessidade de um development build (em vez de Expo Go), **serão
-  validadas apenas no bootstrap** da aplicação. Este documento não promete
+- A compatibilidade de versões entre Expo, MMKV, NativeWind e demais bibliotecas,
+  assim como a necessidade de development build em vez de Expo Go, foram validadas
+  na T-101 e aplicadas no bootstrap da T-102 (ver
+  [COMPATIBILIDADE](bootstrap/COMPATIBILIDADE.md)). A validação em runtime Hermes e
+  os development builds permanecem pendentes da T-108; este documento não promete
   suporte a Expo Go.
 
 ---
