@@ -115,7 +115,7 @@ Responsável e dispatch ficam vazios até o dispatch real; o papel previsto est�
 | ID | Título | Onda | Estado | Motivo | Responsável (papel/modelo confirmado) | Run / task / dispatch | Evidências | Atualizado |
 |---|---|---|---|---|---|---|---|---|
 | T-101 | Spike de compatibilidade | 1 | concluída | Aceite do usuário pelo merge do PR #2 (2026-09-24 11:25 UTC); runtime Hermes segue em AC-108-03 | Líder classe C · Claude Code · `claude-opus-5-5` · esforço alto | Execução direta, sem Orca (pedido do usuário na sessão) | `docs/bootstrap/COMPATIBILIDADE.md` §4 | 2026-09-24 |
-| T-102 | Criar projeto Expo | 2 | revisão | Aguarda CI do PR e aceite do usuário; AC-102-02 `MAN` pendente de build autorizado | Executor · Claude Code · `claude-opus-5-5` · esforço médio | Execução direta, sem Orca (pedido do usuário) | Ficha §4.1 | 2026-09-24 |
+| T-102 | Criar projeto Expo | 2 | revisão | CI verde no PR #3; aguarda aceite do usuário; AC-102-02 `MAN` pendente de build autorizado | Executor · Claude Code · `claude-opus-5-5` · esforço médio | Execução direta, sem Orca (pedido do usuário) | Ficha §4.1 | 2026-09-24 |
 | T-103 | Qualidade de código | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
 | T-104 | Runner Vitest/RNTL | 3 | aguardando | T-102 | — | — | — | 2026-09-24 |
 | T-105 | Runner Maestro | 4 | aguardando | T-102, T-108 | — | — | — | 2026-09-24 |
@@ -178,10 +178,10 @@ mantida até a conclusão.
 - Arquivos: `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `app.json`, `babel.config.js`, `metro.config.js`, `tailwind.config.js`, `global.css`, `nativewind-env.d.ts`, `app-env.d.ts`, `app/_layout.tsx`, `app/index.tsx`, `.gitignore`, `src/**/.gitkeep`, `assets/` (ícones e splash provisórios do template); `.github/workflows/ci.yml` (passo de testes com `--if-present`)
 - Recursos reservados (§3): R-01, R-02, R-03, R-06, R-14
 - Evidências (Windows 11, repositório no OneDrive): `pnpm install` 0; `npx expo install` (libs da Entrega 1) 0; `pnpm peers check` 0; `npx expo-doctor` 21/21 0; `pnpm run typecheck` 0 (com e sem `expo-env.d.ts`); `npx expo export --platform android` 0 (Hermes 3,8 MB); `npx expo start --port 8081` com `/status` = `packager-status:running` e bundle Android de desenvolvimento HTTP 200 contendo a rota inicial; Metro encerrado (PID 7872 e filho 23952)
-- AC: 102-01 ✓; 102-02 `CMD` ✓, `MAN` **pendente** (renderizar em emulador exige build nativo autorizado pelo usuário; verificar junto da T-108); 102-03 ✓ (nenhum segredo em `app.json`/configs); 102-04 ✓; 102-05 ✓; 102-06 depende do CI do PR
+- AC: 102-01 ✓; 102-02 `CMD` ✓, `MAN` **pendente** (renderizar em emulador exige build nativo autorizado pelo usuário; verificar junto da T-108); 102-03 ✓ (nenhum segredo em `app.json`/configs); 102-04 ✓; 102-05 ✓; 102-06 ✓ (CI run 35994354897: install, typecheck, testes `--if-present` e bundle Hermes executados; a 1ª tentativa falhou por versão do pnpm duplicada no workflow, corrigida)
 - Pendências registradas: ícones e splash provisórios do Expo (sem arte da marca); `android.package`/`ios.bundleIdentifier` a decidir na T-108; achados A-18 e A-19 na COMPATIBILIDADE
 - Bloqueio atual: nenhum
-- Próximo passo concreto: abrir o PR, conferir o job `app` do CI (AC-102-06) e pedir revisão ao usuário
+- Próximo passo concreto: revisão e merge do PR #3 pelo usuário; depois T-103, T-104 e T-106 (paralelizáveis após a T-102)
 
 #### T-101 — Spike de compatibilidade da stack (concluída)
 - Concluída em 2026-09-24: aceite do usuário pelo merge do PR #2; evidências em `docs/bootstrap/COMPATIBILIDADE.md` §4
@@ -282,3 +282,4 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | G-25 | Revisto pelo usuário: o repositório segue no OneDrive; risco de sincronização e de caminho aceito | Claude Code / claude-opus-5-5 | Conversa |
 | 2026-09-24 | T-102 | `aguardando` → `implementação` (checagem objetiva), execução direta | Claude Code / claude-opus-5-5 | Ficha §4.1 |
 | 2026-09-24 | T-102 | `implementação` → `revisão`: projeto Expo SDK 57 criado; checagens com código 0 (ficha §4.1); AC-102-02 `MAN` pendente de build; A-05 resolvido com `app-env.d.ts`; achados A-18 e A-19 | Claude Code / claude-opus-5-5 | Ficha §4.1 |
+| 2026-09-24 | T-102 | CI do PR #3 verde (run 35994354897); AC-102-06 atendido | Claude Code / claude-opus-5-5 | PR #3 |
