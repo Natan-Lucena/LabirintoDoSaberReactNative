@@ -163,6 +163,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
   - AC-102-03 nenhum segredo em `app.config`/variáveis públicas. — `REV`
   - AC-102-04 `npx expo-doctor` e `pnpm peers check` terminam com código 0. — `CMD`
   - AC-102-05 `npx expo export --platform android` termina com código 0 (bundle Hermes). — `CMD`
+  - AC-102-06 o job `app` do CI (`.github/workflows/ci.yml`) deixa de ser pulado e fica verde no PR da T-102: os scripts `typecheck` e `test` e o comando de bundle precisam ter os nomes que o workflow chama. — `CMD`
 - **Classe/esforço:** B, médio. **Parada:** comando de criação divergente do T-101.
 
 #### T-103 — Qualidade de código

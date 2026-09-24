@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: Documentação
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Espaços em branco (árvore inteira)
+        # 4b825dc6... é a árvore vazia do Git: compara todos os arquivos versionados.
+        run: git diff --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD
+
+      - name: Links e âncoras dos Markdown
+        run: python3 scripts/check-docs.py
+
+  app:
+    name: App (typecheck, testes e bundle Android)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # O app só existe a partir da T-102; até lá este job passa sem executar nada.
+      - name: Detectar app
+        id: detect
+        run: |
+          if [ -f package.json ]; then
+            echo "has_app=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_app=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Sem package.json (antes da T-102): etapas do app puladas."
+          fi
+
+      - uses: pnpm/action-setup@v6
+        if: steps.detect.outputs.has_app == 'true'
+        with:
+          version: 11
+          cache: true
+
+      - uses: actions/setup-node@v7
+        if: steps.detect.outputs.has_app == 'true'
+        with:
+          node-version: 22
+
+      - name: Instalar dependências
+        if: steps.detect.outputs.has_app == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        if: steps.detect.outputs.has_app == 'true'
+        run: pnpm run typecheck
+
+      - name: Testes (Vitest)
+        if: steps.detect.outputs.has_app == 'true'
+        run: pnpm test
+
+      - name: Bundle Android (JS/Hermes, sem build nativo)
+        if: steps.detect.outputs.has_app == 'true'
+        run: pnpm exec expo export --platform android --output-dir dist-android

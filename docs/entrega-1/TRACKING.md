@@ -102,6 +102,7 @@ registrado aqui (pelo escritor do tracking) antes da edição e liberado na revi
 | R-11 | `src/features/sessions/ContentStep.tsx` | T-703 → T-704 (serial: `start`) | livre |
 | R-12 | `src/features/sessions/PlayerScreen.tsx` | T-802 → T-803 (serial: pendências) → T-804 (serial: encerramento) | livre |
 | R-13 | `src/features/appointments/AgendaScreen.tsx` | T-903 → T-904 (serial: formulário) → T-905 (serial: excluir, Montar Plano) | livre |
+| R-14 | `.github/workflows/ci.yml`, `scripts/check-docs.py` | Criados na revisão da T-101; mudanças por pedido ao orquestrador | livre |
 
 A ordem "→" já é imposta pelas dependências do BACKLOG. Edições *(serial)* limitam-se ao
 wiring descrito na tarefa e precisam de teste de integração.
@@ -271,3 +272,4 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | Design | Protótipo conferido no fonte da versão Offline local (DESIGN §7): todas as dúvidas confirmadas. Usuário reviu G-09 ("Em breve"; AC-702-04 removido; T-905 deixa de depender de T-702) e complementou G-11 ("Atividades Recentes" no estado 03; `ContentCard` passa para T-602, T-703 depende de T-602) e G-12 (status e `color.success`). Conflitos C-15 a C-17 | Claude Code / claude-opus-5-5 | DESIGN §7; GATES histórico |
 | 2026-09-24 | T-101 | `pronta` → `implementação`; execução direta por Claude Code / claude-opus-5-5 a pedido do usuário, sem dispatch Orca | Claude Code / claude-opus-5-5 | Ficha §4.1 |
 | 2026-09-24 | T-101 | `implementação` → `revisão`. Spike concluído com evidências (COMPATIBILIDADE §4). Usuário decidiu G-22 (Vitest), G-23 (TS 6), G-24 e G-25 e pediu build nativo só com autorização dele; runtime Hermes movido para AC-108-03 | Claude Code / claude-opus-5-5 | `docs/bootstrap/COMPATIBILIDADE.md` |
+| 2026-09-24 | CI | A pedido do usuário, CI no GitHub Actions: job `docs` (espaços em branco e links/âncoras via `scripts/check-docs.py`) e job `app` (pnpm, typecheck, Vitest e bundle Android), pulado até existir `package.json` (T-102, AC-102-06). Build nativo fora do CI | Claude Code / claude-opus-5-5 | `.github/workflows/ci.yml` |
