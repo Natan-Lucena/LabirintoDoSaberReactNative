@@ -12,7 +12,7 @@ export type AuthState = {
   status: AuthStatus;
   token: string | null;
   educatorId: string | null;
-  login: (token: string) => Promise<void>;
+  login: (token: string, educatorId?: string) => Promise<void>;
   logout: () => Promise<void>;
   expireSession: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -40,9 +40,13 @@ export const useAuthStore = create<AuthState>(() => ({
   status: "idle",
   token: null,
   educatorId: null,
-  login: async (token: string) => {
+  login: async (token: string, educatorId?: string) => {
     await saveToken(token);
-    useAuthStore.setState({ status: "authenticated", token });
+    useAuthStore.setState({
+      status: "authenticated",
+      token,
+      educatorId: educatorId ?? null,
+    });
   },
   logout: async () => {
     await clearSession("logout");

@@ -1,7 +1,4 @@
-import {
-  type ConfigPlugin,
-  withAndroidManifest,
-} from "expo/config-plugins";
+import { type ConfigPlugin, withAndroidManifest } from "expo/config-plugins";
 import type { ConfigContext } from "expo/config";
 
 const developmentEnvironment = "development";
@@ -22,6 +19,10 @@ export default ({ config }: ConfigContext) => {
     process.env.EXPO_PUBLIC_APP_ENV ?? developmentEnvironment;
   const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
   const isDevelopment = appEnvironment === developmentEnvironment;
+  // G-29: propaga a flag de telas mockadas para src/config/env.ts
+  // (getRuntimeUseMocks). getUseMocks aplica o padrão por ambiente e
+  // rejeita "true" em produção.
+  const useMocks = process.env.EXPO_PUBLIC_USE_MOCKS ?? "";
 
   return {
     ...config,
@@ -29,6 +30,7 @@ export default ({ config }: ConfigContext) => {
       ...config.extra,
       appEnvironment,
       apiBaseUrl,
+      useMocks,
     },
     ios: {
       ...config.ios,

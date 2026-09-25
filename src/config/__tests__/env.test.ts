@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getApiBaseUrl } from "@/config/env";
+import { getApiBaseUrl, getUseMocks } from "@/config/env";
 
 describe("getApiBaseUrl", () => {
   it("accepts an HTTP backend URL in development", () => {
@@ -12,7 +12,7 @@ describe("getApiBaseUrl", () => {
     ).toBe("http://10.0.2.2:3000");
   });
 
-  it.each([undefined, "", "not-a-url", "ftp://api.example.com"]) (
+  it.each([undefined, "", "not-a-url", "ftp://api.example.com"])(
     "rejects a missing or invalid API URL: %s",
     (apiBaseUrl) => {
       expect(() =>
@@ -44,4 +44,41 @@ describe("getApiBaseUrl", () => {
       ).toBe("https://api.example.com");
     },
   );
+});
+
+describe("getUseMocks", () => {
+  it("defaults to true in development when unset", () => {
+    expect(getUseMocks({ environment: "development" })).toBe(true);
+  });
+
+  it.each(["homologation", "production"] as const)(
+    "defaults to false in %s when unset",
+    (environment) => {
+      expect(getUseMocks({ environment })).toBe(false);
+    },
+  );
+
+  it("honors an explicit true/false value outside production", () => {
+    expect(
+      getUseMocks({ environment: "development", useMocksRaw: "false" }),
+    ).toBe(false);
+    expect(
+      getUseMocks({ environment: "homologation", useMocksRaw: "true" }),
+    ).toBe(true);
+    expect(
+      getUseMocks({ environment: "homologation", useMocksRaw: "TRUE" }),
+    ).toBe(true);
+  });
+
+  it("rejects an invalid value", () => {
+    expect(() =>
+      getUseMocks({ environment: "development", useMocksRaw: "maybe" }),
+    ).toThrow(/EXPO_PUBLIC_USE_MOCKS/i);
+  });
+
+  it("rejects an explicit true in production", () => {
+    expect(() =>
+      getUseMocks({ environment: "production", useMocksRaw: "true" }),
+    ).toThrow(/not allowed in production/i);
+  });
 });

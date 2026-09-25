@@ -34,6 +34,19 @@ describe("auth store", () => {
     expect(useAuthStore.getState().educatorId).toBeNull();
   });
 
+  // T-401: login aceita educatorId opcional (após getMe), limpo no logout.
+  it("login com educatorId grava o educatorId no estado", async () => {
+    await useAuthStore.getState().login("token-abc", "edu-1");
+
+    expect(useAuthStore.getState().educatorId).toBe("edu-1");
+  });
+
+  it("login sem educatorId mantém educatorId nulo", async () => {
+    await useAuthStore.getState().login("token-abc");
+
+    expect(useAuthStore.getState().educatorId).toBeNull();
+  });
+
   it("logout notifica os assinantes do evento de limpeza com reason logout", async () => {
     const listener = vi.fn();
     const unsubscribe = subscribeAuthCleared(listener);

@@ -69,3 +69,46 @@ export function getRuntimeApiBaseUrl(): string {
       typeof extra?.apiBaseUrl === "string" ? extra.apiBaseUrl : undefined,
   });
 }
+
+export interface UseMocksInput {
+  environment: AppEnvironment;
+  useMocksRaw?: string;
+}
+
+/** G-29: telas mockadas. Padrão true em desenvolvimento, false fora dele. */
+export function getUseMocks({
+  environment,
+  useMocksRaw,
+}: UseMocksInput): boolean {
+  if (useMocksRaw === undefined || useMocksRaw.trim() === "") {
+    return environment === "development";
+  }
+
+  const normalized = useMocksRaw.trim().toLowerCase();
+
+  if (normalized === "true") {
+    if (environment === "production") {
+      throw new Error(
+        "EXPO_PUBLIC_USE_MOCKS=true is not allowed in production.",
+      );
+    }
+
+    return true;
+  }
+
+  if (normalized === "false") {
+    return false;
+  }
+
+  throw new Error("EXPO_PUBLIC_USE_MOCKS must be true or false.");
+}
+
+export function getRuntimeUseMocks(): boolean {
+  const extra = Constants.expoConfig?.extra;
+
+  return getUseMocks({
+    environment: getAppEnvironment(extra?.appEnvironment),
+    useMocksRaw:
+      typeof extra?.useMocks === "string" ? extra.useMocks : undefined,
+  });
+}

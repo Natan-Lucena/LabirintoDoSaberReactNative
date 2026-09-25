@@ -9,11 +9,13 @@ import { setTokenProvider } from "@/api/client";
 import { connectStorageToAuth } from "@/storage/mmkv";
 import { connectSessionExpiry } from "@/features/auth/session-expiry";
 import { useAuthStore } from "@/stores/auth";
+import { installApiMocks } from "@/mocks/install"; // T-401: instala o adaptador de mocks (G-29)
 
 function AppShellWiring({ children }: PropsWithChildren): ReactElement {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    installApiMocks();
     setTokenProvider(() => useAuthStore.getState().token);
     const unsubscribeStorage = connectStorageToAuth();
     const unsubscribeSessionExpiry = connectSessionExpiry(queryClient);
@@ -29,8 +31,9 @@ function AppShellWiring({ children }: PropsWithChildren): ReactElement {
 }
 
 export function AppProviders({ children }: PropsWithChildren): ReactElement {
+  const educatorId = useAuthStore((state) => state.educatorId); // T-401
   return (
-    <QueryProvider educatorId={null /* T-401 preenche o educatorId real */}>
+    <QueryProvider educatorId={educatorId}>
       <AppShellWiring>{children}</AppShellWiring>
       {/* Ponto de extensão para T-803: montar <ResumeSessionPrompt /> aqui,
           dentro da árvore do QueryProvider (edição em série, sem tocar no
