@@ -100,11 +100,10 @@ export function StudentsListScreen(): ReactElement {
         />
       ) : (
         <View style={styles.list}>
-          {pageItems.map((student, index) => (
+          {pageItems.map((student) => (
             <StudentCard
               key={student.id}
               student={student}
-              index={index}
               onPress={goToStudent}
             />
           ))}

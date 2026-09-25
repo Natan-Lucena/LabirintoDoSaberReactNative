@@ -2,17 +2,6 @@ import type { Student } from "@/api/types";
 
 export const PAGE_SIZE = 10;
 
-const AVATAR_BACKGROUND_COLORS = [
-  "#E94B8F",
-  "#9B6DD6",
-  "#4A90E2",
-  "#50C878",
-] as const;
-
-export function avatarBackgroundColorForIndex(index: number): string {
-  return AVATAR_BACKGROUND_COLORS[index % AVATAR_BACKGROUND_COLORS.length];
-}
-
 export function normalizeText(value: string): string {
   return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }

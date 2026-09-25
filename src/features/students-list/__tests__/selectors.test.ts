@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import type { Student } from "@/api/types";
 import {
-  avatarBackgroundColorForIndex,
   filterBySearch,
   paginate,
   sortByNameAsc,
@@ -75,13 +74,5 @@ describe("paginate", () => {
     const students = [makeStudent({ id: "1" })];
     expect(paginate(students, 5).pageItems).toHaveLength(1);
     expect(paginate(students, 0).pageItems).toHaveLength(1);
-  });
-});
-
-describe("avatarBackgroundColorForIndex", () => {
-  it("alterna entre 4 cores por índice", () => {
-    const colors = [0, 1, 2, 3, 4].map(avatarBackgroundColorForIndex);
-    expect(colors[4]).toBe(colors[0]);
-    expect(new Set(colors.slice(0, 4)).size).toBe(4);
   });
 });

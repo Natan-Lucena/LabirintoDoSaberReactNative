@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import type { Student } from "@/api/types";
 import { Tag } from "@/components/Tag";
 import { color, typography } from "@/theme";
-import { avatarBackgroundColorForIndex } from "@/features/students-list/selectors";
+import { avatarBackgroundColorForStudentId } from "@/features/students-list/avatar";
 import { StudentAvatar } from "@/features/students-list/components/StudentAvatar";
 
 const GENDER_LABEL_PT_BR: Record<Student["gender"], string> = {
@@ -18,13 +18,11 @@ export function formatStudentSubtitle(student: Student): string {
 
 export interface StudentCardProps {
   student: Student;
-  index: number;
   onPress: (student: Student) => void;
 }
 
 export function StudentCard({
   student,
-  index,
   onPress,
 }: StudentCardProps): ReactElement {
   return (
@@ -37,7 +35,7 @@ export function StudentCard({
       <View style={styles.row}>
         <StudentAvatar
           photoUrl={student.photoUrl}
-          backgroundColor={avatarBackgroundColorForIndex(index)}
+          backgroundColor={avatarBackgroundColorForStudentId(student.id)}
         />
         <View style={styles.info}>
           <Text style={styles.name}>{student.name}</Text>

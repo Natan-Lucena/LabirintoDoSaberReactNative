@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
@@ -10,12 +11,12 @@ import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
 import { Screen } from "@/components/Screen";
 import { Tag } from "@/components/Tag";
+import { avatarBackgroundColorForStudentId } from "@/features/students-list/avatar";
 import { formatStudentSubtitle } from "@/features/students/StudentRow";
 import { useStudents } from "@/features/students/useStudents";
 import { color, shape, typography } from "@/theme";
 
 const AVATAR_SIZE = 64;
-const AVATAR_FALLBACK_BACKGROUND = color.pink;
 
 export interface StudentDetailScreenProps {
   studentId: string;
@@ -42,6 +43,7 @@ export function StudentDetailScreen({
 }: StudentDetailScreenProps): ReactElement {
   const router = useRouter();
   const { data, isPending, isError, refetch } = useStudents();
+  const [hasPhotoError, setHasPhotoError] = useState(false);
 
   function goToEdit() {
     router.push({
@@ -94,14 +96,24 @@ export function StudentDetailScreen({
           >
             <Ionicons name="create-outline" size={20} color={color.accent} />
           </Pressable>
-          {student.photoUrl ? (
+          {student.photoUrl && !hasPhotoError ? (
             <Image
               source={{ uri: student.photoUrl }}
               style={styles.avatarImage}
               accessibilityLabel={student.name}
+              onError={() => setHasPhotoError(true)}
             />
           ) : (
-            <View style={styles.avatarFallback}>
+            <View
+              style={[
+                styles.avatarFallback,
+                {
+                  backgroundColor: avatarBackgroundColorForStudentId(
+                    student.id,
+                  ),
+                },
+              ]}
+            >
               <Image
                 source={require("../../../assets/images/avatar-crianca.png")}
                 style={styles.avatarIllustration}
@@ -197,7 +209,6 @@ const styles = StyleSheet.create({
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
-    backgroundColor: AVATAR_FALLBACK_BACKGROUND,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",

@@ -11,7 +11,6 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
-import { FooterActions } from "@/components/FooterActions";
 import { LoadingState } from "@/components/LoadingState";
 import { Screen } from "@/components/Screen";
 import { CATEGORY_LABELS } from "@/features/activities/selectors";
@@ -151,12 +150,20 @@ export function GroupDetailScreen({
           </Text>
         ) : null}
 
-        <FooterActions
-          onBack={() => setConfirmVisible(true)}
-          backLabel="Excluir Grupo"
-          onPrimary={goToEdit}
-          primaryLabel="Editar Grupo"
-        />
+        <View style={styles.footer}>
+          <Pressable
+            onPress={() => setConfirmVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Excluir Grupo"
+            style={styles.deleteButton}
+          >
+            <Ionicons name="trash-outline" size={18} color={color.pink} />
+            <Text style={styles.deleteButtonLabel}>Excluir Grupo</Text>
+          </Pressable>
+          <View style={styles.editAction}>
+            <Button label="Editar Grupo" onPress={goToEdit} variant="primary" />
+          </View>
+        </View>
 
         {isConfirmVisible ? (
           <Modal
@@ -305,4 +312,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   confirmActions: { flexDirection: "row", gap: 8 },
+  footer: { flexDirection: "row", gap: 8 },
+  deleteButton: {
+    flex: 1,
+    minHeight: shape.minTouchTarget,
+    borderRadius: shape.buttonRadius,
+    borderWidth: shape.hairlineWidth,
+    borderColor: color.pink,
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteButtonLabel: {
+    fontSize: typography.button.fontSize,
+    lineHeight: typography.button.lineHeight,
+    fontFamily: typography.button.fontFamily,
+    color: color.text,
+  },
+  editAction: { flex: 1.4 },
 });

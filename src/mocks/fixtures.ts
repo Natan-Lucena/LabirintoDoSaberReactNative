@@ -4,6 +4,7 @@ import type {
   Educator,
   EducatorLastSession,
   Student,
+  TaskCategory,
   TaskNotebookWithGroups,
 } from "@/api/types";
 import { toBrasiliaISOString } from "@/utils/date";
@@ -107,23 +108,79 @@ export const MOCK_LAST_SESSIONS: EducatorLastSession[] = [
   { studentName: "Caio Mendes", sessionName: "Palavras do cotidiano" },
 ];
 
-export const MOCK_TASK_NOTEBOOKS: TaskNotebookWithGroups[] = [
-  "Cores e formas",
-  "Palavras do dia",
-  "Leitura guiada",
-  "Historias curtas",
-].map((description, index) => ({
-  notebook: {
-    id: `notebook-${index + 1}`,
-    educator: MOCK_EDUCATOR.id,
-    tasks: [],
-    category: "reading",
-    description,
-    createdAt: "2026-01-01T12:00:00.000Z",
-    taskGroupsIds: [],
+/**
+ * Espelha os ids/nomes/categorias de MOCK_TASK_GROUPS
+ * (src/mocks/handlers/content.ts). Ids literais evitam import circular.
+ */
+const MOCK_TASK_GROUP_NAMES: Record<string, string> = {
+  "group-1": "Alfabeto e sons",
+  "group-2": "Vocabulário do dia a dia",
+  "group-3": "Produção de texto guiada",
+};
+
+const MOCK_TASK_GROUP_TASK_IDS: Record<string, string[]> = {
+  "group-1": ["task-1", "task-2"],
+  "group-2": ["task-3"],
+  "group-3": ["task-4", "task-5", "task-6"],
+};
+
+const MOCK_TASK_GROUP_CATEGORY: Record<string, TaskCategory> = {
+  "group-1": "reading",
+  "group-2": "vocabulary",
+  "group-3": "writing",
+};
+
+/**
+ * Vínculo caderno -> grupos, espelhando os ids fictícios de
+ * MOCK_TASK_GROUPS/MOCK_TASKS (src/mocks/handlers/content.ts). Ids literais
+ * evitam import circular fixtures.ts <-> handlers/content.ts.
+ */
+const mockNotebookGroupLinks: {
+  description: string;
+  groupIds: string[];
+  taskIds: string[];
+}[] = [
+  {
+    description: "Cores e formas",
+    groupIds: ["group-1"],
+    taskIds: ["task-1", "task-2"],
   },
-  taskGroups: [],
-}));
+  {
+    description: "Palavras do dia",
+    groupIds: ["group-2"],
+    taskIds: ["task-3"],
+  },
+  {
+    description: "Leitura guiada",
+    groupIds: ["group-1", "group-2"],
+    taskIds: ["task-1", "task-2", "task-3"],
+  },
+  {
+    description: "Historias curtas",
+    groupIds: ["group-3"],
+    taskIds: ["task-4", "task-5", "task-6"],
+  },
+];
+
+export const MOCK_TASK_NOTEBOOKS: TaskNotebookWithGroups[] =
+  mockNotebookGroupLinks.map(({ description, groupIds, taskIds }, index) => ({
+    notebook: {
+      id: `notebook-${index + 1}`,
+      educator: MOCK_EDUCATOR.id,
+      tasks: taskIds,
+      category: "reading",
+      description,
+      createdAt: "2026-01-01T12:00:00.000Z",
+      taskGroupsIds: groupIds,
+    },
+    taskGroups: groupIds.map((groupId) => ({
+      id: groupId,
+      name: MOCK_TASK_GROUP_NAMES[groupId],
+      tasksIds: MOCK_TASK_GROUP_TASK_IDS[groupId],
+      educatorId: MOCK_EDUCATOR.id,
+      category: MOCK_TASK_GROUP_CATEGORY[groupId],
+    })),
+  }));
 
 export type MockHomeScenario = "default" | "no-sessions" | "no-appointments";
 
