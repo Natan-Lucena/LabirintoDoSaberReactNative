@@ -10,7 +10,7 @@ Referências (arquivo Figma `IuUM9BWR6sCXTOUmXcguQf`):
 
 | Nó                                                                                     | Tela                                                 | Frente |
 | -------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------ |
-| `1:25739` (Ver Tudo), `1:25165` (Cadernos), `1:25266` (Grupos), `1:25365` (Atividades) | Aba Atividades: lista com busca, filtros e paginação | UX3-L  |
+| `1:25032` (Ver Tudo), `1:25165` (Cadernos), `1:25266` (Grupos), `1:25365` (Atividades) | Aba Atividades: lista com busca, filtros e paginação | UX3-L  |
 | `1:25469`                                                                              | Criar Caderno                                        | UX3-N  |
 | `1:25629`                                                                              | Criar Grupo                                          | UX3-G  |
 | `1:25739`                                                                              | Criar Atividade                                      | UX3-A  |
