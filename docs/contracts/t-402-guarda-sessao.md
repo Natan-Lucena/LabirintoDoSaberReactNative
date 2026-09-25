@@ -33,17 +33,14 @@ criar telas de produto (Login é da T-401).
 (T-401) nem uma rota autenticada real (T-502/T-601+); o único arquivo de rota
 hoje é `app/index.tsx`. Um `Href` literal para uma rota inexistente não compila.
 
-**Decisão (aprovada pelo orquestrador, ver histórico):** os destinos ficam num
-módulo único, `src/features/auth/routes.ts` (`AUTH_DESTINATION`/`APP_DESTINATION`,
-hoje ambos `"/"`), para T-401/T-502 trocarem num só lugar quando as rotas reais
-existirem. O guard usa `usePathname()` (expo-router) e só chama
-`router.replace(destino)` quando `pathname !== destino`, evitando o loop de um
-usuário já em `"/"` ser redirecionado para `"/"` indefinidamente (como os dois
-destinos são iguais hoje, o guard efetivamente só navega quando o caminho atual
-diverge de `"/"`, independente do `target`). Isso deixa o comportamento
-observável limitado (não há hoje uma tela `(auth)` real para ir), mas mantém a
-API (`useSessionGuardTarget` retorna `"idle" | "auth" | "app"`) estável para
-quando as rotas reais existirem.
+**Decisão (FX3, aprovada pelo orquestrador, ver histórico):** os destinos ficam
+num módulo único, `src/features/auth/routes.ts` (`AUTH_DESTINATION`/
+`APP_DESTINATION`). O guard usa `useSegments()` para identificar a fronteira do
+grupo `(auth)`: autenticado só substitui para `APP_DESTINATION` se
+`segments[0] === "(auth)"`; deslogado só substitui para `AUTH_DESTINATION` se
+não estiver nesse grupo. Assim, rotas autenticadas como tabs, sessão e shell
+permanecem acessíveis, login/recuperação continuam acessíveis ao deslogado e
+não há replace repetido dentro do grupo correto.
 
 ## Critérios
 
@@ -58,11 +55,11 @@ quando as rotas reais existirem.
 
 - `type SessionGuardTarget = "idle" | "auth" | "app"`.
 - `useSessionGuardTarget(): SessionGuardTarget` — deriva de `useAuthStore((s) => s.status)`.
-- `useSessionGuard(): void` — hook de efeito: quando `target !== "idle"`,
-  resolve `destination` (`AUTH_DESTINATION` ou `APP_DESTINATION`, de
-  `src/features/auth/routes.ts`) e chama `router.replace(destination)` apenas
-  quando `usePathname() !== destination` (evita loop e redirecionamento
-  redundante). Não altera estado, não faz chamada de rede.
+- `useSessionGuard(): void` — hook de efeito: quando `target !== "idle"`, usa
+  `useSegments()`. Para `"app"`, chama `router.replace(APP_DESTINATION)` somente
+  se o grupo atual for `(auth)`; para `"auth"`, chama
+  `router.replace(AUTH_DESTINATION)` somente fora desse grupo. Não altera estado,
+  não faz chamada de rede.
 
 ### `src/features/auth/routes.ts`
 
@@ -99,9 +96,9 @@ quando as rotas reais existirem.
 ## Plano de testes
 
 `src/features/auth/__tests__/useSessionGuard.test.tsx` (AC-402-01): `idle` nunca
-navega; `unauthenticated`/`authenticated` já no destino placeholder não navegam
-(evita o loop); `unauthenticated`/`authenticated` fora do destino navegam uma
-única vez para `"/"`.
+navega; autenticado em tabs, sessão ou shell não navega, mas cruza de `(auth)`
+para `APP_DESTINATION`; deslogado cruza de tabs/sessão para login, mas permanece
+em login ou recuperação dentro de `(auth)`; sem `navigationKey` não navega.
 
 `src/features/auth/__tests__/session-expiry.test.ts` (AC-402-02): evento de
 sessão expirada limpa o `queryClient` antes de chamar `expireSession` e ativa o
@@ -165,3 +162,7 @@ Validação: `pnpm exec vitest run src/features/auth/__tests__/useSessionGuard.t
   proposto, registrado como não sobrevivendo a reabrir o app. Fase 2
   implementada com esses ajustes; testes reescritos antes da implementação
   para cobrir os novos casos (sem alterar os critérios aprovados).
+- 2026-09-25: FX3 corrigiu a comparação por pathname, que redirecionava toda
+  rota autenticada diferente de `/` para Home. A guarda passou a verificar a
+  fronteira de `useSegments()` conforme a decisão acima; vermelho com 4/13
+  falhas, aprovado pelo orquestrador antes da implementação.

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { usePathname, useRootNavigationState, useRouter } from "expo-router";
+import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 
 import { APP_DESTINATION, AUTH_DESTINATION } from "@/features/auth/routes";
 import { useAuthStore } from "@/stores/auth";
@@ -18,22 +18,25 @@ export function useSessionGuardTarget(): SessionGuardTarget {
 
 export function useSessionGuard(): void {
   const target = useSessionGuardTarget();
-  const pathname = usePathname();
+  const segments = useSegments();
   const router = useRouter();
   // T-502: evita "Attempted to navigate before mounting the Root Layout" no
   // primeiro boot com sessão salva, quando o guard decide antes do navegador
   // (Root Layout do expo-router) terminar de montar.
   const navigationKey = useRootNavigationState()?.key;
+  const isInAuthGroup = segments[0] === "(auth)";
 
   useEffect(() => {
     if (target === "idle" || !navigationKey) {
       return;
     }
 
-    const destination = target === "auth" ? AUTH_DESTINATION : APP_DESTINATION;
-
-    if (pathname !== destination) {
-      router.replace(destination);
+    if (target === "app" && isInAuthGroup) {
+      router.replace(APP_DESTINATION);
     }
-  }, [target, pathname, router, navigationKey]);
+
+    if (target === "auth" && !isInAuthGroup) {
+      router.replace(AUTH_DESTINATION);
+    }
+  }, [target, router, navigationKey, isInAuthGroup]);
 }
