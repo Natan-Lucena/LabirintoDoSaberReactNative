@@ -25,4 +25,20 @@ const color = {
  */
 const maxContentWidthTablet = 720;
 
-module.exports = { color, maxContentWidthTablet };
+/**
+ * Valores de forma (DESIGN §4, coluna "Proposta", aprovados em G-17).
+ * Lacuna da T-201 corrigida na T-202: nenhum componente pode usar raio,
+ * padding de alvo mínimo ou altura literal fora desta fonte.
+ */
+const shape = {
+  cardRadius: 16,
+  buttonRadius: 16,
+  inputRadius: 12,
+  minTouchTarget: 48,
+  tagPaddingVertical: 4,
+  tagPaddingHorizontal: 10,
+  accentBorderWidth: 3,
+  avatarSize: 40,
+};
+
+module.exports = { color, maxContentWidthTablet, shape };
