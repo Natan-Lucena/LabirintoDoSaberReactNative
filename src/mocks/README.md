@@ -17,12 +17,19 @@ Controlado por `EXPO_PUBLIC_USE_MOCKS` (lido em `src/config/env.ts`,
 (`src/app-shell/AppProviders.tsx`). Se a flag for `false`, não faz nada —
 `apiClient` mantém o adaptador HTTP real do Axios.
 
-## Endpoints mockados nesta tarefa (T-401)
+## Endpoints mockados
 
-Só autenticação:
+Autenticação (T-401):
 
 - `POST /educator/sign-in`
 - `GET /educator/me`
+
+Dados da Home (T-601):
+
+- `GET /appointment/`
+- `GET /student/`
+- `GET /educator/get-last-sessions`
+- `GET /task-notebook/`
 
 ## Cenários (e-mails reservados, `src/mocks/fixtures.ts`)
 
@@ -53,8 +60,18 @@ usuários ou crianças é usado.
 Não recriar o adaptador nem duplicar a instalação — um único
 `installApiMocks()` cobre todos os handlers registrados.
 
-## Limitação desta tarefa
+## Cenários da Home
 
-Só os dois endpoints de auth acima estão cobertos. Telas seguintes que
-dependam de outros endpoints devem estender o registro (item acima), não
-criar um segundo adaptador.
+As fixtures da Home usam somente nomes e dados fictícios. Os agendamentos são
+gerados para o dia atual em `America/Sao_Paulo`, incluindo `PENDING`,
+`COMPLETED` e `CANCELLED`; o último não entra na contagem da Home. Durante o
+desenvolvimento, chame `setMockHomeScenario("no-sessions")` de
+`src/mocks/fixtures` para o cenário `no-sessions`, que devolve `404
+EDUCATOR_DOES_NOT_HAVE_SESSIONS` para últimas sessões e `no-appointments`
+devolve uma agenda vazia, permitindo observar o estado 03.
+
+## Limitação atual
+
+Os endpoints de autenticação e Home acima estão cobertos. Telas seguintes que
+dependam de outros endpoints devem estender o registro (item acima), não criar
+um segundo adaptador.
