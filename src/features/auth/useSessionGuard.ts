@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { usePathname, useRouter } from "expo-router";
+import { usePathname, useRootNavigationState, useRouter } from "expo-router";
 
 import { APP_DESTINATION, AUTH_DESTINATION } from "@/features/auth/routes";
 import { useAuthStore } from "@/stores/auth";
@@ -20,9 +20,13 @@ export function useSessionGuard(): void {
   const target = useSessionGuardTarget();
   const pathname = usePathname();
   const router = useRouter();
+  // T-502: evita "Attempted to navigate before mounting the Root Layout" no
+  // primeiro boot com sessão salva, quando o guard decide antes do navegador
+  // (Root Layout do expo-router) terminar de montar.
+  const navigationKey = useRootNavigationState()?.key;
 
   useEffect(() => {
-    if (target === "idle") {
+    if (target === "idle" || !navigationKey) {
       return;
     }
 
@@ -31,5 +35,5 @@ export function useSessionGuard(): void {
     if (pathname !== destination) {
       router.replace(destination);
     }
-  }, [target, pathname, router]);
+  }, [target, pathname, router, navigationKey]);
 }

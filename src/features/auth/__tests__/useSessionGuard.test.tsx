@@ -9,10 +9,12 @@ import { useSessionGuard } from "@/features/auth/useSessionGuard";
 
 const routerReplace = vi.fn();
 let pathname = "/";
+let navigationKey: string | undefined = "root";
 
 vi.mock("expo-router", () => ({
   useRouter: () => ({ replace: routerReplace }),
   usePathname: () => pathname,
+  useRootNavigationState: () => ({ key: navigationKey }),
 }));
 
 function Probe() {
@@ -27,6 +29,7 @@ function setStatus(status: "idle" | "authenticated" | "unauthenticated") {
 describe("useSessionGuard (AC-402-01)", () => {
   beforeEach(() => {
     routerReplace.mockClear();
+    navigationKey = "root";
   });
 
   it("does not redirect while status is idle, regardless of the current path", async () => {
@@ -67,6 +70,16 @@ describe("useSessionGuard (AC-402-01)", () => {
     setStatus("authenticated");
     pathname = "/";
     await render(<Probe />);
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("does not redirect while the root navigator has not finished mounting (T-502)", async () => {
+    setStatus("unauthenticated");
+    pathname = "/(auth)/login";
+    navigationKey = undefined;
+    await act(async () => {
+      await render(<Probe />);
+    });
     expect(routerReplace).not.toHaveBeenCalled();
   });
 });
