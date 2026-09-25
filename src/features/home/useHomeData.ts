@@ -31,6 +31,13 @@ export interface HomeData {
   recentNotebooks: TaskNotebookWithGroups[];
 }
 
+export interface HomeQueryResult {
+  data: HomeData | undefined;
+  isPending: boolean;
+  isError: boolean;
+  refetch: () => Promise<unknown[]>;
+}
+
 export const homeQueryKeys = {
   educator: ["educator", "me"] as const,
   appointments: ["appointment"] as const,
@@ -136,4 +143,68 @@ export function useHomeData(): HomeData {
     lastSessions: lastSessionsQuery.data ?? [],
     notebooks: notebooksQuery.data ?? [],
   });
+}
+
+export function useHomeQuery(): HomeQueryResult {
+  const educatorQuery = useQuery({
+    queryKey: homeQueryKeys.educator,
+    queryFn: getMe,
+  });
+  const appointmentsQuery = useQuery({
+    queryKey: homeQueryKeys.appointments,
+    queryFn: listAppointments,
+  });
+  const studentsQuery = useQuery({
+    queryKey: homeQueryKeys.students,
+    queryFn: listStudents,
+  });
+  const lastSessionsQuery = useQuery({
+    queryKey: homeQueryKeys.lastSessions,
+    queryFn: getLastSessionsOrEmpty,
+  });
+  const notebooksQuery = useQuery({
+    queryKey: homeQueryKeys.notebooks,
+    queryFn: () => listTaskNotebooks(),
+  });
+  const queries = [
+    educatorQuery,
+    appointmentsQuery,
+    studentsQuery,
+    lastSessionsQuery,
+    notebooksQuery,
+  ];
+  const isPending = queries.some((query) => query.isPending);
+  const isError = queries.some((query) => query.isError);
+  const hasData = queries.every((query) => query.data !== undefined);
+
+  const data = hasData
+    ? (() => {
+        const studentsById = new Map(
+          studentsQuery.data!.map((student) => [student.id, student]),
+        );
+        const todayAppointments = selectTodayAppointments(
+          appointmentsQuery.data!,
+        ).map((appointment) => ({
+          appointment,
+          student: studentsById.get(appointment.studentId) ?? null,
+        }));
+
+        return {
+          educator: educatorQuery.data,
+          todayAppointments,
+          scheduledAppointmentsCount: countScheduledAppointments(
+            todayAppointments.map(({ appointment }) => appointment),
+          ),
+          lastSessions: lastSessionsQuery.data!,
+          recentNotebooks: selectRecentNotebooks(notebooksQuery.data!),
+        };
+      })()
+    : undefined;
+
+  return {
+    data,
+    isPending,
+    isError,
+    refetch: async () => Promise.all(queries.map((query) => query.refetch())),
+  };
 }
