@@ -21,7 +21,6 @@ const styles = StyleSheet.create({
     fontSize: typography.sectionTitle.fontSize,
     lineHeight: typography.sectionTitle.lineHeight,
     fontFamily: typography.sectionTitle.fontFamily,
-    fontWeight: typography.sectionTitle.fontWeight,
     color: semanticColor.textOnPrimary,
   },
   subtitle: {
@@ -52,13 +51,14 @@ export function GreetingBanner({
   return (
     <View style={styles.container}>
       <View style={styles.greetingRow}>
-        <Text style={styles.greeting} accessibilityLabel={`Olá, ${educatorName}!`}>
+        <Text
+          style={styles.greeting}
+          accessibilityLabel={`Olá, ${educatorName}!`}
+        >
           {`Olá, ${educatorName}! 👋`}
         </Text>
       </View>
-      <Text style={styles.subtitle}>
-        {subtitleFor(appointmentsTodayCount)}
-      </Text>
+      <Text style={styles.subtitle}>{subtitleFor(appointmentsTodayCount)}</Text>
       <View style={styles.buttonRow}>
         <Button
           label="Iniciar Sessão"

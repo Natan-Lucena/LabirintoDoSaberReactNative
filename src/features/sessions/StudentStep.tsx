@@ -3,6 +3,7 @@ import { useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { FooterActions } from "@/components/FooterActions";
@@ -40,6 +41,10 @@ export function StudentStep(): ReactElement {
     router.back();
   }
 
+  function openComingSoon(title: string) {
+    router.push({ pathname: "/shell/coming-soon", params: { title } });
+  }
+
   async function handleNext() {
     if (!selected) {
       return;
@@ -49,7 +54,12 @@ export function StudentStep(): ReactElement {
   }
 
   return (
-    <Screen>
+    <Screen style={styles.content}>
+      <AppHeader
+        title="Nova sessão"
+        onMenuPress={() => openComingSoon("Menu")}
+        onAvatarPress={() => openComingSoon("Perfil")}
+      />
       <View
         accessible
         accessibilityLabel="Passo 1"
@@ -112,7 +122,8 @@ export function StudentStep(): ReactElement {
 }
 
 const styles = StyleSheet.create({
-  stepIndicator: { marginBottom: 12 },
+  content: { flex: 1, padding: 16 },
+  stepIndicator: { marginTop: 12, marginBottom: 12 },
   title: {
     fontSize: typography.sectionTitle.fontSize,
     lineHeight: typography.sectionTitle.lineHeight,

@@ -15,13 +15,29 @@ export function Screen({
   scroll = false,
   style,
 }: ScreenProps): ReactElement {
-  const Container = scroll ? ScrollView : View;
+  // ScrollView aplica `padding`/`gap` de `style` ao contêiner externo (que só
+  // tem um filho, o viewport nativo), não ao conteúdo rolável — por isso o
+  // espaçamento (ex.: gap entre AppHeader e o banner da Home) precisa ir em
+  // `contentContainerStyle`, não em `style`.
+  if (scroll) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          testID="screen-content"
+          style={styles.flex}
+          contentContainerStyle={[styles.scrollContent, style]}
+        >
+          {children}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Container testID="screen-content" style={[styles.content, style]}>
+      <View testID="screen-content" style={[styles.content, style]}>
         {children}
-      </Container>
+      </View>
     </SafeAreaView>
   );
 }
@@ -33,6 +49,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    width: "100%",
+    maxWidth: maxContentWidthTablet,
+    alignSelf: "center",
+  },
+  flex: { flex: 1 },
+  scrollContent: {
     width: "100%",
     maxWidth: maxContentWidthTablet,
     alignSelf: "center",

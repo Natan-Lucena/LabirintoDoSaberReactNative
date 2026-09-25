@@ -86,7 +86,9 @@ export function Button({
           }
         />
       ) : null}
-      <Text style={[styles.label, labelStyle]}>{label}</Text>
+      <Text style={[styles.label, labelStyle]} numberOfLines={1}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

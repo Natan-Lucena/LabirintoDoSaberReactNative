@@ -173,4 +173,20 @@ describe("HomeScreen (AC-603-01..04)", () => {
     ).toBeTruthy();
     expect(screen.getByText("Sessões de hoje")).toBeTruthy();
   });
+
+  // FX4: no Android, `padding`/`gap` passado em `style` de um ScrollView vai
+  // para o contêiner externo (que tem 1 filho só) e não afeta o layout do
+  // conteúdo rolável — o gap entre AppHeader e o banner ficava "solto".
+  // O espaçamento precisa estar em `contentContainerStyle`.
+  it("FX4: aplica o espaçamento padrão via contentContainerStyle do scroll", async () => {
+    setHomeQuery();
+    await render(<HomeScreen />);
+
+    const content = screen.getByTestId("screen-content");
+    const flatContentContainerStyle = [content.props.contentContainerStyle]
+      .flat(Infinity)
+      .reduce((acc, style) => ({ ...acc, ...style }), {});
+    expect(flatContentContainerStyle.padding).toBe(16);
+    expect(flatContentContainerStyle.gap).toBe(16);
+  });
 });

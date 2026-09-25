@@ -41,4 +41,14 @@ describe("AC-202-01 Button", () => {
       .reduce((acc, style) => ({ ...acc, ...style }), {});
     expect(flatStyle.minHeight).toBeGreaterThanOrEqual(48);
   });
+
+  // FX4: no Android, o rótulo pode quebrar linha por mismatch de medida de
+  // fonte customizada, cortando a última letra ("Entrar" -> "Entra") quando
+  // a 2ª linha é cortada pela altura do container. numberOfLines=1 evita a
+  // quebra silenciosa.
+  it("limita o rótulo a uma linha (evita corte da última letra no Android)", async () => {
+    await render(<Button label="Entrar" onPress={vi.fn()} />);
+    const label = screen.getByText("Entrar");
+    expect(label.props.numberOfLines).toBe(1);
+  });
 });

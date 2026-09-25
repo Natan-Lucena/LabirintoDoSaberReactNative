@@ -61,7 +61,11 @@ describe("StudentStep", () => {
 
     await render(<StudentStep />);
 
-    await waitFor(() => expect(screen.getByRole("header")).toBeTruthy());
+    await waitFor(() =>
+      expect(
+        screen.getByText("Escolha o aluno que participará desta sessão"),
+      ).toBeTruthy(),
+    );
   });
 
   it("AC-702-05: mostra ErrorState com retry", async () => {
@@ -131,7 +135,11 @@ describe("StudentStep", () => {
 
     await render(<StudentStep />);
 
-    await waitFor(() => expect(screen.getByRole("header")).toBeTruthy());
+    await waitFor(() =>
+      expect(
+        screen.getByText("Escolha o aluno que participará desta sessão"),
+      ).toBeTruthy(),
+    );
 
     fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
 
@@ -145,5 +153,22 @@ describe("StudentStep", () => {
     await render(<StudentStep />);
 
     await waitFor(() => expect(screen.getByLabelText("Passo 1")).toBeTruthy());
+  });
+
+  // FX4: tela 04 não tinha AppHeader nem padding horizontal (conteúdo
+  // encostado nas bordas). Alinha ao padrão das demais telas (t-203, t-702).
+  it("FX4: usa AppHeader (t-702, pendência 8) e padding horizontal como a Home", async () => {
+    vi.mocked(listStudents).mockResolvedValue([]);
+
+    await render(<StudentStep />);
+
+    expect(screen.getByLabelText("Abrir menu")).toBeTruthy();
+    expect(screen.getByLabelText("Abrir perfil")).toBeTruthy();
+
+    const content = screen.getByTestId("screen-content");
+    const flatStyle = [content.props.style]
+      .flat(Infinity)
+      .reduce((acc, style) => ({ ...acc, ...style }), {});
+    expect(flatStyle.paddingHorizontal ?? flatStyle.padding).toBe(16);
   });
 });

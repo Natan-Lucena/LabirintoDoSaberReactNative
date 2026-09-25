@@ -312,4 +312,23 @@ describe("ContentStep", () => {
     mockSessionName = null;
     mockContent = null;
   });
+
+  // FX4: tela 05 não tinha AppHeader nem padding horizontal (conteúdo
+  // encostado nas bordas). Alinha ao padrão das demais telas (t-203, t-702).
+  it("FX4: usa AppHeader e padding horizontal como a Home", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([]);
+    vi.mocked(listTaskGroupsByEducator).mockResolvedValue([]);
+    vi.mocked(listTasks).mockResolvedValue([]);
+
+    await renderContentStep();
+
+    expect(screen.getByLabelText("Abrir menu")).toBeTruthy();
+    expect(screen.getByLabelText("Abrir perfil")).toBeTruthy();
+
+    const content = screen.getByTestId("screen-content");
+    const flatStyle = [content.props.style]
+      .flat(Infinity)
+      .reduce((acc, style) => ({ ...acc, ...style }), {});
+    expect(flatStyle.paddingHorizontal ?? flatStyle.padding).toBe(16);
+  });
 });

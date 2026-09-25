@@ -42,7 +42,10 @@ export function TabBar({ tabs, activeKey }: TabBarProps): ReactElement {
             >
               <Icon name={tab.icon} size={22} color={tintColor} />
             </View>
-            <Text style={[styles.label, { color: tintColor }]}>
+            <Text
+              style={[styles.label, { color: tintColor }]}
+              numberOfLines={1}
+            >
               {tab.label}
             </Text>
           </Pressable>

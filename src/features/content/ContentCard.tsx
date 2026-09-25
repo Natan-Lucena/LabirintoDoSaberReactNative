@@ -17,7 +17,6 @@ const styles = StyleSheet.create({
     fontSize: typography.cardTitle.fontSize,
     lineHeight: typography.cardTitle.lineHeight,
     fontFamily: typography.cardTitle.fontFamily,
-    fontWeight: typography.cardTitle.fontWeight,
     color: color.text,
     marginBottom: 8,
   },
@@ -47,7 +46,11 @@ export function ContentCard({
       </Text>
       <View style={styles.tagsRow}>
         {tags.map((tag, index) => (
-          <Tag key={tag} label={tag} variant={index === 0 ? "primary" : "neutral"} />
+          <Tag
+            key={tag}
+            label={tag}
+            variant={index === 0 ? "primary" : "neutral"}
+          />
         ))}
       </View>
     </Card>

@@ -14,7 +14,6 @@ const styles = StyleSheet.create({
     fontSize: typography.cardTitle.fontSize,
     lineHeight: typography.cardTitle.lineHeight,
     fontFamily: typography.cardTitle.fontFamily,
-    fontWeight: typography.cardTitle.fontWeight,
     color: color.text,
   },
   sessionName: {

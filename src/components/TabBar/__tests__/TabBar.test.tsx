@@ -32,4 +32,14 @@ describe("TabBar", () => {
     await fireEvent.press(screen.getByLabelText("Atividades"));
     expect(tabs[1].onPress).toHaveBeenCalledTimes(1);
   });
+
+  // FX4: no Android, rótulos como "Início"/"Agenda"/"Atividades" apareciam
+  // cortados (ex.: "Iníci", "Agend", "Atividade") porque o texto quebrava
+  // para uma 2ª linha invisível cortada pela altura fixa da tab bar.
+  // numberOfLines=1 evita a quebra silenciosa.
+  it("limita os rótulos das abas a uma linha (evita corte no Android)", async () => {
+    await render(<TabBar tabs={tabs} activeKey="home" />);
+    expect(screen.getByText("Início").props.numberOfLines).toBe(1);
+    expect(screen.getByText("Atividades").props.numberOfLines).toBe(1);
+  });
 });
