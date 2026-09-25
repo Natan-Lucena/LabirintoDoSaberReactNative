@@ -41,6 +41,13 @@ describe("NewNotebookScreen", () => {
     createTaskNotebook.mockReset();
   });
 
+  it("usa plural no rótulo acessível do grupo (2 atividades)", async () => {
+    await render(<NewNotebookScreen />);
+    expect(
+      await screen.findByLabelText("Alfabeto e sons, 2 atividades"),
+    ).toBeTruthy();
+  });
+
   it("bloqueia a criação até selecionar categoria e grupo com atividades", async () => {
     await render(<NewNotebookScreen />);
 

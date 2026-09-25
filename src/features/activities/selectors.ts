@@ -19,6 +19,10 @@ export const KIND_LABELS: Record<ActivityKind, string> = {
   task: "Atividade",
 };
 
+function pluralize(count: number, singular: string, plural: string): string {
+  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
+}
+
 export function normalizeText(value: string): string {
   return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
@@ -32,7 +36,7 @@ export function buildActivityItems(
     id: notebook.id,
     kind: "notebook",
     title: notebook.description,
-    secondary: `${notebook.tasks.length} tarefas`,
+    secondary: pluralize(notebook.tasks.length, "tarefa", "tarefas"),
     category: notebook.category,
   }));
 
@@ -40,7 +44,7 @@ export function buildActivityItems(
     id: group.id,
     kind: "group",
     title: group.name,
-    secondary: `${group.tasksIds.length} atividades`,
+    secondary: pluralize(group.tasksIds.length, "atividade", "atividades"),
     category: group.category,
   }));
 

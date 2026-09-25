@@ -20,6 +20,10 @@ import { Screen } from "@/components/Screen";
 import { TextField } from "@/components/TextField";
 import { color, shape, typography } from "@/theme";
 
+function pluralize(count: number, singular: string, plural: string): string {
+  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
+}
+
 const categoryOptions = [
   { key: "reading", label: "Leitura" },
   { key: "writing", label: "Escrita" },
@@ -194,7 +198,7 @@ export function NewNotebookScreen(): ReactElement {
                 <Pressable
                   key={group.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`${group.name}, ${group.tasksIds.length} atividades`}
+                  accessibilityLabel={`${group.name}, ${pluralize(group.tasksIds.length, "atividade", "atividades")}`}
                   accessibilityState={{
                     selected: selectedGroupIds.includes(group.id),
                   }}

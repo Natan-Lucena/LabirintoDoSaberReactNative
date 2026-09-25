@@ -68,6 +68,18 @@ describe("AC-602-01 GreetingBanner", () => {
     expect(onStartSession).toHaveBeenCalledTimes(1);
   });
 
+  // UX2: banner em layout de linha, botão com ícone "play" à direita.
+  it("mostra o ícone play no botão Iniciar Sessão", async () => {
+    await render(
+      <GreetingBanner
+        educatorName="Ana"
+        appointmentsTodayCount={0}
+        onStartSession={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("icon-play")).toBeTruthy();
+  });
+
   it("marca o texto da saudação como acessível e o emoji como decorativo", async () => {
     await render(
       <GreetingBanner

@@ -17,7 +17,7 @@ export interface TabDefinition {
 export const TAB_DEFINITIONS: TabDefinition[] = [
   {
     key: "home",
-    label: "Início",
+    label: "Tela Inicial",
     headerTitle: "Tela Inicial",
     icon: "home",
     segment: "index",

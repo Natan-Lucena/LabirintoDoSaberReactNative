@@ -40,11 +40,18 @@ export function TabBar({ tabs, activeKey }: TabBarProps): ReactElement {
                 isActive ? styles.iconWrapperActive : null,
               ]}
             >
-              <Icon name={tab.icon} size={22} color={tintColor} />
+              <Icon
+                name={tab.icon}
+                size={22}
+                color={tintColor}
+                active={isActive}
+              />
             </View>
             <Text
               style={[styles.label, { color: tintColor }]}
               numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
             >
               {tab.label}
             </Text>

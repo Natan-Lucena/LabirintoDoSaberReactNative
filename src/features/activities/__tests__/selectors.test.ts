@@ -48,6 +48,24 @@ const tasks: Task[] = [
 ];
 
 describe("buildActivityItems (AC-L-01)", () => {
+  it("usa singular quando a contagem de tarefas/atividades é 1", () => {
+    const singularNotebooks: TaskNotebookWithGroups[] = [
+      {
+        notebook: { ...notebooks[0].notebook, tasks: ["task-1"] },
+        taskGroups: [],
+      },
+    ];
+    const singularGroups: TaskGroup[] = [
+      { ...groups[0], tasksIds: ["task-1"] },
+    ];
+
+    const items = buildActivityItems(singularNotebooks, singularGroups, []);
+
+    expect(items[0].secondary).toBe("1 tarefa");
+    expect(items[1].secondary).toBe("1 atividade");
+  });
+
+
   it("mapeia cadernos, grupos e atividades com título e linha secundária derivados dos dados", () => {
     const items = buildActivityItems(notebooks, groups, tasks);
 

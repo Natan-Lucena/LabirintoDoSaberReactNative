@@ -7,13 +7,13 @@ import { LoadingState } from "@/components/LoadingState";
 import { PendingBanner } from "@/components/PendingBanner";
 import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
-import { ContentCard } from "@/features/content/ContentCard";
 import { CompletedSessionCard } from "@/features/home/components/CompletedSessionCard";
 import { GreetingBanner } from "@/features/home/components/GreetingBanner";
+import { RecentActivityCard } from "@/features/home/components/RecentActivityCard";
 import { ScheduledSessionCard } from "@/features/home/components/ScheduledSessionCard";
 import { useHomeQuery } from "@/features/home/useHomeData";
 import { useOnline } from "@/hooks/useOnline";
-import { color } from "@/theme";
+import { color, shape } from "@/theme";
 
 const statusLabels = {
   PENDING: "Pendente",
@@ -36,7 +36,24 @@ const styles = StyleSheet.create({
   carousel: { gap: 10, paddingRight: 4 },
   state: { flex: 1, justifyContent: "center" },
   fallback: { color: color.textSecondary },
+  recentActivitiesCard: {
+    backgroundColor: color.surface,
+    borderWidth: shape.hairlineWidth,
+    borderColor: "#E0E0E0",
+    borderRadius: 15,
+    padding: 17,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  recentActivitiesRow: { flexDirection: "row", gap: 10 },
 });
+
+function pluralize(count: number, singular: string, plural: string): string {
+  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
+}
 
 export function HomeScreen(): ReactElement {
   const router = useRouter();
@@ -123,18 +140,26 @@ export function HomeScreen(): ReactElement {
       {data.todayAppointments.length === 0 ? (
         <View style={styles.section}>
           <SectionHeader title="Atividades Recentes" />
-          {data.recentNotebooks.map(({ notebook }) => (
-            <ContentCard
-              key={notebook.id}
-              description={notebook.description}
-              tags={[
-                categoryLabels[notebook.category],
-                `${notebook.tasks.length} atividades`,
-              ]}
-              accessibilityLabel={notebook.description}
-              onPress={() => openComingSoon("Atividades")}
-            />
-          ))}
+          <View style={styles.recentActivitiesCard}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentActivitiesRow}
+            >
+              {data.recentNotebooks.map(({ notebook }, index) => (
+                <RecentActivityCard
+                  key={notebook.id}
+                  index={index}
+                  title={notebook.description}
+                  tags={[
+                    categoryLabels[notebook.category],
+                    pluralize(notebook.tasks.length, "tarefa", "tarefas"),
+                  ]}
+                  onPress={() => openComingSoon("Atividades")}
+                />
+              ))}
+            </ScrollView>
+          </View>
         </View>
       ) : null}
     </Screen>

@@ -28,7 +28,7 @@ describe("useTabItems (AC-501-01)", () => {
       "reports",
     ]);
     expect(result.current.items.map((item) => item.label)).toEqual([
-      "Início",
+      "Tela Inicial",
       "Atividades",
       "Alunos",
       "Relatórios",

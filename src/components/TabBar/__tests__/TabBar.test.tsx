@@ -42,4 +42,15 @@ describe("TabBar", () => {
     expect(screen.getByText("Início").props.numberOfLines).toBe(1);
     expect(screen.getByText("Atividades").props.numberOfLines).toBe(1);
   });
+
+  // UX2: rótulo "Tela Inicial" não pode cortar; reduz a fonte antes de quebrar linha.
+  it("permite reduzir a fonte do rótulo em vez de cortar (Tela Inicial)", async () => {
+    const longTabs: TabBarItem[] = [
+      { key: "home", label: "Tela Inicial", icon: "home", onPress: vi.fn() },
+    ];
+    await render(<TabBar tabs={longTabs} activeKey="home" />);
+    const label = screen.getByText("Tela Inicial");
+    expect(label.props.adjustsFontSizeToFit).toBe(true);
+    expect(label.props.numberOfLines).toBe(1);
+  });
 });

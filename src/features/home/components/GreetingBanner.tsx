@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { Button } from "../../../components/Button";
-import { color, semanticColor, typography } from "../../../theme";
+import { color, semanticColor, shape, typography } from "../../../theme";
 
 export interface GreetingBannerProps {
   educatorName: string;
@@ -13,10 +13,19 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: color.primary,
     borderRadius: 16,
-    padding: 20,
-    gap: 4,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 1,
+    elevation: 2,
   },
-  greetingRow: { flexDirection: "row", alignItems: "center" },
+  textColumn: { flex: 1, gap: 2 },
   greeting: {
     fontSize: typography.sectionTitle.fontSize,
     lineHeight: typography.sectionTitle.lineHeight,
@@ -28,9 +37,23 @@ const styles = StyleSheet.create({
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
     color: semanticColor.textOnPrimary,
-    marginBottom: 12,
   },
-  buttonRow: { alignItems: "flex-start" },
+  startButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: color.surface,
+    borderRadius: 16,
+    height: 45,
+    paddingHorizontal: 14,
+    minHeight: shape.minTouchTarget,
+  },
+  startButtonLabel: {
+    fontSize: typography.button.fontSize,
+    lineHeight: typography.button.lineHeight,
+    fontFamily: typography.button.fontFamily,
+    color: semanticColor.textAccentOnSurface,
+  },
 });
 
 function subtitleFor(appointmentsTodayCount: number): string {
@@ -50,22 +73,33 @@ export function GreetingBanner({
 }: GreetingBannerProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.greetingRow}>
+      <View style={styles.textColumn}>
         <Text
           style={styles.greeting}
           accessibilityLabel={`Olá, ${educatorName}!`}
         >
           {`Olá, ${educatorName}! 👋`}
         </Text>
+        <Text style={styles.subtitle}>
+          {subtitleFor(appointmentsTodayCount)}
+        </Text>
       </View>
-      <Text style={styles.subtitle}>{subtitleFor(appointmentsTodayCount)}</Text>
-      <View style={styles.buttonRow}>
-        <Button
-          label="Iniciar Sessão"
-          onPress={onStartSession}
-          variant="onPrimaryWhite"
+      <Pressable
+        onPress={onStartSession}
+        accessibilityRole="button"
+        accessibilityLabel="Iniciar Sessão"
+        style={styles.startButton}
+      >
+        <Ionicons
+          name="play"
+          size={16}
+          color={semanticColor.textAccentOnSurface}
+          testID="icon-play"
         />
-      </View>
+        <Text style={styles.startButtonLabel} numberOfLines={1}>
+          Iniciar Sessão
+        </Text>
+      </Pressable>
     </View>
   );
 }
