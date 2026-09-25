@@ -28,7 +28,7 @@
   exige pedido ao líder antes de editar.
 - **Edição serial restrita.** Alguns arquivos pertencem a uma tarefa anterior e são
   editados depois por outra, apenas para ligar (wiring) o que ela entrega. Eles
-  aparecem marcados como *(serial)* na lista da tarefa, são recursos compartilhados
+  aparecem marcados como _(serial)_ na lista da tarefa, são recursos compartilhados
   no [TRACKING §3](TRACKING.md#3-recursos-compartilhados) e a ordem é garantida pelas
   dependências. A tarefa posterior altera só o necessário para o wiring e cobre a
   integração com teste.
@@ -37,6 +37,11 @@
 - **Gate aberto não reduz escopo.** Uma tarefa bloqueada continua na entrega. Tirá-la
   exige decisão de redução de escopo do usuário, registrada em GATES e no TRACKING
   ([GATES, regra 5](GATES.md#regras)).
+- **Telas mockadas (G-29).** Desde a T-401, critérios que citam chamadas à API são
+  verificados contra a camada de mocks (`src/mocks/`, flag `EXPO_PUBLIC_USE_MOCKS`),
+  com os mesmos módulos e hooks de dados. Cada tarefa de tela acrescenta os dados
+  fictícios dos endpoints que usa, com cenários de erro. A verificação contra o
+  backend real é da T-1004.
 
 ## 2. Protocolo comum de tarefa
 
@@ -67,11 +72,11 @@ objetiva declarada na própria tarefa**; isso não dispensa validação.
 
 O modelo exato é confirmado **no dispatch** (AGENTS §3); nada aqui promete ID disponível.
 
-| Classe | Uso | Modelo de referência | Esforço padrão |
-|---|---|---|---|
-| A | Execução mecânica: rodar comandos, coletar logs, aplicar mudança totalmente especificada | Haiku | Baixo |
-| B | Testes e implementação com decisões locais e contrato definido | Sonnet / Terra (confirmar capacidade) | Médio |
-| C | Arquitetura, estado com risco de perda de dados, integração ambígua, diagnóstico difícil | Opus / Sol | Alto |
+| Classe | Uso                                                                                      | Modelo de referência                  | Esforço padrão |
+| ------ | ---------------------------------------------------------------------------------------- | ------------------------------------- | -------------- |
+| A      | Execução mecânica: rodar comandos, coletar logs, aplicar mudança totalmente especificada | Haiku                                 | Baixo          |
+| B      | Testes e implementação com decisões locais e contrato definido                           | Sonnet / Terra (confirmar capacidade) | Médio          |
+| C      | Arquitetura, estado com risco de perda de dados, integração ambígua, diagnóstico difícil | Opus / Sol                            | Alto           |
 
 Cada tarefa indica a classe do executor. O líder da frente (classe C) revisa todas.
 
@@ -102,28 +107,29 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 
 ## 3. Histórias
 
-| US | História | Telas / fonte | Tarefas |
-|---|---|---|---|
-| US-01 | Como time, quero um projeto Expo configurado e verificável para implementar com segurança | PROJECT §3, §4 | T-101–T-108 (T-109 cancelada) |
-| US-02 | Como educador, quero interface consistente e acessível em todas as telas | DESIGN §4, §5 | T-201–T-205 |
-| US-03 | Como app, preciso de acesso à API, sessão segura e cache criptografado | PROJECT §7, §8 | T-301–T-306 |
-| US-04 | Como educador, quero entrar no app com email e senha | Login | T-401, T-402 |
-| US-05 | Como educador, quero recuperar minha senha | 01 `senha` | T-403, T-404 |
-| US-06 | Como educador, quero navegar entre as áreas do app | Shell, root, tabs | T-501, T-502 |
-| US-07 | Como educador, quero ver minha agenda de hoje e as últimas sessões | 02 `home`, 03 `homeVazia` | T-601–T-603 |
-| US-08 | Como educador, quero escolher o aluno da sessão | 04 `sessaoAluno` | T-701, T-702 |
-| US-09 | Como educador, quero nomear a sessão e escolher o conteúdo | 05 `sessaoNome` | T-703, T-704 |
-| US-10 | Como educador, quero aplicar as atividades por toque sem perder progresso | 06 `sessaoPlayer` | T-801–T-803 |
-| US-11 | Como educador, quero encerrar a sessão e registrar observação | 06 encerramento | T-804 |
-| US-12 | Como educador, quero ver minha agenda por mês e por dia | 07 `agenda` | T-901–T-903 |
-| US-13 | Como educador, quero criar, editar, remarcar e excluir agendamentos | 07 formulário | T-904, T-905 |
-| US-14 | Como time, quero a entrega validada em aparelho com evidência | Homologação | T-1001–T-1003 |
+| US    | História                                                                                  | Telas / fonte             | Tarefas                       |
+| ----- | ----------------------------------------------------------------------------------------- | ------------------------- | ----------------------------- |
+| US-01 | Como time, quero um projeto Expo configurado e verificável para implementar com segurança | PROJECT §3, §4            | T-101–T-108 (T-109 cancelada) |
+| US-02 | Como educador, quero interface consistente e acessível em todas as telas                  | DESIGN §4, §5             | T-201–T-205                   |
+| US-03 | Como app, preciso de acesso à API, sessão segura e cache criptografado                    | PROJECT §7, §8            | T-301–T-306                   |
+| US-04 | Como educador, quero entrar no app com email e senha                                      | Login                     | T-401, T-402                  |
+| US-05 | Como educador, quero recuperar minha senha                                                | 01 `senha`                | T-403, T-404                  |
+| US-06 | Como educador, quero navegar entre as áreas do app                                        | Shell, root, tabs         | T-501, T-502                  |
+| US-07 | Como educador, quero ver minha agenda de hoje e as últimas sessões                        | 02 `home`, 03 `homeVazia` | T-601–T-603                   |
+| US-08 | Como educador, quero escolher o aluno da sessão                                           | 04 `sessaoAluno`          | T-701, T-702                  |
+| US-09 | Como educador, quero nomear a sessão e escolher o conteúdo                                | 05 `sessaoNome`           | T-703, T-704                  |
+| US-10 | Como educador, quero aplicar as atividades por toque sem perder progresso                 | 06 `sessaoPlayer`         | T-801–T-803                   |
+| US-11 | Como educador, quero encerrar a sessão e registrar observação                             | 06 encerramento           | T-804                         |
+| US-12 | Como educador, quero ver minha agenda por mês e por dia                                   | 07 `agenda`               | T-901–T-903                   |
+| US-13 | Como educador, quero criar, editar, remarcar e excluir agendamentos                       | 07 formulário             | T-904, T-905                  |
+| US-14 | Como time, quero a entrega validada em aparelho com evidência                             | Homologação               | T-1001–T-1003, T-1004         |
 
 ## 4. Tarefas
 
 ### EP-01 — Bootstrap (US-01)
 
 #### T-101 — Spike de compatibilidade da stack
+
 - **Propósito:** confirmar versões compatíveis de Expo SDK, Expo Router, React Native,
   NativeWind, react-native-mmkv (criptografia), Reanimated, Gesture Handler,
   FlashList, SecureStore, TanStack Query, o runner de testes com RNTL, e a necessidade de development
@@ -146,6 +152,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Parada:** conflito de versão sem solução documentada → escalar antes de T-102.
 
 #### T-102 — Criar projeto Expo com TypeScript strict e Expo Router
+
 - **Depende:** T-101. (G-25 revisto: o repositório segue no local atual.)
 - **Fonte obrigatória:** [COMPATIBILIDADE](../bootstrap/COMPATIBILIDADE.md) §3, §5 e §7 (versões, achados A-01 a A-10 e comandos validados).
 - **Arquivos:** `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` (`allowBuilds`), `tsconfig.json`,
@@ -168,6 +175,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio. **Parada:** comando de criação divergente do T-101.
 
 #### T-103 — Qualidade de código
+
 - **Depende:** T-102. **Recurso:** R-01.
 - **Arquivos:** configs de ESLint e Prettier, `.husky/`, configuração de lint-staged, scripts `lint`/`format`.
 - **Aceite:**
@@ -176,6 +184,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** A/B, baixo.
 
 #### T-104 — Runner de testes unitários e de componente (Vitest)
+
 - **Depende:** T-102. **Recurso:** R-01.
 - **Decisão (G-22):** Vitest 5 + `vitest-native` (motor `native`, plataforma Android) + RNTL 14.
   Versões e configuração validadas em [COMPATIBILIDADE](../bootstrap/COMPATIBILIDADE.md) §3, §5 (A-06, A-11 a A-15) e §7.
@@ -194,6 +203,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-105 — Runner E2E Maestro
+
 - **Depende:** T-102, T-108, G-01.
 - **Arquivos:** `.maestro/smoke.yaml`, `.maestro/README.md`, script `test:e2e`.
 - **Aceite:** AC-105-01 fluxo fumaça abre o app no emulador Android e termina com código 0. — `CMD` + `MAN`
@@ -203,6 +213,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio. **Parada:** Maestro indisponível no Windows/Android → escalar.
 
 #### T-106 — Configuração de ambiente
+
 - **Depende:** T-102, T-104 (AC-106-01 é `UT`). **Recurso:** R-02.
 - **Arquivos:** `app.config.ts` (seção `extra`/ambiente), `src/config/env.ts`, `src/config/__tests__/env.test.ts`, `.env.example`.
 - **Requisitos:** base URL por variável Expo pública; perfis dev/homolog/prod; sem URL
@@ -218,6 +229,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, baixo.
 
 #### T-107 — Documentar comandos reais
+
 - **Depende:** T-103, T-104, T-106. **Recurso:** R-05.
 - **Arquivos:** `README.md`.
 - **Aceite:** AC-107-01 cada comando documentado foi executado e tem código de saída registrado; comandos pendentes (E2E, builds) marcados como pendentes. — `CMD` + `REV`
@@ -225,6 +237,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** A, baixo.
 
 #### T-108 — Development build nativo
+
 - **Depende:** T-101, T-102, G-01. **Recurso:** R-02.
 - **Arquivos:** `eas.json` (se usado), ajustes de `app.config.ts` exigidos pelo build.
 - **Alvos (G-01):** development build Expo (não Expo Go: MMKV criptografado exige
@@ -240,6 +253,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio. **Parada:** sem conta Apple Developer ou aparelho iOS → registrar pendência de AC-108-02 e escalar; não simular.
 
 #### T-109 — Observabilidade (Sentry) — **cancelada**
+
 - **Estado:** cancelada em 2026-09-24 por decisão de redução de escopo do usuário (G-20).
   Volta como tarefa de uma entrega futura; o ID não é reutilizado.
 - **Depende (histórico):** T-102, T-106, T-502.
@@ -249,6 +263,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-02 — Fundação de interface (US-02)
 
 #### T-201 — Tokens, tema e fontes
+
 - **Fontes:** DESIGN §4. **Depende:** T-102, T-104, G-17, G-03 (fontes). **Recursos:** R-01, R-03.
 - **Arquivos:** `src/theme/tokens.ts`, `src/theme/typography.ts`, `src/theme/index.ts`,
   `tailwind.config.js`, `global.css` (se NativeWind exigir), carregamento de fontes em
@@ -262,6 +277,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-202 — Primitivos de conteúdo e entrada
+
 - **Depende:** T-201.
 - **Arquivos:** `src/components/{Card,Button,TextField,SearchField,Tag,FilterChips,SectionHeader}/` com `index.tsx` e `__tests__/`.
 - **Aceite:**
@@ -274,6 +290,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-203 — Primitivos de layout, navegação e ícones
+
 - **Depende:** T-201, G-03 (conjunto de ícones).
 - **Arquivos:** `src/components/{AppHeader,TabBar,StepIndicator,Avatar,FooterActions,Icon,Screen}/` com `__tests__/`.
 - **Aceite:**
@@ -284,6 +301,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-204 — Sobreposições
+
 - **Depende:** T-201. Sem nova dependência: `Modal` do React Native com Reanimated/Gesture Handler da stack.
 - **Arquivos:** `src/components/{BottomSheet,ConfirmDialog}/` com `__tests__/`.
 - **Aceite:**
@@ -293,6 +311,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-205 — Estados comuns de tela
+
 - **Depende:** T-202.
 - **Arquivos:** `src/components/{LoadingState,EmptyState,ErrorState,PendingBanner}/` com `__tests__/`.
 - **Aceite:** AC-205-01 `ErrorState` oferece "Tentar novamente" que chama o callback; AC-205-02 `PendingBanner` é anunciado ao aparecer. — `CT`
@@ -301,6 +320,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-03 — Dados, sessão e cache (US-03)
 
 #### T-301 — Cliente HTTP e normalização de erros
+
 - **Fontes:** PROJECT §7, Parte II (convenções de erro). **Depende:** T-104, T-106.
 - **Arquivos:** `src/api/client.ts`, `src/api/errors.ts`, `src/api/__tests__/client.test.ts`, `src/api/__tests__/errors.test.ts`.
 - **Requisitos:** R1 instância única Axios; R2 Bearer injetado a partir de um provedor de
@@ -315,6 +335,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** C, alto (base de toda integração).
 
 #### T-302 — Token seguro e store de autenticação
+
 - **Depende:** T-104.
 - **Arquivos:** `src/stores/auth.ts`, `src/features/auth/token-storage.ts`, `__tests__/` correspondentes.
 - **Aceite:**
@@ -324,6 +345,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-303 — MMKV criptografado e persistência de cache
+
 - **Depende:** T-101, T-104, T-302, G-04. **Recurso:** R-01 (persister, se necessário).
 - **Arquivos:** `src/storage/mmkv.ts`, `src/storage/encryption-key.ts`, `src/api/query-persister.ts`, `__tests__/` correspondentes.
 - **Requisitos:** R1 instância com chave de G-04; R2 nenhuma escrita em MMKV sem criptografia;
@@ -340,9 +362,10 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** C, alto (dados sensíveis).
 
 #### T-304 — QueryClient, retry e conectividade
+
 - **Depende:** T-301, T-303, G-03 (conectividade).
 - **Arquivos:** `src/api/query-client.ts`, `src/api/QueryProvider.tsx`, `src/hooks/useOnline.ts`,
-  `__tests__/`, `src/test-utils/render.tsx` *(serial, R-04: acrescenta QueryClient isolado por teste)*.
+  `__tests__/`, `src/test-utils/render.tsx` _(serial, R-04: acrescenta QueryClient isolado por teste)_.
 - **Aceite:**
   - AC-304-01 sem retry automático para 4xx; retry limitado para rede/5xx em leituras. — `UT`
   - AC-304-02 mutações não repetem sozinhas (evita envio duplicado). — `UT`
@@ -351,6 +374,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** C, médio.
 
 #### T-305 — Tipos e módulos de API da entrega
+
 - **Depende:** T-102, T-104, T-301 (os módulos usam o cliente e o `ApiError`). **Recurso:** R-08.
 - **Arquivos:** `src/api/types.ts`, `src/api/endpoints/{educator,student,content,session,appointment}.ts`, `src/api/__tests__/endpoints.test.ts`.
 - **Requisitos:** tipos exatamente como PROJECT Parte II; caminhos com barra final
@@ -362,6 +386,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-306 — Datas, fuso e calendário
+
 - **Depende:** T-104, G-13, G-03 (se `Intl` insuficiente).
 - **Arquivos:** `src/utils/date.ts`, `src/utils/__tests__/date.test.ts`.
 - **Aceite:**
@@ -375,6 +400,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-04 — Acesso (US-04, US-05)
 
 #### T-402 — Guarda de rotas e expiração de sessão
+
 - **Depende:** T-102, T-301, T-302, T-304 (limpeza do QueryClient).
 - **Integração:** o guard é montado no root pela tarefa de composição (EP-05), não aqui.
 - **Arquivos:** `app/(auth)/_layout.tsx`, `src/features/auth/{useSessionGuard.ts,SessionGuard.tsx}`, `__tests__/`.
@@ -385,8 +411,12 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** C, médio.
 
 #### T-401 — Login
+
 - **Fontes:** briefing (link "Esqueceu a senha?"), API `sign-in`, `me`. **Depende:** T-202, T-205, T-301, T-302, T-304, T-305, T-502; G-18 só para aceite visual.
 - **Arquivos:** `app/(auth)/login.tsx`, `src/features/auth/{LoginForm.tsx,useSignIn.ts,schemas.ts}`, `__tests__/`.
+- **Camada de mocks (G-29):** esta tarefa cria `src/mocks/` (adaptador do `apiClient`, dados
+  fictícios de `sign-in` e `me`, cenários de erro) e a flag `EXPO_PUBLIC_USE_MOCKS` em
+  `src/config/env.ts` (edição serial da T-106).
 - **Aceite:**
   - AC-401-01 email inválido e senha fora de 6–100 bloqueiam envio com mensagem por campo. — `CT`
   - AC-401-02 sucesso grava token, carrega `me` e navega para a Home. — `CT`
@@ -396,6 +426,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-403 — Recuperação de senha: etapas Email e Código
+
 - **Fontes:** DESIGN 01. **Depende:** T-202, T-203, T-205, T-304, T-305, T-502. **Recurso:** R-10 (cria `ForgotPasswordFlow.tsx`).
 - **Arquivos:** `app/(auth)/forgot-password.tsx`, `src/features/auth/{ForgotPasswordFlow.tsx,useGenerateToken.ts}`, `__tests__/`.
 - **Aceite:**
@@ -407,9 +438,10 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-404 — Recuperação de senha: etapa Senha
-- **Depende:** T-403, G-05. **Recurso:** R-10.
+
+- **Depende:** T-403, G-05 (desde G-29, esses gates bloqueiam só a integração real, T-1004). **Recurso:** R-10.
 - **Arquivos:** `src/features/auth/{ResetPasswordStep.tsx,useUpdatePassword.ts}`, `__tests__/`,
-  `src/features/auth/ForgotPasswordFlow.tsx` *(serial, só para montar a etapa 3)*.
+  `src/features/auth/ForgotPasswordFlow.tsx` _(serial, só para montar a etapa 3)_.
 - **Aceite:**
   - AC-404-01 nova senha 6–100 e confirmação igual, com alternância de visibilidade. — `CT`
   - AC-404-02 envia `{ email, newPassword }` e volta ao Login com confirmação. — `CT`
@@ -422,6 +454,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-05 — Estrutura autenticada (US-06)
 
 #### T-501 — Tabs, header e destinos fora do escopo
+
 - **Depende:** T-203, T-205, T-502, G-10. **Recurso:** R-07.
 - **Arquivos:** `app/(tabs)/_layout.tsx`, `app/(tabs)/{activities,students,reports}.tsx` (placeholders conforme G-10), `src/features/shell/`, `__tests__/`.
 - **Aceite:**
@@ -431,6 +464,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-502 — Composição do root e dono da integração transversal
+
 - **Propósito:** ligar a fundação em um app executável. É a tarefa dona da integração
   de providers, fontes e guarda de sessão; as tarefas de fundação entregam módulos
   testados isoladamente e não editam o root.
@@ -452,6 +486,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-06 — Home (US-07)
 
 #### T-601 — Dados da Home
+
 - **Depende:** T-304, T-305, T-306.
 - **Fontes:** `GET /appointment/`, `GET /student/`, `GET /educator/get-last-sessions`, `GET /educator/me` e, para "Atividades Recentes" (03), `GET /task-notebook/`.
 - **Arquivos:** `src/features/home/{useHomeData.ts,selectors.ts}`, `__tests__/`.
@@ -464,6 +499,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-602 — Componentes da Home e `ContentCard`
+
 - **Depende:** T-202, G-11, G-12, G-15.
 - **Arquivos:** `src/features/home/components/{GreetingBanner,ScheduledSessionCard,CompletedSessionCard}.tsx`,
   `src/features/content/ContentCard.tsx` (reusado por T-703), `__tests__/`.
@@ -475,6 +511,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-603 — Tela Home (02/03)
+
 - **Depende:** T-205, T-501, T-601, T-602.
 - **Arquivos:** `app/(tabs)/index.tsx`, `src/features/home/HomeScreen.tsx`, `__tests__/`.
 - **Aceite:**
@@ -488,10 +525,11 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-07 — Preparação da sessão (US-08, US-09)
 
 #### T-701 — Store do fluxo de sessão
+
 - **Fontes:** PROJECT §6. **Depende:** T-303, T-305.
 - **Arquivos:** `src/stores/session-flow.ts`, `src/stores/__tests__/session-flow.test.ts`.
 - **Requisitos:** máquina de estados explícita (`idle → studentSelected → configured →
-  starting → running → finishing → awaitingObservation → closed`, com `startUncertain`
+starting → running → finishing → awaitingObservation → closed`, com `startUncertain`
   para `start` de resultado desconhecido e `error`); guarda `educatorId`, aluno, nome,
   conteúdo, `sessionId`, instante do envio do `start`, índice e respostas confirmadas,
   pendentes e em conflito; persiste em MMKV criptografado a cada transição; transições
@@ -504,6 +542,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** C, alto (perda de progresso).
 
 #### T-702 — Tela 04: escolher aluno
+
 - **Depende:** T-202, T-203, T-205, T-304, T-305, T-701, G-14.
 - **Arquivos:** `app/session/_layout.tsx`, `app/session/student.tsx`, `src/features/students/{useStudents.ts,StudentRow.tsx}`, `src/features/sessions/StudentStep.tsx`, `__tests__/`.
 - **Aceite:**
@@ -516,7 +555,8 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-703 — Tela 05: nome e conteúdo
-- **Depende:** T-602 (`ContentCard`), T-702, G-06, G-10, G-15. **Recurso:** R-11 (cria `ContentStep.tsx`).
+
+- **Depende:** T-602 (`ContentCard`), T-702, G-06 (desde G-29, esses gates bloqueiam só a integração real, T-1004), G-10, G-15. **Recurso:** R-11 (cria `ContentStep.tsx`).
 - **Arquivos:** `app/session/content.tsx`, `src/features/sessions/{ContentStep.tsx,useContentCatalog.ts}`, `__tests__/`.
 - **Aceite:**
   - AC-703-01 nome obrigatório conforme G-15, máximo 100, com contador ou erro acessível. — `CT`
@@ -533,9 +573,10 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-704 — Início da sessão (`start`)
-- **Depende:** T-301, T-701, T-703, G-06, G-08. **Recurso:** R-11.
+
+- **Depende:** T-301, T-701, T-703, G-06 (desde G-29, esses gates bloqueiam só a integração real, T-1004), G-08. **Recurso:** R-11.
 - **Arquivos:** `src/features/sessions/{useStartSession.ts,loadSessionTasks.ts,reconcileStart.ts}`, `__tests__/`,
-  `src/features/sessions/ContentStep.tsx` *(serial, só para ligar "Iniciar Sessão Agora")*.
+  `src/features/sessions/ContentStep.tsx` _(serial, só para ligar "Iniciar Sessão Agora")_.
 - **Aceite:**
   - AC-704-01 envia `{ studentId, name }` e grava `sessionId` antes de navegar para 06. — `UT`
   - AC-704-02 carrega as tarefas pela fonte aprovada em G-06; sem essa fonte a tarefa não é concluída. — `UT` + `REV`
@@ -555,6 +596,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-08 — Player e encerramento (US-10, US-11)
 
 #### T-801 — Componentes do player
+
 - **Depende:** T-202, G-03 (áudio); G-21 só para AC-801-04.
 - **Arquivos:** `src/features/sessions/player/{ActivityPlayer.tsx,AnswerOption.tsx,ImageZoom.tsx,AudioButton.tsx,Timer.tsx}`, `__tests__/`.
 - **Aceite:**
@@ -567,7 +609,8 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-802 — Tela 06: responder atividades
-- **Depende:** T-704, T-801, G-06, G-07; G-21 só para AC-802-05. **Recurso:** R-12 (cria `PlayerScreen.tsx`).
+
+- **Depende:** T-704, T-801, G-06, G-07 (desde G-29, esses gates bloqueiam só a integração real, T-1004); G-21 só para AC-802-05. **Recurso:** R-12 (cria `PlayerScreen.tsx`).
 - **Arquivos:** `app/session/player.tsx`, `src/features/sessions/{PlayerScreen.tsx,useAnswer.ts}`, `__tests__/`.
 - **Aceite:**
   - AC-802-01 Confirmar Resposta envia `{ sessionId, taskId, selectedAlternativeId, timeToAnswer }` com a unidade de G-07 e avança. — `CT`
@@ -578,10 +621,11 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** C, alto.
 
 #### T-803 — Pendências, reconciliação e retomada
+
 - **Fontes:** PROJECT §6, §7. **Depende:** T-304, T-502, T-802, G-08, G-21. **Recursos:** R-06, R-12.
 - **Arquivos:** `src/features/sessions/{answerQueue.ts,reconcile.ts,ResumeSessionPrompt.tsx}`, `__tests__/`,
-  `src/features/sessions/PlayerScreen.tsx` *(serial, só para `PendingBanner` e estado de conflito)*,
-  `app/_layout.tsx` *(serial, só para montar `ResumeSessionPrompt` no ponto de extensão de T-502)*.
+  `src/features/sessions/PlayerScreen.tsx` _(serial, só para `PendingBanner` e estado de conflito)_,
+  `app/_layout.tsx` _(serial, só para montar `ResumeSessionPrompt` no ponto de extensão de T-502)_.
 - **Aceite:**
   - AC-803-01 falha de rede/timeout deixa a resposta pendente com `PendingBanner` visível. — `CT`
   - AC-803-02 antes de reenviar, consulta `GET /task-notebook-session/student/:studentId`; se a resposta já existe igual, marca confirmada sem reenviar. — `UT`
@@ -595,10 +639,11 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** C, alto.
 
 #### T-804 — Encerramento e observação
+
 - **Fontes:** briefing do usuário (última resposta → encerramento com observação → Home); G-16 resolvido.
 - **Depende:** T-204, T-205, T-803 (fila de pendências e edição serial do player); G-18 só para aceite visual. **Recurso:** R-12.
 - **Arquivos:** `src/features/sessions/{FinishFlow.tsx,ObservationSheet.tsx,useFinishSession.ts,useSaveObservation.ts}`, `__tests__/`,
-  `src/features/sessions/PlayerScreen.tsx` *(serial, só para montar o `FinishFlow`)*.
+  `src/features/sessions/PlayerScreen.tsx` _(serial, só para montar o `FinishFlow`)_.
 - **Decisão aprovada (não "corrigir"):** a última resposta confirmada leva direto a `finish`
   e à folha de observação com **Pular / Salvar**, e daí à Home. Não existe "Continuar
   sessão" nem diálogo intermediário "Encerrar sessão?".
@@ -621,6 +666,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 ### EP-09 — Agenda (US-12, US-13)
 
 #### T-901 — Dados da agenda
+
 - **Depende:** T-304, T-305, T-306, G-13.
 - **Arquivos:** `src/features/appointments/{useAppointments.ts,mutations.ts,selectors.ts}`, `__tests__/`.
 - **Aceite:**
@@ -631,6 +677,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-902 — Componentes da agenda
+
 - **Depende:** T-202, T-306, G-12.
 - **Arquivos:** `src/features/appointments/components/{MiniCalendar,StatTile,AppointmentCard}.tsx`, `__tests__/`.
 - **Aceite:**
@@ -640,6 +687,7 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-903 — Tela 07: agenda
+
 - **Depende:** T-205, T-501, T-901, T-902. **Recurso:** R-13 (cria `AgendaScreen.tsx`).
 - **Arquivos:** `app/(tabs)/appointments.tsx`, `src/features/appointments/AgendaScreen.tsx`, `__tests__/`.
 - **Aceite:**
@@ -650,9 +698,10 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-904 — Formulário de agendamento
+
 - **Depende:** T-202, T-204, T-901, T-903, G-03 (seletor de data/hora), G-12; G-18 só para aceite visual. **Recurso:** R-13.
 - **Arquivos:** `app/appointment-form.tsx`, `src/features/appointments/{AppointmentForm.tsx,schemas.ts}`, `__tests__/`,
-  `src/features/appointments/AgendaScreen.tsx` *(serial, só para Novo, Editar, Remarcar e `new=1`)*.
+  `src/features/appointments/AgendaScreen.tsx` _(serial, só para Novo, Editar, Remarcar e `new=1`)_.
 - **Aceite:**
   - AC-904-01 criar: aluno (de `GET /student/`), data e hora obrigatórios, observação opcional → `POST /appointment/`. — `CT`
   - AC-904-02 editar: aluno exibido sem edição; altera data/hora e observação. — `CT`
@@ -666,9 +715,10 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio.
 
 #### T-905 — Excluir e "Montar Plano da Sessão"
+
 - **Depende:** T-204, T-904 (edição serial da `AgendaScreen`), G-09. **Recurso:** R-13.
 - **Arquivos:** `src/features/appointments/{useDeleteAppointment.ts,AppointmentActions.tsx}`, `__tests__/`,
-  `src/features/appointments/AgendaScreen.tsx` *(serial, só para Excluir e Montar Plano)*.
+  `src/features/appointments/AgendaScreen.tsx` _(serial, só para Excluir e Montar Plano)_.
 - **Aceite:**
   - AC-905-01 Excluir abre `ConfirmDialog`; só confirma chama `DELETE /appointment/:id`. — `CT`
   - AC-905-02 Montar Plano da Sessão abre a tela "Em breve" de T-501 (G-09 revisto: o destino do protótipo é o Plano de Ensino por IA, fora da entrega). — `CT`
@@ -678,8 +728,21 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 
 ### EP-10 — Integração e homologação (US-14)
 
+#### T-1004 — Integração das telas com a API real
+
+- **Depende:** T-401, T-403, T-404, T-603, T-804, T-904, T-905, G-05, G-06, G-07, G-19.
+- **Propósito:** desligar os mocks (G-29), validar cada tela contra o backend do
+  ambiente de G-19, corrigir divergências entre fixtures e respostas reais e remover
+  marcações de mock provisório.
+- **Aceite:**
+  - AC-1004-01 com `EXPO_PUBLIC_USE_MOCKS=false`, cada fluxo da Entrega 1 funciona
+    contra o backend de G-19 (MAN + evidência). — `MAN`
+  - AC-1004-02 fixtures ajustadas para refletir respostas reais observadas. — `REV`
+- **Classe/esforço:** C, médio.
+
 #### T-1001 — Fluxos E2E
-- **Depende:** T-105, T-401, T-403, T-404, T-603, T-804, T-904, T-905, G-19.
+
+- **Depende:** T-105, T-401, T-403, T-404, T-603, T-804, T-904, T-905, T-1004, G-19.
 - **Escopo:** o fluxo de recuperação inclui a etapa Senha. Retirá-la exige decisão de
   redução de escopo do usuário ([GATES, regra 5](GATES.md#regras)); G-05 aberto não basta.
 - **Arquivos:** `.maestro/{login,recuperar-senha,sessao-completa,sessao-retomada,agenda-crud}.yaml`.
@@ -687,12 +750,14 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 - **Classe/esforço:** B, médio (execução por A).
 
 #### T-1002 — Revisão de acessibilidade e layout
+
 - **Depende:** T-401, T-403, T-404, T-603, T-702, T-703, T-804, T-903, T-904, T-905.
 - **Arquivos:** `docs/entrega-1/evidencias/acessibilidade.md` (relatório; exceção de propriedade concedida a esta tarefa).
 - **Aceite:** AC-1002-01 TalkBack (e VoiceOver se G-01) percorre cada tela na ordem visual com rótulos; AC-1002-02 escala de fonte 1,3 e 2,0 sem perda de função; AC-1002-03 celular e tablet conforme G-01; AC-1002-04 contraste dos pares finais. — `MAN` + `REV`
 - **Classe/esforço:** C, médio.
 
 #### T-1003 — Homologação e relatório final
+
 - **Depende:** T-108, T-1001, T-1002, G-01, G-19. **Recurso:** R-05.
 - **Arquivos:** `docs/entrega-1/evidencias/homologacao.md`, `README.md` (atualização final de comandos).
 - **Aceite:** AC-1003-01 matriz tela × plataforma × aparelho com resultado e evidência; AC-1003-02 pendências (iOS, gates abertos) explícitas; a entrega só é declarada completa com T-404 concluída ou com nova decisão de redução de escopo registrada (T-109 já foi retirada por decisão); AC-1003-03 `lint`, `typecheck`, `test` e `test:e2e` com códigos de saída. — `MAN` + `CMD` + `REV`
@@ -733,6 +798,10 @@ T-803 → T-804          T-804 → T-1001, T-1002
 T-901 → T-903, T-904   T-902 → T-903
 T-903 → T-904, T-1002  T-904 → T-905, T-1001, T-1002
 T-905 → T-1001, T-1002
+T-401 → T-1004         T-403 → T-1004
+T-404 → T-1004         T-603 → T-1004
+T-804 → T-1004         T-904 → T-1004
+T-905 → T-1004         T-1004 → T-1001
 T-1001 → T-1003        T-1002 → T-1003
 ```
 
