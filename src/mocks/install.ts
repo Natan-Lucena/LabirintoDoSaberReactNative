@@ -7,6 +7,7 @@ import "@/mocks/handlers/educator";
 import "@/mocks/handlers/appointment";
 import "@/mocks/handlers/student";
 import "@/mocks/handlers/content";
+import "@/mocks/handlers/notebook-create";
 
 let installed = false;
 
