@@ -11,6 +11,8 @@ export interface TextFieldProps {
   hint?: string;
   secureTextEntry?: boolean;
   accessibilityLabel?: string;
+  placeholder?: string;
+  onBlur?: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -47,6 +49,8 @@ export function TextField({
   hint,
   secureTextEntry,
   accessibilityLabel,
+  placeholder,
+  onBlur,
 }: TextFieldProps) {
   const [visible, setVisible] = useState(false);
   const errorId = useId();
@@ -58,10 +62,12 @@ export function TextField({
         <TextInput
           value={value}
           onChangeText={onChangeText}
+          onBlur={onBlur}
           secureTextEntry={secureTextEntry ? !visible : false}
           accessibilityLabel={accessibilityLabel ?? label}
           accessibilityHint={error}
           nativeID={errorId}
+          placeholder={placeholder}
           style={styles.input}
         />
         {secureTextEntry ? (

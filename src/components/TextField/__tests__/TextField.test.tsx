@@ -72,3 +72,35 @@ describe("AC-202-05 TextField alvo de toque", () => {
     expect(flatStyle.minHeight).toBeGreaterThanOrEqual(48);
   });
 });
+
+// T-703: placeholder e onBlur opcionais, usados na tela 05 (nome da sessão).
+describe("TextField placeholder e onBlur (T-703)", () => {
+  it("repassa o placeholder ao input", async () => {
+    await render(
+      <TextField
+        label="Nome"
+        value=""
+        onChangeText={vi.fn()}
+        placeholder="Ex: Sessão de Alfabetização - 08/04/2026"
+      />,
+    );
+    expect(
+      screen.getByPlaceholderText("Ex: Sessão de Alfabetização - 08/04/2026"),
+    ).toBeTruthy();
+  });
+
+  it("chama onBlur ao perder o foco", async () => {
+    const onBlur = vi.fn();
+    await render(
+      <TextField
+        label="Nome"
+        value=""
+        onChangeText={vi.fn()}
+        onBlur={onBlur}
+      />,
+    );
+    const input = screen.getByDisplayValue("");
+    fireEvent(input, "blur");
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+});
