@@ -1,5 +1,7 @@
 import {
   MOCK_EDUCATOR,
+  getMockHomeScenario,
+  MOCK_LAST_SESSIONS,
   MOCK_NETWORK_ERROR_EMAIL,
   MOCK_TOKEN,
   MOCK_VALID_CREDENTIALS,
@@ -39,6 +41,17 @@ registerMockHandler({ method: "get", path: "/educator/me" }, () => {
 
   return { status: 200, data: MOCK_EDUCATOR };
 });
+
+registerMockHandler(
+  { method: "get", path: "/educator/get-last-sessions" },
+  () => {
+    if (getMockHomeScenario() === "no-sessions") {
+      throw new MockApiError(404, "EDUCATOR_DOES_NOT_HAVE_SESSIONS");
+    }
+
+    return { status: 200, data: MOCK_LAST_SESSIONS };
+  },
+);
 
 // Referenciado para garantir o registro no módulo de instalação.
 export const educatorMockHandlersRegistered = true;
