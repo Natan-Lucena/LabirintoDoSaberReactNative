@@ -8,6 +8,7 @@ import "@/mocks/handlers/appointment";
 import "@/mocks/handlers/student";
 import "@/mocks/handlers/content";
 import "@/mocks/handlers/notebook-create";
+import "@/mocks/handlers/group-create";
 
 let installed = false;
 
