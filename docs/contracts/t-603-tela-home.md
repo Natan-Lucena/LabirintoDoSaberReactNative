@@ -48,3 +48,16 @@ export Android, removendo `dist-android` ao fim.
 - 2026-09-25: após revisão do vermelho, `useHomeQuery` foi autorizado em
   `useHomeData.ts`; uma chave agregada `["home"]` foi rejeitada porque não seria
   invalidada pelas mutações de Agenda (T-901).
+- 2026-09-25 (UX2, Figma "Home sem agenda"): card de "Sessões de hoje" passou
+  a abrir "Em breve" (title "Agenda") em vez de `/appointments` — decisão do
+  usuário de adiar a Agenda. "Últimas Sessões Realizadas" virou carrossel
+  horizontal (`ScrollView horizontal`) com `CompletedSessionCard` mostrando
+  avatar (`assets/images/avatar-crianca.png`) e borda esquerda alternando
+  primary/info(`rgb(74,144,226)`, sem token no tema)/success por índice —
+  mantém a decisão já vigente de não exibir horário/categoria/descrição
+  (G-11/G-14). "Atividades Recentes" **não** foi redesenhada com fundos
+  alternados/ícone (Figma) porque isso exigiria editar `ContentCard`/`Card`,
+  fora do escopo de arquivos permitidos desta tarefa; pendência registrada
+  para uma frente com esses arquivos liberados. Banner mantido com as cores
+  acessíveis já vigentes do tema (G-17); "Tela Inicial" é o título do
+  `AppHeader` (T-501), não do banner.

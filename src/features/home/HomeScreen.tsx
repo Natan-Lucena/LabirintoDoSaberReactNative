@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { ErrorState } from "@/components/ErrorState";
@@ -14,13 +14,14 @@ import { ScheduledSessionCard } from "@/features/home/components/ScheduledSessio
 import { useHomeQuery } from "@/features/home/useHomeData";
 import { useOnline } from "@/hooks/useOnline";
 import { color } from "@/theme";
-import { dayKey } from "@/utils/date";
 
 const statusLabels = {
   PENDING: "Pendente",
   COMPLETED: "Concluído",
   CANCELLED: "Cancelado",
 } as const;
+
+const ACCENTS = ["primary", "info", "success"] as const;
 
 const categoryLabels = {
   reading: "Leitura",
@@ -32,6 +33,7 @@ const categoryLabels = {
 const styles = StyleSheet.create({
   content: { padding: 16, gap: 16 },
   section: { gap: 10 },
+  carousel: { gap: 10, paddingRight: 4 },
   state: { flex: 1, justifyContent: "center" },
   fallback: { color: color.textSecondary },
 });
@@ -91,12 +93,7 @@ export function HomeScreen(): ReactElement {
               scheduledAt={new Date(appointment.scheduledAt)}
               statusLabel={statusLabels[appointment.status]}
               accent={index % 2 === 0 ? "primary" : "pink"}
-              onPress={() =>
-                router.push({
-                  pathname: "/appointments",
-                  params: { date: dayKey(new Date(appointment.scheduledAt)) },
-                })
-              }
+              onPress={() => openComingSoon("Agenda")}
             />
           ))}
         </View>
@@ -107,14 +104,21 @@ export function HomeScreen(): ReactElement {
           actionLabel="Ver todas →"
           onActionPress={() => openComingSoon("Relatórios")}
         />
-        {data.lastSessions.map((session, index) => (
-          <CompletedSessionCard
-            key={`${session.studentName ?? "session"}-${session.sessionName}-${index}`}
-            studentName={session.studentName}
-            sessionName={session.sessionName}
-            onPress={() => openComingSoon("Relatórios")}
-          />
-        ))}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carousel}
+        >
+          {data.lastSessions.map((session, index) => (
+            <CompletedSessionCard
+              key={`${session.studentName ?? "session"}-${session.sessionName}-${index}`}
+              studentName={session.studentName}
+              sessionName={session.sessionName}
+              accent={ACCENTS[index % ACCENTS.length]}
+              onPress={() => openComingSoon("Relatórios")}
+            />
+          ))}
+        </ScrollView>
       </View>
       {data.todayAppointments.length === 0 ? (
         <View style={styles.section}>

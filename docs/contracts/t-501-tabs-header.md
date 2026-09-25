@@ -184,3 +184,14 @@ depois).
   `src/features/shell/__tests__/coming-soon-route.test.tsx`, importando
   `app/shell/coming-soon.tsx`. `APP_DESTINATION`/`src/features/auth/routes.ts`
   mantidos sem qualquer edição (decisão acima).
+- 2026-09-25 (UX2, Figma "Home sem agenda"): **4 abas** em vez das 5 do G-10 —
+  decisão do usuário de adiar Agenda. `agenda` removido de `TAB_DEFINITIONS`;
+  rota `app/(tabs)/appointments.tsx` preservada no disco mas escondida da tab
+  bar via `<Tabs.Screen name="appointments" options={{ href: null }} />` em
+  `app/(tabs)/_layout.tsx`. Título de cabeçalho da Home passou a ser "Tela
+  Inicial" (campo `headerTitle` em `TabDefinition`, distinto do rótulo de aba
+  "Início"). `TabBar` ganhou cantos superiores arredondados (16) e sombra
+  (Figma), substituindo a borda superior; ícones de "Alunos"/"Relatórios"
+  mantidos como `people-outline`/`stats-chart-outline` (não
+  `person-outline`/`clipboard-outline` do Figma) porque `src/components/Icon`
+  está fora do escopo de arquivos permitidos desta tarefa.

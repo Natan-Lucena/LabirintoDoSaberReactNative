@@ -6,7 +6,8 @@ import { TabBar } from "@/components/TabBar";
 import { TAB_DEFINITIONS, useTabItems } from "@/features/shell/useTabItems";
 
 // T-501: TabBar/AppHeader customizados (T-203) em vez do header/tab bar
-// nativos do Expo Router. G-10: 5 abas do design.
+// nativos do Expo Router. UX2: 4 abas do Figma "Home sem agenda" — Agenda
+// fica para depois e some da tab bar (continua acessível via /appointments).
 function TabBarAdapter(): ReactElement {
   const { items, activeKey } = useTabItems();
 
@@ -37,9 +38,10 @@ export default function TabsLayout(): ReactElement {
         <Tabs.Screen
           key={tab.key}
           name={tab.segment}
-          options={{ title: tab.label }}
+          options={{ title: tab.headerTitle ?? tab.label }}
         />
       ))}
+      <Tabs.Screen name="appointments" options={{ href: null }} />
     </Tabs>
   );
 }

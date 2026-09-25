@@ -6,13 +6,22 @@ import type { TabBarItem } from "@/components/TabBar";
 export interface TabDefinition {
   key: string;
   label: string;
+  headerTitle?: string;
   icon: IconName;
   segment: string;
 }
 
-// Ordem fixa do design (DESIGN §2, G-10): Início, Atividades, Alunos, Agenda, Relatórios.
+// UX2 (Figma "Home sem agenda"): 4 abas — Agenda fica para depois (decisão do
+// usuário). Rota /appointments continua existindo mas some da tab bar
+// (app/(tabs)/_layout.tsx, href: null).
 export const TAB_DEFINITIONS: TabDefinition[] = [
-  { key: "home", label: "Início", icon: "home", segment: "index" },
+  {
+    key: "home",
+    label: "Início",
+    headerTitle: "Tela Inicial",
+    icon: "home",
+    segment: "index",
+  },
   {
     key: "activities",
     label: "Atividades",
@@ -20,7 +29,6 @@ export const TAB_DEFINITIONS: TabDefinition[] = [
     segment: "activities",
   },
   { key: "students", label: "Alunos", icon: "students", segment: "students" },
-  { key: "agenda", label: "Agenda", icon: "agenda", segment: "appointments" },
   {
     key: "reports",
     label: "Relatórios",

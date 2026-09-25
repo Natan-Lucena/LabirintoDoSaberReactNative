@@ -17,21 +17,20 @@ describe("useTabItems (AC-501-01)", () => {
     segments = ["(tabs)"];
   });
 
-  it("returns the 5 tabs in the design order with the right labels", async () => {
+  // UX2: 4 abas (Figma "Home sem agenda") — Agenda fica para depois.
+  it("returns the 4 tabs in the design order with the right labels", async () => {
     const { result } = await renderHook(() => useTabItems());
 
     expect(result.current.items.map((item) => item.key)).toEqual([
       "home",
       "activities",
       "students",
-      "agenda",
       "reports",
     ]);
     expect(result.current.items.map((item) => item.label)).toEqual([
       "Início",
       "Atividades",
       "Alunos",
-      "Agenda",
       "Relatórios",
     ]);
   });

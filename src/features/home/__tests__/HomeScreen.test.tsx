@@ -117,9 +117,10 @@ describe("HomeScreen (AC-603-01..04)", () => {
     await fireEvent.press(screen.getByText("Leitura guiada"));
 
     expect(routerPush).toHaveBeenCalledWith("/session/student");
+    // UX2: Agenda fica para depois — card de hoje abre "Em breve" (Agenda).
     expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/appointments",
-      params: { date: "2026-04-02" },
+      pathname: "/shell/coming-soon",
+      params: { title: "Agenda" },
     });
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
