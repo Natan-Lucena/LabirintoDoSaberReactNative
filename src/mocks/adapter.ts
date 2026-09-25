@@ -3,7 +3,7 @@
 import { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
-import { getMockHandler } from "@/mocks/handlers/registry";
+import { getMockHandlerMatch } from "@/mocks/handlers/registry";
 import { MockApiError, MockNetworkError } from "@/mocks/handlers/types";
 
 function buildResponse<T>(
@@ -48,9 +48,9 @@ export async function mockAdapter(
 ): Promise<AxiosResponse> {
   const method = (config.method ?? "get").toLowerCase();
   const url = new URL(config.url ?? "", config.baseURL ?? "http://mock.local");
-  const handler = getMockHandler(method, url.pathname);
+  const match = getMockHandlerMatch(method, url.pathname);
 
-  if (!handler) {
+  if (!match) {
     throw buildApiErrorAxiosError(
       config,
       404,
@@ -59,10 +59,13 @@ export async function mockAdapter(
     );
   }
 
-  const params = Object.fromEntries(url.searchParams.entries());
+  const params = {
+    ...Object.fromEntries(url.searchParams.entries()),
+    ...match.params,
+  };
 
   try {
-    const result = await handler({ body: config.data, params });
+    const result = await match.handler({ body: config.data, params });
 
     return buildResponse(config, result.status, result.data);
   } catch (error) {
