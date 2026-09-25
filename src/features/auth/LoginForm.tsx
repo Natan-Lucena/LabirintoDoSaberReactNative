@@ -1,5 +1,6 @@
 import { useEffect, type ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
@@ -16,7 +17,7 @@ import { useSignIn } from "@/features/auth/useSignIn";
 import { APP_DESTINATION } from "@/features/auth/routes";
 
 const styles = StyleSheet.create({
-  container: { gap: 16 },
+  container: { gap: 20 },
   notice: {
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
@@ -34,7 +35,7 @@ const styles = StyleSheet.create({
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
     color: color.primary,
-    textAlign: "center",
+    textAlign: "right",
   },
 });
 
@@ -92,7 +93,7 @@ export function LoginForm(): ReactElement {
         name="email"
         render={({ field: { onChange, value } }) => (
           <TextField
-            label="E-mail"
+            label="Email"
             value={value}
             onChangeText={(text) => {
               const email = text.trim();
@@ -100,7 +101,15 @@ export function LoginForm(): ReactElement {
               onChange(email);
             }}
             error={errors.email?.message}
-            accessibilityLabel="E-mail"
+            accessibilityLabel="Email"
+            placeholder="seu@email.com"
+            leftIcon={
+              <Ionicons
+                name="mail-outline"
+                size={20}
+                color={color.textSecondary}
+              />
+            }
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
@@ -121,6 +130,14 @@ export function LoginForm(): ReactElement {
             error={errors.password?.message}
             secureTextEntry
             accessibilityLabel="Senha"
+            placeholder="••••••••"
+            leftIcon={
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color={color.textSecondary}
+              />
+            }
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -146,7 +163,7 @@ export function LoginForm(): ReactElement {
       ) : null}
 
       <Button
-        label="Entrar"
+        label="Entrar agora"
         onPress={handleSubmit(onSubmit)}
         loading={isSubmitting}
         disabled={isSubmitting}
@@ -155,10 +172,10 @@ export function LoginForm(): ReactElement {
       <Pressable
         onPress={handleForgotPassword}
         accessibilityRole="link"
-        accessibilityLabel="Esqueceu a senha?"
+        accessibilityLabel="Esqueci minha senha"
         hitSlop={8}
       >
-        <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
+        <Text style={styles.forgotPassword}>Esqueci minha senha</Text>
       </Pressable>
     </View>
   );

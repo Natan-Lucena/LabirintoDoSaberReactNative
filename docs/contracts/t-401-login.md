@@ -191,7 +191,7 @@ export function LoginForm(): ReactElement;
 - Exibe `formError` (401/rede) acima do botão; erro de rede mostra ação
   "Tentar novamente" reenviando os mesmos valores (reaproveita
   `handleSubmit`).
-- Link "Esqueceu a senha?" (`Pressable`/`Text` com `accessibilityRole="link"`)
+- Link "Esqueci minha senha" (`Pressable`/`Text` com `accessibilityRole="link"`)
   navega para `/(auth)/forgot-password`.
 - Se `wasSessionExpired()` (T-402) for verdadeiro ao montar, mostra aviso
   "Sua sessão expirou. Entre novamente." acima do formulário e chama
@@ -199,9 +199,14 @@ export function LoginForm(): ReactElement;
 
 ### `app/(auth)/login.tsx`
 
-- `Screen` com `scroll` + `LoginForm` dentro de um cartão (`View` com
-  `shape`/`color` tokens, sem novo componente compartilhado — visual local,
-  conforme G-18: "montados com primitivos e tokens").
+- Composição UX1 baseada no nó Figma "Login Version 2": fundo por
+  `experimental_backgroundImage`, logo local em `expo-image`, cartão central
+  e `LoginForm`. Os `TextField` recebem ícones Ionicons à esquerda e o controle
+  de visibilidade da senha fica dentro do campo.
+- Desvios deliberados de contraste (G-17): o link usa `color.accent`, não o
+  turquesa claro do Figma, e o texto do botão mantém a cor acessível definida
+  pelo `Button`, não branco. O gradiente é experimental no RN 0.86 e requer
+  validação visual no emulador pelo orquestrador.
 
 ### `app/(auth)/forgot-password.tsx` (placeholder mínimo, T-403 substitui)
 
@@ -280,3 +285,8 @@ vermelho antes de implementar.
   (`useSessionGuard.test.tsx`, `root-layout.test.tsx`,
   `AppProviders.test.tsx`) causados pela troca de `AUTH_DESTINATION` e pela
   instalação dos mocks no boot.
+- 2026-09-25: UX1 aplicou o visual Figma "Login Version 2", substituindo as
+  cópias "Entrar", "E-mail" e "Esqueceu a senha?" por "Entrar agora",
+  "Email" e "Esqueci minha senha". O olho textual foi substituído por ícone
+  acessível, foram mantidos validação/mocks/navegação existentes, e itens não
+  aprovados (lembrar-me, divisor, Google e cadastro) permanecem omitidos.

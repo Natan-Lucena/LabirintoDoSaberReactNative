@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { Text } from "react-native";
 
 import { render } from "@/test-utils/render";
+import LoginScreen from "../../../../app/(auth)/login";
 import { LoginForm } from "@/features/auth/LoginForm";
 import { APP_DESTINATION } from "@/features/auth/routes";
 
@@ -15,6 +17,12 @@ let isSubmitting = false;
 
 vi.mock("expo-router", () => ({
   useRouter: () => ({ replace: routerReplace, push: routerPush }),
+}));
+
+vi.mock("expo-image", () => ({
+  Image: ({ accessibilityLabel }: { accessibilityLabel?: string }) => (
+    <Text accessibilityLabel={accessibilityLabel} />
+  ),
 }));
 
 vi.mock("@/features/auth/useSignIn", () => ({
@@ -44,9 +52,9 @@ describe("LoginForm", () => {
   it("AC-401-01: blocks submit and shows field errors for invalid email/password", async () => {
     await render(<LoginForm />);
 
-    await fireEvent.changeText(screen.getByLabelText("E-mail"), "invalido");
+    await fireEvent.changeText(screen.getByLabelText("Email"), "invalido");
     await fireEvent.changeText(screen.getByLabelText("Senha"), "123");
-    await fireEvent.press(screen.getByRole("button", { name: "Entrar" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Entrar agora" }));
 
     expect(await screen.findByText(/e-mail válido/i)).toBeTruthy();
     expect(screen.getByText(/6 e 100/i)).toBeTruthy();
@@ -57,11 +65,11 @@ describe("LoginForm", () => {
     submitMock.mockResolvedValue(true);
     await render(<LoginForm />);
 
-    await fireEvent.changeText(screen.getByLabelText("E-mail"), "e@x.com");
+    await fireEvent.changeText(screen.getByLabelText("Email"), "e@x.com");
     await fireEvent.changeText(screen.getByLabelText("Senha"), "senha123");
-    await fireEvent.press(screen.getByRole("button", { name: "Entrar" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Entrar agora" }));
 
-    await screen.findByRole("button", { name: "Entrar" });
+    await screen.findByRole("button", { name: "Entrar agora" });
     expect(submitMock).toHaveBeenCalledWith({
       email: "e@x.com",
       password: "senha123",
@@ -73,7 +81,7 @@ describe("LoginForm", () => {
     submitMock.mockResolvedValue(true);
     await render(<LoginForm />);
 
-    const email = screen.getByLabelText("E-mail");
+    const email = screen.getByLabelText("Email");
     const password = screen.getByLabelText("Senha");
     expect(email.props.autoCapitalize).toBe("none");
     expect(email.props.keyboardType).toBe("email-address");
@@ -84,7 +92,7 @@ describe("LoginForm", () => {
 
     await fireEvent.changeText(email, " educadora.mock@labirinto.test ");
     await fireEvent.changeText(password, "senha123");
-    await fireEvent.press(screen.getByRole("button", { name: "Entrar" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Entrar agora" }));
 
     expect(submitMock).toHaveBeenCalledWith({
       email: "educadora.mock@labirinto.test",
@@ -92,11 +100,11 @@ describe("LoginForm", () => {
     });
   });
 
-  it("AC-401-05: 'Esqueceu a senha?' navigates to the forgot-password route", async () => {
+  it("AC-401-05: 'Esqueci minha senha' navigates to the forgot-password route", async () => {
     await render(<LoginForm />);
 
     await fireEvent.press(
-      screen.getByRole("link", { name: "Esqueceu a senha?" }),
+      screen.getByRole("link", { name: "Esqueci minha senha" }),
     );
 
     expect(routerPush).toHaveBeenCalledWith("/(auth)/forgot-password");
@@ -116,7 +124,23 @@ describe("LoginForm", () => {
     isSubmitting = true;
     await render(<LoginForm />);
 
-    const button = screen.getByRole("button", { name: "Entrar" });
+    const button = screen.getByRole("button", { name: "Entrar agora" });
     expect(button.props.accessibilityState.disabled).toBe(true);
+  });
+
+  it("alterna a visibilidade da senha pelo ícone acessível", async () => {
+    await render(<LoginForm />);
+
+    await fireEvent.press(screen.getByLabelText("Mostrar senha"));
+    expect(screen.getByLabelText("Ocultar senha")).toBeTruthy();
+  });
+
+  it("mostra o logo e omite opções de autenticação não aprovadas", async () => {
+    await render(<LoginScreen />);
+
+    expect(screen.getByLabelText("Labirinto do Saber")).toBeTruthy();
+    expect(screen.queryByText("Lembre-se de mim")).toBeNull();
+    expect(screen.queryByText("Continuar com Google")).toBeNull();
+    expect(screen.queryByText("Novo por aqui?")).toBeNull();
   });
 });

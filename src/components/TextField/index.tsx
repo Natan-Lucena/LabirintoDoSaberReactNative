@@ -1,4 +1,5 @@
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Pressable,
   StyleSheet,
@@ -25,6 +26,8 @@ export interface TextFieldProps {
   keyboardType?: TextInputProps["keyboardType"];
   autoComplete?: TextInputProps["autoComplete"];
   textContentType?: TextInputProps["textContentType"];
+  leftIcon?: ReactNode;
+  rightAccessory?: ReactNode;
 }
 
 const styles = StyleSheet.create({
@@ -35,13 +38,19 @@ const styles = StyleSheet.create({
     fontFamily: typography.body.fontFamily,
     color: color.text,
   },
-  inputRow: { flexDirection: "row", alignItems: "center" },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: shape.minTouchTarget,
+    borderWidth: shape.hairlineWidth,
+    borderColor: color.border,
+    borderRadius: shape.inputRadius,
+    backgroundColor: color.surface,
+  },
   input: {
     flex: 1,
     minHeight: shape.minTouchTarget,
-    borderRadius: shape.inputRadius,
-    backgroundColor: color.background,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 13,
     fontSize: typography.body.fontSize,
     color: color.text,
@@ -51,6 +60,8 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
   },
   error: { color: color.pink, fontSize: typography.body.fontSize },
+  icon: { marginLeft: 14 },
+  accessory: { marginRight: 14 },
 });
 
 export function TextField({
@@ -68,6 +79,8 @@ export function TextField({
   keyboardType,
   autoComplete,
   textContentType,
+  leftIcon,
+  rightAccessory,
 }: TextFieldProps) {
   const [visible, setVisible] = useState(false);
   const errorId = useId();
@@ -76,6 +89,7 @@ export function TextField({
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputRow}>
+        {leftIcon ? <View style={styles.icon}>{leftIcon}</View> : null}
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -94,13 +108,20 @@ export function TextField({
         />
         {secureTextEntry ? (
           <Pressable
+            style={styles.accessory}
             onPress={() => setVisible((current) => !current)}
             accessibilityRole="button"
             accessibilityLabel={visible ? "Ocultar senha" : "Mostrar senha"}
             hitSlop={12}
           >
-            <Text>{visible ? "Ocultar" : "Mostrar"}</Text>
+            <Ionicons
+              name={visible ? "eye-off-outline" : "eye-outline"}
+              size={20}
+              color={color.textSecondary}
+            />
           </Pressable>
+        ) : rightAccessory ? (
+          <View style={styles.accessory}>{rightAccessory}</View>
         ) : null}
       </View>
       {error ? (

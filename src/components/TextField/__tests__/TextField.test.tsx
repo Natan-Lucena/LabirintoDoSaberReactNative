@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { Text } from "react-native";
 
 import { fireEvent, render, screen } from "../../../test-utils/render";
 import { TextField } from "../index";
@@ -126,5 +127,22 @@ describe("TextField opções de teclado (FX2)", () => {
     expect(input.props.keyboardType).toBe("email-address");
     expect(input.props.autoComplete).toBe("email");
     expect(input.props.textContentType).toBe("emailAddress");
+  });
+});
+
+describe("TextField acessórios (UX1)", () => {
+  it("renderiza ícone à esquerda e acessório à direita quando fornecidos", async () => {
+    await render(
+      <TextField
+        label="Email"
+        value=""
+        onChangeText={vi.fn()}
+        leftIcon={<Text accessibilityLabel="Ícone de email">@</Text>}
+        rightAccessory={<Text accessibilityLabel="Ação do campo">ação</Text>}
+      />,
+    );
+
+    expect(screen.getByLabelText("Ícone de email")).toBeTruthy();
+    expect(screen.getByLabelText("Ação do campo")).toBeTruthy();
   });
 });
