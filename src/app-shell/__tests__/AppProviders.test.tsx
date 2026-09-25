@@ -25,6 +25,10 @@ vi.mock("@/features/auth/session-expiry", () => ({
   connectSessionExpiry: (client: QueryClient) => connectSessionExpiry(client),
 }));
 
+// T-401: installApiMocks lê a config de ambiente real (fora do escopo deste
+// teste de wiring); mockado para um no-op, como os demais módulos acima.
+vi.mock("@/mocks/install", () => ({ installApiMocks: vi.fn() }));
+
 const { AppProviders } = await import("@/app-shell/AppProviders");
 
 describe("AppProviders (AC-502-01, AC-502-03, wiring único)", () => {

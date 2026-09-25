@@ -35,6 +35,10 @@ vi.mock("@/storage/mmkv", () => ({
   connectStorageToAuth: () => () => undefined,
 }));
 
+// T-401: installApiMocks lê a config de ambiente real (fora do escopo deste
+// teste de composição do root); mockado para um no-op, como os demais acima.
+vi.mock("@/mocks/install", () => ({ installApiMocks: vi.fn() }));
+
 const { default: RootLayout } = await import("../../../app/_layout");
 
 describe("app/_layout root composition (AC-502-01, ajuste do navegador sempre montado)", () => {
@@ -51,12 +55,12 @@ describe("app/_layout root composition (AC-502-01, ajuste do navegador sempre mo
     });
   });
 
-  it("redirects to the auth destination when unauthenticated", async () => {
+  it("does not redirect when unauthenticated and already at the auth destination", async () => {
     useAuthStore.setState({ status: "unauthenticated" });
 
     await render(<RootLayout />);
 
-    expect(routerReplace).toHaveBeenCalledWith("/");
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 
   it("redirects to the app destination when authenticated", async () => {
@@ -86,6 +90,7 @@ describe("app/_layout root composition (AC-502-01, ajuste do navegador sempre mo
 
   it("does not navigate before the root navigator finishes mounting, then navigates once it does", async () => {
     navigationKey = undefined;
+    pathname = "/";
     useAuthStore.setState({ status: "unauthenticated" });
 
     const { rerender } = await render(<RootLayout />);
@@ -95,6 +100,6 @@ describe("app/_layout root composition (AC-502-01, ajuste do navegador sempre mo
     await rerender(<RootLayout />);
 
     expect(routerReplace).toHaveBeenCalledTimes(1);
-    expect(routerReplace).toHaveBeenCalledWith("/");
+    expect(routerReplace).toHaveBeenCalledWith("/(auth)/login");
   });
 });

@@ -39,21 +39,21 @@ describe("useSessionGuard (AC-402-01)", () => {
     expect(routerReplace).not.toHaveBeenCalled();
   });
 
-  it("does not redirect when unauthenticated and already at the auth placeholder destination", async () => {
+  it("does not redirect when unauthenticated and already at the auth destination", async () => {
     setStatus("unauthenticated");
-    pathname = "/";
+    pathname = "/(auth)/login";
     await render(<Probe />);
     expect(routerReplace).not.toHaveBeenCalled();
   });
 
-  it("redirects when unauthenticated and away from the auth placeholder destination", async () => {
+  it("redirects when unauthenticated and away from the auth destination", async () => {
     setStatus("unauthenticated");
-    pathname = "/(auth)/login";
+    pathname = "/";
     await act(async () => {
       await render(<Probe />);
     });
     expect(routerReplace).toHaveBeenCalledTimes(1);
-    expect(routerReplace).toHaveBeenCalledWith("/");
+    expect(routerReplace).toHaveBeenCalledWith("/(auth)/login");
   });
 
   it("redirects when authenticated and away from the app placeholder destination", async () => {
