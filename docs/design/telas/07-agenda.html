@@ -1,0 +1,63 @@
+<!-- Fonte: Labirinto V4 Mobile - Offline.html (Claude Design, projeto fe9f5a5d-00c3-4254-9797-0fba2801a1f3), template desempacotado, linhas 1845-1906; extraído em 2026-09-24; referência visual, não código a importar; valores passam pelas adaptações aprovadas em G-17. -->
+            <sc-if value="{{ isAgenda }}" hint-placeholder-val="{{ true }}">
+              <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <span style="font:700 13px Nunito,sans-serif;color:rgb(0,0,0)">abril 2026</span>
+                  <span style="font:400 10px Nunito,sans-serif;color:rgb(158,151,151)">‹  ›</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+                  <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7">
+                    <div style="text-align:center;font:700 6.594px Nunito,sans-serif;color:rgb(158,151,151);padding:2px 0">{{ w }}</div>
+                  </sc-for>
+                  <sc-for list="{{ monthDays }}" as="d" hint-placeholder-count="35">
+                    <div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:8px;background:{{ d.bg }}">
+                      <span style="font:{{ d.fw }} 10px Nunito,sans-serif;color:{{ d.fg }}">{{ d.n }}</span>
+                      <div style="width:3px;height:3px;border-radius:100px;background:{{ d.dot }}"></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="border-radius:16.273px;background:rgb(114,222,212);box-shadow:0 2.170px 2.170px rgba(0,0,0,0.25);padding:14px;text-align:center;font:700 10px Nunito,sans-serif;color:#fff">Novo Agendamento</div>
+              <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:20.187px;display:flex;flex-direction:column;gap:11px">
+                <div style="font:700 13px Nunito,sans-serif;color:rgb(0,0,0)">📊 Resumo do Dia</div>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;border-radius:11px;background:rgb(246,248,248);padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+                    <span style="font:400 6.594px/9.891px Nunito,sans-serif;color:rgb(158,151,151)">Total de Sessões</span>
+                    <span style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">4</span>
+                  </div>
+                  <div style="flex:1;border-radius:11px;background:rgb(246,248,248);padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+                    <span style="font:400 6.594px/9.891px Nunito,sans-serif;color:rgb(158,151,151)">Primeira Sessão</span>
+                    <span style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">09:00</span>
+                  </div>
+                  <div style="flex:1;border-radius:11px;background:rgb(246,248,248);padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+                    <span style="font:400 6.594px/9.891px Nunito,sans-serif;color:rgb(158,151,151)">Última Sessão</span>
+                    <span style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">17:30</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;padding:4px 4px 0">
+                <span style="font:700 13px Nunito,sans-serif;color:rgb(0,0,0)">Sessões de Hoje</span>
+                <span style="font:400 6.594px/9.891px Nunito,sans-serif;color:rgb(158,151,151)">quinta-feira, 02 de abril de 2026</span>
+              </div>
+              <sc-for list="{{ agendaSessions }}" as="s" hint-placeholder-count="4">
+                <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:16px 18px;display:flex;flex-direction:column;gap:8px;border-left:2.090px solid {{ s.accent }}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <span style="font:700 10px 'Roboto Mono',monospace;color:rgb(63,74,73)">{{ s.from }} <span style="font-family:Nunito,sans-serif;color:rgb(158,151,151);font-weight:400">até</span> {{ s.to }}</span>
+                    <span style="border-radius:11063370px;background:{{ s.badgeBg }};padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:{{ s.badgeFg }};white-space:nowrap">{{ s.badge }}</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">{{ s.student }}</span>
+                    <span style="font:400 10px/13.138px Nunito,sans-serif;color:rgb(158,151,151)">{{ s.activity }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <span style="border-radius:11063370px;background:rgb(216,245,243);padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:rgb(26,90,82)">{{ s.cat }}</span>
+                    <div style="display:flex;gap:12px">
+                      <span style="font:700 6.594px Nunito,sans-serif;color:rgb(26,90,82)">Editar</span>
+                      <span style="font:700 6.594px Nunito,sans-serif;color:rgb(26,90,82)">Remarcar</span>
+                      <span style="font:700 6.594px Nunito,sans-serif;color:rgb(233,75,143)">Excluir</span>
+                    </div>
+                  </div>
+                  <div style="border-radius:11063370px;background:rgb(114,222,212);padding:8px 0;text-align:center;font:700 10px Nunito,sans-serif;color:#fff;margin-top:2px">Montar Plano da Sessão</div>
+                </div>
+              </sc-for>
+            </sc-if>

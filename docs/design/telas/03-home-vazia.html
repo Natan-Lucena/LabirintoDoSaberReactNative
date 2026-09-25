@@ -1,0 +1,37 @@
+<!-- Fonte: Labirinto V4 Mobile - Offline.html (Claude Design, projeto fe9f5a5d-00c3-4254-9797-0fba2801a1f3), template desempacotado, linhas 1230-1265; extraído em 2026-09-24; referência visual, não código a importar; valores passam pelas adaptações aprovadas em G-17. -->
+            <sc-if value="{{ isHomeVazia }}" hint-placeholder-val="{{ true }}">
+              <div style="border-radius:16.273px;background:rgb(114,222,212);border:0.434px solid rgb(224,224,224);box-shadow:0 2.170px 2.170px rgba(0,0,0,0.25);padding:14px 17.792px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <div style="font:700 17.358px Nunito,sans-serif;color:#fff;white-space:nowrap">Olá, Dra. Ana Paula! 👋</div>
+                  <div style="font:400 10px/14.646px Nunito,sans-serif;color:rgba(255,255,255,0.9)">Seja bem-vinda!</div>
+                </div>
+                <div style="border-radius:16.273px;background:#fff;box-shadow:0 2.170px 2.170px rgba(0,0,0,0.25);padding:12px 17.358px;font:700 10px Nunito,sans-serif;color:rgb(26,90,82);white-space:nowrap">Iniciar Sessão</div>
+              </div>
+              <div style="font:700 13px Nunito,sans-serif;color:rgb(0,0,0);padding:4px 4px 0">Últimas Sessões Realizadas</div>
+              <sc-for list="{{ lastSessions }}" as="s" hint-placeholder-count="3">
+                <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:16px 18px;display:flex;flex-direction:column;gap:6px;border-left:2.090px solid rgb(114,222,212)">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">{{ s.name }}</span>
+                    <span style="font:700 10px Nunito,sans-serif;color:rgb(158,151,151)">{{ s.time }}</span>
+                  </div>
+                  <div style="font:400 10px/13.138px Nunito,sans-serif;color:rgb(158,151,151)">{{ s.desc }}</div>
+                  <div style="margin-top:2px">{{ s.tag }}</div>
+                </div>
+              </sc-for>
+              <div style="font:700 13px Nunito,sans-serif;color:rgb(0,0,0);padding:6px 4px 0">Atividades Recentes</div>
+              <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:16px 18px;display:flex;flex-direction:column;gap:5px">
+                <div style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">Alfabetização Divertida</div>
+                <div style="font:400 10px/13.138px Nunito,sans-serif;color:rgb(158,151,151)">Atividades de reconhecimento de letras e sílabas</div>
+                <div style="display:flex;gap:5px;margin-top:3px"><span style="border-radius:11063370px;background:rgb(216,245,243);padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:rgb(26,90,82)">Leitura</span><span style="border-radius:11063370px;background:rgb(243,244,246);padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:rgb(158,151,151)">Vocabulário</span></div>
+              </div>
+              <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:16px 18px;display:flex;flex-direction:column;gap:5px">
+                <div style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">Números e Quantidade</div>
+                <div style="font:400 10px/13.138px Nunito,sans-serif;color:rgb(158,151,151)">Exercícios de contagem e operações básicas</div>
+                <div style="display:flex;gap:5px;margin-top:3px"><span style="border-radius:11063370px;background:rgb(216,245,243);padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:rgb(26,90,82)">Matemática</span><span style="border-radius:11063370px;background:rgb(243,244,246);padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:rgb(158,151,151)">Contagem</span></div>
+              </div>
+              <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:16px 18px;display:flex;flex-direction:column;gap:5px">
+                <div style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">Sons e Palavras</div>
+                <div style="font:400 10px/13.138px Nunito,sans-serif;color:rgb(158,151,151)">Formação de sílabas e palavras simples</div>
+                <div style="display:flex;gap:5px;margin-top:3px"><span style="border-radius:11063370px;background:rgb(216,245,243);padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:rgb(26,90,82)">Escrita</span><span style="border-radius:11063370px;background:rgb(243,244,246);padding:4px 9px;font:700 6.594px Nunito,sans-serif;color:rgb(158,151,151)">Compreensão</span></div>
+              </div>
+            </sc-if>

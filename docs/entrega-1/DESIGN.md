@@ -7,14 +7,14 @@
 
 ## 1. Fontes e acesso real
 
-| Fonte | Local? | Acesso | Evidência |
-|---|---|---|---|
+| Fonte                                                                                               | Local?                                               | Acesso                                                                            | Evidência                                                                     |
+| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `Labirinto V4 Mobile - Offline.html` (projeto Claude Design `fe9f5a5d-00c3-4254-9797-0fba2801a1f3`) | Cópia do usuário em `Downloads`, fora do repositório | **Lido integralmente** em 2026-09-24: fonte do protótipo desempacotado localmente | Mesmo horário de atualização do arquivo remoto (2026-09-10 23:13 UTC); ver §7 |
-| `Labirinto V4 Mobile.dc.html` | Cópia do usuário em `Downloads` | Comparado: mesmo fonte da versão Offline, sem as fontes embutidas | Mesmas 32 telas, dados e regras de navegação |
-| `docs/Prompt - Mobile Fase 1 (Acesso, Início, Sessão, Agenda).md` (discovery do design) | Não | **Lido integralmente** | Copiado pelo botão "Copy" do editor do projeto |
-| `components/v4/Components.bundle.js` (35 KB) e `Components.d.ts` (3 KB) | Não | Listados pela API do projeto; **não lidos** | São componentes web do Figma: referência de nome, não código a importar |
-| "Mapa de Navegação — Labirinto do Saber (Frontend Web)" | Não | Não acessado | Citado pelo discovery e pelo briefing |
-| Briefing do usuário ao líder documental | Sim (na spec da tarefa) | Lido | Spec `task_c312de1f9319` |
+| `Labirinto V4 Mobile.dc.html`                                                                       | Cópia do usuário em `Downloads`                      | Comparado: mesmo fonte da versão Offline, sem as fontes embutidas                 | Mesmas 32 telas, dados e regras de navegação                                  |
+| `docs/Prompt - Mobile Fase 1 (Acesso, Início, Sessão, Agenda).md` (discovery do design)             | Não                                                  | **Lido integralmente**                                                            | Copiado pelo botão "Copy" do editor do projeto                                |
+| `components/v4/Components.bundle.js` (35 KB) e `Components.d.ts` (3 KB)                             | Não                                                  | Listados pela API do projeto; **não lidos**                                       | São componentes web do Figma: referência de nome, não código a importar       |
+| "Mapa de Navegação — Labirinto do Saber (Frontend Web)"                                             | Não                                                  | Não acessado                                                                      | Citado pelo discovery e pelo briefing                                         |
+| Briefing do usuário ao líder documental                                                             | Sim (na spec da tarefa)                              | Lido                                                                              | Spec `task_c312de1f9319`                                                      |
 
 Histórico do acesso:
 
@@ -29,6 +29,8 @@ Histórico do acesso:
 3. O fonte é um protótipo com dados fictícios e navegação por palavra-chave do texto
    clicado. Destinos derivados dessa navegação são indício, não especificação.
 
+Trechos literais de cada tela (markup e estilos inline do protótipo) estão em [docs/design/telas](../design/telas/README.md), para consulta fiel de layout pelas tarefas de tela.
+
 ## 2. Catálogo das telas
 
 Estrutura das telas logadas no design: status bar (44), header de 64 com menu à
@@ -36,17 +38,17 @@ esquerda, título central e avatar à direita; tab bar **Início · Atividades �
 Agenda · Relatórios** onde indicado. Rotas abaixo são **propostas** (Expo Router,
 organização do PROJECT §4) e só valem depois do bootstrap.
 
-| # | Chave | Tela | Header | Tabs | Rota proposta | Equivalente web |
-|---|---|---|---|---|---|---|
-| — | — | Login (fora do conjunto 01–07) | não | não | `app/(auth)/login.tsx` | `/` login |
-| 01 | `senha` | Recuperar / Redefinir Senha | não | não | `app/(auth)/forgot-password.tsx` | `/forgotPassword` + `/resetPassword` |
-| 02 | `home` | Home com agenda | sim | sim | `app/(tabs)/index.tsx` | `/home` |
-| 03 | `homeVazia` | Home sem agenda (mesma tela, estado vazio) | sim | sim | `app/(tabs)/index.tsx` | `/home` |
-| 04 | `sessaoAluno` | Iniciar Sessão — escolher aluno | sim | não | `app/session/student.tsx` | `/Session` |
-| 05 | `sessaoNome` | Iniciar Sessão — nome e conteúdo | sim | não | `app/session/content.tsx` | `/SessionTitle`, `/SessionType`, `/SessionNotebook` · `/SessionGroup` · `/SessionActivities` |
-| 06 | `sessaoPlayer` | Sessão em andamento (+ encerramento) | sim | não | `app/session/player.tsx` | `/SessionInit` |
-| 07 | `agenda` | Agenda de Atendimentos | sim | sim | `app/(tabs)/appointments.tsx` | `/agenda` |
-| — | — | Formulário de agendamento | — | não | `app/appointment-form.tsx` (modal) | modal da agenda |
+| #   | Chave          | Tela                                       | Header | Tabs | Rota proposta                      | Equivalente web                                                                              |
+| --- | -------------- | ------------------------------------------ | ------ | ---- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| —   | —              | Login (fora do conjunto 01–07)             | não    | não  | `app/(auth)/login.tsx`             | `/` login                                                                                    |
+| 01  | `senha`        | Recuperar / Redefinir Senha                | não    | não  | `app/(auth)/forgot-password.tsx`   | `/forgotPassword` + `/resetPassword`                                                         |
+| 02  | `home`         | Home com agenda                            | sim    | sim  | `app/(tabs)/index.tsx`             | `/home`                                                                                      |
+| 03  | `homeVazia`    | Home sem agenda (mesma tela, estado vazio) | sim    | sim  | `app/(tabs)/index.tsx`             | `/home`                                                                                      |
+| 04  | `sessaoAluno`  | Iniciar Sessão — escolher aluno            | sim    | não  | `app/session/student.tsx`          | `/Session`                                                                                   |
+| 05  | `sessaoNome`   | Iniciar Sessão — nome e conteúdo           | sim    | não  | `app/session/content.tsx`          | `/SessionTitle`, `/SessionType`, `/SessionNotebook` · `/SessionGroup` · `/SessionActivities` |
+| 06  | `sessaoPlayer` | Sessão em andamento (+ encerramento)       | sim    | não  | `app/session/player.tsx`           | `/SessionInit`                                                                               |
+| 07  | `agenda`       | Agenda de Atendimentos                     | sim    | sim  | `app/(tabs)/appointments.tsx`      | `/agenda`                                                                                    |
+| —   | —              | Formulário de agendamento                  | —      | não  | `app/appointment-form.tsx` (modal) | modal da agenda                                                                              |
 
 ### 01 · Recuperar / Redefinir Senha (`senha`)
 
@@ -154,20 +156,20 @@ usuário em 2026-09-24 (G-17)** e é a referência de T-201.
 
 ### Cores
 
-| Token proposto | Fonte (exata) | Uso no design | Nota de acessibilidade (WCAG 2.x, calculado) |
-|---|---|---|---|
-| `color.primary` | `rgb(114,222,212)` | botões, banner, seleção, passo ativo | Branco sobre ela: **1,60:1** (falha). Preto: 13,11:1; `rgb(26,90,82)`: 4,99:1 (AA texto normal) |
-| `color.selection` | `rgb(216,245,243)` | fundo selecionado, tags | Destaque sobre ela: 6,95:1 |
-| `color.accent` | `rgb(26,90,82)` | texto de destaque, links | Sobre branco 7,99:1 |
-| `color.pink` | `rgb(233,75,143)` | acento, ação destrutiva | Sobre branco 3,58:1: só texto grande, ícones e bordas |
-| `color.success` | `rgb(80,200,120)` | acento do agendamento "Realizada" (07) | Sobre branco **2,13:1** e sobre o fundo 2,00:1: só decorativo (borda de acento); o status vai em texto |
-| `color.background` | `rgb(246,248,248)` | fundo de tela e de input | — |
-| `color.surface` | `#fff` | cards | — |
-| `color.border` | `rgb(224,224,224)` | borda de card | 1,32:1: decorativa; não pode ser o único limite de campo |
-| `color.tagNeutral` | `rgb(243,244,246)` | tags neutras | Secundário sobre ela 8,34:1 |
-| `color.text` | `rgb(0,0,0)` | texto principal | 21:1 |
-| `color.textSecondary` | `rgb(63,74,73)` | texto secundário | 9,18:1 no branco; 8,61:1 no fundo |
-| `color.textTertiary` | `rgb(158,151,151)` | terciário, placeholder | **2,87:1** no branco e 2,69:1 no fundo: falha para texto |
+| Token proposto        | Fonte (exata)      | Uso no design                          | Nota de acessibilidade (WCAG 2.x, calculado)                                                           |
+| --------------------- | ------------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `color.primary`       | `rgb(114,222,212)` | botões, banner, seleção, passo ativo   | Branco sobre ela: **1,60:1** (falha). Preto: 13,11:1; `rgb(26,90,82)`: 4,99:1 (AA texto normal)        |
+| `color.selection`     | `rgb(216,245,243)` | fundo selecionado, tags                | Destaque sobre ela: 6,95:1                                                                             |
+| `color.accent`        | `rgb(26,90,82)`    | texto de destaque, links               | Sobre branco 7,99:1                                                                                    |
+| `color.pink`          | `rgb(233,75,143)`  | acento, ação destrutiva                | Sobre branco 3,58:1: só texto grande, ícones e bordas                                                  |
+| `color.success`       | `rgb(80,200,120)`  | acento do agendamento "Realizada" (07) | Sobre branco **2,13:1** e sobre o fundo 2,00:1: só decorativo (borda de acento); o status vai em texto |
+| `color.background`    | `rgb(246,248,248)` | fundo de tela e de input               | —                                                                                                      |
+| `color.surface`       | `#fff`             | cards                                  | —                                                                                                      |
+| `color.border`        | `rgb(224,224,224)` | borda de card                          | 1,32:1: decorativa; não pode ser o único limite de campo                                               |
+| `color.tagNeutral`    | `rgb(243,244,246)` | tags neutras                           | Secundário sobre ela 8,34:1                                                                            |
+| `color.text`          | `rgb(0,0,0)`       | texto principal                        | 21:1                                                                                                   |
+| `color.textSecondary` | `rgb(63,74,73)`    | texto secundário                       | 9,18:1 no branco; 8,61:1 no fundo                                                                      |
+| `color.textTertiary`  | `rgb(158,151,151)` | terciário, placeholder                 | **2,87:1** no branco e 2,69:1 no fundo: falha para texto                                               |
 
 Adaptações propostas (G-17): texto e ícones sobre `primary` em `accent` ou preto;
 placeholder e metadado em tom com ≥ 4,5:1 a aprovar; seleção indicada por borda
@@ -184,18 +186,18 @@ finais implementadas.
 
 Famílias: Nunito (interface), Roboto Mono (horários e cronômetro), Roboto (título do header).
 
-| Papel | Fonte (exata) | Proposta mobile (pt/dp, escala do sistema ativa) |
-|---|---|---|
-| Header | Roboto 400 22px / 28px | 22 / 28 |
-| Rótulo da tab bar | Roboto 600 9px / 13px; aba ativa em pill `color.selection` com texto `color.accent`, inativa em `color.textTertiary` | 12 / 16; inativa em tom com ≥ 4,5:1 |
-| Título de tela e banner | Nunito 700 17.358px | 20 / 26 |
-| Título de seção | Nunito 700 13px | 16 / 22 |
-| Título de card | Nunito 700 12px | 15 / 20 |
-| Corpo, label | Nunito 400/700 10px, lh 13.138px | 14 / 20 |
-| Botão | Nunito 700 10px, lh 14.646px | 16 / 20 |
-| Tag, metadado | Nunito 700/400 6.594px, lh 9.891px | 12 / 16 (mínimo) |
-| Horário, cronômetro | Roboto Mono | 14 / 20 em listas; 20 / 26 no player |
-| Enunciado para a criança (06) | não especificado | ≥ 20 / 28; alternativas ≥ 18 |
+| Papel                         | Fonte (exata)                                                                                                        | Proposta mobile (pt/dp, escala do sistema ativa) |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Header                        | Roboto 400 22px / 28px                                                                                               | 22 / 28                                          |
+| Rótulo da tab bar             | Roboto 600 9px / 13px; aba ativa em pill `color.selection` com texto `color.accent`, inativa em `color.textTertiary` | 12 / 16; inativa em tom com ≥ 4,5:1              |
+| Título de tela e banner       | Nunito 700 17.358px                                                                                                  | 20 / 26                                          |
+| Título de seção               | Nunito 700 13px                                                                                                      | 16 / 22                                          |
+| Título de card                | Nunito 700 12px                                                                                                      | 15 / 20                                          |
+| Corpo, label                  | Nunito 400/700 10px, lh 13.138px                                                                                     | 14 / 20                                          |
+| Botão                         | Nunito 700 10px, lh 14.646px                                                                                         | 16 / 20                                          |
+| Tag, metadado                 | Nunito 700/400 6.594px, lh 9.891px                                                                                   | 12 / 16 (mínimo)                                 |
+| Horário, cronômetro           | Roboto Mono                                                                                                          | 14 / 20 em listas; 20 / 26 no player             |
+| Enunciado para a criança (06) | não especificado                                                                                                     | ≥ 20 / 28; alternativas ≥ 18                     |
 
 Critério da proposta: preservar a ordem hierárquica e o peso da fonte, com mínimos
 de legibilidade em aparelho (12 para metadado, 14 para corpo). Respeitar a escala de
@@ -204,17 +206,17 @@ pode perder função com escala 2,0 (quebra de linha em vez de corte).
 
 ### Forma, espaço e elevação
 
-| Elemento | Fonte (exata) | Proposta |
-|---|---|---|
-| Card | raio 15.833px, borda 0.492px, sombra `0 2.462px 2.462px rgba(0,0,0,.25)`, padding 20.187px ou 16px 18px (listas) | raio 16, borda `hairlineWidth`, sombra iOS equivalente e `elevation` 2 no Android, padding 20 ou 16×18 |
-| Botão primário e banner | raio 16.273px, sombra `0 2.170px 2.170px rgba(0,0,0,.25)`, padding 14px | raio 16, altura mínima 48, padding 14 |
-| Input | raio 11px, fundo `rgb(246,248,248)`, padding 13px 14px | raio 12, altura mínima 48, indicador de foco visível |
-| Tag | pill, padding 4px 9px | pill, padding 4×10 (sem alvo de toque) |
-| Chip de filtro | pill, padding 7px 12px | pill, área de toque mínima 48 com `hitSlop` |
-| Borda esquerda de acento | 2.090px | 3 (2 se aprovado) |
-| Avatar da lista | 35.804 × 37.828 | 40 × 40 circular (o valor não quadrado parece artefato de extração; confirmar) |
-| Status bar / header | 44 / 64 | safe area do sistema / 56–64 |
-| Alvo de toque | não especificado | ≥ 44×44 pt (iOS) e ≥ 48×48 dp (Android) |
+| Elemento                 | Fonte (exata)                                                                                                    | Proposta                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Card                     | raio 15.833px, borda 0.492px, sombra `0 2.462px 2.462px rgba(0,0,0,.25)`, padding 20.187px ou 16px 18px (listas) | raio 16, borda `hairlineWidth`, sombra iOS equivalente e `elevation` 2 no Android, padding 20 ou 16×18 |
+| Botão primário e banner  | raio 16.273px, sombra `0 2.170px 2.170px rgba(0,0,0,.25)`, padding 14px                                          | raio 16, altura mínima 48, padding 14                                                                  |
+| Input                    | raio 11px, fundo `rgb(246,248,248)`, padding 13px 14px                                                           | raio 12, altura mínima 48, indicador de foco visível                                                   |
+| Tag                      | pill, padding 4px 9px                                                                                            | pill, padding 4×10 (sem alvo de toque)                                                                 |
+| Chip de filtro           | pill, padding 7px 12px                                                                                           | pill, área de toque mínima 48 com `hitSlop`                                                            |
+| Borda esquerda de acento | 2.090px                                                                                                          | 3 (2 se aprovado)                                                                                      |
+| Avatar da lista          | 35.804 × 37.828                                                                                                  | 40 × 40 circular (o valor não quadrado parece artefato de extração; confirmar)                         |
+| Status bar / header      | 44 / 64                                                                                                          | safe area do sistema / 56–64                                                                           |
+| Alvo de toque            | não especificado                                                                                                 | ≥ 44×44 pt (iOS) e ≥ 48×48 dp (Android)                                                                |
 
 ## 5. Componentes
 
@@ -229,40 +231,40 @@ Em React Native: status bar do sistema com safe area; ícones por um wrapper `Ic
 
 ### Primitivos (base de todas as telas)
 
-| Componente | Variações | Telas | Tarefa |
-|---|---|---|---|
-| `Card` | padrão, acento esquerdo, selecionado, gradiente | todas | T-202 |
-| `Button` | primário, secundário, branco sobre primária, pill; loading, desabilitado | todas | T-202 |
-| `TextField` | label, dica, erro, senha com visibilidade | Login, 01, 05, formulário | T-202 |
-| `SearchField` | com limpar | 04, 05 | T-202 |
-| `Tag` | primária, neutra, rosa | 02, 03, 05, 07 | T-202 |
-| `FilterChips` | ativo, inativo | 05 | T-202 |
-| `SectionHeader` | título, subtítulo, ação opcional | 02, 03, 07 | T-202 |
-| `AppHeader` | menu, título, avatar | 02–07 | T-203 |
-| `TabBar` | aba ativa | 02, 03, 07 | T-203 |
-| `StepIndicator` | 3 etapas; passo único | 01, 04 | T-203 |
-| `Avatar` | foto, iniciais | 04, header | T-203 |
-| `FooterActions` | Voltar + primária (1 : 1,4) | 04, 05 | T-203 |
-| `Icon` | wrapper do conjunto aprovado | todas | T-203 |
-| `BottomSheet`, `ConfirmDialog` | formulário, confirmação | 06, 07 | T-204 |
-| `LoadingState`, `EmptyState`, `ErrorState`, `PendingBanner` | — | todas | T-205 |
+| Componente                                                  | Variações                                                                | Telas                     | Tarefa |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------- | ------ |
+| `Card`                                                      | padrão, acento esquerdo, selecionado, gradiente                          | todas                     | T-202  |
+| `Button`                                                    | primário, secundário, branco sobre primária, pill; loading, desabilitado | todas                     | T-202  |
+| `TextField`                                                 | label, dica, erro, senha com visibilidade                                | Login, 01, 05, formulário | T-202  |
+| `SearchField`                                               | com limpar                                                               | 04, 05                    | T-202  |
+| `Tag`                                                       | primária, neutra, rosa                                                   | 02, 03, 05, 07            | T-202  |
+| `FilterChips`                                               | ativo, inativo                                                           | 05                        | T-202  |
+| `SectionHeader`                                             | título, subtítulo, ação opcional                                         | 02, 03, 07                | T-202  |
+| `AppHeader`                                                 | menu, título, avatar                                                     | 02–07                     | T-203  |
+| `TabBar`                                                    | aba ativa                                                                | 02, 03, 07                | T-203  |
+| `StepIndicator`                                             | 3 etapas; passo único                                                    | 01, 04                    | T-203  |
+| `Avatar`                                                    | foto, iniciais                                                           | 04, header                | T-203  |
+| `FooterActions`                                             | Voltar + primária (1 : 1,4)                                              | 04, 05                    | T-203  |
+| `Icon`                                                      | wrapper do conjunto aprovado                                             | todas                     | T-203  |
+| `BottomSheet`, `ConfirmDialog`                              | formulário, confirmação                                                  | 06, 07                    | T-204  |
+| `LoadingState`, `EmptyState`, `ErrorState`, `PendingBanner` | —                                                                        | todas                     | T-205  |
 
 ### Domínio
 
-| Componente | Composição | Tarefa | Reuso futuro previsto no design |
-|---|---|---|---|
-| `GreetingBanner` | saudação, subtítulo, botão | T-602 | Home |
-| `ScheduledSessionCard` | acento, aluno, horário, tag | T-602 | Perfil do aluno › Sessões |
-| `CompletedSessionCard` | gradiente, aluno, sessão (campos G-11) | T-602 | Relatórios, Perfil |
-| `StudentRow` | selecionável, avatar, nome, detalhes | T-702 | Alunos, Gerar Relatório |
-| `ContentCard` | título, descrição, tags | T-602 (usado em 03 e 05) | Atividades, Banco de Atividades |
-| `AnswerOption` | normal, selecionado, desabilitado | T-801 | atividades interativas |
-| `ActivityPlayer` | enunciado, imagem com zoom, áudio, opções, cronômetros | T-801 | demais tipos de atividade |
-| `ObservationSheet` | texto, Pular/Salvar, rascunho | T-804 | Relatório da Sessão |
-| `MiniCalendar` | 7 colunas, seleção, pontos | T-902 | Gerar Relatório (período) |
-| `StatTile` | rótulo, valor | T-902 | Progresso, Relatórios |
-| `AppointmentCard` | acento, horário, status, ações, "Montar Plano" | T-902 | — |
-| `AppointmentForm` | criar, editar, remarcar | T-904 | — |
+| Componente             | Composição                                             | Tarefa                   | Reuso futuro previsto no design |
+| ---------------------- | ------------------------------------------------------ | ------------------------ | ------------------------------- |
+| `GreetingBanner`       | saudação, subtítulo, botão                             | T-602                    | Home                            |
+| `ScheduledSessionCard` | acento, aluno, horário, tag                            | T-602                    | Perfil do aluno › Sessões       |
+| `CompletedSessionCard` | gradiente, aluno, sessão (campos G-11)                 | T-602                    | Relatórios, Perfil              |
+| `StudentRow`           | selecionável, avatar, nome, detalhes                   | T-702                    | Alunos, Gerar Relatório         |
+| `ContentCard`          | título, descrição, tags                                | T-602 (usado em 03 e 05) | Atividades, Banco de Atividades |
+| `AnswerOption`         | normal, selecionado, desabilitado                      | T-801                    | atividades interativas          |
+| `ActivityPlayer`       | enunciado, imagem com zoom, áudio, opções, cronômetros | T-801                    | demais tipos de atividade       |
+| `ObservationSheet`     | texto, Pular/Salvar, rascunho                          | T-804                    | Relatório da Sessão             |
+| `MiniCalendar`         | 7 colunas, seleção, pontos                             | T-902                    | Gerar Relatório (período)       |
+| `StatTile`             | rótulo, valor                                          | T-902                    | Progresso, Relatórios           |
+| `AppointmentCard`      | acento, horário, status, ações, "Montar Plano"         | T-902                    | —                               |
+| `AppointmentForm`      | criar, editar, remarcar                                | T-904                    | —                               |
 
 O PROJECT lista `react-native-calendars` na stack, e essa escolha não é reaberta: o
 `MiniCalendar` (T-902) o envolve e o estiliza conforme este documento. Grade própria
@@ -286,23 +288,23 @@ só com incompatibilidade comprovada, escalada e aprovada.
 
 Cada dúvida registrada em GATES foi conferida no fonte da versão Offline (§1).
 
-| Item | O que o protótipo mostra | Resultado |
-|---|---|---|
-| C-05 / G-05 | 01 com "Etapa 3/3", badge "Código verificado" e "Código verificado! Agora crie uma nova senha segura" | Confirmado. O badge existe no design; a API não verifica código (G-05 aberto) |
-| G-18 Login | Não existe tela de Login entre as 32; "Redefinir Senha" e "Voltar ao login" levam à Home no protótipo | Confirmado: Login sem referência visual |
-| C-12 / G-11 | "Olá, Dra. Ana Paula! 👋"; 03 com "Seja bem-vinda!" | Confirmado; a API não tem título nem gênero |
-| C-08 / G-11 | Últimas Sessões: aluno, "09:00 • 45min", "08/04/2026", categoria, "Taxa de Acerto 85%" | Confirmado; a API só dá aluno e nome da sessão |
-| C-11 / G-12 | Sessões de hoje: aluno, horário, descrição da atividade, categoria | Confirmado; a API não tem atividade nem categoria no agendamento |
-| Novo: 03 | Seção "Atividades Recentes" só no estado sem agenda | **Não estava no discovery.** Decidido: primeiros 3 cadernos (G-11) |
-| C-09 / G-14 | 04: "8 anos • Feminino" e "Nível 1 - Inicial"; selecionado com borda e ✓ | Confirmado; a API não tem nível |
-| C-10 / G-15 | 05: "Alfabetização Divertida", "Histórias Ilustradas" com descrição e tags; chips Cadernos/Grupos/Atividades; "Ver Tudo" | Confirmado; `TaskNotebook` não tem nome. Grafia "Dê um nome á sessão" confirmada |
-| 06 | Aluno, dois cronômetros ("00:02", "00:00"), enunciado, área de imagem, 4 alternativas, Confirmar Resposta; sem indicador de progresso nem ícone de áudio | Confirmado. O protótipo não distingue visualmente qual cronômetro é o da atividade: definir na implementação (Roboto Mono em destaque = atividade, conforme discovery) |
-| C-03 / G-16 | "Confirmar Resposta" leva ao Relatório da Sessão | Confirmado; prevalece a decisão do usuário (Home) |
-| C-04 / G-16 | Não há "Continuar sessão", "Pular" nem folha de observação no fim da sessão | Confirmado que "Continuar sessão" só existia no chat do designer. A observação só aparece como a tela separada "Escrever Observação" (`obs`) |
-| G-18 observação | Tela `obs`: resumo da sessão (duração, taxa de acerto), editor com Negrito/Itálico/Lista, contador de caracteres, "Limpar" e "Salvar Relatório" | A folha de observação da entrega usa texto simples multilinha: a API grava `observation` como string, sem formatação |
-| C-07 / G-12 | 07: "09:00 até 10:00", badge "Realizada"/"Agendada", aluno, atividade, categoria, Editar/Remarcar/Excluir, "Montar Plano da Sessão" | Confirmado; status mapeado acima (§2, 07) |
-| C-02 / G-09 | "Montar Plano da Sessão" navega para `pe` (Plano de Ensino gerado por IA) | Confirmado que o destino do protótipo é o PE. **G-09 revisto:** abre "Em breve" |
-| C-06 / G-10 | Tab bar Início · Atividades · Alunos · Agenda · Relatórios; no protótipo levam a Criar Caderno, Progresso do aluno e Gerar Relatório | Confirmado; nesta entrega abrem "Em breve" |
-| Header | 64 de altura, `IconsMenu24px` · título Roboto 22/28 · `IconsAccountCircleFilled24px`, fundo `rgb(246,248,248)` | Confirmado |
-| C-13 / G-17 | Cores e tamanhos de fonte das telas 01–07 idênticos aos de §4; única cor nova: verde `rgb(80,200,120)` do status "Realizada" | Confirmado; verde adicionado como `color.success` |
-| Mini calendário 07 | "abril 2026", ‹ ›, grade de 7 colunas com dias do mês vizinho esmaecidos, dia selecionado em turquesa, ponto nos dias com sessão | Confirmado |
+| Item               | O que o protótipo mostra                                                                                                                                 | Resultado                                                                                                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C-05 / G-05        | 01 com "Etapa 3/3", badge "Código verificado" e "Código verificado! Agora crie uma nova senha segura"                                                    | Confirmado. O badge existe no design; a API não verifica código (G-05 aberto)                                                                                          |
+| G-18 Login         | Não existe tela de Login entre as 32; "Redefinir Senha" e "Voltar ao login" levam à Home no protótipo                                                    | Confirmado: Login sem referência visual                                                                                                                                |
+| C-12 / G-11        | "Olá, Dra. Ana Paula! 👋"; 03 com "Seja bem-vinda!"                                                                                                      | Confirmado; a API não tem título nem gênero                                                                                                                            |
+| C-08 / G-11        | Últimas Sessões: aluno, "09:00 • 45min", "08/04/2026", categoria, "Taxa de Acerto 85%"                                                                   | Confirmado; a API só dá aluno e nome da sessão                                                                                                                         |
+| C-11 / G-12        | Sessões de hoje: aluno, horário, descrição da atividade, categoria                                                                                       | Confirmado; a API não tem atividade nem categoria no agendamento                                                                                                       |
+| Novo: 03           | Seção "Atividades Recentes" só no estado sem agenda                                                                                                      | **Não estava no discovery.** Decidido: primeiros 3 cadernos (G-11)                                                                                                     |
+| C-09 / G-14        | 04: "8 anos • Feminino" e "Nível 1 - Inicial"; selecionado com borda e ✓                                                                                 | Confirmado; a API não tem nível                                                                                                                                        |
+| C-10 / G-15        | 05: "Alfabetização Divertida", "Histórias Ilustradas" com descrição e tags; chips Cadernos/Grupos/Atividades; "Ver Tudo"                                 | Confirmado; `TaskNotebook` não tem nome. Grafia "Dê um nome á sessão" confirmada                                                                                       |
+| 06                 | Aluno, dois cronômetros ("00:02", "00:00"), enunciado, área de imagem, 4 alternativas, Confirmar Resposta; sem indicador de progresso nem ícone de áudio | Confirmado. O protótipo não distingue visualmente qual cronômetro é o da atividade: definir na implementação (Roboto Mono em destaque = atividade, conforme discovery) |
+| C-03 / G-16        | "Confirmar Resposta" leva ao Relatório da Sessão                                                                                                         | Confirmado; prevalece a decisão do usuário (Home)                                                                                                                      |
+| C-04 / G-16        | Não há "Continuar sessão", "Pular" nem folha de observação no fim da sessão                                                                              | Confirmado que "Continuar sessão" só existia no chat do designer. A observação só aparece como a tela separada "Escrever Observação" (`obs`)                           |
+| G-18 observação    | Tela `obs`: resumo da sessão (duração, taxa de acerto), editor com Negrito/Itálico/Lista, contador de caracteres, "Limpar" e "Salvar Relatório"          | A folha de observação da entrega usa texto simples multilinha: a API grava `observation` como string, sem formatação                                                   |
+| C-07 / G-12        | 07: "09:00 até 10:00", badge "Realizada"/"Agendada", aluno, atividade, categoria, Editar/Remarcar/Excluir, "Montar Plano da Sessão"                      | Confirmado; status mapeado acima (§2, 07)                                                                                                                              |
+| C-02 / G-09        | "Montar Plano da Sessão" navega para `pe` (Plano de Ensino gerado por IA)                                                                                | Confirmado que o destino do protótipo é o PE. **G-09 revisto:** abre "Em breve"                                                                                        |
+| C-06 / G-10        | Tab bar Início · Atividades · Alunos · Agenda · Relatórios; no protótipo levam a Criar Caderno, Progresso do aluno e Gerar Relatório                     | Confirmado; nesta entrega abrem "Em breve"                                                                                                                             |
+| Header             | 64 de altura, `IconsMenu24px` · título Roboto 22/28 · `IconsAccountCircleFilled24px`, fundo `rgb(246,248,248)`                                           | Confirmado                                                                                                                                                             |
+| C-13 / G-17        | Cores e tamanhos de fonte das telas 01–07 idênticos aos de §4; única cor nova: verde `rgb(80,200,120)` do status "Realizada"                             | Confirmado; verde adicionado como `color.success`                                                                                                                      |
+| Mini calendário 07 | "abril 2026", ‹ ›, grade de 7 colunas com dias do mês vizinho esmaecidos, dia selecionado em turquesa, ponto nos dias com sessão                         | Confirmado                                                                                                                                                             |
