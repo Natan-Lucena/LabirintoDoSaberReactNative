@@ -439,7 +439,8 @@ vermelho; limitações; desvios do contrato. O líder consolida no TRACKING.
 
 #### T-404 — Recuperação de senha: etapa Senha
 
-- **Depende:** T-403, G-05 (desde G-29, esses gates bloqueiam só a integração real, T-1004). **Recurso:** R-10.
+- **Depende:** T-403, G-05. **Recurso:** R-10.
+- **Gates de backend (G-29):** G-05, G-06 e G-07 bloqueiam só a integração real, feita na tarefa de integração com a API; aqui a tarefa usa a camada de mocks.
 - **Arquivos:** `src/features/auth/{ResetPasswordStep.tsx,useUpdatePassword.ts}`, `__tests__/`,
   `src/features/auth/ForgotPasswordFlow.tsx` _(serial, só para montar a etapa 3)_.
 - **Aceite:**
@@ -556,7 +557,8 @@ starting → running → finishing → awaitingObservation → closed`, com `sta
 
 #### T-703 — Tela 05: nome e conteúdo
 
-- **Depende:** T-602 (`ContentCard`), T-702, G-06 (desde G-29, esses gates bloqueiam só a integração real, T-1004), G-10, G-15. **Recurso:** R-11 (cria `ContentStep.tsx`).
+- **Depende:** T-602 (`ContentCard`), T-702, G-06, G-10, G-15. **Recurso:** R-11 (cria `ContentStep.tsx`).
+- **Gates de backend (G-29):** G-05, G-06 e G-07 bloqueiam só a integração real, feita na tarefa de integração com a API; aqui a tarefa usa a camada de mocks.
 - **Arquivos:** `app/session/content.tsx`, `src/features/sessions/{ContentStep.tsx,useContentCatalog.ts}`, `__tests__/`.
 - **Aceite:**
   - AC-703-01 nome obrigatório conforme G-15, máximo 100, com contador ou erro acessível. — `CT`
@@ -574,7 +576,8 @@ starting → running → finishing → awaitingObservation → closed`, com `sta
 
 #### T-704 — Início da sessão (`start`)
 
-- **Depende:** T-301, T-701, T-703, G-06 (desde G-29, esses gates bloqueiam só a integração real, T-1004), G-08. **Recurso:** R-11.
+- **Depende:** T-301, T-701, T-703, G-06, G-08. **Recurso:** R-11.
+- **Gates de backend (G-29):** G-05, G-06 e G-07 bloqueiam só a integração real, feita na tarefa de integração com a API; aqui a tarefa usa a camada de mocks.
 - **Arquivos:** `src/features/sessions/{useStartSession.ts,loadSessionTasks.ts,reconcileStart.ts}`, `__tests__/`,
   `src/features/sessions/ContentStep.tsx` _(serial, só para ligar "Iniciar Sessão Agora")_.
 - **Aceite:**
@@ -610,7 +613,8 @@ starting → running → finishing → awaitingObservation → closed`, com `sta
 
 #### T-802 — Tela 06: responder atividades
 
-- **Depende:** T-704, T-801, G-06, G-07 (desde G-29, esses gates bloqueiam só a integração real, T-1004); G-21 só para AC-802-05. **Recurso:** R-12 (cria `PlayerScreen.tsx`).
+- **Depende:** T-704, T-801, G-06, G-07; G-21 só para AC-802-05. **Recurso:** R-12 (cria `PlayerScreen.tsx`).
+- **Gates de backend (G-29):** G-05, G-06 e G-07 bloqueiam só a integração real, feita na tarefa de integração com a API; aqui a tarefa usa a camada de mocks.
 - **Arquivos:** `app/session/player.tsx`, `src/features/sessions/{PlayerScreen.tsx,useAnswer.ts}`, `__tests__/`.
 - **Aceite:**
   - AC-802-01 Confirmar Resposta envia `{ sessionId, taskId, selectedAlternativeId, timeToAnswer }` com a unidade de G-07 e avança. — `CT`
