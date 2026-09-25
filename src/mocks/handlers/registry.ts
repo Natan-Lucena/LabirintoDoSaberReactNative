@@ -24,6 +24,40 @@ export function getMockHandler(
   );
 }
 
+export function getMockHandlerMatch(
+  method: string,
+  path: string,
+): { handler: MockHandler; params: Record<string, string> } | undefined {
+  const exact = getMockHandler(method, path);
+  if (exact) {
+    return { handler: exact, params: {} };
+  }
+
+  const pathSegments = path.split("/");
+  for (const [key, handler] of handlers) {
+    const [registeredMethod, registeredPath] = key.split(" ");
+    const registeredSegments = registeredPath.split("/");
+    if (
+      registeredMethod !== method ||
+      registeredSegments.length !== pathSegments.length
+    ) {
+      continue;
+    }
+
+    const params: Record<string, string> = {};
+    const matches = registeredSegments.every((segment, index) => {
+      if (segment.startsWith(":")) {
+        params[segment.slice(1)] = pathSegments[index];
+        return true;
+      }
+      return segment === pathSegments[index];
+    });
+    if (matches) {
+      return { handler, params };
+    }
+  }
+}
+
 export function clearMockHandlers(): void {
   handlers.clear();
 }

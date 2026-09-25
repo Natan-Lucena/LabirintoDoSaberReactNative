@@ -31,6 +31,15 @@ Dados da Home (T-601):
 - `GET /educator/get-last-sessions`
 - `GET /task-notebook/`
 
+Agendamentos (T-901):
+
+- `POST /appointment/`
+- `PUT /appointment/:id`
+- `DELETE /appointment/:id`
+
+Os handlers de agendamento mantem estado somente em memoria durante a sessao do
+app, usam ids ficticios e devolvem `400 NOT_FOUND` para PUT/DELETE de id ausente.
+
 ## Cenários (e-mails reservados, `src/mocks/fixtures.ts`)
 
 | E-mail                          | Senha      | Resultado                                  |
