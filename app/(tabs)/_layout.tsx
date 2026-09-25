@@ -7,6 +7,12 @@ import { TAB_DEFINITIONS, useTabItems } from "@/features/shell/useTabItems";
 
 // T-501: TabBar/AppHeader customizados (T-203) em vez do header/tab bar
 // nativos do Expo Router. G-10: 5 abas do design.
+function TabBarAdapter(): ReactElement {
+  const { items, activeKey } = useTabItems();
+
+  return <TabBar tabs={items} activeKey={activeKey} />;
+}
+
 export default function TabsLayout(): ReactElement {
   const router = useRouter();
 
@@ -15,10 +21,7 @@ export default function TabsLayout(): ReactElement {
 
   return (
     <Tabs
-      tabBar={() => {
-        const { items, activeKey } = useTabItems();
-        return <TabBar tabs={items} activeKey={activeKey} />;
-      }}
+      tabBar={() => <TabBarAdapter />}
       screenOptions={{
         headerShown: true,
         header: ({ options }) => (
