@@ -6,12 +6,14 @@ import { useAuthStore } from "@/stores/auth";
 
 const routerReplace = vi.fn();
 let pathname = "/(auth)/login";
+let segments: string[] = ["(auth)", "login"];
 let navigationKey: string | undefined = "root";
 let fontsLoaded = true;
 
 vi.mock("expo-router", () => ({
   useRouter: () => ({ replace: routerReplace }),
   usePathname: () => pathname,
+  useSegments: () => segments,
   useRootNavigationState: () => ({ key: navigationKey }),
   // Marca o Stack real (T-502: navegador sempre montado, BootGate só controla o splash).
   Stack: () => <Text>stack</Text>,
@@ -45,6 +47,7 @@ describe("app/_layout root composition (AC-502-01, ajuste do navegador sempre mo
   beforeEach(() => {
     routerReplace.mockClear();
     pathname = "/(auth)/login";
+    segments = ["(auth)", "login"];
     navigationKey = "root";
     fontsLoaded = true;
     useAuthStore.setState({
@@ -91,6 +94,7 @@ describe("app/_layout root composition (AC-502-01, ajuste do navegador sempre mo
   it("does not navigate before the root navigator finishes mounting, then navigates once it does", async () => {
     navigationKey = undefined;
     pathname = "/";
+    segments = ["(tabs)"];
     useAuthStore.setState({ status: "unauthenticated" });
 
     const { rerender } = await render(<RootLayout />);
