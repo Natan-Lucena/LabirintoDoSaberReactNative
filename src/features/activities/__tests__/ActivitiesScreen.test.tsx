@@ -85,15 +85,28 @@ describe("ActivitiesScreen (AC-L-01..03, AC-X-01)", () => {
     expect(screen.getByText("Nenhum conteúdo encontrado")).toBeTruthy();
   });
 
-  it("toca num item e navega para Em breve com o título do tipo", async () => {
+  it("toca num caderno e navega para o detalhe do caderno (D-07)", async () => {
     await render(<ActivitiesScreen />);
 
     await fireEvent.press(screen.getByLabelText("Sons e Letras"));
 
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Caderno" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/content/notebook/notebook-1");
+  });
+
+  it("toca num grupo e navega para o detalhe do grupo (D-07)", async () => {
+    await render(<ActivitiesScreen />);
+
+    await fireEvent.press(screen.getByLabelText("Alfabeto e sons"));
+
+    expect(routerPush).toHaveBeenCalledWith("/content/group/group-1");
+  });
+
+  it("toca numa atividade e navega para o detalhe da atividade (D-07)", async () => {
+    await render(<ActivitiesScreen />);
+
+    await fireEvent.press(screen.getByLabelText("O que significa 'veloz'?"));
+
+    expect(routerPush).toHaveBeenCalledWith("/content/task/task-1");
   });
 
   it("mostra carregando enquanto os dados chegam", async () => {

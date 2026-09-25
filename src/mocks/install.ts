@@ -11,6 +11,7 @@ import "@/mocks/handlers/notebook-create";
 import "@/mocks/handlers/group-create";
 import "@/mocks/handlers/task-create";
 import "@/mocks/handlers/student-create";
+import "@/mocks/handlers/notebook-delete";
 
 let installed = false;
 

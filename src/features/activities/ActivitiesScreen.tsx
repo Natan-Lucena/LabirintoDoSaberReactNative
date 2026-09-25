@@ -13,13 +13,13 @@ import { ActivityCard } from "@/features/activities/components/ActivityCard";
 import { CreateContentSheet } from "@/features/activities/components/CreateContentSheet";
 import { Pagination } from "@/features/activities/components/Pagination";
 import {
-  KIND_LABELS,
   filterByKind,
   filterBySearch,
   paginate,
   type ActivityFilterKey,
 } from "@/features/activities/selectors";
 import { useActivitiesQuery } from "@/features/activities/useActivitiesData";
+import type { ActivityListItem } from "@/features/activities/types";
 import { color, typography } from "@/theme";
 
 const FILTER_OPTIONS: { key: ActivityFilterKey; label: string }[] = [
@@ -72,11 +72,10 @@ export function ActivitiesScreen(): ReactElement {
     setPage(1);
   }
 
-  function openComingSoon(kind: keyof typeof KIND_LABELS) {
-    router.push({
-      pathname: "/shell/coming-soon",
-      params: { title: KIND_LABELS[kind] },
-    });
+  function goToDetail(item: ActivityListItem) {
+    router.push(
+      `/content/${item.kind}/${item.id}` as Parameters<typeof router.push>[0],
+    );
   }
 
   function goToCreate(pathname: string) {
@@ -136,7 +135,7 @@ export function ActivitiesScreen(): ReactElement {
             <ActivityCard
               key={`${item.kind}-${item.id}`}
               item={item}
-              onPress={() => openComingSoon(item.kind)}
+              onPress={() => goToDetail(item)}
             />
           ))}
         </View>
