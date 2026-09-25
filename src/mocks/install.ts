@@ -9,6 +9,7 @@ import "@/mocks/handlers/student";
 import "@/mocks/handlers/content";
 import "@/mocks/handlers/notebook-create";
 import "@/mocks/handlers/group-create";
+import "@/mocks/handlers/task-create";
 
 let installed = false;
 
