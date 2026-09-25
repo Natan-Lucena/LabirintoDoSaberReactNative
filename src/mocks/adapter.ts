@@ -43,6 +43,18 @@ function buildNetworkAxiosError(
   );
 }
 
+function parseRequestBody(body: unknown): unknown {
+  if (typeof body !== "string") {
+    return body;
+  }
+
+  try {
+    return JSON.parse(body) as unknown;
+  } catch {
+    return body;
+  }
+}
+
 export async function mockAdapter(
   config: InternalAxiosRequestConfig,
 ): Promise<AxiosResponse> {
@@ -65,7 +77,10 @@ export async function mockAdapter(
   };
 
   try {
-    const result = await match.handler({ body: config.data, params });
+    const result = await match.handler({
+      body: parseRequestBody(config.data),
+      params,
+    });
 
     return buildResponse(config, result.status, result.data);
   } catch (error) {

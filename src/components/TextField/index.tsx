@@ -1,5 +1,12 @@
 import { useId, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  type TextInputProps,
+  View,
+} from "react-native";
 
 import { color, semanticColor, shape, typography } from "../../theme";
 
@@ -13,6 +20,11 @@ export interface TextFieldProps {
   accessibilityLabel?: string;
   placeholder?: string;
   onBlur?: () => void;
+  autoCapitalize?: TextInputProps["autoCapitalize"];
+  autoCorrect?: TextInputProps["autoCorrect"];
+  keyboardType?: TextInputProps["keyboardType"];
+  autoComplete?: TextInputProps["autoComplete"];
+  textContentType?: TextInputProps["textContentType"];
 }
 
 const styles = StyleSheet.create({
@@ -51,6 +63,11 @@ export function TextField({
   accessibilityLabel,
   placeholder,
   onBlur,
+  autoCapitalize,
+  autoCorrect,
+  keyboardType,
+  autoComplete,
+  textContentType,
 }: TextFieldProps) {
   const [visible, setVisible] = useState(false);
   const errorId = useId();
@@ -68,6 +85,11 @@ export function TextField({
           accessibilityHint={error}
           nativeID={errorId}
           placeholder={placeholder}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={autoCorrect}
+          keyboardType={keyboardType}
+          autoComplete={autoComplete}
+          textContentType={textContentType}
           style={styles.input}
         />
         {secureTextEntry ? (
