@@ -8,16 +8,18 @@
 
 ## 0. Próximo passo global
 
-Estado em 2026-09-24, após o merge do PR #8: **M0 concluído** (exceto G-05, G-06 e G-07); **M1 em andamento**. Leia o
-[handoff](#handoff-para-o-próximo-modelo) antes de continuar.
+Estado em 2026-09-25: app navegável com mocks no **emulador Android** (dev build da T-108, `com.labirintodosaber.app`):
+Login -> Tela Inicial -> Iniciar Sessão -> tela 04 -> tela 05, abas e "Em breve" validados pelo orquestrador com screenshots.
+Concluídas nesta etapa: T-601, T-602, T-603, T-701, T-702, T-703, T-901, T-902, T-108 (Android emulador), correções
+FX1 (lint no CI), FX2 (corpo dos mocks e teclado do login), FX3 (guarda de sessão, T-402 reaberta e corrigida).
+Agenda adiada (G-31): T-903, T-904 e T-905 saem da Entrega 1.
 
-| #   | Ação                                                                                                                                                                                                           | Responsável                       | Condição de conclusão                      |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------ |
-| 1   | Em andamento (run_0f0031abd486): T-601 dados da Home e mocks (OpenCode openai/gpt-5.6-terra) e T-702 tela 04 (Sonnet)                                                                                          | Orquestrador claude-opus-5-5      | PRs próprios; aceite pelo merge do usuário |
-| 2   | Depois: T-603 Home completa, T-703 tela 05, T-901 -> T-903 Agenda; T-403, T-801, T-204, T-107 prontas                                                                                                          | Orquestrador                      | App navegável com mocks (G-29)             |
-| 3   | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07; P4 opcional) — ainda **não enviadas**. G-06 está no caminho crítico (tela 05, onda 9)                           | Usuário                           | Data de envio registrada lá e em §7        |
-| 4   | T-108 (dev build Android + iOS via EAS) quando o usuário liberar a máquina; inclui AC-102-02 `MAN` (rota inicial no emulador), AC-108-03 (Hermes: `Intl`, MMKV, SecureStore) e a reinvestigação do achado A-08 | Líder, com autorização do usuário | T-108 `concluída` ou pendência registrada  |
-| 5   | Decidir `android.package` e `ios.bundleIdentifier` (identidade nas lojas) antes da T-108                                                                                                                       | Usuário                           | Registrado em GATES                        |
+| #   | Ação                                                                                                                                                                      | Responsável                       | Condição de conclusão                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ----------------------------------------- |
+| 1   | Em andamento: FX4 (corte de texto no Android e espaçamento das telas 04/05/Home), UX1 (Login no Figma, G-30) e, em seguida, UX2 (Tela Inicial e tab bar no Figma, 4 abas) | Orquestrador claude-opus-5-5      | Na `main` e conferido no emulador         |
+| 2   | Depois: T-704/T-801/T-802/T-803/T-804 (sessão em andamento), T-403/T-404 (recuperação de senha), T-204, T-107 (README), T-1002                                            | Orquestrador                      | App navegável com mocks (G-29)            |
+| 3   | Enviar ao backend as perguntas de [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) (G-05, G-06, G-07) — ainda **não enviadas**                                                   | Usuário                           | Data de envio registrada lá e em §7       |
+| 4   | T-108 restante: aparelho físico (AC-108-01), iOS via EAS (AC-108-02), verificação Hermes/Intl/MMKV (AC-108-03)                                                            | Líder, com autorização do usuário | Pendências registradas em COMPATIBILIDADE |
 
 Atualize esta tabela sempre que um item for concluído ou o próximo passo mudar.
 
@@ -601,3 +603,4 @@ texto destes arquivos; não fazem parte do repositório.
 | 2026-09-24 | T-402, T-205, T-502 | T-402 e T-205 `concluída` (PRs #15 e #16); T-502 `pronta` | Haiku via Orca, orquestrador `claude-opus-5-5` | PRs #15 e #16 |
 | 2026-09-25 | T-203, T-701, T-502, G-29, T-1004 | T-203, T-701 e T-502 `concluída` (PRs #18, #19, #20); G-29 (telas mockadas) decidido; T-1004 criada; gates de backend deixam de bloquear T-404, T-703, T-704 e T-802; T-401, T-501 e T-306 em execução | Sonnet via Orca, orquestrador `claude-opus-5-5` | PRs #18, #19, #20 |
 | 2026-09-25 | T-306, T-401, T-501, T-602, T-902, T-601, T-702 | Concluídas pelos merges dos PRs #22, #24, #25, #23 e #26 (desvios de vermelho pulado em T-401 e T-501 registrados); T-601 (OpenCode Terra) e T-702 (Sonnet) em testes | Haiku via Orca, orquestrador `claude-opus-5-5` | PRs #22-#26 |
+| 2026-09-25 | T-603, T-703, T-901, T-108, FX2, FX3, G-30, G-31 | T-603, T-703, T-901 e T-108 (Android emulador) `concluída` (PRs #31 a #36); FX2 e FX3 corrigem bugs vistos no emulador (login mock sempre 401; guarda de sessão bloqueando rotas autenticadas); G-30 (Figma) e G-31 (4 abas, Agenda adiada: T-903 a T-905 fora da Entrega 1) decididos pelo usuário. |
