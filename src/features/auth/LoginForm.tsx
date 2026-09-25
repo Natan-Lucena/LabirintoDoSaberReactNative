@@ -17,7 +17,7 @@ import { useSignIn } from "@/features/auth/useSignIn";
 import { APP_DESTINATION } from "@/features/auth/routes";
 
 const styles = StyleSheet.create({
-  container: { gap: 20 },
+  container: { gap: 20, backgroundColor: "transparent" },
   notice: {
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
@@ -36,6 +36,11 @@ const styles = StyleSheet.create({
     fontFamily: typography.body.fontFamily,
     color: color.primary,
     textAlign: "right",
+  },
+  forgotPasswordButton: {
+    minHeight: 48,
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
 });
 
@@ -144,6 +149,16 @@ export function LoginForm(): ReactElement {
         )}
       />
 
+      <Pressable
+        style={styles.forgotPasswordButton}
+        onPress={handleForgotPassword}
+        accessibilityRole="link"
+        accessibilityLabel="Esqueci minha senha"
+        hitSlop={8}
+      >
+        <Text style={styles.forgotPassword}>Esqueci minha senha</Text>
+      </Pressable>
+
       {formError ? (
         <View style={{ gap: 8 }}>
           <Text
@@ -168,15 +183,6 @@ export function LoginForm(): ReactElement {
         loading={isSubmitting}
         disabled={isSubmitting}
       />
-
-      <Pressable
-        onPress={handleForgotPassword}
-        accessibilityRole="link"
-        accessibilityLabel="Esqueci minha senha"
-        hitSlop={8}
-      >
-        <Text style={styles.forgotPassword}>Esqueci minha senha</Text>
-      </Pressable>
     </View>
   );
 }

@@ -19,12 +19,13 @@ const styles = StyleSheet.create({
     gap: 32,
   },
   logo: { width: 146, height: 89 },
+  cardHeader: { gap: 5 },
   title: {
     fontSize: typography.screenTitle.fontSize,
     lineHeight: typography.screenTitle.lineHeight,
     fontFamily: typography.screenTitle.fontFamily,
     color: color.text,
-    textAlign: "center",
+    textAlign: "left",
   },
   card: {
     width: "100%",
@@ -47,6 +48,7 @@ const styles = StyleSheet.create({
     lineHeight: typography.tag.lineHeight,
     fontFamily: typography.body.fontFamily,
     color: color.textTertiary,
+    textAlign: "left",
   },
 });
 
@@ -61,8 +63,10 @@ export default function LoginScreen(): ReactElement {
           accessibilityLabel="Labirinto do Saber"
         />
         <View style={styles.card}>
-          <Text style={styles.title}>Entrar</Text>
-          <Text style={styles.subtitle}>Acesse sua conta para continuar</Text>
+          <View style={styles.cardHeader}>
+            <Text style={styles.title}>Entrar</Text>
+            <Text style={styles.subtitle}>Acesse sua conta para continuar</Text>
+          </View>
           <LoginForm />
         </View>
       </View>

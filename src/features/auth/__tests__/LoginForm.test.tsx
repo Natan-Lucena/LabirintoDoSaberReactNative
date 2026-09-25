@@ -110,6 +110,17 @@ describe("LoginForm", () => {
     expect(routerPush).toHaveBeenCalledWith("/(auth)/forgot-password");
   });
 
+  it("posiciona o link de recuperação antes da ação principal com alvo de toque", async () => {
+    await render(<LoginForm />);
+
+    const link = screen.getByRole("link", { name: "Esqueci minha senha" });
+    const button = screen.getByRole("button", { name: "Entrar agora" });
+    expect(link.parent?.children.indexOf(link)).toBeLessThan(
+      link.parent?.children.indexOf(button) ?? 0,
+    );
+    expect(link.props.style.minHeight).toBeGreaterThanOrEqual(48);
+  });
+
   it("shows the formError message and a retry action when present", async () => {
     formError = "E-mail ou senha incorretos. Tente novamente.";
     await render(<LoginForm />);
@@ -142,5 +153,16 @@ describe("LoginForm", () => {
     expect(screen.queryByText("Lembre-se de mim")).toBeNull();
     expect(screen.queryByText("Continuar com Google")).toBeNull();
     expect(screen.queryByText("Novo por aqui?")).toBeNull();
+  });
+
+  it("mantém título e subtítulo juntos no cabeçalho do cartão", async () => {
+    await render(<LoginScreen />);
+
+    const title = screen.getByText("Entrar");
+    const subtitle = screen.getByText("Acesse sua conta para continuar");
+    expect(title.parent).toBe(subtitle.parent);
+    expect(title.parent?.children.indexOf(title)).toBeLessThan(
+      title.parent?.children.indexOf(subtitle) ?? 0,
+    );
   });
 });
