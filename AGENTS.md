@@ -27,7 +27,9 @@ recursos implementados. O estado atual e o handoff estão no
   Expo para Android e iOS via EAS (não Expo Go); backend **local** com dados fictícios
   nos testes; fuso fixo `America/Sao_Paulo`; **Expo SDK 57, TypeScript 6 e Vitest**
   (versões validadas em `docs/bootstrap/COMPATIBILIDADE.md`, que é a referência de
-  versões da T-102 em diante).
+  versões da T-102 em diante). Desde 2026-09-25 (G-29), as telas são desenvolvidas
+  com dados mockados (`src/mocks/`, flag `EXPO_PUBLIC_USE_MOCKS`); a integração real
+  é a T-1004.
 - O backend é externo a este repositório. Sua referência fornecida descreve o
   contrato de integração; não alegue validação contra seu código ou produção sem
   evidência. Preserve métodos, caminhos, formatos e erros, inclusive peculiaridades.
@@ -143,26 +145,26 @@ modelos disponíveis no ambiente que atendam aos papéis definidos aqui.
 Antes do primeiro dispatch, confirme ferramentas, autenticação, modelos acessíveis
 e suporte a delegação. Registre no contrato ou plano da tarefa:
 
-| Campo | Conteúdo obrigatório |
-|---|---|
-| Papel | Orquestrador, líder ou executor |
-| Ferramenta | Claude Code ou OpenCode, conforme disponibilidade real |
-| Modelo | Nome e ID exato confirmado no ambiente |
-| Esforço | Baixo, médio ou alto, com justificativa |
-| Escopo | Entrega, arquivos, dependências e verificações |
-| Limites | Concorrência, timeout e orçamento, quando configuráveis |
+| Campo      | Conteúdo obrigatório                                    |
+| ---------- | ------------------------------------------------------- |
+| Papel      | Orquestrador, líder ou executor                         |
+| Ferramenta | Claude Code ou OpenCode, conforme disponibilidade real  |
+| Modelo     | Nome e ID exato confirmado no ambiente                  |
+| Esforço    | Baixo, médio ou alto, com justificativa                 |
+| Escopo     | Entrega, arquivos, dependências e verificações          |
+| Limites    | Concorrência, timeout e orçamento, quando configuráveis |
 
 `Astra`, `Sol` e `Terra` são nomes fornecidos para este fluxo: confirme seu mapeamento
 antes de usá-los. Não presuma que sejam IDs válidos, que pertençam à Anthropic ou que
 estejam disponíveis em ambas as ferramentas. Também confirme versões/IDs de Opus,
 Sonnet e Haiku. Nunca anuncie um modelo que a ferramenta não permite selecionar.
 
-| Classe / modelo de referência | Responsabilidade típica | Esforço inicial |
-|---|---|---|
-| Orquestrador capaz, como Astra | Discovery global, refino, prioridades e aprovação final | Médio; alto com ambiguidade ou risco |
-| Opus / Sol | Liderança de frentes, arquitetura, contratos complexos, desenho de testes e diagnóstico difícil | Médio ou alto |
-| Sonnet / Terra | Escrita de testes e implementação com decisões locais e contrato definido | Médio |
-| Haiku | Subir projeto, rodar testes/scripts, coletar logs e aplicar mudanças completamente especificadas | Baixo |
+| Classe / modelo de referência  | Responsabilidade típica                                                                          | Esforço inicial                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| Orquestrador capaz, como Astra | Discovery global, refino, prioridades e aprovação final                                          | Médio; alto com ambiguidade ou risco |
+| Opus / Sol                     | Liderança de frentes, arquitetura, contratos complexos, desenho de testes e diagnóstico difícil  | Médio ou alto                        |
+| Sonnet / Terra                 | Escrita de testes e implementação com decisões locais e contrato definido                        | Médio                                |
+| Haiku                          | Subir projeto, rodar testes/scripts, coletar logs e aplicar mudanças completamente especificadas | Baixo                                |
 
 Escolha pelo julgamento necessário, não pelo número de arquivos. Antes de cada
 dispatch, avalie ambiguidade, risco de erro, alcance das mudanças e facilidade de
@@ -230,15 +232,15 @@ implementação → validação de testes.**
 
 Cada etapa produz uma saída verificável. Não pule uma etapa silenciosamente.
 
-| Etapa | Responsável principal | Apoio delegado | Saída / condição para avançar |
-|---|---|---|---|
-| Receber tarefa | Orquestrador | — | Objetivo, resultado esperado e restrições registrados |
-| Discovery | Orquestrador; Opus/Sol para investigação especializada | Haiku coleta resultados de comandos conhecidos | Diagnóstico com evidências e lacunas |
-| Refino | Orquestrador + líder Opus/Sol | Usuário decide ambiguidades bloqueantes | Escopo, não objetivos e critérios de aceite testáveis |
-| Contratos | Líder Opus/Sol, com aprovação do orquestrador | Sonnet/Terra detalham aspectos locais | Interfaces, invariantes, propriedade de arquivos e dependências aprovadas |
-| Escrita de testes | Sonnet/Terra, com revisão do líder | Haiku executa os testes | Testes ligados ao contrato; falha esperada demonstrada quando aplicável |
-| Implementação | Sonnet/Terra sob o líder | Haiku aplica alterações determinísticas | Código satisfaz o contrato e é revisado |
-| Validação de testes | Líder interpreta; orquestrador aprova | Haiku executa verificações reproduzíveis | Evidências de aprovação, regressões verificadas e limitações explícitas |
+| Etapa               | Responsável principal                                  | Apoio delegado                                 | Saída / condição para avançar                                             |
+| ------------------- | ------------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------- |
+| Receber tarefa      | Orquestrador                                           | —                                              | Objetivo, resultado esperado e restrições registrados                     |
+| Discovery           | Orquestrador; Opus/Sol para investigação especializada | Haiku coleta resultados de comandos conhecidos | Diagnóstico com evidências e lacunas                                      |
+| Refino              | Orquestrador + líder Opus/Sol                          | Usuário decide ambiguidades bloqueantes        | Escopo, não objetivos e critérios de aceite testáveis                     |
+| Contratos           | Líder Opus/Sol, com aprovação do orquestrador          | Sonnet/Terra detalham aspectos locais          | Interfaces, invariantes, propriedade de arquivos e dependências aprovadas |
+| Escrita de testes   | Sonnet/Terra, com revisão do líder                     | Haiku executa os testes                        | Testes ligados ao contrato; falha esperada demonstrada quando aplicável   |
+| Implementação       | Sonnet/Terra sob o líder                               | Haiku aplica alterações determinísticas        | Código satisfaz o contrato e é revisado                                   |
+| Validação de testes | Líder interpreta; orquestrador aprova                  | Haiku executa verificações reproduzíveis       | Evidências de aprovação, regressões verificadas e limitações explícitas   |
 
 ### Discovery
 

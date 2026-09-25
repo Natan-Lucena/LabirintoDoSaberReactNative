@@ -11,15 +11,15 @@
 Esta tabela registra o discovery anterior ao bootstrap, em 2026-09-24. Para o
 estado atual, consulte [§3](#3-marcos) e o [TRACKING](TRACKING.md).
 
-| Fato | Evidência | Impacto |
-|---|---|---|
-| Não há aplicação, manifesto, lockfile nem testes | Árvore do repositório em 2026-09-24: README, AGENTS, `docs/` | Tudo começa pelo bootstrap; nenhum comando do app existe ainda |
-| Stack definida, não instalada | [PROJECT §3](../PROJECT.md#3-stack-técnica) | Versões e compatibilidade só no spike T-101 |
-| Gerenciador e plataformas decididos em 2026-09-24 | [Decisões registradas](GATES.md#decisões-registradas): pnpm; dev build Android + iOS via EAS | T-101 pronta; iOS depende de conta Apple e aparelho do usuário |
-| Só G-05, G-06 e G-07 abertos (backend) | [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md) | Bloqueiam etapa Senha da recuperação, tela 05, `start` e player |
-| Backend externo com lacunas de integração | [PROJECT, pendências](../PROJECT.md#pendências-de-integração-arquitetura) | Recuperação de senha, `start`, `answer` e retomada têm gates |
-| Design acessado parcialmente | [DESIGN §1](DESIGN.md#1-fontes-e-acesso-real) | 01 e topo da 02 observados; demais telas pelo texto do discovery |
-| Máquina de desenvolvimento Windows | Ambiente da sessão | Sem simulador iOS local; iOS depende de macOS ou EAS (G-01) |
+| Fato                                              | Evidência                                                                                    | Impacto                                                          |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Não há aplicação, manifesto, lockfile nem testes  | Árvore do repositório em 2026-09-24: README, AGENTS, `docs/`                                 | Tudo começa pelo bootstrap; nenhum comando do app existe ainda   |
+| Stack definida, não instalada                     | [PROJECT §3](../PROJECT.md#3-stack-técnica)                                                  | Versões e compatibilidade só no spike T-101                      |
+| Gerenciador e plataformas decididos em 2026-09-24 | [Decisões registradas](GATES.md#decisões-registradas): pnpm; dev build Android + iOS via EAS | T-101 pronta; iOS depende de conta Apple e aparelho do usuário   |
+| Só G-05, G-06 e G-07 abertos (backend)            | [PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md)                                                    | Bloqueiam etapa Senha da recuperação, tela 05, `start` e player  |
+| Backend externo com lacunas de integração         | [PROJECT, pendências](../PROJECT.md#pendências-de-integração-arquitetura)                    | Recuperação de senha, `start`, `answer` e retomada têm gates     |
+| Design acessado parcialmente                      | [DESIGN §1](DESIGN.md#1-fontes-e-acesso-real)                                                | 01 e topo da 02 observados; demais telas pelo texto do discovery |
+| Máquina de desenvolvimento Windows                | Ambiente da sessão                                                                           | Sem simulador iOS local; iOS depende de macOS ou EAS (G-01)      |
 
 ## 2. Escopo
 
@@ -45,6 +45,10 @@ entrega mesmo bloqueada; homologar sem ela exige decisão explícita de reduçã
 ([GATES, regra 5](GATES.md#regras)). Sentry (T-109) **saiu** da entrega por decisão do
 usuário (G-20).
 
+**Telas mockadas (G-29, 2026-09-25):** as telas são construídas contra uma camada de
+mocks tipada pelo contrato da API; os gates de backend G-05 a G-07 passam a bloquear
+só a integração real (T-1004), que antecede os E2E (T-1001).
+
 **Encerramento da sessão (decisão do usuário):** última resposta → `finish` →
 observação com Pular/Salvar → Home, sem "Continuar sessão" (G-16 resolvido).
 
@@ -54,16 +58,16 @@ Estado em 2026-09-24: M0 concluído, exceto G-05 a G-07 (backend); M1 em andamen
 (T-101 e T-102 concluídas; T-103 e T-108 prontas; T-104 em execução). Para a etapa
 atual da T-104, consulte o [TRACKING](TRACKING.md#0-próximo-passo-global).
 
-| Marco | Objetivo | Tarefas | Gates que precisam estar resolvidos | Saída verificável |
-|---|---|---|---|---|
-| M0 — Decisões | Destravar bootstrap e caminho crítico | — | Concluído em 2026-09-24, exceto G-05–G-07 (backend) | Decisões em GATES e TRACKING; perguntas ao backend enviadas |
-| M1 — Bootstrap | Projeto executável e verificável | T-101–T-108 | — | Comandos reais no README com códigos de saída; dev build Android e iOS (EAS) |
-| M2 — Fundação | Componentes e dados reutilizáveis | T-201–T-205, T-301–T-306 | — | Testes UT/CT verdes; primitivos observados em emulador |
-| M3 — Acesso e estrutura | Root integrado, entrar, recuperar senha, navegar | T-402, T-502, T-401, T-403, T-404, T-501 | G-05 para T-404 | App sobe pelo root; Login real contra o backend local; 401 volta ao Login |
-| M4 — Home | Telas 02/03 | T-601–T-603 | — | Estados com e sem agenda observados |
-| M5 — Sessão | Telas 04–06 e encerramento | T-701–T-704, T-801–T-804 | G-06, G-07 | Sessão completa, encerramento → Home, retomada após fechar o app |
-| M6 — Agenda | Tela 07 e CRUD | T-901–T-905 | — | CRUD com dados de teste; fuso `America/Sao_Paulo` verificado |
-| M7 — Homologação | Evidência em aparelho | T-1001–T-1003 | — (conta Apple e aparelho iOS para AC-108-02) | Matriz tela × plataforma × aparelho; todas as tarefas concluídas ou redução de escopo registrada |
+| Marco                   | Objetivo                                         | Tarefas                                  | Gates que precisam estar resolvidos                 | Saída verificável                                                                                |
+| ----------------------- | ------------------------------------------------ | ---------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| M0 — Decisões           | Destravar bootstrap e caminho crítico            | —                                        | Concluído em 2026-09-24, exceto G-05–G-07 (backend) | Decisões em GATES e TRACKING; perguntas ao backend enviadas                                      |
+| M1 — Bootstrap          | Projeto executável e verificável                 | T-101–T-108                              | —                                                   | Comandos reais no README com códigos de saída; dev build Android e iOS (EAS)                     |
+| M2 — Fundação           | Componentes e dados reutilizáveis                | T-201–T-205, T-301–T-306                 | —                                                   | Testes UT/CT verdes; primitivos observados em emulador                                           |
+| M3 — Acesso e estrutura | Root integrado, entrar, recuperar senha, navegar | T-402, T-502, T-401, T-403, T-404, T-501 | G-05 para T-404                                     | App sobe pelo root; Login real contra o backend local; 401 volta ao Login                        |
+| M4 — Home               | Telas 02/03                                      | T-601–T-603                              | —                                                   | Estados com e sem agenda observados                                                              |
+| M5 — Sessão             | Telas 04–06 e encerramento                       | T-701–T-704, T-801–T-804                 | G-06, G-07                                          | Sessão completa, encerramento → Home, retomada após fechar o app                                 |
+| M6 — Agenda             | Tela 07 e CRUD                                   | T-901–T-905                              | —                                                   | CRUD com dados de teste; fuso `America/Sao_Paulo` verificado                                     |
+| M7 — Homologação        | Evidência em aparelho                            | T-1001–T-1003                            | — (conta Apple e aparelho iOS para AC-108-02)       | Matriz tela × plataforma × aparelho; todas as tarefas concluídas ou redução de escopo registrada |
 
 M4, M5 e M6 podem correr em paralelo depois de M2 e de T-502/T-501, desde que os
 arquivos sejam disjuntos (ver recursos compartilhados no TRACKING §3).
@@ -73,15 +77,15 @@ arquivos sejam disjuntos (ver recursos compartilhados no TRACKING §3).
 Cada módulo é testado isoladamente **e** ligado ao app por um dono explícito, para
 não sobrar componente solto:
 
-| Ponto de integração | Dono | Como |
-|---|---|---|
-| Root: providers, fontes, guarda de sessão | T-502 | Dona de `app/_layout.tsx`; teste de integração do root |
-| Root: prompt de retomada | T-803 | Edição serial restrita no ponto de extensão de T-502 |
-| Provider de queries nos testes | T-304 | Edição serial de `src/test-utils/render.tsx` |
-| Etapa 3 da recuperação | T-404 | Edição serial de `ForgotPasswordFlow.tsx` (T-403) |
-| `start` na tela 05 | T-704 | Edição serial de `ContentStep.tsx` (T-703) |
-| Pendências e encerramento no player | T-803 → T-804 | Edições seriais de `PlayerScreen.tsx` (T-802) |
-| Formulário, excluir e Montar Plano na Agenda | T-904 → T-905 | Edições seriais de `AgendaScreen.tsx` (T-903) |
+| Ponto de integração                          | Dono          | Como                                                   |
+| -------------------------------------------- | ------------- | ------------------------------------------------------ |
+| Root: providers, fontes, guarda de sessão    | T-502         | Dona de `app/_layout.tsx`; teste de integração do root |
+| Root: prompt de retomada                     | T-803         | Edição serial restrita no ponto de extensão de T-502   |
+| Provider de queries nos testes               | T-304         | Edição serial de `src/test-utils/render.tsx`           |
+| Etapa 3 da recuperação                       | T-404         | Edição serial de `ForgotPasswordFlow.tsx` (T-403)      |
+| `start` na tela 05                           | T-704         | Edição serial de `ContentStep.tsx` (T-703)             |
+| Pendências e encerramento no player          | T-803 → T-804 | Edições seriais de `PlayerScreen.tsx` (T-802)          |
+| Formulário, excluir e Montar Plano na Agenda | T-904 → T-905 | Edições seriais de `AgendaScreen.tsx` (T-903)          |
 
 ## 4. Ordem das telas
 
@@ -115,39 +119,39 @@ o nível topológico mais cedo da tarefa, calculado a partir das dependências d
 BACKLOG (ver TRACKING §6). Uma tarefa só entra quando dependências estão concluídas
 e gates resolvidos; gates abertos podem empurrá-la para ondas posteriores.
 
-| Onda | Tarefas | Observação |
-|---|---|---|
-| 1 | T-101 | Única; versões validadas; concluída |
-| 2 | T-102 | Única; cria manifesto (R-01) e instala a stack |
-| 3 | T-103, T-104, T-108 | Instalações serializadas por R-01; T-108 exige G-01 |
-| 4 | T-105, T-106, T-201, T-302, T-306 | |
-| 5 | T-107, T-202, T-203, T-204, T-301, T-303 | |
-| 6 | T-205, T-304, T-305, T-602, T-801, T-902 | T-304 edita `render.tsx` (R-04) |
-| 7 | T-402, T-601, T-701, T-901 | |
-| 8 | T-502, T-702 | T-502 é a integração do root |
-| 9 | T-401, T-403, T-501, T-703 | (T-109 cancelada, G-20) |
-| 10 | T-404, T-603, T-704, T-903 | |
-| 11 | T-802, T-904 | |
-| 12 | T-803, T-905 | |
-| 13 | T-804 | |
-| 14 | T-1001, T-1002 | |
-| 15 | T-1003 | |
+| Onda | Tarefas                                  | Observação                                          |
+| ---- | ---------------------------------------- | --------------------------------------------------- |
+| 1    | T-101                                    | Única; versões validadas; concluída                 |
+| 2    | T-102                                    | Única; cria manifesto (R-01) e instala a stack      |
+| 3    | T-103, T-104, T-108                      | Instalações serializadas por R-01; T-108 exige G-01 |
+| 4    | T-105, T-106, T-201, T-302, T-306        |                                                     |
+| 5    | T-107, T-202, T-203, T-204, T-301, T-303 |                                                     |
+| 6    | T-205, T-304, T-305, T-602, T-801, T-902 | T-304 edita `render.tsx` (R-04)                     |
+| 7    | T-402, T-601, T-701, T-901               |                                                     |
+| 8    | T-502, T-702                             | T-502 é a integração do root                        |
+| 9    | T-401, T-403, T-501, T-703               | (T-109 cancelada, G-20)                             |
+| 10   | T-404, T-603, T-704, T-903               |                                                     |
+| 11   | T-802, T-904                             |                                                     |
+| 12   | T-803, T-905                             |                                                     |
+| 13   | T-804                                    |                                                     |
+| 14   | T-1001, T-1002                           |                                                     |
+| 15   | T-1003                                   |                                                     |
 
 ## 7. Riscos principais
 
-| Risco | Efeito | Mitigação no plano |
-|---|---|---|
-| Backend não esclarece vínculo conteúdo ↔ sessão (G-06) | Player não pode ser integrado | Enviar em M0; M4 e M6 seguem sem ele |
-| Autorização de `update-password` indefinida (G-05) | Etapa 3 da recuperação atrasa | T-403 entrega etapas 1–2; T-404 isolada, continua no escopo; redução só por decisão do usuário |
-| `start`, `answer`, `finish` e `observation` sem idempotência | Sessão duplicada, respostas duplicadas ou perdidas | Reconciliação pela listagem do aluno antes de qualquer nova mutação (T-704, T-803, T-804; G-08); conflito visível em vez de repetição automática |
-| Módulos entregues isolados e nunca ligados | Telas que passam nos testes mas não funcionam juntas | Dono da integração (T-502) e edições seriais com teste de integração (§3 Integração) |
-| Troca de conta expõe dados de outro educador | Vazamento de dados de crianças | Isolamento por `educatorId` (G-04, AC-303-04, AC-701-04) |
-| Sessões órfãs após sair do player | Sessões nunca finalizadas no servidor | G-21 decidido: retomada oferece "Retomar" ou "Encerrar agora" |
-| iOS sem conta Apple ou aparelho | AC-108-02 e homologação iOS pendentes | Usuário providencia; senão, pendência explícita em T-1003 |
-| Incompatibilidade nativa (MMKV, NativeWind, Reanimated) | Bootstrap atrasa | Spike T-101 antes de criar o projeto |
-| Sem macOS para E2E iOS | Maestro só em Android | iOS validado manualmente no dev build EAS; não declarar E2E iOS sem evidência |
-| Tipografia do design ilegível em aparelho | Retrabalho visual | G-17 antes de T-201 |
-| Backend local diferente do de produção | Integração validada só localmente | G-19 decidido (backend local, dados fictícios); registrar a versão do backend usada nas evidências |
+| Risco                                                        | Efeito                                               | Mitigação no plano                                                                                                                               |
+| ------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Backend não esclarece vínculo conteúdo ↔ sessão (G-06)       | Player não pode ser integrado                        | Enviar em M0; M4 e M6 seguem sem ele                                                                                                             |
+| Autorização de `update-password` indefinida (G-05)           | Etapa 3 da recuperação atrasa                        | T-403 entrega etapas 1–2; T-404 isolada, continua no escopo; redução só por decisão do usuário                                                   |
+| `start`, `answer`, `finish` e `observation` sem idempotência | Sessão duplicada, respostas duplicadas ou perdidas   | Reconciliação pela listagem do aluno antes de qualquer nova mutação (T-704, T-803, T-804; G-08); conflito visível em vez de repetição automática |
+| Módulos entregues isolados e nunca ligados                   | Telas que passam nos testes mas não funcionam juntas | Dono da integração (T-502) e edições seriais com teste de integração (§3 Integração)                                                             |
+| Troca de conta expõe dados de outro educador                 | Vazamento de dados de crianças                       | Isolamento por `educatorId` (G-04, AC-303-04, AC-701-04)                                                                                         |
+| Sessões órfãs após sair do player                            | Sessões nunca finalizadas no servidor                | G-21 decidido: retomada oferece "Retomar" ou "Encerrar agora"                                                                                    |
+| iOS sem conta Apple ou aparelho                              | AC-108-02 e homologação iOS pendentes                | Usuário providencia; senão, pendência explícita em T-1003                                                                                        |
+| Incompatibilidade nativa (MMKV, NativeWind, Reanimated)      | Bootstrap atrasa                                     | Spike T-101 antes de criar o projeto                                                                                                             |
+| Sem macOS para E2E iOS                                       | Maestro só em Android                                | iOS validado manualmente no dev build EAS; não declarar E2E iOS sem evidência                                                                    |
+| Tipografia do design ilegível em aparelho                    | Retrabalho visual                                    | G-17 antes de T-201                                                                                                                              |
+| Backend local diferente do de produção                       | Integração validada só localmente                    | G-19 decidido (backend local, dados fictícios); registrar a versão do backend usada nas evidências                                               |
 
 ## 8. Manutenção deste roadmap
 
