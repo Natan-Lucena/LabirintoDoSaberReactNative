@@ -69,6 +69,29 @@ describe("LoginForm", () => {
     expect(routerReplace).toHaveBeenCalledWith(APP_DESTINATION);
   });
 
+  it("configura o teclado do login e envia o e-mail sem espaços externos", async () => {
+    submitMock.mockResolvedValue(true);
+    await render(<LoginForm />);
+
+    const email = screen.getByLabelText("E-mail");
+    const password = screen.getByLabelText("Senha");
+    expect(email.props.autoCapitalize).toBe("none");
+    expect(email.props.keyboardType).toBe("email-address");
+    expect(email.props.autoComplete).toBe("email");
+    expect(email.props.autoCorrect).toBe(false);
+    expect(password.props.autoCapitalize).toBe("none");
+    expect(password.props.autoCorrect).toBe(false);
+
+    await fireEvent.changeText(email, " educadora.mock@labirinto.test ");
+    await fireEvent.changeText(password, "senha123");
+    await fireEvent.press(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(submitMock).toHaveBeenCalledWith({
+      email: "educadora.mock@labirinto.test",
+      password: "senha123",
+    });
+  });
+
   it("AC-401-05: 'Esqueceu a senha?' navigates to the forgot-password route", async () => {
     await render(<LoginForm />);
 

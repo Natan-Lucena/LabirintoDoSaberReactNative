@@ -95,11 +95,17 @@ export function LoginForm(): ReactElement {
             label="E-mail"
             value={value}
             onChangeText={(text) => {
-              setValue("email", text);
-              onChange(text);
+              const email = text.trim();
+              setValue("email", email);
+              onChange(email);
             }}
             error={errors.email?.message}
             accessibilityLabel="E-mail"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            autoComplete="email"
+            textContentType="emailAddress"
           />
         )}
       />
@@ -115,6 +121,8 @@ export function LoginForm(): ReactElement {
             error={errors.password?.message}
             secureTextEntry
             accessibilityLabel="Senha"
+            autoCapitalize="none"
+            autoCorrect={false}
           />
         )}
       />

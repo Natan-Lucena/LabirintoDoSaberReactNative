@@ -104,3 +104,27 @@ describe("TextField placeholder e onBlur (T-703)", () => {
     expect(onBlur).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("TextField opções de teclado (FX2)", () => {
+  it("repassa as opções de teclado ao TextInput", async () => {
+    await render(
+      <TextField
+        label="E-mail"
+        value=""
+        onChangeText={vi.fn()}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        autoComplete="email"
+        textContentType="emailAddress"
+      />,
+    );
+
+    const input = screen.getByDisplayValue("");
+    expect(input.props.autoCapitalize).toBe("none");
+    expect(input.props.autoCorrect).toBe(false);
+    expect(input.props.keyboardType).toBe("email-address");
+    expect(input.props.autoComplete).toBe("email");
+    expect(input.props.textContentType).toBe("emailAddress");
+  });
+});
