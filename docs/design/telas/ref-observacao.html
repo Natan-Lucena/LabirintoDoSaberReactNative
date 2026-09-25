@@ -1,0 +1,33 @@
+<!-- Fonte: Labirinto V4 Mobile - Offline.html (Claude Design, projeto fe9f5a5d-00c3-4254-9797-0fba2801a1f3), template desempacotado, linhas 1941-1972; extraído em 2026-09-24; referência visual, não código a importar; valores passam pelas adaptações aprovadas em G-17. -->
+            <sc-if value="{{ isObs }}" hint-placeholder-val="{{ true }}">
+              <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:20.187px;display:flex;flex-direction:column;gap:11px">
+                <div style="font:700 13px Nunito,sans-serif;color:rgb(0,0,0)">{{ obsSession.name }}</div>
+                <div style="font:400 10px/13.138px Nunito,sans-serif;color:rgb(158,151,151)">Ana Carolina Lima • {{ obsSession.when }}</div>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;border-radius:11px;background:rgb(246,248,248);padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+                    <span style="font:400 6.594px/9.891px Nunito,sans-serif;color:rgb(158,151,151)">Duração</span>
+                    <span style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">{{ obsSession.dur }}</span>
+                  </div>
+                  <div style="flex:1;border-radius:11px;background:rgb(246,248,248);padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+                    <span style="font:400 6.594px/9.891px Nunito,sans-serif;color:rgb(158,151,151)">Taxa de Acerto</span>
+                    <span style="font:700 12px Nunito,sans-serif;color:rgb(0,0,0)">{{ obsSession.rate }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="border-radius:15.833px;background:#fff;border:0.492px solid rgb(224,224,224);box-shadow:0 2.462px 2.462px rgba(0,0,0,0.25);padding:20.187px;display:flex;flex-direction:column;gap:9px">
+                <div style="font:700 13px Nunito,sans-serif;color:rgb(0,0,0)">Escrever Observação</div>
+                <div style="border-radius:11px;background:rgb(246,248,248);border:0.492px solid rgb(224,224,224);padding:12px 14px;min-height:150px;font:400 10px/14.646px Nunito,sans-serif;color:rgb(158,151,151);text-wrap:pretty">Adicione observações detalhadas sobre o desempenho do aluno durante a sessão...</div>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div style="display:flex;gap:12px">
+                    <span style="font:700 10px Nunito,sans-serif;color:rgb(63,74,73)">B</span>
+                    <span style="font:400 10px Nunito,sans-serif;font-style:italic;color:rgb(63,74,73)">I</span>
+                    <span style="font:400 10px Nunito,sans-serif;color:rgb(63,74,73)">Lista</span>
+                  </div>
+                  <span style="font:400 6.594px/9.891px Nunito,sans-serif;color:rgb(158,151,151)">0 caracteres</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1;border-radius:16.273px;background:#fff;border:0.492px solid rgb(224,224,224);padding:14px;text-align:center;font:700 10px Nunito,sans-serif;color:rgb(63,74,73)">Limpar</div>
+                <div style="flex:1.4;border-radius:16.273px;background:rgb(114,222,212);box-shadow:0 2.170px 2.170px rgba(0,0,0,0.25);padding:14px;text-align:center;font:700 10px Nunito,sans-serif;color:#fff">Salvar Relatório</div>
+              </div>
+            </sc-if>

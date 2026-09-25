@@ -38,7 +38,7 @@ discovery do projeto Claude Design (ver [DESIGN §1](DESIGN.md#1-fontes-e-acesso
 ## Tabela de gates
 
 Estado em 2026-09-24: **abertos só G-05, G-06 e G-07** (dependem do backend; perguntas em
-[PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md)). Os demais estão resolvidos; a decisão vale e
+[PERGUNTAS-BACKEND](PERGUNTAS-BACKEND.md)). Os demais estão resolvidos, incluindo G-28 (ícones); a decisão vale e
 fica em [Decisões registradas](#decisões-registradas). Nos gates resolvidos, a coluna
 "Recomendação" é histórica.
 
@@ -155,3 +155,4 @@ Decididas pelo usuário em 2026-09-24, em resposta às perguntas da sessão Clau
 - 2026-09-24: G-25 revisto pelo usuário antes da T-102: seguir no OneDrive. T-101 concluída (merge do PR #2).
 - 2026-09-24: G-26 decidido pelo usuário durante a T-303 (persister do cache autorizado para a T-304).
 - 2026-09-24: G-27 decidido pelo usuário durante a T-303 (expo-crypto autorizado).
+- 2026-09-24: G-28 decidido pelo usuário (ícones via @expo/vector-icons); extração das telas do protótipo para docs/design/telas aprovada.

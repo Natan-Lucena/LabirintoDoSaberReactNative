@@ -1,3 +1,6 @@
 const expoConfig = require("eslint-config-expo/flat");
 
-module.exports = expoConfig;
+module.exports = [
+  { ignores: ["docs/design/telas/**"] },
+  ...expoConfig,
+];
