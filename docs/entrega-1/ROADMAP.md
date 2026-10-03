@@ -1,5 +1,9 @@
 # Entrega 1 — Roadmap
 
+> **Atualização 2026-10-03:** o novo design (Figma Make) reformula o produto. O plano vigente
+> está no [Roadmap da Entrega 2](../entrega-2/ROADMAP.md); este documento fica como histórico
+> da Entrega 1.
+
 > Visão de escopo, marcos, ordem e caminho crítico da primeira entrega do app mobile
 > Labirinto do Saber. Detalhe das tarefas: [BACKLOG](BACKLOG.md). Estado real:
 > [TRACKING](TRACKING.md). Decisões pendentes: [GATES](GATES.md). Design:
