@@ -1,6 +1,6 @@
 # Entrega 2 — Roadmap do novo design (Figma Make)
 
-> Plano para implementar **todo** o novo design do Labirinto do Saber, partindo do app da
+> Tarefas refinadas: [BACKLOG da Entrega 2](BACKLOG.md). Plano para implementar **todo** o novo design do Labirinto do Saber, partindo do app da
 > Entrega 1. Fonte do design: Figma Make
 > [`L7sCNfMhrzOzhtlNpS3cHr`](https://www.figma.com/make/L7sCNfMhrzOzhtlNpS3cHr/Receive-.fig-files),
 > lido em 2026-10-03: `src/App.tsx` (14 telas) e `src/index.css` (design system).
@@ -76,6 +76,9 @@ Destinos que o design aciona mas não desenha, tratados nas tarefas indicadas:
   não cobre esses módulos. A tarefa **API-01** traz o contrato real (OpenAPI ou documentação do
   backend) para `PROJECT.md` e `src/api/types.ts` antes de qualquer tela que dependa dele.
   Nenhuma tarefa inventa endpoint ou campo. Se faltar algo, a tarefa para e registra a dúvida.
+- Cada ficha do backlog lista os **endpoints existentes** que usa e o que **ainda não existe na
+  API**. O resumo por domínio está em [BACKLOG §2.3](BACKLOG.md#23-cobertura-da-api). Planos
+  (PDI/PE), escalas, equipe, tutoriais e notificações não têm nenhum endpoint documentado hoje.
 - **Integração real** desde o início, com `EXPO_PUBLIC_USE_MOCKS=false` em homologação. Os mocks
   de cada módulo continuam existindo para testes e para desenvolvimento sem backend.
 - Regras herdadas que continuam valendo:
@@ -102,525 +105,75 @@ N2, N3, N4 e N5 podem andar em paralelo depois de N1, com arquivos disjuntos.
 
 ## 5. Tarefas
 
-Formato: **ID — título**. Cada tarefa traz o escopo (o que entra e o que fica fora), as
-dependências (Dep.) e os critérios de aceite (AC). As classes seguem o AGENTS §3:
-
-| Classe | Modelo | Uso                    |
-| ------ | ------ | ---------------------- |
-| A      | Opus   | Arquitetura e contrato |
-| B      | Sonnet | Tela ou módulo         |
-| C      | Haiku  | Trabalho mecânico      |
-
-Cada tarefa ganha um contrato em `docs/contracts/` antes de começar.
-
-### 5.1 Contrato e base (N0)
-
-**API-01 — Contrato real da API (classe A)**
-
-- Escopo: obter a documentação ou OpenAPI do backend e atualizar `PROJECT.md` Parte II com
-  todos os módulos do §3.
-  - Tipos em `src/api/types.ts` e um módulo por domínio em `src/api/endpoints/`.
-  - Registrar diferenças com o design, como campos que a tela mostra e a API não tem.
-- Fora: telas.
-- Dep.: nenhuma.
-- AC: cada tela do §2 tem endpoint(s) identificado(s) na matriz `API-TELAS` da Entrega 2;
-  typecheck verde.
-
-**API-02 — Mocks por domínio para testes (classe C)**
-
-- Escopo: handlers mockados tipados para cada endpoint do API-01, com cenários de sucesso, vazio
-  e erro, seguindo o padrão de `src/mocks/`.
-- Dep.: API-01.
-- AC: teste de integração via `apiClient` para cada handler.
-
-### 5.2 Design system (N1)
-
-**DS-01 — Tokens do novo tema (classe B)**
-
-- Escopo: substituir a paleta de `src/theme/` pelos tokens do `index.css` do Figma.
-  - Grupos de tokens: `brand-50…700`, `ink-300…950`, `surface`, `surface-soft`, `border`,
-    `peach`, `lavender`, `yellow`, `warning`, `success` e `danger`.
-  - Raios 10/16/24, sombras `sm`/`md`, espaçamento de conteúdo 20 (15 em telas ≤ 370 dp), Nunito
-    400–800.
-  - Validar o contraste (G-17) e registrar ajustes.
-- Dep.: nenhuma.
-- AC: testes de contraste dos pares texto/fundo usados; Tailwind e tokens TS com os mesmos
-  valores.
-
-**DS-02 — Ícones (classe B)**
-
-- Escopo: os 22 ícones de traço do design (home, calendar, users, grid, bell, search, chevron,
-  clock, message, sparkles, clipboard, chart, book, file, play, plus, check, arrow, brain, print,
-  share, close), via `react-native-svg` (G-32) com os paths do Figma.
-- Dep.: DS-01, G-32.
-- AC: componente `Icon` com `name`/`size`/cor; teste de snapshot por ícone.
-
-**DS-03 — Botões e controles (classe B)**
-
-- Escopo:
-  - `Button` com as variantes `primary`, `secondary`, `ghost` e `soft`, ícone e largura cheia;
-  - `IconButton` circular de 42;
-  - `BackButton`;
-  - `Switch`;
-  - `Checkbox`, com a lista marcável `check-list`;
-  - `SegmentedControl`;
-  - `FilterChip` com rolagem horizontal;
-  - `Tabs` com sublinhado.
-  - Altura mínima de toque 44.
-- Dep.: DS-01, DS-02.
-- AC: testes de componente com acessibilidade (role, estado `checked`/`selected`).
-
-**DS-04 — Campos e formulários (classe B)**
-
-- Escopo: `Field` (rótulo + input/textarea/select), `SearchField` com ícone, `FieldGrid` de 2
-  colunas e seletores de data, hora e opção (select nativo ou sheet), com foco destacado.
-- Dep.: DS-01.
-- AC: integração com React Hook Form + Zod e erro acessível.
-
-**DS-05 — Cards e blocos (classe B)**
-
-- Escopo:
-  - `Avatar` com iniciais e tons mint, peach e lavender (raio 15);
-  - `Badge` normal e warning;
-  - `InfoCard`;
-  - `SectionTitle` com ação;
-  - `FeatureRow`;
-  - `ProgressBar`;
-  - `MiniBars`;
-  - `Toast`;
-  - `SuccessPanel`;
-  - `AIContext` / `AIInsight` (lavanda);
-  - `PrivacyNote`;
-  - `FloatingActionButton`.
-- Dep.: DS-01, DS-02.
-- AC: testes de componente; catálogo visual conferido no emulador.
-
-**DS-06 — Migração visual das telas mantidas (classe B)**
-
-- Escopo: reestilizar o Login, os estados de tela (carregando, vazio e erro) e o "Em breve" com o
-  novo tema.
-- Fora: telas que serão substituídas.
-- Dep.: DS-01 a DS-05.
-- AC: Login no novo visual sem regressão de testes.
-
-### 5.3 Navegação e casca (N1)
-
-**NAV-01 — Abas Início, Agenda, Pacientes e Recursos (classe B)**
-
-- Escopo: nova tab bar (76 de altura, ativo com fundo `brand-50`) e rotas do §2.
-- Atenção: revoga G-31 (Agenda volta às abas). As abas Atividades e Relatórios saem da barra e
-  passam a ser acessadas pelo Recursos.
-- Dep.: DS-03.
-- AC: as 4 abas navegam; telas internas mantêm a aba-mãe ativa (como `rootScreen` do Figma).
-
-**NAV-02 — Cabeçalho novo (classe B)**
-
-- Escopo: `AppHeader` com eyebrow e título grande; sino nas telas de aba; botão voltar nas telas
-  internas. Fundo translúcido fixo.
-- Dep.: DS-03.
-- AC: cabeçalho em todas as rotas; voltar respeita a pilha.
-
-**NAV-03 — Limpeza de rotas da Entrega 1 (classe B)**
-
-- Escopo: aplicar a decisão G-33 sobre o fluxo antigo de sessão e conteúdo.
-  - Remover ou esconder as rotas e telas que saem, sem perder dados nem testes do que fica.
-- Dep.: G-33, NAV-01.
-- AC: nenhuma rota órfã; o CI continua verde.
-
-### 5.4 Início (N2)
-
-**HOME-01 — Nova tela Início (classe B)**
-
-- Escopo:
-  - Cabeçalho "Olá, {nome}" com a data por extenso.
-  - **Próximo atendimento** (hero): avatar, horário e tipo, com os botões "Ver ficha" e "Iniciar
-    sessão" (vai para EVO).
-  - **Acesso rápido**: Novo paciente, Criar plano, Aplicar escala e Atividades.
-  - **Agenda de hoje** em linha do tempo:
-    - concluído, atual e próximo;
-    - botão "Notificar responsável" no atual;
-    - "Ver agenda".
-  - **Cartão de sugestões da IA**: contagem e resumo, levando a Planos.
-  - Estados vazio (sem atendimentos), carregando e erro.
-- Dep.: NAV-01, NAV-02, DS-05, API-01 (agenda, pacientes, sugestões de IA).
-- AC: dados reais; cada atalho leva à rota certa; contagem no fuso de SP.
-
-### 5.5 Agenda (N2)
-
-**AGE-01 — Tela Agenda (classe B)**
-
-- Escopo:
-  - Faixa de dias (seg–sex, com navegação de semana);
-  - lista de atendimentos do dia com horário, duração, paciente, tipo e "Concluído";
-  - destaque no atendimento atual;
-  - título "N atendimentos";
-  - botão "Novo atendimento".
-- Reaproveita T-901 (dados e mutações) e T-902.
-- Dep.: NAV-01, DS-05, API-01.
-- AC: troca de dia atualiza a lista; tocar num atendimento abre detalhe/ações (AGE-03).
-
-**AGE-02 — Mensagens automáticas por WhatsApp (classe B)**
-
-- Escopo:
-  - Cartão com interruptor "Mensagens automáticas" (confirmação, cancelamento e remarcação), que
-    persiste a preferência no backend.
-  - Botão "Notificar responsável" no atendimento, que dispara o envio pelo backend e mostra o toast
-    "Mensagem preparada para o responsável".
-- Dep.: AGE-01, API-01.
-- AC: o estado do interruptor persiste; o envio não se repete sozinho (G-08).
-
-**AGE-03 — Novo, editar, remarcar e cancelar atendimento (classe B)**
-
-- Escopo:
-  - Formulário: paciente (seletor), data, horário, tipo de atendimento (Terapia de aprendizagem,
-    Avaliação…) e "Confirmar por WhatsApp".
-  - Edição, remarcação e cancelamento a partir do item da agenda.
-- Dep.: AGE-01, DS-04.
-- AC: criar, editar e cancelar refletem na Agenda e no Início; validação de conflito conforme
-  a API.
-
-**AGE-04 — Atendimento atual → sessão (classe B)**
-
-- Escopo: do atendimento atual (Agenda ou Início), "Iniciar sessão" abre a Evolução daquele
-  atendimento (EVO-01) e marca o início conforme a API.
-- Dep.: AGE-01, EVO-01.
-- AC: o atendimento fica concluído depois de salvar a evolução.
-
-### 5.6 Pacientes (N2)
-
-**PAC-01 — Lista de pacientes (classe B)**
-
-- Escopo:
-  - Eyebrow "N pacientes ativos";
-  - busca;
-  - filtros Todos / Com sessão hoje / Pendências;
-  - card com avatar de iniciais, idade, status (PDI ativo, Avaliação pendente, PE em revisão) e
-    próximo atendimento;
-  - botão flutuante "Cadastrar paciente".
-- Substitui a lista de alunos (UX4-L).
-- Dep.: NAV-01, DS-05, API-01.
-- AC: filtros e busca funcionam com dados reais; status vindo da API.
-
-**PAC-02 — Novo paciente (classe B)**
-
-- Escopo:
-  - Nome completo, data de nascimento, responsável, telefone do responsável;
-  - dificuldades identificadas (Linguagem, Consciência fonológica, Leitura e escrita, Atenção,
-    Comportamento adaptativo);
-  - observações;
-  - botão "Salvar e criar PDI", que leva a PLN-02 com o paciente.
-- Substitui o cadastro de aluno (UX4-C).
-- Dep.: DS-04, API-01.
-- AC: validação conforme a API; o paciente aparece na lista e na Agenda.
-
-**PAC-03 — Ficha do paciente: Visão geral (classe B)**
-
-- Escopo:
-  - Resumo (avatar, responsável, botão de contato);
-  - abas Visão geral / Planos / Avaliações;
-  - **PDI vigente**: título, vigência, % de progresso e "Ver plano completo";
-  - **Próxima sessão**;
-  - **Dificuldades mapeadas** (tags, com Editar);
-  - **Evolução recente**: variação em % e mini gráfico de barras.
-- Dep.: PAC-01, DS-05, API-01.
-- AC: dados reais; estados vazios ("sem PDI", "sem sessões").
-
-**PAC-04 — Ficha: aba Planos (classe B)**
-
-- Escopo: lista de PDI e PE do paciente (InfoCards com status e ação) e "Criar novo plano".
-- Dep.: PAC-03, PLN-01.
-- AC: cada item abre o plano; criar já leva o paciente pré-selecionado.
-
-**PAC-05 — Ficha: aba Avaliações (classe B)**
-
-- Escopo: aplicações de escala e anamnese do paciente e "Nova avaliação".
-- Dep.: PAC-03, AVA-01.
-- AC: "Ver resultado" abre AVA-04; "Ver síntese" abre PAC-06.
-
-**PAC-06 — Anamnese do paciente (classe B)**
-
-- Escopo: visualizar a síntese da anamnese e preencher/atualizar o formulário de anamnese
-  (modelo e respostas da API).
-- Dep.: PAC-03, API-01.
-- AC: síntese exibida; atualização salva com data.
-
-**PAC-07 — Editar paciente e contatar responsável (classe B)**
-
-- Escopo:
-  - editar dados e dificuldades;
-  - botão de contato (WhatsApp ou ligação via `Linking`, conforme G-36).
-- Dep.: PAC-02, PAC-03.
-- AC: a edição reflete na ficha e na lista.
-
-### 5.7 Evolução da sessão (N3)
-
-**EVO-01 — Tela Evolução da sessão (classe B)**
-
-- Escopo:
-  - Resumo do PE da sessão (tema, duração, nº de critérios);
-  - **critérios mensuráveis**: lista marcável, com detalhe como "8 de 10 tentativas";
-  - **registro descritivo**;
-  - **sugestão da IA para a próxima sessão**;
-  - "Salvar e atualizar prontuário" com o painel de sucesso.
-- Dep.: DS-03, DS-04, DS-05, API-01.
-- AC: salvar persiste critérios e registro; o atendimento fica concluído; não há reenvio
-  automático.
-
-**EVO-02 — Prontuário / histórico de evoluções (classe B)**
-
-- Escopo: lista cronológica das evoluções do paciente, acessível pela ficha, com o detalhe de
-  cada registro.
-- Dep.: EVO-01, PAC-03.
-- AC: a evolução salva aparece no histórico e alimenta a "Evolução recente" (PAC-03).
-
-**EVO-03 — Atividades durante a sessão (classe B)**
-
-- Escopo: a partir da Evolução, abrir uma atividade do banco recomendada para o paciente (ATV-03)
-  e voltar com o resultado anexado, se a API registrar.
-- Dep.: EVO-01, ATV-03, G-35.
-- AC: o resultado da atividade aparece no registro da sessão quando a API suportar.
-
-### 5.8 Planos com IA (N3)
-
-**PLN-01 — Hub de planos (classe B)**
-
-- Escopo:
-  - destaque "Planejamento conectado à evolução real" com "Criar novo plano";
-  - **Em andamento**: PDI e PE com % e prazo de revisão;
-  - **Próximas sessões planejadas**.
-- Dep.: NAV-02, DS-05, API-01.
-- AC: dados reais; cada item abre o plano.
-
-**PLN-02 — Gerar planejamento com IA (classe B)**
-
-- Escopo:
-  - seletor PDI / PE da sessão;
-  - foco do planejamento (texto);
-  - contexto conectado (aviso de que a IA usa dificuldades, anamnese, avaliações e evolução);
-  - dificuldades consideradas (lista marcável, vindas do paciente);
-  - duração de referência (3 ou 6 meses);
-  - "Gerar planejamento com IA", com estado de carregando e erro.
-- Dep.: PLN-01, PAC-03, API-01.
-- AC: a geração chama o backend e mostra o rascunho; timeout e erro tratados sem reenvio
-  automático.
-
-**PLN-03 — Rascunho editável e salvar (classe B)**
-
-- Escopo:
-  - rascunho com objetivo geral, metas prioritárias e campo "Ajustes do profissional";
-  - edição do conteúdo;
-  - "Salvar PDI/PE" e "Compartilhar".
-- Dep.: PLN-02, DS-04.
-- AC: o plano salvo aparece no hub e na ficha; compartilhar usa o `Share` nativo com uma síntese.
-
-**PLN-04 — Detalhe do plano e acompanhamento de objetivos (classe B)**
-
-- Escopo: "Ver plano completo": objetivos e metas com progresso, vigência, revisão e edição.
-- Dep.: PLN-03.
-- AC: o % do plano bate com o da ficha; a revisão registra a data.
-
-**PLN-05 — Sugestões da IA para revisar (classe B)**
-
-- Escopo: lista das sugestões pendentes (cartão do Início), com aceitar/descartar cada uma e
-  aplicação no plano.
-- Dep.: PLN-04, HOME-01, API-01.
-- AC: a contagem do Início diminui ao resolver uma sugestão.
-
-### 5.9 Avaliações e escalas (N4)
-
-**AVA-01 — Hub de avaliações (classe B)**
-
-- Escopo:
-  - "Nova aplicação" e "Escolher escala";
-  - **modelos disponíveis** (nome, nº de itens, tempo);
-  - **aplicações recentes** com badge de faixa (Moderado…).
-- Dep.: NAV-02, DS-05, API-01.
-- AC: modelos e aplicações vêm da API.
-
-**AVA-02 — Aplicar escala (classe B)**
-
-- Escopo:
-  - seleção do paciente;
-  - progresso "N de M";
-  - instrução;
-  - cards de pergunta com opções Nunca / Às vezes / Frequentemente / Muito (escala do modelo);
-  - navegação entre itens.
-- Dep.: AVA-01, DS-03, API-01.
-- AC: todas as respostas são registradas; dá para sair e voltar ao rascunho.
-
-**AVA-03 — Escore e insight (classe B)**
-
-- Escopo:
-  - pontuação parcial e total **calculada pelo backend**;
-  - faixa interpretativa;
-  - aviso "não substitui avaliação clínica";
-  - insight preliminar da IA;
-  - "Salvar rascunho" e "Concluir escala".
-- Dep.: AVA-02.
-- AC: o cliente não calcula escore por conta própria se a API devolver; concluir trava a
-  edição.
-
-**AVA-04 — Resultado de uma aplicação (classe B)**
-
-- Escopo: tela de resultado: escore, faixa, insight, respostas (se a API permitir) e data.
-- Dep.: AVA-03.
-- AC: acessível pela ficha e pelo hub.
-
-**AVA-05 — Rascunhos de avaliação (classe B)**
-
-- Escopo: retomar uma aplicação salva como rascunho.
-- Dep.: AVA-03.
-- AC: o rascunho reabre na pergunta em que parou.
-
-### 5.10 Banco de atividades (N4)
-
-**ATV-01 — Banco de atividades (classe B)**
-
-- Escopo:
-  - busca por habilidade ou tema;
-  - filtros Todas / Interativas / Imprimíveis;
-  - **recomendada para o paciente** (destaque com "Iniciar atividade");
-  - grade de **atividades prontas** (tipo e habilidade, miniatura colorida).
-- Dep.: NAV-02, DS-05, API-01.
-- AC: dados reais; filtros e busca funcionam.
-
-**ATV-02 — Ver todas e detalhe da atividade (classe B)**
-
-- Escopo: lista completa com paginação; detalhe com habilidade, tipo e paciente sugerido.
-- Dep.: ATV-01.
-- AC: navegação para jogar (ATV-03) ou imprimir (ATV-05).
-
-**ATV-03 — Motor de atividades interativas (classe A/B)**
-
-- Escopo: shell de jogo com progresso "Atividade N de M", ilustração, instrução e feedback de
-  sucesso ou erro com "Tentar novamente".
-- Dep.: ATV-02, G-35.
-- AC: o tipo de atividade é extensível; o resultado é enviado à API quando houver paciente e
-  sessão.
-
-**ATV-04 — Tipos de atividade (classe B)** — uma subtarefa por tipo, conforme o catálogo da API:
-
-| Subtarefa | Atividade           | Habilidade · formato                                     |
-| --------- | ------------------- | -------------------------------------------------------- |
-| ATV-04a   | **Forme a palavra** | Toque nas letras em ordem, com validação                 |
-| ATV-04b   | Associe as cores    | Associação                                               |
-| ATV-04c   | Leia e responda     | Quiz; reaproveita o modelo de tarefa de múltipla escolha |
-| ATV-04d   | Memória visual      | Atenção                                                  |
-
-- Dep.: ATV-03.
-- AC: cada tipo jogável do início ao fim no emulador.
-
-**ATV-05 — Atividades imprimíveis (classe B)**
-
-- Escopo: abrir o PDF da atividade imprimível e imprimir/compartilhar (`expo-print` /
-  `expo-sharing`, G-34).
-- Dep.: ATV-02, G-34.
-- AC: o PDF abre, imprime e compartilha no Android.
-
-### 5.11 Relatórios (N5)
-
-**REL-01 — Configurar relatório (classe B)**
-
-- Escopo:
-  - nota de privacidade ("Relatórios seguros por padrão");
-  - paciente;
-  - tipo (Síntese de acompanhamento, Anamnese e avaliações, Evolução do PDI);
-  - **incluir no documento** (lista marcável);
-  - período;
-  - "Gerar síntese".
-- Dep.: NAV-02, DS-04, API-01.
-- AC: os parâmetros são enviados ao backend; carregando e erro tratados.
-
-**REL-02 — Prévia e exportação (classe B)**
-
-- Escopo: "Relatório pronto" (PDF, nº de páginas), prévia do documento, "Imprimir" e "Enviar"
-  (compartilhar o PDF).
-- Dep.: REL-01, G-34.
-- AC: o PDF gerado pelo backend é baixado, visualizado, impresso e compartilhado.
-
-**REL-03 — Histórico de relatórios (classe B)**
-
-- Escopo: relatórios já gerados por paciente, para reabrir ou reenviar.
-- Dep.: REL-02.
-- AC: a lista vem da API.
-
-### 5.12 Recursos, equipe, ajuda e notificações (N5)
-
-**REC-01 — Tela Recursos (classe B)**
-
-- Escopo: banner do perfil (nome e papel) e grupos de funcionalidades:
-  - Planejamento personalizado;
-  - Avaliação e conteúdo;
-  - Conta e suporte.
-  - Cada item leva à sua rota.
-- Dep.: NAV-01, DS-05.
-- AC: todas as entradas navegam; nenhum "Em breve" para módulos do roadmap.
-
-**REC-02 — Perfil e conta (classe B)**
-
-- Escopo: dados do profissional (nome, papel, foto), editar perfil e sair (logout já existe).
-- Dep.: REC-01, API-01.
-- AC: a edição persiste; o logout limpa os dados (G-04).
-
-**EQP-01 — Equipe e convites (classe B)**
-
-- Escopo: "Convide um profissional" (compartilhar o link seguro gerado pelo backend) e
-  profissionais ativos com papel (Administradora/Profissional) e status.
-- Dep.: REC-01, API-01.
-- AC: o link vem da API e é compartilhado pelo `Share` nativo; a lista é real.
-
-**EQP-02 — Permissões por papel (classe A/B)**
-
-- Escopo: esconder ou bloquear ações de admin (convidar, gerenciar equipe) para quem não é
-  administrador, conforme os papéis da API.
-- Dep.: EQP-01.
-- AC: um usuário "Profissional" não vê ações de admin; teste por papel.
-
-**AJD-01 — Central de ajuda (classe B)**
-
-- Escopo: vídeo de boas-vindas ("Conheça o Labirinto do Saber · 4 min") e tutoriais essenciais
-  numerados com duração. Reprodução do vídeo conforme G-37.
-- Dep.: REC-01, API-01.
-- AC: os vídeos tocam; a lista vem da API.
-
-**NOT-01 — Notificações (classe B)**
-
-- Escopo:
-  - tela aberta pelo sino;
-  - lista de notificações (lembretes, confirmações, sugestões da IA) com lida/não lida;
-  - contador no sino.
-  - Push nativo (`expo-notifications`) conforme G-36.
-- Dep.: NAV-02, API-01.
-- AC: o sino mostra as não lidas; tocar numa notificação leva ao destino.
-
-### 5.13 Qualidade e homologação (N6)
-
-**QA-01 — Plano de testes da Entrega 2 (classe B)**
-
-- Escopo: roteiro manual no formato do
-  [plano da Entrega 1](../entrega-1/PLANO-TESTES.md), cobrindo as 15 telas, os fluxos entre
-  módulos e os destinos do §2.
-- Dep.: N2–N5.
-- AC: todos os P1 passam no Android.
-
-**QA-02 — E2E Maestro (classe B)**
-
-- Escopo: fluxos críticos: login → Início → iniciar sessão → evolução; cadastrar paciente → criar
-  PDI; aplicar escala; gerar relatório.
-- Dep.: QA-01.
-- AC: rodam no AVD Android no CI ou localmente com evidência.
-
-**QA-03 — Acessibilidade (classe B)**
-
-- Escopo: TalkBack/VoiceOver nas telas principais, fonte grande, contraste e alvos de 44.
-- Dep.: N2–N5.
-- AC: checklist sem bloqueios.
-
-**QA-04 — Homologação em aparelhos (classe B)**
-
-- Escopo: aparelho Android físico e iOS via EAS (pendências T-108), com o backend de homologação.
-- Dep.: QA-01 a QA-03.
-- AC: matriz tela × plataforma registrada.
+As tarefas estão **refinadas no [BACKLOG da Entrega 2](BACKLOG.md)**. Cada ficha traz:
+
+- a história (US);
+- o componente e as classes do Figma Make;
+- os recursos de API;
+- as dependências e os gates;
+- os arquivos exclusivos;
+- os critérios de aceite numerados com o tipo de verificação.
+
+As histórias US2-01 a US2-15 estão no [BACKLOG §3](BACKLOG.md#3-histórias).
+
+| Tarefa                                                                   | Título                                        | US     | Figma (Make)                                                                            | Marco | Onda | Dependências                  |
+| ------------------------------------------------------------------------ | --------------------------------------------- | ------ | --------------------------------------------------------------------------------------- | ----- | ---- | ----------------------------- |
+| [API-01](BACKLOG.md#api-01--contrato-real-da-api)                        | Contrato real da API                          | todas  | —                                                                                       | N0    | 1    | —                             |
+| [API-02](BACKLOG.md#api-02--mocks-por-domínio)                           | Mocks por domínio                             | todas  | —                                                                                       | N0    | 2    | API-01                        |
+| [DS-01](BACKLOG.md#ds-01--tokens-do-novo-tema)                           | Tokens do novo tema                           | —      | `:root` do `index.css`                                                                  | N1    | 1    | —                             |
+| [DS-02](BACKLOG.md#ds-02--ícones)                                        | Ícones                                        | —      | `Icon`, `iconPaths`                                                                     | N1    | 2    | DS-01, G-32                   |
+| [DS-03](BACKLOG.md#ds-03--botões-e-controles)                            | Botões e controles                            | —      | `Button`, `IconButton`, `.switch`, `.check-list`, `.segmented`, `.filter-chip`, `.tabs` | N1    | 2    | DS-01, DS-02                  |
+| [DS-04](BACKLOG.md#ds-04--campos-e-formulários)                          | Campos e formulários                          | —      | `.field`, `.field-grid`, `.search-field`                                                | N1    | 2    | DS-01, DS-02                  |
+| [DS-05](BACKLOG.md#ds-05--cards-e-blocos)                                | Cards e blocos                                | —      | `Avatar`, `InfoCard`, `SectionTitle`, `.badge`, `.toast`, `.ai-*`, `.timeline-item`     | N1    | 2    | DS-01 a DS-03                 |
+| [DS-06](BACKLOG.md#ds-06--migração-visual-das-telas-mantidas)            | Migração visual das telas mantidas            | —      | —                                                                                       | N1    | 3    | DS-01 a DS-05                 |
+| [NAV-01](BACKLOG.md#nav-01--abas-início-agenda-pacientes-e-recursos)     | Abas Início, Agenda, Pacientes e Recursos     | US2-15 | `navigation`, `.bottom-nav`                                                             | N1    | 3    | DS-03, G-31                   |
+| [NAV-02](BACKLOG.md#nav-02--cabeçalho-novo)                              | Cabeçalho novo                                | US2-15 | `AppHeader`, `.eyebrow`, `.back-button`                                                 | N1    | 3    | DS-03                         |
+| [NAV-03](BACKLOG.md#nav-03--limpeza-da-entrega-1)                        | Limpeza da Entrega 1                          | —      | —                                                                                       | N1    | 4    | G-33, NAV-01                  |
+| [HOME-01](BACKLOG.md#home-01--tela-início)                               | Tela Início                                   | US2-01 | `HomeScreen`                                                                            | N2    | 4    | NAV-01, NAV-02, DS-05, API-01 |
+| [AGE-01](BACKLOG.md#age-01--tela-agenda)                                 | Tela Agenda                                   | US2-02 | `AgendaScreen`                                                                          | N2    | 4    | NAV-01, DS-05, API-01         |
+| [AGE-02](BACKLOG.md#age-02--mensagens-automáticas-whatsapp)              | Mensagens automáticas (WhatsApp)              | US2-03 | `.setting-card`, `.switch`, `.toast`                                                    | N2    | 5    | AGE-01                        |
+| [AGE-03](BACKLOG.md#age-03--novo-editar-remarcar-e-cancelar-atendimento) | Novo, editar, remarcar e cancelar atendimento | US2-02 | `SimpleFormScreen` (atendimento)                                                        | N2    | 5    | AGE-01, DS-04, PAC-01         |
+| [AGE-04](BACKLOG.md#age-04--iniciar-sessão-a-partir-do-atendimento)      | Iniciar sessão a partir do atendimento        | US2-06 | `.hero-card`, `.appointment--current`                                                   | N2    | 7    | AGE-01, EVO-01                |
+| [PAC-01](BACKLOG.md#pac-01--lista-de-pacientes)                          | Lista de pacientes                            | US2-04 | `PatientsScreen`                                                                        | N2    | 4    | NAV-01, DS-05, API-01         |
+| [PAC-02](BACKLOG.md#pac-02--novo-paciente)                               | Novo paciente                                 | US2-04 | `SimpleFormScreen` (paciente)                                                           | N2    | 5    | DS-04, API-01                 |
+| [PAC-03](BACKLOG.md#pac-03--ficha-visão-geral)                           | Ficha: Visão geral                            | US2-05 | `PatientDetail` aba `visao`                                                             | N2    | 5    | PAC-01                        |
+| [PAC-04](BACKLOG.md#pac-04--ficha-planos)                                | Ficha: Planos                                 | US2-05 | `PatientDetail` aba `planos`                                                            | N2    | 6    | PAC-03, PLN-01                |
+| [PAC-05](BACKLOG.md#pac-05--ficha-avaliações)                            | Ficha: Avaliações                             | US2-05 | `PatientDetail` aba `avaliacoes`                                                        | N2    | 6    | PAC-03, AVA-01                |
+| [PAC-06](BACKLOG.md#pac-06--anamnese)                                    | Anamnese                                      | US2-05 | destino "Ver síntese"                                                                   | N2    | 6    | PAC-03                        |
+| [PAC-07](BACKLOG.md#pac-07--editar-paciente-e-contatar-responsável)      | Editar paciente e contatar responsável        | US2-04 | `.patient-summary` (`message`)                                                          | N2    | 6    | PAC-02, PAC-03, G-36          |
+| [EVO-01](BACKLOG.md#evo-01--evolução-da-sessão)                          | Evolução da sessão                            | US2-06 | `EvolutionScreen`                                                                       | N3    | 6    | DS-03 a DS-05, API-01         |
+| [EVO-02](BACKLOG.md#evo-02--prontuário)                                  | Prontuário                                    | US2-06 | —                                                                                       | N3    | 7    | EVO-01, PAC-03                |
+| [EVO-03](BACKLOG.md#evo-03--atividade-durante-a-sessão)                  | Atividade durante a sessão                    | US2-06 | —                                                                                       | N3    | 8    | EVO-01, ATV-03, G-35          |
+| [PLN-01](BACKLOG.md#pln-01--hub-de-planos)                               | Hub de planos                                 | US2-07 | `PlansScreen` (hub)                                                                     | N3    | 5    | NAV-02, DS-05                 |
+| [PLN-02](BACKLOG.md#pln-02--gerar-planejamento-com-ia)                   | Gerar planejamento com IA                     | US2-07 | `PlansScreen` (generate)                                                                | N3    | 6    | PLN-01, PAC-03                |
+| [PLN-03](BACKLOG.md#pln-03--rascunho-editável)                           | Rascunho editável                             | US2-07 | `.generated-sheet`                                                                      | N3    | 7    | PLN-02                        |
+| [PLN-04](BACKLOG.md#pln-04--detalhe-do-plano)                            | Detalhe do plano                              | US2-08 | destino "Ver plano completo"                                                            | N3    | 8    | PLN-03                        |
+| [PLN-05](BACKLOG.md#pln-05--sugestões-da-ia)                             | Sugestões da IA                               | US2-08 | `.insight-card`                                                                         | N3    | 9    | PLN-04, HOME-01               |
+| [AVA-01](BACKLOG.md#ava-01--hub-de-avaliações)                           | Hub de avaliações                             | US2-09 | `AssessmentsScreen`                                                                     | N4    | 5    | NAV-02, DS-05                 |
+| [AVA-02](BACKLOG.md#ava-02--aplicar-escala)                              | Aplicar escala                                | US2-09 | `.question-card`, `.scale-option`                                                       | N4    | 6    | AVA-01                        |
+| [AVA-03](BACKLOG.md#ava-03--escore-e-insight)                            | Escore e insight                              | US2-09 | `.score-preview`, `.ai-insight`                                                         | N4    | 7    | AVA-02                        |
+| [AVA-04](BACKLOG.md#ava-04--resultado-da-aplicação)                      | Resultado da aplicação                        | US2-09 | destino "Ver resultado"                                                                 | N4    | 8    | AVA-03                        |
+| [AVA-05](BACKLOG.md#ava-05--rascunhos)                                   | Rascunhos                                     | US2-09 | "Salvar rascunho"                                                                       | N4    | 8    | AVA-03                        |
+| [ATV-01](BACKLOG.md#atv-01--banco-de-atividades)                         | Banco de atividades                           | US2-10 | `ActivitiesScreen`                                                                      | N4    | 5    | NAV-02, DS-05                 |
+| [ATV-02](BACKLOG.md#atv-02--ver-todas-e-detalhe)                         | Ver todas e detalhe                           | US2-10 | "Ver todas"                                                                             | N4    | 6    | ATV-01                        |
+| [ATV-03](BACKLOG.md#atv-03--motor-de-atividades-interativas)             | Motor de atividades interativas               | US2-10 | `.game-shell`                                                                           | N4    | 7    | ATV-02, G-35                  |
+| [ATV-04](BACKLOG.md#atv-04--tipos-de-atividade)                          | Tipos de atividade                            | US2-10 | `.word-slots`, `.letter-pool`, `.activity-grid`                                         | N4    | 8    | ATV-03                        |
+| [ATV-05](BACKLOG.md#atv-05--imprimíveis)                                 | Imprimíveis                                   | US2-10 | miniatura "Imprimível"                                                                  | N4    | 8    | ATV-02, G-34                  |
+| [REL-01](BACKLOG.md#rel-01--configurar-relatório)                        | Configurar relatório                          | US2-11 | `ReportsScreen`                                                                         | N5    | 5    | NAV-02, DS-04                 |
+| [REL-02](BACKLOG.md#rel-02--prévia-e-exportação)                         | Prévia e exportação                           | US2-11 | `.report-preview`, `.paper-preview`                                                     | N5    | 6    | REL-01, G-34                  |
+| [REL-03](BACKLOG.md#rel-03--histórico-de-relatórios)                     | Histórico de relatórios                       | US2-11 | —                                                                                       | N5    | 7    | REL-02                        |
+| [REC-01](BACKLOG.md#rec-01--tela-recursos)                               | Tela Recursos                                 | US2-15 | `MoreScreen`                                                                            | N5    | 4    | NAV-01, DS-05                 |
+| [REC-02](BACKLOG.md#rec-02--perfil-e-conta)                              | Perfil e conta                                | US2-15 | `.profile-banner`                                                                       | N5    | 5    | REC-01                        |
+| [EQP-01](BACKLOG.md#eqp-01--equipe-e-convites)                           | Equipe e convites                             | US2-12 | `TeamScreen`                                                                            | N5    | 5    | REC-01                        |
+| [EQP-02](BACKLOG.md#eqp-02--permissões-por-papel)                        | Permissões por papel                          | US2-12 | —                                                                                       | N5    | 6    | EQP-01                        |
+| [AJD-01](BACKLOG.md#ajd-01--central-de-ajuda)                            | Central de ajuda                              | US2-13 | `TeamScreen` (onboarding)                                                               | N5    | 5    | REC-01, G-37                  |
+| [NOT-01](BACKLOG.md#not-01--notificações)                                | Notificações                                  | US2-14 | sino do `AppHeader`                                                                     | N5    | 5    | NAV-02, G-36                  |
+| [QA-01](BACKLOG.md#qa-01--plano-de-testes-da-entrega-2)                  | Plano de testes da Entrega 2                  | —      | —                                                                                       | N6    | 9    | N2 a N5                       |
+| [QA-02](BACKLOG.md#qa-02--e2e-maestro)                                   | E2E Maestro                                   | —      | —                                                                                       | N6    | 10   | QA-01                         |
+| [QA-03](BACKLOG.md#qa-03--acessibilidade)                                | Acessibilidade                                | —      | —                                                                                       | N6    | 9    | N2 a N5                       |
+| [QA-04](BACKLOG.md#qa-04--homologação-em-aparelhos)                      | Homologação em aparelhos                      | —      | —                                                                                       | N6    | 10   | QA-01 a QA-03                 |
+
+**54 tarefas.** A ATV-04 conta como uma, com quatro subtarefas (a–d).
 
 ## 6. Decisões necessárias (propostas para GATES)
 
