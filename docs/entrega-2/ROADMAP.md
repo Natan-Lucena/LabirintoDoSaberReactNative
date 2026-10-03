@@ -103,6 +103,59 @@ Destinos que o design aciona mas não desenha, tratados nas tarefas indicadas:
 
 N2, N3, N4 e N5 podem andar em paralelo depois de N1, com arquivos disjuntos.
 
+### 4.1 Marco V1 — primeira versão funcionando (prioridade)
+
+**Decisões do usuário (2026-10-03):**
+
+- **Visual:** a V1 segue o Figma Make e reaproveita componentes e lógica da Entrega 1 (G-38).
+- **Mídia:** imagem e áudio nas atividades entram (G-39).
+- **Markdown:** a análise por IA usa uma lib de Markdown (G-40).
+- **Expo Go:** a **primeira tarefa** é voltar para o Expo Go (G-41).
+
+**Escopo da V1, ponta a ponta com o backend real:**
+
+- criar atividade, manual (com imagem e áudio) e **com IA**;
+- montar cadernos e grupos;
+- cadastrar e ver pacientes;
+- fazer a sessão (player + registro);
+- relatórios da sessão e do aluno, com **análise por IA** e PDF.
+
+Tudo isso tem endpoint no contrato atual. A exceção são duas pendências do backend:
+
+| Gate | Pendência                 | Bloqueia                     |
+| ---- | ------------------------- | ---------------------------- |
+| G-06 | Vínculo sessão ↔ caderno  | SES-01                       |
+| G-07 | Unidade do `timeToAnswer` | SES-02 e os tempos do REL-04 |
+
+| Bloco      | Tarefas                                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Base       | **EXPO-01** (primeira), DS-01 a DS-06, NAV-01, NAV-02                                                                                     |
+| Telas raiz | HOME-01 (V1), PAC-01, REC-01 (V1)                                                                                                         |
+| Pacientes  | PAC-02 (V1), PAC-03 (V1)                                                                                                                  |
+| Atividades | ATV-01 (V1), ATV-02, ATV-03, **ATV-06** (criar com mídia), **ATV-07** (criar com IA), **ATV-08** (upload), **CNT-01** (cadernos e grupos) |
+| Sessão     | **SES-01** (iniciar), **SES-02** (player), **SES-03** (retomar), **SES-04** (encerrar e registro)                                         |
+| Relatórios | **REL-04** (sessão), **REL-05** (aluno), **REL-06** (análise com IA)                                                                      |
+| Fechamento | **INT-01** (integração real), **QA-05** (ponta a ponta)                                                                                   |
+
+As fichas, o escopo V1 das tarefas reaproveitadas e as ondas V1-0 a V1-8 estão no
+[BACKLOG §4.0](BACKLOG.md#40-marco-v1-prioridade). Caminho crítico da V1:
+
+```
+EXPO-01 → DS-01 → DS-03 → NAV-01 → PAC-01 → SES-01 (G-06) → SES-02 (G-07)
+        → SES-04 → REL-04 → REL-05 → REL-06 → INT-01 → QA-05
+```
+
+Depois da V1 seguem os marcos N2 a N6 com o que falta do design. Esses módulos dependem de API
+que ainda não existe:
+
+- Agenda com WhatsApp;
+- Evolução com critérios do PE;
+- Planos com IA;
+- Escalas;
+- Equipe;
+- Ajuda;
+- Notificações.
+
 ## 5. Tarefas
 
 As tarefas estão **refinadas no [BACKLOG da Entrega 2](BACKLOG.md)**. Cada ficha traz:
@@ -177,15 +230,27 @@ As histórias US2-01 a US2-15 estão no [BACKLOG §3](BACKLOG.md#3-histórias).
 
 ## 6. Decisões necessárias (propostas para GATES)
 
-| Gate           | Decisão                                                         | Recomendação                                                                                                                                                              | Bloqueia                |
-| -------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| G-32           | Ícones do Figma                                                 | Adicionar `react-native-svg` (exige rebuild nativo, já viável desde a T-108) e usar os paths do Figma                                                                     | DS-02                   |
-| G-33           | Destino do fluxo antigo (cadernos, grupos, telas 04/05, player) | Substituir: o atendimento vira Agenda → Evolução e o conteúdo vira Banco de atividades; o modelo de tarefa de múltipla escolha vive como tipo "Leia e responda" (ATV-04c) | NAV-03, EVO-03, ATV-04c |
-| G-34           | PDF, impressão e compartilhamento                               | `expo-print` + `expo-sharing` + `expo-file-system` (rebuild nativo)                                                                                                       | ATV-05, REL-02          |
-| G-35           | Atividade jogada durante a sessão registra resultado?           | Sim, se a API tiver o endpoint; senão, a atividade roda sem registro                                                                                                      | ATV-03, EVO-03          |
-| G-36           | Contato e notificações                                          | Contato pelo app do WhatsApp via `Linking`; push com `expo-notifications` só se o backend enviar push. Sem push, só a lista do sino                                       | PAC-07, NOT-01          |
-| G-37           | Vídeos da Central de ajuda                                      | `expo-video` com URL da API (rebuild nativo)                                                                                                                              | AJD-01                  |
-| G-31 (revisão) | Agenda nas abas                                                 | Revogar: o novo design traz Agenda como aba                                                                                                                               | NAV-01                  |
+| Gate | Decisão                                                         | Recomendação                                                                                                                                                              | Bloqueia                |
+| ---- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| G-32 | Ícones do Figma                                                 | Adicionar `react-native-svg` (compatível com o Expo Go, G-41) e usar os paths do Figma                                                                                    | DS-02                   |
+| G-33 | Destino do fluxo antigo (cadernos, grupos, telas 04/05, player) | Substituir: o atendimento vira Agenda → Evolução e o conteúdo vira Banco de atividades; o modelo de tarefa de múltipla escolha vive como tipo "Leia e responda" (ATV-04c) | NAV-03, EVO-03, ATV-04c |
+| G-34 | PDF, impressão e compartilhamento                               | `expo-print` + `expo-sharing` + `expo-file-system` (compatíveis com o Expo Go)                                                                                            | ATV-05, REL-02          |
+| G-35 | Atividade jogada durante a sessão registra resultado?           | Sim, se a API tiver o endpoint; senão, a atividade roda sem registro                                                                                                      | ATV-03, EVO-03          |
+| G-36 | Contato e notificações                                          | Contato pelo app do WhatsApp via `Linking`; push com `expo-notifications` só se o backend enviar push. Sem push, só a lista do sino                                       | PAC-07, NOT-01          |
+| G-37 | Vídeos da Central de ajuda                                      | `expo-video` com URL da API (compatível com o Expo Go)                                                                                                                    | AJD-01                  |
+
+**Decididas em 2026-10-03 (usuário):**
+
+| Gate | Decisão                                                                               | Efeito                                                                                 |
+| ---- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| G-38 | A V1 segue o Figma Make, reaproveitando componentes e lógica da Entrega 1             | Marco V1 (§4.1); telas sem desenho usam o design system do Make                        |
+| G-39 | Imagem e áudio nas atividades entram na V1                                            | ATV-06, ATV-08, SES-02                                                                 |
+| G-40 | Análise por IA renderizada com lib de Markdown (pura JS, compatível com o Expo Go)    | REL-06                                                                                 |
+| G-41 | Voltar para o Expo Go como primeira tarefa; toda dependência precisa rodar no Expo Go | EXPO-01; a T-108 (dev build) vira opcional; G-32, G-34 e G-37 deixam de exigir rebuild |
+| G-31 | Revogado: a Agenda volta às abas (o Make tem Início, Agenda, Pacientes e Recursos)    | NAV-01                                                                                 |
+
+**Ainda abertas (backend):** G-06 (vínculo sessão ↔ caderno) e G-07 (unidade do
+`timeToAnswer`), que bloqueiam a sessão da V1, e G-05 (recuperação de senha), fora da V1.
 
 ## 7. Ondas sugeridas
 

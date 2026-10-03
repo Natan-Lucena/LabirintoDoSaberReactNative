@@ -126,6 +126,375 @@ design. O detalhe está em cada ficha.
 
 ## 4. Tarefas
 
+### 4.0 Marco V1 (prioridade)
+
+O que é a V1 (decisão do usuário em 2026-10-03, registrada como G-38 a G-41):
+
+- **Escopo:** primeira versão funcionando ponta a ponta com o backend real:
+  - criar atividade, inclusive **com IA**;
+  - criar aluno/paciente;
+  - fazer uma sessão;
+  - ver relatórios, inclusive a análise por IA.
+- **Visual:** segue o **Figma Make** (G-38), reaproveitando componentes e lógica da Entrega 1
+  onde couber.
+- **Imagem e áudio** nas atividades entram (G-39).
+- **Markdown:** a análise por IA usa uma lib de Markdown (G-40).
+- **Expo Go:** a primeira tarefa é **voltar para o Expo Go** (G-41).
+  - O app deixa de exigir development build; toda dependência nova tem de rodar no Expo Go.
+  - O único bloqueio hoje é o `react-native-mmkv` (Nitro).
+- **Sessão:** só tem API em `task-notebook-session`, que é o fluxo de responder tarefas.
+  - Por isso, na V1 a sessão é o **player do Figma Make** (`.game-shell`) rodando as tarefas do
+    caderno, seguido de um encerramento no estilo de `EvolutionScreen`, só com o que a API tem:
+    o registro descritivo vira `observation`.
+  - Critérios do PE e sugestão para a próxima sessão ficam para depois, porque não têm API.
+- **Tarefas sem tela própria no Make:** criar atividade e montar caderno/grupo são montadas com o
+  design system do Make (DS-01 a DS-05), sobre a lógica que já existe (UX3/UX5).
+
+**Ordem da V1:**
+
+| Onda | Tarefas                                                             | Observação                                      |
+| ---- | ------------------------------------------------------------------- | ----------------------------------------------- |
+| V1-0 | EXPO-01                                                             | Primeira; destrava o desenvolvimento no Expo Go |
+| V1-1 | DS-01, DS-02, DS-03, DS-04, DS-05, ATV-08                           | Design system e upload de mídia em paralelo     |
+| V1-2 | NAV-01, NAV-02, DS-06                                               | Casca nova                                      |
+| V1-3 | HOME-01 (V1), PAC-01, PAC-02 (V1), ATV-01 (V1), CNT-01, REC-01 (V1) | Telas raiz                                      |
+| V1-4 | PAC-03 (V1), ATV-06, ATV-07, SES-01                                 | SES-01 depende de G-06                          |
+| V1-5 | ATV-02, ATV-03, SES-02                                              |                                                 |
+| V1-6 | SES-03, SES-04, REL-04                                              |                                                 |
+| V1-7 | REL-05, REL-06                                                      |                                                 |
+| V1-8 | INT-01, QA-05                                                       | Integração real e teste ponta a ponta           |
+
+Caminho crítico:
+
+```
+EXPO-01 → DS-01 → DS-03 → NAV-01 → PAC-01 → SES-01 (G-06) → SES-02 (G-07)
+        → SES-04 → REL-04 → REL-05 → REL-06 → INT-01 → QA-05
+```
+
+**Tarefas da Entrega 2 que entram na V1 e como (escopo V1):**
+
+| Tarefa                        | Escopo na V1                                                                                                                                                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DS-01 a DS-06, NAV-01, NAV-02 | Completas                                                                                                                                                                                                                                         |
+| HOME-01 (V1)                  | Hero do próximo atendimento, acesso rápido e agenda de hoje com `GET /appointment/`. Sem "Notificar responsável" nem cartão de sugestões da IA (sem API); "Criar plano" e "Aplicar escala" levam a "Em breve"                                     |
+| PAC-01                        | Completa, com o que a API tem (sem status do paciente)                                                                                                                                                                                            |
+| PAC-02 (V1)                   | Formulário do Make **mais** os campos que a API exige (`gender`, `zipcode`, `road`, `housenumber`); `age` em vez de data de nascimento; dificuldades como `learningTopics`. Reaproveita a lógica de UX4-C                                         |
+| PAC-03 (V1)                   | Resumo, "Dificuldades mapeadas" e "Evolução recente" (análise), mais a lista de sessões do paciente com acesso ao relatório. Sem PDI, sem as abas Planos e Avaliações (G-38 V1)                                                                   |
+| ATV-01 (V1)                   | Banco com `GET /task/`, `GET /task-group/list-by-educator` e `GET /task-notebook/`; filtros por categoria e tipo, busca por `promptContains`; botão "+ Criar atividade" (ATV-06/ATV-07). Sem "Interativas/Imprimíveis" nem recomendação (sem API) |
+| ATV-02, ATV-03                | Detalhe e player; o tipo jogável na V1 é o quiz (ATV-04c)                                                                                                                                                                                         |
+| REC-01 (V1)                   | Recursos com Atividades, Cadernos e grupos, e Relatórios; os demais itens levam a "Em breve"                                                                                                                                                      |
+
+Fichas novas da V1:
+
+#### EXPO-01 — Migração de volta para o Expo Go
+
+- **Classe:** A
+- **Dep.:** nenhuma (primeira tarefa da V1)
+- **Gate:** G-41
+- **Escopo:**
+  1. Trocar o MMKV por um armazenamento disponível no Expo Go, **mantendo a interface** de
+     `src/storage/mmkv.ts`. Os consumidores são `query-persister.ts`, `AppProviders.tsx`,
+     `useSignIn.ts` e `session-flow.ts`.
+     - Recomendação: `expo-sqlite/kv-store` (API síncrona, compatível com o persister síncrono
+       do TanStack) com criptografia AES-256-GCM em JS (`@noble/ciphers`).
+     - A chave fica no SecureStore, como hoje (G-27).
+     - Manter o isolamento por educador e a limpeza no logout e na troca de conta (G-04).
+  2. Remover `react-native-mmkv` e `react-native-nitro-modules` e o mock de Nitro dos testes.
+  3. Scripts:
+     - `android` e `ios` voltam a `expo start --android` / `--ios`;
+     - `start` abre no Expo Go.
+  4. Auditar cada dependência contra o Expo Go do SDK 57. Toda dependência nova da V1 tem de
+     ser compatível: `react-native-svg`, `expo-image-picker`, `expo-document-picker`,
+     `expo-audio`, `expo-print`, `expo-sharing`, `expo-file-system` e a lib de Markdown.
+  5. Atualizar `COMPATIBILIDADE`, `README` e AGENTS §1.
+     - A T-108 (dev build) vira opcional.
+     - O `android/` gerado continua fora do Git.
+- **Fora:** mudar telas.
+- **Arquivos:**
+  - `src/storage/**` e seus testes;
+  - `src/api/query-persister.ts` (só o adaptador);
+  - `package.json`, `pnpm-lock.yaml`, `app.json`;
+  - `vitest` setup (mocks);
+  - `docs/bootstrap/COMPATIBILIDADE.md`, `README.md`.
+- **AC:**
+  - AC-EXPO-01-01 o app abre e navega no **Expo Go** (Android) com `pnpm start` e leitura do
+    QR, sem erro de módulo nativo. `MAN`
+  - AC-EXPO-01-02 o cache persistido continua criptografado: o valor gravado não é legível
+    sem a chave. `UT`
+  - AC-EXPO-01-03 logout e troca de conta apagam os dados do educador anterior (G-04). `UT`
+  - AC-EXPO-01-04 testes, typecheck, lint e o bundle Android (`expo export`) passam. `CMD`
+  - AC-EXPO-01-05 não há dependência fora do Expo Go no `package.json`; a lista auditada fica
+    registrada no COMPATIBILIDADE. `REV`
+
+#### ATV-06 — Criar e editar atividade (manual, com imagem e áudio)
+
+- **Classe:** B
+- **US:** US2-10
+- **Figma:** sem tela no Make. Usar o padrão de formulário de `SimpleFormScreen` e
+  `PlansScreen` (generate): `.field`, `.segmented`, `.check-list` e `full-button`, com os
+  componentes DS.
+- **Dep.:** DS-03, DS-04, ATV-08
+- **Reaproveita:** a lógica de UX3-A (`src/features/content-create/task`).
+- **Endpoints existentes:**
+  - `POST /task/create` (multipart: `category`, `type`, `prompt`, `alternatives` em JSON,
+    `imageFile?`, `audioFile?`);
+  - `PUT /task/update`;
+  - `GET /task/:id`;
+  - `POST /task/upload-media` (até 10 MB).
+- **Ainda não existe na API:** nada.
+- **Escopo:**
+  - enunciado e categoria;
+  - 2 a 4 alternativas com exatamente uma correta;
+  - **tipo com mídia** (`multipleChoiceWithMedia`) quando houver imagem ou áudio (regras da
+    API: tarefa de texto não pode ter mídia; tarefa com mídia exige imagem ou áudio);
+  - prévia da imagem e do áudio;
+  - editar uma atividade existente.
+- **AC:**
+  - AC-ATV-06-01 criar com e sem mídia respeita o tipo e as regras da API. `CT`
+  - AC-ATV-06-02 a imagem e o áudio aparecem na prévia e no detalhe. `MAN`
+  - AC-ATV-06-03 editar envia `PUT /task/update` só com os campos alterados. `CT`
+  - AC-ATV-06-04 os erros `TEXT_TASK_CANNOT_HAVE_MEDIA` e `MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO`
+    aparecem como mensagem legível. `CT`
+
+#### ATV-07 — Criar atividades com IA
+
+- **Classe:** B
+- **US:** US2-10
+- **Figma:** sem tela no Make. Referência visual: `PlansScreen` (generate) e `.generated-sheet`.
+  - Formulário: `.field`, `.ai-context` e "Gerar com IA" (`sparkles`).
+  - Rascunho: `.generated-sheet` com `badge` "Editável" e a lista de tarefas geradas.
+- **Dep.:** DS-03, DS-04, DS-05
+- **Endpoints existentes:**
+  - `POST /ai-task/generate` (`targetAudience`, `instructions`, `quantity` 1–15, `category`;
+    devolve `{ tasks: TaskInput[] }`, sempre `multipleChoice`; **não persiste**);
+  - `POST /task/batch` (salva as tarefas revisadas).
+- **Ainda não existe na API:** geração de tarefas com mídia (a IA só gera texto).
+- **Escopo:**
+  - formulário com público-alvo (pré-preenchido a partir do paciente, se houver contexto),
+    instruções, quantidade e categoria;
+  - gerar, com estado de carregando;
+  - revisar: editar o enunciado, as alternativas e a correta de cada tarefa, e descartar tarefas;
+  - "Salvar N atividades" (batch);
+  - opção de criar já um caderno com elas (CNT-01).
+- **AC:**
+  - AC-ATV-07-01 a geração valida a quantidade (1–15) antes de enviar. `UT`
+  - AC-ATV-07-02 os erros `AI_GENERATION_FAILED`, `AI_INVALID_OUTPUT` e `INVALID_QUANTITY` aparecem
+    com "Tentar novamente", sem reenvio automático. `CT`
+  - AC-ATV-07-03 nada é salvo até o "Salvar"; só as tarefas não descartadas vão no batch. `CT`
+  - AC-ATV-07-04 depois de salvar, as atividades aparecem no banco (ATV-01). `CT`
+
+#### ATV-08 — Upload de imagem e áudio
+
+- **Classe:** B
+- **Dep.:** EXPO-01
+- **Escopo:**
+  - componentes `MediaPicker` (imagem por galeria ou câmera com `expo-image-picker`; áudio por
+    arquivo com `expo-document-picker`);
+  - `AudioPlayer` (`expo-audio`, já instalado);
+  - envio por `POST /task/upload-media`, com limite de 10 MB validado antes.
+- **Endpoints existentes:** `POST /task/upload-media`.
+- **Ainda não existe na API:** nada.
+- **AC:**
+  - AC-ATV-08-01 um arquivo acima de 10 MB é recusado antes do envio. `UT`
+  - AC-ATV-08-02 as permissões negadas mostram a explicação e o atalho para as configurações. `CT`
+  - AC-ATV-08-03 funciona no Expo Go. `MAN`
+
+#### CNT-01 — Cadernos e grupos no novo visual
+
+- **Classe:** B
+- **Figma:** sem tela no Make; usar `InfoCard`, `.check-list` e `SectionTitle`.
+- **Dep.:** DS-03, DS-05
+- **Reaproveita:** UX3-N, UX3-G, UX5-N e UX5-G (lógica e testes).
+- **Endpoints existentes:** `task-notebook` e `task-group` (create, list, update, delete).
+- **Ainda não existe na API:** nada.
+- **Escopo:**
+  - criar, ver e excluir caderno e grupo, agora também **editar** (`PUT …/update`);
+  - escolher as atividades de um grupo;
+  - acesso pelo Recursos e pelo banco de atividades.
+- **AC:**
+  - AC-CNT-01-01 os testes de UX3/UX5 continuam verdes depois do novo visual. `CMD`
+  - AC-CNT-01-02 editar caderno e grupo funciona. `CT`
+  - AC-CNT-01-03 um caderno criado pode ser usado numa sessão (SES-01). `MAN`
+
+#### SES-01 — Iniciar sessão
+
+- **Classe:** B
+- **US:** US2-06
+- **Figma:** `.hero-card` ("Iniciar sessão") no Início e ação na ficha do paciente; a escolha do
+  caderno é uma folha com `.check-list` (sem tela própria no Make).
+- **Dep.:** PAC-01, CNT-01, **G-06**
+- **Reaproveita:** T-701 (store do fluxo) e a lógica de T-702/T-703 (escolher paciente, nome e
+  conteúdo).
+- **Endpoints existentes:**
+  - `POST /task-notebook-session/start` (`studentId`, `name` ≤ 100);
+  - `GET /task-notebook-session/student/:studentId` (sessão aberta, para reconciliar);
+  - `GET /task-notebook/`.
+- **Ainda não existe na API:** **o vínculo sessão ↔ caderno** (G-06). O `start` não recebe o
+  caderno, mas o `answer` valida `TASK_NOT_IN_NOTEBOOK`.
+- **AC:**
+  - AC-SES-01-01 escolher paciente, nome e caderno inicia a sessão e abre o player. `CT`
+  - AC-SES-01-02 se já houver sessão aberta do paciente, oferece "Retomar" ou "Encerrar agora"
+    (G-21), sem criar duplicata. `CT`
+  - AC-SES-01-03 um erro do `start` mostra a mensagem, sem reenvio automático (G-08). `CT`
+
+#### SES-02 — Player da sessão
+
+- **Classe:** B
+- **US:** US2-06
+- **Figma:** `ActivitiesScreen` (jogo): `.game-shell`, `.game-progress` "Atividade N de M",
+  `.game-illustration` (a imagem da tarefa, se houver), título e instrução (enunciado),
+  alternativas no estilo `.scale-option` ou `.letter-pool`, e `.success-message`.
+- **Dep.:** SES-01, ATV-03, ATV-08 (player de áudio), **G-07**
+- **Reaproveita:** T-801 (componentes previstos).
+- **Endpoints existentes:**
+  - `POST /task-notebook-session/answer` (`sessionId`, `taskId`, `selectedAlternativeId`,
+    `timeToAnswer`);
+  - `GET /task/:id`.
+- **Ainda não existe na API:** a **unidade do `timeToAnswer`** (G-07) e a lista ordenada de
+  tarefas da sessão (G-06).
+- **Escopo:**
+  - mostrar cada tarefa com imagem e áudio;
+  - medir o tempo;
+  - enviar a resposta **uma única vez**, sem permitir trocar depois do envio;
+  - avançar até a última.
+- **AC:**
+  - AC-SES-02-01 cada resposta é enviada uma vez; `TASK_ALREADY_ANSWERED` é tratado como já
+    respondida. `CT`
+  - AC-SES-02-02 o progresso e o áudio funcionam. `CT` + `MAN`
+  - AC-SES-02-03 a perda de rede durante o envio não reenvia sozinha e oferece reconciliar. `CT`
+
+#### SES-03 — Retomada da sessão
+
+- **Classe:** B
+- **Dep.:** SES-02
+- **Reaproveita:** o desenho da T-803 e a decisão G-21.
+- **Endpoints existentes:** `GET /task-notebook-session/student/:studentId`,
+  `POST /task-notebook-session/finish`.
+- **Ainda não existe na API:** nada.
+- **AC:**
+  - AC-SES-03-01 ao reabrir o app com sessão aberta, oferece "Retomar" (volta na primeira
+    tarefa sem resposta) ou "Encerrar agora". `CT`
+
+#### SES-04 — Encerrar sessão e registro
+
+- **Classe:** B
+- **US:** US2-06
+- **Figma:** `EvolutionScreen` adaptada:
+  - `.session-summary` (nome da sessão, paciente, nº de questões);
+  - "Registro descritivo" (textarea);
+  - "Salvar e atualizar prontuário";
+  - `.success-panel`.
+  - Sem critérios nem sugestão da IA na V1 (sem API).
+- **Dep.:** SES-02
+- **Reaproveita:** T-804.
+- **Endpoints existentes:**
+  - `POST /task-notebook-session/finish`;
+  - `POST /task-notebook-session/observation` (`observation` ≥ 1; só depois de finalizar).
+- **Ainda não existe na API:** critérios do PE e sugestão para a próxima sessão.
+- **AC:**
+  - AC-SES-04-01 a última resposta leva ao `finish` e depois ao registro, com "Pular" ou
+    "Salvar". `CT`
+  - AC-SES-04-02 salvar envia a observação uma vez e abre o relatório da sessão (REL-04). `CT`
+
+#### REL-04 — Relatório da sessão
+
+- **Classe:** B
+- **US:** US2-11
+- **Figma:** `ReportsScreen`, área de prévia (`.report-preview`) e componentes `.evolution-card`
+  / `.mini-bars` / `.progress` para as métricas.
+- **Dep.:** SES-04, DS-05
+- **Endpoints existentes:** `GET /task-notebook-session/report/:sessionId`, que devolve:
+  - `totalTimeSession` e `totalQuestions`;
+  - `averageTimePerQuestion`, `averageCorrectTime` e `averageIncorrectTime`;
+  - `percentageByCategory` e `percentageByType`;
+  - `observation`.
+- **Ainda não existe na API:** nada (depende de G-07 para exibir os tempos na unidade certa).
+- **Escopo:** tela com as métricas, a observação e os botões "Imprimir" e "Enviar" (PDF gerado
+  no app com `expo-print` a partir dos dados).
+- **AC:**
+  - AC-REL-04-01 todas as métricas aparecem; um valor `null` aparece como "—". `CT`
+  - AC-REL-04-02 o PDF é gerado, impresso e compartilhado no Expo Go. `MAN`
+  - AC-REL-04-03 abre no fim da sessão e na lista de sessões do paciente (PAC-03 V1). `CT`
+
+#### REL-05 — Relatórios do aluno (análise)
+
+- **Classe:** B
+- **US:** US2-11
+- **Figma:** `ReportsScreen`: paciente, período (últimas N sessões ou datas) e "Gerar síntese".
+  Os tipos e o "Incluir no documento" ficam restritos ao que a API tem.
+- **Dep.:** REL-04
+- **Endpoints existentes:**
+  - `GET /task-notebook-session/analysis/student/:studentId` (`limit` **ou**
+    `startDate`/`endDate`);
+  - `POST …/analysis/student/:studentId/snapshot`;
+  - `GET …/analysis/student/:studentId/history`.
+- **Ainda não existe na API:** os tipos "Anamnese e avaliações" e "Evolução do PDI"; o PDF gerado
+  pelo servidor.
+- **Escopo:**
+  - acerto geral e por categoria;
+  - lista de sessões do período;
+  - "Salvar snapshot" e o histórico de snapshots;
+  - "Imprimir" e "Enviar" em PDF gerado no app.
+- **AC:**
+  - AC-REL-05-01 a UI não permite combinar `limit` com datas (regra da API). `UT`
+  - AC-REL-05-02 o snapshot salvo aparece no histórico. `CT`
+
+#### REL-06 — Análise psicopedagógica com IA
+
+- **Classe:** B
+- **US:** US2-11
+- **Figma:** `.ai-context` / `.ai-insight` (lavanda) para o bloco de IA e `.privacy-note` para o
+  aviso.
+- **Dep.:** REL-05, G-40
+- **Endpoints existentes:**
+  - `GET /task-notebook-session/analysis/student/:studentId/ai` (`limit` ou datas,
+    `templateId?` para incluir a anamnese);
+  - `GET /anamnese/templates/` para escolher o modelo.
+- **Ainda não existe na API:** nada.
+- **Escopo:**
+  - botão "Gerar análise com IA", com carregando e erro;
+  - renderização do Markdown (seções Visão Geral, Pontos Fortes, Dificuldades, Padrões, Melhoria,
+    Guia de Intervenção e Considerações Finais) com a lib de Markdown;
+  - incluir a análise no PDF do relatório (REL-05).
+- **AC:**
+  - AC-REL-06-01 o erro `AI_ANALYSIS_FAILED` aparece com "Tentar novamente", sem reenvio
+    automático. `CT`
+  - AC-REL-06-02 o Markdown aparece com títulos e listas, com a tipografia do tema. `CT` + `MAN`
+  - AC-REL-06-03 o texto da análise não vai para log nem para o cache persistido (dado
+    sensível). `REV`
+
+#### INT-01 — Integração real da V1
+
+- **Classe:** B (com C para execução)
+- **Dep.:** todas as tarefas da V1 de tela
+- **Escopo:**
+  - `EXPO_PUBLIC_USE_MOCKS=false` contra o backend de homologação;
+  - validar endpoint por endpoint: login, `student`, `task` (inclusive mídia e IA),
+    `task-group`, `task-notebook`, `task-notebook-session` (start, answer, finish, observation,
+    report, analysis e ai) e `appointment`;
+  - registrar as divergências e corrigir os tipos.
+- **AC:**
+  - AC-INT-01-01 cada endpoint da V1 tem evidência de chamada real bem-sucedida (data,
+    ambiente). `MAN`
+  - AC-INT-01-02 os mocks continuam iguais ao contrato real (testes atualizados). `UT`
+
+#### QA-05 — Teste ponta a ponta da V1
+
+- **Classe:** B/C
+- **Dep.:** INT-01
+- **Escopo:** roteiro manual e fluxo Maestro, no Expo Go e no Android:
+  1. login;
+  2. cadastrar paciente;
+  3. criar atividade com imagem e áudio;
+  4. gerar atividades com IA;
+  5. montar caderno;
+  6. sessão completa com registro;
+  7. relatório da sessão;
+  8. relatório do aluno com análise por IA, impresso e compartilhado.
+- **AC:**
+  - AC-QA-05-01 o roteiro passa sem bloqueio no Android. `MAN`
+  - AC-QA-05-02 o fluxo Maestro do caminho feliz passa. `E2E`
+
 ### 4.1 Contrato e base
 
 #### API-01 — Contrato real da API
@@ -1172,4 +1541,5 @@ N2–N5 → QA-01 → QA-02; QA-03 → QA-04
 ## 6. Histórico
 
 - 2026-10-03: criação pelo orquestrador a partir do Figma Make e do Roadmap da Entrega 2.
+- 2026-10-03: marco V1 (§4.0), com EXPO-01, ATV-06/07/08, CNT-01, SES-01 a 04, REL-04/05/06, INT-01 e QA-05; G-38 a G-41.
 - 2026-10-03: endpoints do contrato atual e pendências de API em cada ficha; §2.3 Cobertura da API.
