@@ -7,28 +7,12 @@ import {
   persistQueryClient,
 } from "@/api/query-persister";
 
+// Chave fixa de 32 bytes (64 chars hex), no mesmo formato produzido por
+// getOrCreateEncryptionKey (encryption-key.ts). `expo-sqlite/kv-store` é
+// mockado globalmente em memória por vitest.setup.ts (EXPO-01).
 vi.mock("@/storage/encryption-key", () => ({
-  getOrCreateEncryptionKey: vi.fn(async () => "fake-key"),
+  getOrCreateEncryptionKey: vi.fn(async () => "b2".repeat(32)),
 }));
-
-vi.mock("react-native-mmkv", () => {
-  const stores = new Map<string, Map<string, string>>();
-  return {
-    createMMKV: (config: { id: string }) => {
-      if (!stores.has(config.id)) {
-        stores.set(config.id, new Map());
-      }
-      const store = stores.get(config.id)!;
-      return {
-        set: (key: string, value: string) => store.set(key, value),
-        getString: (key: string) => store.get(key),
-        getAllKeys: () => Array.from(store.keys()),
-        remove: (key: string) => store.delete(key),
-        clearAll: () => store.clear(),
-      };
-    },
-  };
-});
 
 describe("query-persister", () => {
   const educatorId = "educator-1";

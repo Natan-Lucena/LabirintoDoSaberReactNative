@@ -1,31 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SQLiteStorageMock } from "@/test-utils/mocks";
+
+// Chave fixa de 32 bytes (64 chars hex), no mesmo formato produzido por
+// getOrCreateEncryptionKey (encryption-key.ts). `expo-sqlite/kv-store` é
+// mockado globalmente em memória por vitest.setup.ts (EXPO-01).
+const FIXED_ENCRYPTION_KEY = "a1".repeat(32);
+
 vi.mock("@/storage/encryption-key", () => ({
-  getOrCreateEncryptionKey: vi.fn(async () => "a".repeat(32)),
+  getOrCreateEncryptionKey: vi.fn(async () => FIXED_ENCRYPTION_KEY),
 }));
 
-// O preset "mmkv" de vitest-native expõe `delete()` em vez de `remove()`
-// (diverge do tipo `MMKV` real de react-native-mmkv, que só existe em
-// runtime nativo). Este mock local replica a API real usada por
-// src/storage/mmkv.ts para os testes ficarem determinísticos.
-vi.mock("react-native-mmkv", () => ({
-  createMMKV: (config: { id: string }) => {
-    const store = new Map<string, unknown>();
-    return {
-      id: config.id,
-      set: (key: string, value: unknown) => {
-        store.set(key, value);
-      },
-      getString: (key: string) => {
-        const value = store.get(key);
-        return typeof value === "string" ? value : undefined;
-      },
-      remove: (key: string) => store.delete(key),
-      getAllKeys: () => Array.from(store.keys()),
-      clearAll: () => store.clear(),
-    };
-  },
-}));
+// Mesmo esquema de nome de banco usado internamente por src/storage/mmkv.ts
+// (um arquivo SQLite por educador). Usado só para inspecionar o valor bruto
+// gravado (via o mock em memória), sem passar pela camada de decifragem.
+function rawStorageFor(educatorId: string): SQLiteStorageMock {
+  return new SQLiteStorageMock(`labirinto.${educatorId}.db`);
+}
 
 const EDUCATOR_A = "educator-a";
 const EDUCATOR_B = "educator-b";
@@ -185,5 +176,31 @@ describe("storage/mmkv", () => {
     unsubscribe();
 
     expect(unsubscribeSpy).toHaveBeenCalled();
+  });
+
+  it("o valor gravado no armazenamento não contém o texto original em claro (AC-EXPO-01-02)", async () => {
+    const { mmkv } = await loadModules();
+    const storage = await mmkv.getStorage(EDUCATOR_A);
+    const plaintext = "dado-sensivel-do-estudante";
+
+    storage.set("query:student:1", plaintext);
+
+    const raw = rawStorageFor(EDUCATOR_A).getItemSync("query:student:1");
+    expect(raw).not.toBeNull();
+    expect(raw).not.toContain(plaintext);
+    expect(storage.getString("query:student:1")).toBe(plaintext);
+  });
+
+  it("valor que não decifra (chave trocada/corrompido) é tratado como ausente e a entrada é apagada", async () => {
+    const { mmkv } = await loadModules();
+    const storage = await mmkv.getStorage(EDUCATOR_A);
+    storage.set("query:student:1", "dado");
+
+    // Corrompe o valor gravado diretamente no armazenamento bruto, simulando
+    // uma troca de chave ou dado corrompido.
+    rawStorageFor(EDUCATOR_A).setItemSync("query:student:1", "0000corrompido");
+
+    expect(storage.getString("query:student:1")).toBeUndefined();
+    expect(storage.getAllKeys()).not.toContain("query:student:1");
   });
 });

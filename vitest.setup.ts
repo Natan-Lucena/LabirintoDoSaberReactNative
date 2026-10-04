@@ -1,15 +1,17 @@
 import { afterEach, vi } from "vitest";
 
 import {
+  expoCryptoMock,
   getLocalSearchParams,
   resetNativeMocks,
   routerMock,
   secureStoreMock,
+  sqliteKvStoreMock,
 } from "@/test-utils/mocks";
 
-vi.mock("react-native-nitro-modules", () => ({
-  NitroModules: { createHybridObject: vi.fn() },
-}));
+vi.mock("expo-sqlite/kv-store", () => sqliteKvStoreMock);
+
+vi.mock("expo-crypto", () => expoCryptoMock);
 
 vi.mock("expo-secure-store", () => secureStoreMock);
 

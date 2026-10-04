@@ -19,17 +19,21 @@ recursos implementados. O estado atual e o handoff estão no
 [TRACKING](docs/entrega-1/TRACKING.md) (§0 e seção Handoff).
 
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
-  Zustand, Axios, React Hook Form/Zod, NativeWind, SecureStore e MMKV. Consulte a
-  lista completa no documento; confirme versões e compatibilidade no bootstrap.
+  Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
+  (TanStack Query e fluxo de sessão) fica em `expo-sqlite/kv-store`, cifrado em
+  AES-256-GCM (`@noble/ciphers`) por `src/storage/mmkv.ts` — ver G-41/EXPO-01.
+  Consulte a lista completa no documento; confirme versões e compatibilidade no
+  bootstrap.
 - Confirme gerenciador de pacotes, scripts e configuração instalada no discovery;
   não reabra escolhas documentadas sem evidência ou pedido do usuário. Decisões de
-  2026-09-24 (detalhes em `docs/entrega-1/GATES.md`): **pnpm**; development build
-  Expo para Android e iOS via EAS (não Expo Go); backend **local** com dados fictícios
-  nos testes; fuso fixo `America/Sao_Paulo`; **Expo SDK 57, TypeScript 6 e Vitest**
-  (versões validadas em `docs/bootstrap/COMPATIBILIDADE.md`, que é a referência de
-  versões da T-102 em diante). Desde 2026-09-25 (G-29), as telas são desenvolvidas
-  com dados mockados (`src/mocks/`, flag `EXPO_PUBLIC_USE_MOCKS`); a integração real
-  é a T-1004.
+  2026-09-24 (detalhes em `docs/entrega-1/GATES.md`): **pnpm**; backend **local**
+  com dados fictícios nos testes; fuso fixo `America/Sao_Paulo`; **Expo SDK 57,
+  TypeScript 6 e Vitest** (versões validadas em `docs/bootstrap/COMPATIBILIDADE.md`,
+  que é a referência de versões da T-102 em diante). Desde 2026-10-03 (G-41/EXPO-01),
+  o app roda no **Expo Go** (`pnpm start` + leitura do QR); o development build via
+  EAS (T-108) é opcional, só para recursos que o Expo Go não cobrir. Desde
+  2026-09-25 (G-29), as telas são desenvolvidas com dados mockados (`src/mocks/`,
+  flag `EXPO_PUBLIC_USE_MOCKS`); a integração real é a T-1004.
 - O backend é externo a este repositório. Sua referência fornecida descreve o
   contrato de integração; não alegue validação contra seu código ou produção sem
   evidência. Preserve métodos, caminhos, formatos e erros, inclusive peculiaridades.

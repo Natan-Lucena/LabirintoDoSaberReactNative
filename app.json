@@ -34,6 +34,7 @@
       "expo-secure-store",
       "expo-audio",
       "expo-asset",
+      "expo-sqlite",
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

@@ -273,8 +273,9 @@ describe("stores/session-flow", () => {
   // deve ficar dentro do espaço que a T-303 trata como fluxo de sessão (mesmo
   // prefixo que clearSessionFlow apaga e clearQueryCache preserva), sem
   // alterar src/storage/**. Usa o mmkv.ts real (não o mock acima) com
-  // react-native-mmkv/encryption-key mockados localmente, como em
-  // src/storage/__tests__/mmkv.test.ts (A-20).
+  // encryption-key mockado localmente, como em
+  // src/storage/__tests__/mmkv.test.ts. `expo-sqlite/kv-store` já é
+  // mockado em memória globalmente por vitest.setup.ts (EXPO-01).
   describe("integração com o espaço de chaves da T-303 (sem alterar src/storage/**)", () => {
     afterEach(() => {
       // Restaura o mock padrão de "@/storage/mmkv" para os demais testes do
@@ -285,25 +286,7 @@ describe("stores/session-flow", () => {
     async function loadRealMmkvIntegration() {
       vi.doUnmock("@/storage/mmkv");
       vi.doMock("@/storage/encryption-key", () => ({
-        getOrCreateEncryptionKey: vi.fn(async () => "a".repeat(32)),
-      }));
-      vi.doMock("react-native-mmkv", () => ({
-        createMMKV: (config: { id: string }) => {
-          const store = new Map<string, unknown>();
-          return {
-            id: config.id,
-            set: (key: string, value: unknown) => {
-              store.set(key, value);
-            },
-            getString: (key: string) => {
-              const value = store.get(key);
-              return typeof value === "string" ? value : undefined;
-            },
-            remove: (key: string) => store.delete(key),
-            getAllKeys: () => Array.from(store.keys()),
-            clearAll: () => store.clear(),
-          };
-        },
+        getOrCreateEncryptionKey: vi.fn(async () => "a1".repeat(32)),
       }));
       vi.resetModules();
       const sessionFlow = await import("@/stores/session-flow");

@@ -7,9 +7,16 @@ providers quando eles existirem; a T-104 não instala nem cria `QueryClient`.
 
 ## Mocks nativos
 
-- `react-native-nitro-modules`: o setup fornece apenas `NitroModules.createHybridObject`.
-  O `react-native-mmkv` usa sua instância em memória no ambiente de teste; isso não
-  valida criptografia, armazenamento nativo ou comportamento em Hermes.
+- `expo-sqlite/kv-store`: `sqliteKvStoreMock` expõe uma classe `SQLiteStorage` em
+  memória (API síncrona `getItemSync`/`setItemSync`/`removeItemSync`/`getAllKeysSync`/
+  `clearSync`), isolada por `databaseName` (um banco por educador em produção). Isso
+  não valida SQLite nativo nem comportamento em Hermes; a criptografia AES-256-GCM de
+  `src/storage/mmkv.ts` roda de verdade sobre esse armazenamento fictício.
+- `expo-crypto`: `expoCryptoMock` fornece `getRandomBytes`/`getRandomBytesAsync` com
+  bytes aleatórios de verdade (via `globalThis.crypto.getRandomValues` do Node), só
+  para evitar carregar o módulo nativo real (`expo-modules-core`) no Vitest. Testes
+  que precisam de bytes determinísticos (ex.: `encryption-key.test.ts`) sobrescrevem
+  esse mock localmente com `vi.mock("expo-crypto", ...)`.
 - `expo-secure-store`: `secureStoreMock` armazena valores em memória e preserva a API
   assíncrona usada pelo aplicativo. Depois de `await cleanup()`, `afterEach` limpa valores,
   chamadas e overrides/`once`, então reinstala as implementações padrão; use
