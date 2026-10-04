@@ -13,10 +13,12 @@ O projeto é identificado no README como `LabirintoDoSaberReactNative`. Sua arqu
 mobile está definida em [Documentação do projeto](docs/PROJECT.md), que reúne a
 arquitetura React Native + TypeScript e a referência global da API fornecida pelo
 usuário. **Leia esse documento antes de planejar ou implementar funcionalidades.**
-Desde a T-102 (2026-09-24) existe o projeto Expo SDK 57 com as dependências da
-Entrega 1, ainda sem telas reais nem testes: decisões documentadas não equivalem a
-recursos implementados. O estado atual e o handoff estão no
-[TRACKING](docs/entrega-1/TRACKING.md) (§0 e seção Handoff).
+O app Expo SDK 57 já tem as telas da Entrega 1 (com dados mockados) e 475 testes. Desde
+2026-10-03 o trabalho segue a **Entrega 2** (novo design do Figma Make), começando pelo
+marco **V1**. Decisões documentadas não equivalem a recursos implementados. O estado
+atual está no [TRACKING da Entrega 2](docs/entrega-2/TRACKING.md) e o contexto para
+retomar o trabalho em [CONTEXTO-SESSAO](docs/CONTEXTO-SESSAO.md). O histórico da
+Entrega 1 fica no [TRACKING da Entrega 1](docs/entrega-1/TRACKING.md).
 
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
@@ -40,13 +42,21 @@ recursos implementados. O estado atual e o handoff estão no
 - Necessidades novas de API são dependências explícitas a negociar. Não invente
   endpoints ou campos para acomodar o cliente; consulte as pendências de integração
   do documento antes de implementar sessão, reenvio ou recuperação de senha.
-- Comandos comprovados até agora (detalhes e evidências no TRACKING, seção Handoff):
-  `pnpm install --frozen-lockfile`, `pnpm run typecheck`, `npx expo-doctor`,
-  `pnpm peers check`, `npx expo export --platform android` e `npx expo start`.
-  Ainda não existem `test` (T-104), `lint` (T-103) nem build nativo (T-108); a T-107
-  documenta todos no README.
+- Comandos comprovados:
+  - `pnpm install --frozen-lockfile`;
+  - `pnpm start` (Expo Go);
+  - `pnpm run test` (Vitest);
+  - `pnpm run typecheck`;
+  - `pnpm run lint`;
+  - `npx prettier --check <arquivos>`;
+  - `python scripts/check-docs.py`;
+  - `npx expo export --platform android`;
+  - `npx expo-doctor`.
+
+  Os detalhes estão no README e em `docs/bootstrap/COMPATIBILIDADE.md`.
+
 - CI no GitHub Actions (`.github/workflows/ci.yml`): documentação (espaços e links) e
-  app (instalação, typecheck, testes quando existirem, bundle Android). Mantenha-o verde.
+  app (instalação, typecheck, lint, testes, bundle Android). Mantenha-o verde.
 - A branch atual observada era `main`, com remoto `origin` configurado. Confira o
   estado real antes de operações Git; isso não autoriza commit nem push.
 - Não importe regras de Next.js, WhatsApp ou caminhos de outros projetos.
@@ -57,25 +67,34 @@ a primeira execução de testes, mas não a definição dos critérios de aceite
 
 ## 2. Hierarquia: orquestrador → líderes técnicos → executores
 
-### Planejamento obrigatório da primeira entrega
+### Planejamento obrigatório da entrega vigente (Entrega 2 — marco V1)
 
-Antes de iniciar qualquer implementação desta entrega, leia nesta ordem:
+Antes de iniciar qualquer implementação, leia nesta ordem:
 
-1. [Documentação do projeto](docs/PROJECT.md): arquitetura e contrato da API.
-2. [Roadmap da primeira entrega](docs/entrega-1/ROADMAP.md): escopo, sequência e marcos.
-3. [Referências do design](docs/entrega-1/DESIGN.md): telas 01–07, chaves do
-   protótipo, componentes e diferenças entre design e dados disponíveis.
-4. [Backlog de US e tarefas](docs/entrega-1/BACKLOG.md): critérios de aceite,
-   dependências, propriedade e verificações da tarefa selecionada.
-5. [Tracking da entrega](docs/entrega-1/TRACKING.md): estado atual, bloqueios,
-   responsável e próximo passo. **Este é o registro canônico do progresso.**
+1. [Contexto da sessão](docs/CONTEXTO-SESSAO.md): estado atual, regras combinadas com o
+   usuário e armadilhas da orquestração.
+2. [Documentação do projeto](docs/PROJECT.md): arquitetura e contrato da API (Parte II).
+3. [Roadmap da Entrega 2](docs/entrega-2/ROADMAP.md): mapa de telas do Figma Make, marcos
+   e decisões; o marco V1 está no §4.1.
+4. [Backlog da Entrega 2](docs/entrega-2/BACKLOG.md): histórias, fichas refinadas com
+   referência ao Figma Make, endpoints existentes, o que falta na API e critérios de aceite.
+   As fichas da V1 estão no §4.0.
+5. [Tracking da Entrega 2](docs/entrega-2/TRACKING.md): estado de cada tarefa, bloqueios e
+   próximo passo. **É o registro canônico do progresso.**
+6. [Gates e decisões](docs/entrega-1/GATES.md): decisões G-01 a G-41, compartilhadas pelas
+   duas entregas.
+
+O design vigente é o Figma Make `L7sCNfMhrzOzhtlNpS3cHr`. Para ler o código dele, use o
+conector Figma (`get_design_context`, com `fileKey=L7sCNfMhrzOzhtlNpS3cHr` e `nodeId=0:1`).
+A Entrega 1 (`docs/entrega-1/`) é histórico: roadmap, backlog, tracking, design e plano de
+testes.
 
 O backlog define o trabalho; o tracking registra sua execução. Planejamento
 documentado não equivale a implementação concluída. Respeite os gates e decisões
 pendentes: recomendações não são aprovações do usuário, e mock não prova integração.
 Use os IDs do backlog em contratos, dispatches, evidências e relatos de handoff.
 Consulte também [Gates e decisões](docs/entrega-1/GATES.md), a
-[Matriz API × telas](docs/entrega-1/API-TELAS.md) e as
+a [cobertura da API](docs/entrega-2/BACKLOG.md#23-cobertura-da-api) e as
 [Perguntas ao backend](docs/entrega-1/PERGUNTAS-BACKEND.md) antes de integrar cada fluxo.
 
 **Atualização obrigatória do tracking:**
