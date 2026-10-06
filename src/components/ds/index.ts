@@ -35,6 +35,9 @@ export type {
 export { Tabs } from "./Tabs";
 export type { TabOption, TabsProps } from "./Tabs";
 
+// DS-04: campos e formulários (barrel próprio, integrado aqui pela DS-05).
+export * from "./fields";
+
 // DS-05: cards e blocos (Figma Make).
 export { Avatar } from "./Avatar";
 export type { AvatarProps, AvatarTone } from "./Avatar";
