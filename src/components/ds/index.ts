@@ -34,3 +34,56 @@ export type {
 
 export { Tabs } from "./Tabs";
 export type { TabOption, TabsProps } from "./Tabs";
+
+// DS-05: cards e blocos (Figma Make).
+export { Avatar } from "./Avatar";
+export type { AvatarProps, AvatarTone } from "./Avatar";
+
+export { Badge } from "./Badge";
+export type { BadgeProps, BadgeVariant } from "./Badge";
+
+export { InfoCard } from "./InfoCard";
+export type { InfoCardAction, InfoCardProps } from "./InfoCard";
+
+export { SectionTitle } from "./SectionTitle";
+export type { SectionTitleProps } from "./SectionTitle";
+
+export { FeatureRow } from "./FeatureRow";
+export type { FeatureRowProps } from "./FeatureRow";
+
+export { ProgressBar } from "./ProgressBar";
+export type { ProgressBarProps } from "./ProgressBar";
+
+export { MiniBars } from "./MiniBars";
+export type { MiniBarsProps } from "./MiniBars";
+
+export { Toast, useToast } from "./Toast";
+export type { ToastProps, UseToastResult } from "./Toast";
+
+export { SuccessPanel } from "./SuccessPanel";
+export type { SuccessPanelProps } from "./SuccessPanel";
+
+export { AIContext } from "./AIContext";
+export type { AIContextProps } from "./AIContext";
+
+export { AIInsight } from "./AIInsight";
+export type { AIInsightProps } from "./AIInsight";
+
+export { AIHero } from "./AIHero";
+export type { AIHeroAction, AIHeroProps } from "./AIHero";
+
+export { InsightCard } from "./InsightCard";
+export type { InsightCardProps } from "./InsightCard";
+
+export { PrivacyNote } from "./PrivacyNote";
+export type { PrivacyNoteProps } from "./PrivacyNote";
+
+export { Fab } from "./Fab";
+export type { FabProps } from "./Fab";
+
+export { Timeline } from "./Timeline";
+export type {
+  TimelineItemData,
+  TimelineItemStatus,
+  TimelineProps,
+} from "./Timeline";
