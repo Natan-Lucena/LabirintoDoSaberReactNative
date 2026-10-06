@@ -69,6 +69,12 @@ describe("AC-DS-01-02 contraste", () => {
     ["ink-600/surface", color.ink[600], color.surface],
     ["brand-700/brand-50", color.brand[700], color.brand[50]],
     ["success/surface", color.success, color.surface],
+    ["branco/brand-700 (G-42)", "#ffffff", color.brand[700]],
+    [
+      "branco/primaryFill (G-42)",
+      semanticColor.textOnPrimary,
+      semanticColor.primaryFill,
+    ],
   ])("mantém %s em pelo menos 4,5:1", (_name, foreground, background) => {
     expect(getContrastRatio(foreground, background)).toBeGreaterThanOrEqual(
       4.5,
@@ -81,12 +87,6 @@ describe("AC-DS-01-02 contraste", () => {
       color.ink[500],
       color.surfaceSoft,
       semanticColor.textMutedOnSoft,
-    ],
-    [
-      "branco/brand-600",
-      "#ffffff",
-      color.brand[600],
-      semanticColor.textOnPrimary,
     ],
     [
       "warning/yellow",

@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  letterCircleMarked: { backgroundColor: color.primary },
+  letterCircleMarked: { backgroundColor: semanticColor.primaryFill },
   letterText: {
     fontFamily: typography.sectionTitle.fontFamily,
     color: semanticColor.textOnTagNeutral,

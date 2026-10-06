@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   },
   fullWidth: { width: "100%", minHeight: 50 },
   primary: {
-    backgroundColor: color.brand[600],
+    backgroundColor: semanticColor.primaryFill,
     shadowColor: "rgb(22,141,132)",
     shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.18,

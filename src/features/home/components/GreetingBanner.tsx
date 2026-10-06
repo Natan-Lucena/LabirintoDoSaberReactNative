@@ -11,7 +11,7 @@ export interface GreetingBannerProps {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: color.primary,
+    backgroundColor: semanticColor.primaryFill,
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 14,

@@ -50,14 +50,14 @@ describe("AC-DS-03 DsButton", () => {
     expect(flatStyle.minHeight).toBeGreaterThanOrEqual(44);
   });
 
-  it("variante primary usa fundo brand-600 e texto acessível (G-17)", async () => {
+  it("variante primary usa fundo brand-700 e texto acessível (G-42)", async () => {
     await render(
       <DsButton label="Salvar" onPress={vi.fn()} variant="primary" />,
     );
     const flatStyle = [screen.getByRole("button").props.style]
       .flat(Infinity)
       .reduce((acc, style) => ({ ...acc, ...style }), {});
-    expect(flatStyle.backgroundColor).toBe(color.brand[600]);
+    expect(flatStyle.backgroundColor).toBe(semanticColor.primaryFill);
     const flatLabelStyle = [screen.getByText("Salvar").props.style]
       .flat(Infinity)
       .reduce((acc, style) => ({ ...acc, ...style }), {});

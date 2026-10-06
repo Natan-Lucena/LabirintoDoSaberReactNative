@@ -1,10 +1,10 @@
 // `.floating-action` do Figma Make. Ver ficha DS-05.
-// G-17: ícone sobre `brand-600` usa `semanticColor.textOnPrimary` (preto),
-// que é o ajuste acessível no lugar do branco do Make.
+// G-42: ícone sobre fundo de marca usa `semanticColor.primaryFill`
+// (brand-700) com `semanticColor.textOnPrimary` (branco).
 import type { ReactElement } from "react";
 import { Pressable, StyleSheet } from "react-native";
 
-import { color, semanticColor, shape } from "../../theme";
+import { semanticColor, shape } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
 
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     borderRadius: shape.radius.lg - 6,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: color.brand[600],
+    backgroundColor: semanticColor.primaryFill,
     ...shape.shadow.md,
   },
 });

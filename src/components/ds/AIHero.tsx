@@ -1,6 +1,6 @@
-// `.ai-hero` do Figma Make: gradiente `brand`; sem lib nova, usa `brand-600`
-// sólido. G-17: texto claro sobre `brand-600` não chega a 4,5:1, por isso
-// usa `semanticColor.textOnPrimary` (preto) em vez de branco.
+// `.ai-hero` do Figma Make: gradiente `brand`; sem lib nova, usa fundo
+// sólido. G-42: fundo `semanticColor.primaryFill` (brand-700) com texto
+// `semanticColor.textOnPrimary` (branco).
 import type { ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 20,
     borderRadius: shape.radius.lg,
-    backgroundColor: color.brand[600],
+    backgroundColor: semanticColor.primaryFill,
   },
   title: {
     fontSize: 17,

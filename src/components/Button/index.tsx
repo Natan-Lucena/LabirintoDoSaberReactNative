@@ -21,14 +21,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  primary: { backgroundColor: color.primary },
+  primary: { backgroundColor: semanticColor.primaryFill },
   secondary: {
     backgroundColor: color.surface,
     borderWidth: shape.hairlineWidth,
     borderColor: color.border,
   },
   onPrimaryWhite: { backgroundColor: color.surface },
-  pill: { backgroundColor: color.primary, borderRadius: 999 },
+  pill: { backgroundColor: semanticColor.primaryFill, borderRadius: 999 },
   label: {
     fontSize: typography.button.fontSize,
     lineHeight: typography.button.lineHeight,

@@ -16,8 +16,10 @@ export const color = palette.color;
  * pares através deste objeto.
  */
 export const semanticColor = {
-  // Branco sobre brand-600 tem 4,06:1; preto é o ajuste acessível de G-17.
-  textOnPrimary: "#000000",
+  // G-42: fundo de marca com texto/ícone usa brand-700 (5,8:1 com branco).
+  textOnPrimary: "#ffffff",
+  /** Fundo de marca atrás de texto/ícone (G-42); não usar `color.primary`/`brand-600` aqui. */
+  primaryFill: color.brand[700],
   /** Texto principal sobre `surface`/`background`. */
   textOnSurface: color.text,
   textOnBackground: color.text,
