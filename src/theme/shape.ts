@@ -11,4 +11,11 @@ export const shape = {
   hairlineWidth: StyleSheet.hairlineWidth,
 } as const;
 
+/** Espaçamento horizontal de conteúdo: compacto em telas com até 370dp. */
+export function getContentPadding(screenWidth: number): number {
+  return screenWidth <= 370
+    ? shape.contentPaddingCompact
+    : shape.contentPadding;
+}
+
 export type ShapeToken = keyof typeof shape;

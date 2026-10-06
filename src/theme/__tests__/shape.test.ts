@@ -1,25 +1,35 @@
 import { describe, expect, it } from "vitest";
 
-import { shape } from "../shape";
+import { getContentPadding, shape } from "../shape";
 
-// Correção de lacuna da T-201 (tokens de forma, DESIGN §4/G-17) feita na T-202.
-describe("tokens de forma (DESIGN §4, G-17)", () => {
-  it("expõe os raios e alvo mínimo de toque aprovados", () => {
-    expect(shape.cardRadius).toBe(16);
-    expect(shape.buttonRadius).toBe(16);
-    expect(shape.inputRadius).toBe(12);
-    expect(shape.minTouchTarget).toBe(48);
+describe("tokens de forma do Figma Make", () => {
+  it("expõe raios e espaçamento de conteúdo", () => {
+    expect(shape).toMatchObject({
+      radius: { sm: 10, md: 16, lg: 24, button: 13, avatar: 15 },
+      contentPadding: 20,
+      contentPaddingCompact: 15,
+    });
   });
 
-  it("expõe padding de tag e borda de acento", () => {
-    expect(shape.tagPaddingVertical).toBe(4);
-    expect(shape.tagPaddingHorizontal).toBe(10);
-    expect(shape.accentBorderWidth).toBe(3);
-    expect(shape.avatarSize).toBe(40);
+  it("mapeia as sombras CSS para React Native e Android", () => {
+    expect(shape.shadow.sm).toEqual({
+      shadowColor: "rgb(31,75,70)",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 10,
+      elevation: 2,
+    });
+    expect(shape.shadow.md).toEqual({
+      shadowColor: "rgb(31,75,70)",
+      shadowOffset: { width: 0, height: 14 },
+      shadowOpacity: 0.13,
+      shadowRadius: 36,
+      elevation: 8,
+    });
   });
 
-  it("expõe hairlineWidth numérico", () => {
-    expect(typeof shape.hairlineWidth).toBe("number");
-    expect(shape.hairlineWidth).toBeGreaterThan(0);
+  it("reduz o padding somente em telas de até 370dp", () => {
+    expect(getContentPadding(370)).toBe(15);
+    expect(getContentPadding(371)).toBe(20);
   });
 });

@@ -3,22 +3,10 @@
 // os tokens semânticos aprovados (G-17).
 import palette from "./palette.js";
 
-export type ColorToken =
-  | "primary"
-  | "selection"
-  | "accent"
-  | "pink"
-  | "success"
-  | "background"
-  | "surface"
-  | "border"
-  | "tagNeutral"
-  | "text"
-  | "textSecondary"
-  | "textTertiary";
+export type ColorToken = keyof typeof palette.color;
 
 /** Valores exatos da fonte (DESIGN §4, coluna "Fonte"). */
-export const color: Record<ColorToken, string> = palette.color;
+export const color = palette.color;
 
 /**
  * Tokens semânticos: pares texto/fundo aprovados (G-17) para uso pelos
@@ -28,8 +16,8 @@ export const color: Record<ColorToken, string> = palette.color;
  * pares através deste objeto.
  */
 export const semanticColor = {
-  /** Texto/ícone sobre `color.primary` (botão primário, banner). */
-  textOnPrimary: color.accent,
+  // Branco sobre brand-600 tem 4,06:1; preto é o ajuste acessível de G-17.
+  textOnPrimary: "#000000",
   /** Texto principal sobre `surface`/`background`. */
   textOnSurface: color.text,
   textOnBackground: color.text,
@@ -42,11 +30,11 @@ export const semanticColor = {
   textOnSelection: color.accent,
   /** Texto sobre tag neutra (`color.tagNeutral`). */
   textOnTagNeutral: color.textSecondary,
-  /**
-   * `color.pink` só é permitido como acento/borda ou texto grande (≥18,66px
-   * bold ou ≥24px regular) — não atinge 4,5:1 para texto normal (DESIGN §4).
-   */
-  pinkAccentLargeTextOnly: color.pink,
+  // Ajustes de contraste G-17 para pares que o Figma não leva a 4,5:1.
+  textMutedOnSoft: color.ink[600],
+  warningTextOnYellow: "#985c10",
+  dangerTextOnSurface: "#c53b3b",
+  lavenderTextOnLavender: "#705aa9",
 } as const;
 
 /**

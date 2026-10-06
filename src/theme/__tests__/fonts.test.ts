@@ -3,26 +3,44 @@ import { describe, expect, it } from "vitest";
 import { fontFamilies, useAppFonts } from "../fonts";
 import { typography } from "../typography";
 
-// AC-201-03 (fontes carregam sem flash) é MAN — depende de build autorizado.
-// Aqui só o que é testável sem nativo: os identificadores de fonte e a
-// ligação com a tipografia.
-describe("AC-201-03 (parcial, sem nativo) identificadores de fonte", () => {
-  it("expõe os pesos usados pelo design (Nunito, Roboto, Roboto Mono)", () => {
-    expect(fontFamilies.nunito.regular).toBe("Nunito_400Regular");
-    expect(fontFamilies.nunito.bold).toBe("Nunito_700Bold");
-    expect(fontFamilies.roboto.regular).toBe("Roboto_400Regular");
-    expect(fontFamilies.roboto.semiBold).toBe("Roboto_600SemiBold");
-    expect(fontFamilies.robotoMono.regular).toBe("RobotoMono_400Regular");
+describe("AC-DS-01-03 fontes e tipografia", () => {
+  it("expõe todos os pesos Nunito usados no Make", () => {
+    expect(fontFamilies.nunito).toMatchObject({
+      regular: "Nunito_400Regular",
+      medium: "Nunito_500Medium",
+      semiBold: "Nunito_600SemiBold",
+      bold: "Nunito_700Bold",
+      extraBold: "Nunito_800ExtraBold",
+    });
   });
 
-  it("a tipografia referencia os identificadores de fontFamilies (sem string solta)", () => {
-    expect(typography.header.fontFamily).toBe(fontFamilies.roboto.regular);
-    expect(typography.tabLabel.fontFamily).toBe(fontFamilies.roboto.semiBold);
+  it("usa a família do peso, sem fontWeight junto de fonte customizada", () => {
+    for (const style of Object.values(typography)) {
+      expect(style).not.toHaveProperty("fontWeight");
+    }
+  });
+
+  it("define title, eyebrow, section, body e small", () => {
+    expect(typography.title).toMatchObject({
+      fontSize: 24,
+      fontFamily: fontFamilies.nunito.extraBold,
+      letterSpacing: -0.6,
+    });
+    expect(typography.eyebrow).toMatchObject({
+      fontSize: 12,
+      fontFamily: fontFamilies.nunito.bold,
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
+    });
+    expect(typography.section).toMatchObject({
+      fontSize: 17,
+      fontFamily: fontFamilies.nunito.extraBold,
+    });
     expect(typography.body.fontFamily).toBe(fontFamilies.nunito.regular);
-    expect(typography.time.fontFamily).toBe(fontFamilies.robotoMono.regular);
+    expect(typography.small.fontFamily).toBe(fontFamilies.nunito.regular);
   });
 
-  it("useAppFonts existe como função (o carregamento em si exige nativo)", () => {
+  it("mantém o hook de carregamento disponível", () => {
     expect(typeof useAppFonts).toBe("function");
   });
 });

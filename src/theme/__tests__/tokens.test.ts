@@ -1,130 +1,118 @@
 import { describe, expect, it } from "vitest";
 
+import palette from "../palette.js";
 import { getContrastRatio } from "../contrast";
-import { color, maxContentWidthTablet, semanticColor } from "../tokens";
-import { typography } from "../typography";
+import { color, semanticColor } from "../tokens";
+import tailwindConfig from "../../../tailwind.config.js";
 
-// AC-201-01: cada cor da fonte (DESIGN §4) com valor idêntico.
-describe("AC-201-01 cores da fonte", () => {
-  it("usa os valores exatos de DESIGN §4", () => {
-    expect(color.primary).toBe("rgb(114,222,212)");
-    expect(color.selection).toBe("rgb(216,245,243)");
-    expect(color.accent).toBe("rgb(26,90,82)");
-    expect(color.pink).toBe("rgb(233,75,143)");
-    expect(color.success).toBe("rgb(80,200,120)");
-    expect(color.background).toBe("rgb(246,248,248)");
-    expect(color.surface).toBe("#fff");
-    expect(color.border).toBe("rgb(224,224,224)");
-    expect(color.tagNeutral).toBe("rgb(243,244,246)");
-    expect(color.text).toBe("rgb(0,0,0)");
-    expect(color.textSecondary).toBe("rgb(63,74,73)");
-    expect(color.textTertiary).toBe("rgb(158,151,151)");
+const figmaColors = {
+  brand: {
+    50: "#eefaf8",
+    100: "#d9f3ef",
+    200: "#b6e7df",
+    500: "#25a99d",
+    600: "#168d84",
+    700: "#116f69",
+  },
+  ink: {
+    950: "#173331",
+    800: "#294b48",
+    600: "#5a7471",
+    500: "#748b88",
+    300: "#b8c9c6",
+  },
+  surface: "#ffffff",
+  surfaceSoft: "#f6faf9",
+  border: "#dfeae8",
+  peach: "#fff1e7",
+  peachStrong: "#e88a4f",
+  lavender: "#f1ecff",
+  lavenderStrong: "#7661b5",
+  yellow: "#fff7d8",
+  warning: "#a36414",
+  success: "#16845e",
+  danger: "#d44c4c",
+} as const;
+
+describe("AC-DS-01-01 tokens do Figma Make", () => {
+  it("expõe todos os valores exatos em TypeScript", () => {
+    expect(color).toMatchObject(figmaColors);
+  });
+
+  it("mantém palette.js como fonte única dos valores", () => {
+    expect(color).toBe(palette.color);
+    expect(palette.color).toMatchObject(figmaColors);
+  });
+
+  it("expõe a mesma paleta no Tailwind", () => {
+    expect(tailwindConfig.theme?.extend?.colors).toStrictEqual(color);
+  });
+
+  it("mantém os aliases legados mapeados para a nova paleta", () => {
+    expect(color).toMatchObject({
+      primary: color.brand[600],
+      selection: color.brand[50],
+      accent: color.brand[700],
+      pink: color.danger,
+      background: color.surfaceSoft,
+      tagNeutral: color.brand[50],
+      text: color.ink[950],
+      textSecondary: color.ink[600],
+      textTertiary: color.ink[500],
+    });
   });
 });
 
-// AC-201-02: pares texto/fundo usados pelos componentes com contraste
-// WCAG >= 4,5:1 (>= 3:1 para texto grande e UI).
-describe("AC-201-02 contraste dos pares semânticos aprovados", () => {
-  it("texto principal e secundário sobre surface/background >= 4,5:1", () => {
-    expect(
-      getContrastRatio(semanticColor.textOnSurface, color.surface),
-    ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      getContrastRatio(semanticColor.textOnBackground, color.background),
-    ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      getContrastRatio(semanticColor.textSecondaryOnSurface, color.surface),
-    ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      getContrastRatio(
-        semanticColor.textSecondaryOnBackground,
-        color.background,
-      ),
-    ).toBeGreaterThanOrEqual(4.5);
+describe("AC-DS-01-02 contraste", () => {
+  it.each([
+    ["ink-950/surface", color.ink[950], color.surface],
+    ["ink-600/surface", color.ink[600], color.surface],
+    ["brand-700/brand-50", color.brand[700], color.brand[50]],
+    ["success/surface", color.success, color.surface],
+  ])("mantém %s em pelo menos 4,5:1", (_name, foreground, background) => {
+    expect(getContrastRatio(foreground, background)).toBeGreaterThanOrEqual(
+      4.5,
+    );
   });
 
-  it("texto de destaque (accent) sobre surface e sobre selection >= 4,5:1", () => {
-    expect(
-      getContrastRatio(semanticColor.textAccentOnSurface, color.surface),
-    ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      getContrastRatio(semanticColor.textOnSelection, color.selection),
-    ).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it("texto sobre primary usa a adaptação aprovada (accent) >= 4,5:1", () => {
-    expect(
-      getContrastRatio(semanticColor.textOnPrimary, color.primary),
-    ).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it("texto secundário sobre tag neutra >= 4,5:1", () => {
-    expect(
-      getContrastRatio(semanticColor.textOnTagNeutral, color.tagNeutral),
-    ).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it("pink é permitido só como acento/texto grande: entre 3:1 e 4,5:1 sobre surface", () => {
-    const ratio = getContrastRatio(
-      semanticColor.pinkAccentLargeTextOnly,
+  it.each([
+    [
+      "ink-500/surface-soft",
+      color.ink[500],
+      color.surfaceSoft,
+      semanticColor.textMutedOnSoft,
+    ],
+    [
+      "branco/brand-600",
+      "#ffffff",
+      color.brand[600],
+      semanticColor.textOnPrimary,
+    ],
+    [
+      "warning/yellow",
+      color.warning,
+      color.yellow,
+      semanticColor.warningTextOnYellow,
+    ],
+    [
+      "danger/surface",
+      color.danger,
       color.surface,
-    );
-    expect(ratio).toBeGreaterThanOrEqual(3);
-    expect(ratio).toBeLessThan(4.5);
-  });
-});
-
-// Pares que DEVEM falhar (documentados em DESIGN §4): os tokens semânticos
-// não podem usá-los. Garante que ninguém "conserte" isso elevando o valor.
-describe("AC-201-02 pares que devem falhar (não usados pelos tokens semânticos)", () => {
-  it("branco sobre primary falha para texto normal e para UI (< 3:1)", () => {
-    expect(getContrastRatio("#fff", color.primary)).toBeLessThan(3);
-  });
-
-  it("textTertiary como texto falha (< 4,5:1) sobre surface e background", () => {
-    expect(getContrastRatio(color.textTertiary, color.surface)).toBeLessThan(
-      4.5,
-    );
-    expect(getContrastRatio(color.textTertiary, color.background)).toBeLessThan(
-      4.5,
-    );
-  });
-
-  it("border é só decorativo: falha até para componentes de UI (< 3:1)", () => {
-    expect(getContrastRatio(color.border, color.surface)).toBeLessThan(3);
-  });
-
-  it("success é só decorativo (borda de acento), não serve como texto (< 4,5:1)", () => {
-    expect(getContrastRatio(color.success, color.surface)).toBeLessThan(4.5);
-  });
-});
-
-describe("Tipografia (DESIGN §4, proposta mobile) e largura máxima de conteúdo", () => {
-  it("respeita os tamanhos mínimos aprovados (12 metadado, 14 corpo)", () => {
-    expect(typography.tag.fontSize).toBeGreaterThanOrEqual(12);
-    expect(typography.body.fontSize).toBeGreaterThanOrEqual(14);
-  });
-
-  it("usa os tamanhos/entrelinhas propostos para os papéis principais", () => {
-    expect(typography.header).toMatchObject({ fontSize: 22, lineHeight: 28 });
-    expect(typography.screenTitle).toMatchObject({
-      fontSize: 20,
-      lineHeight: 26,
-    });
-    expect(typography.sectionTitle).toMatchObject({
-      fontSize: 16,
-      lineHeight: 22,
-    });
-    expect(typography.cardTitle).toMatchObject({
-      fontSize: 15,
-      lineHeight: 20,
-    });
-    expect(typography.body).toMatchObject({ fontSize: 14, lineHeight: 20 });
-    expect(typography.button).toMatchObject({ fontSize: 16, lineHeight: 20 });
-    expect(typography.tabLabel).toMatchObject({ fontSize: 12, lineHeight: 16 });
-  });
-
-  it("tem uma largura máxima de conteúdo para tablet (R4)", () => {
-    expect(maxContentWidthTablet).toBeGreaterThan(0);
-  });
+      semanticColor.dangerTextOnSurface,
+    ],
+    [
+      "lavender-strong/lavender",
+      color.lavenderStrong,
+      color.lavender,
+      semanticColor.lavenderTextOnLavender,
+    ],
+  ])(
+    "documenta o par Figma inacessível %s e usa substituto >= 4,5:1",
+    (_name, figmaForeground, background, accessibleForeground) => {
+      expect(getContrastRatio(figmaForeground, background)).toBeLessThan(4.5);
+      expect(
+        getContrastRatio(accessibleForeground, background),
+      ).toBeGreaterThanOrEqual(4.5);
+    },
+  );
 });

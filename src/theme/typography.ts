@@ -1,4 +1,3 @@
-// Tipografia da T-201 (DESIGN §4, coluna "Proposta mobile").
 import { fontFamilies } from "./fonts";
 
 export type TypographyRole =
@@ -13,86 +12,97 @@ export type TypographyRole =
   | "time"
   | "timerPlayer"
   | "childPrompt"
-  | "answerOption";
+  | "answerOption"
+  | "title"
+  | "eyebrow"
+  | "section"
+  | "small";
 
 export interface TypographyStyle {
   fontSize: number;
   lineHeight: number;
   fontFamily: string;
-  fontWeight: "400" | "600" | "700";
+  letterSpacing?: number;
+  textTransform?: "uppercase";
+  fontWeight?: undefined;
 }
 
+const nunito = fontFamilies.nunito;
+
+// Cada peso aponta para seu arquivo Nunito: Android corta texto quando fontWeight
+// é combinado com uma família de fonte customizada (FX4).
 export const typography: Record<TypographyRole, TypographyStyle> = {
   header: {
-    fontSize: 22,
-    lineHeight: 28,
-    fontFamily: fontFamilies.roboto.regular,
-    fontWeight: "400",
+    fontSize: 24,
+    lineHeight: 30,
+    fontFamily: nunito.extraBold ?? nunito.regular,
+    letterSpacing: -0.6,
   },
   tabLabel: {
     fontSize: 12,
     lineHeight: 16,
-    fontFamily: fontFamilies.roboto.semiBold ?? fontFamilies.roboto.regular,
-    fontWeight: "600",
+    fontFamily: nunito.semiBold ?? nunito.regular,
   },
   screenTitle: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontFamily: fontFamilies.nunito.bold ?? fontFamilies.nunito.regular,
-    fontWeight: "700",
+    fontSize: 24,
+    lineHeight: 30,
+    fontFamily: nunito.extraBold ?? nunito.regular,
+    letterSpacing: -0.6,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 17,
     lineHeight: 22,
-    fontFamily: fontFamilies.nunito.bold ?? fontFamilies.nunito.regular,
-    fontWeight: "700",
+    fontFamily: nunito.extraBold ?? nunito.regular,
   },
   cardTitle: {
     fontSize: 15,
     lineHeight: 20,
-    fontFamily: fontFamilies.nunito.bold ?? fontFamilies.nunito.regular,
-    fontWeight: "700",
+    fontFamily: nunito.bold ?? nunito.regular,
   },
-  body: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontFamily: fontFamilies.nunito.regular,
-    fontWeight: "400",
-  },
+  body: { fontSize: 14, lineHeight: 20, fontFamily: nunito.regular },
   button: {
     fontSize: 16,
     lineHeight: 20,
-    fontFamily: fontFamilies.nunito.bold ?? fontFamilies.nunito.regular,
-    fontWeight: "700",
+    fontFamily: nunito.bold ?? nunito.regular,
   },
   tag: {
     fontSize: 12,
     lineHeight: 16,
-    fontFamily: fontFamilies.nunito.bold ?? fontFamilies.nunito.regular,
-    fontWeight: "700",
+    fontFamily: nunito.bold ?? nunito.regular,
   },
   time: {
     fontSize: 14,
     lineHeight: 20,
     fontFamily: fontFamilies.robotoMono.regular,
-    fontWeight: "400",
   },
   timerPlayer: {
     fontSize: 20,
     lineHeight: 26,
     fontFamily: fontFamilies.robotoMono.regular,
-    fontWeight: "400",
   },
   childPrompt: {
     fontSize: 20,
     lineHeight: 28,
-    fontFamily: fontFamilies.nunito.bold ?? fontFamilies.nunito.regular,
-    fontWeight: "700",
+    fontFamily: nunito.bold ?? nunito.regular,
   },
-  answerOption: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontFamily: fontFamilies.nunito.regular,
-    fontWeight: "400",
+  answerOption: { fontSize: 18, lineHeight: 24, fontFamily: nunito.regular },
+  title: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontFamily: nunito.extraBold ?? nunito.regular,
+    letterSpacing: -0.6,
   },
+  eyebrow: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: nunito.bold ?? nunito.regular,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  section: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontFamily: nunito.extraBold ?? nunito.regular,
+  },
+  small: { fontSize: 12, lineHeight: 16, fontFamily: nunito.regular },
 };
