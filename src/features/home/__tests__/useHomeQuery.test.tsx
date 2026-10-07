@@ -8,10 +8,8 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 vi.mock("@/api/endpoints/appointment", () => ({ listAppointments: vi.fn() }));
 vi.mock("@/api/endpoints/student", () => ({ listStudents: vi.fn() }));
-vi.mock("@/api/endpoints/content", () => ({ listTaskNotebooks: vi.fn() }));
 vi.mock("@/api/endpoints/educator", () => ({
   getMe: vi.fn(),
-  getLastSessions: vi.fn(),
 }));
 
 const { useHomeQuery } = await import("@/features/home/useHomeData");
@@ -30,7 +28,7 @@ describe("useHomeQuery", () => {
     expect(result.current.isError).toBe(true);
   });
 
-  it("refaz as cinco queries de recurso", async () => {
+  it("refaz as tres queries de recurso", async () => {
     const refetch = vi.fn().mockResolvedValue(undefined);
     useQueryMock.mockReturnValue({
       data: [],
@@ -42,6 +40,6 @@ describe("useHomeQuery", () => {
     const { result } = await renderHook(() => useHomeQuery());
     await result.current.refetch();
 
-    expect(refetch).toHaveBeenCalledTimes(5);
+    expect(refetch).toHaveBeenCalledTimes(3);
   });
 });
