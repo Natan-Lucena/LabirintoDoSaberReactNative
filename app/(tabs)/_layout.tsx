@@ -1,35 +1,46 @@
 import type { ReactElement } from "react";
 import { Tabs, useRouter } from "expo-router";
 
-import { AppHeader } from "@/components/AppHeader";
-import { TabBar } from "@/components/TabBar";
+import { AppHeader } from "@/components/ds/AppHeader";
+import { BottomNav } from "@/components/ds/BottomNav";
 import { TAB_DEFINITIONS, useTabItems } from "@/features/shell/useTabItems";
 
-// T-501: TabBar/AppHeader customizados (T-203) em vez do header/tab bar
-// nativos do Expo Router. UX2: 4 abas do Figma "Home sem agenda" — Agenda
-// fica para depois e some da tab bar (continua acessível via /appointments).
-function TabBarAdapter(): ReactElement {
+// NAV-01/NAV-02: casca nova do Figma Make (BottomNav + AppHeader) em vez do
+// TabBar/AppHeader da Entrega 1. Mantemos as abas antigas (Atividades,
+// Alunos, Relatórios) e /appointments como rotas escondidas (href: null)
+// para não quebrar links internos; a limpeza é da NAV-03.
+function BottomNavAdapter(): ReactElement {
   const { items, activeKey } = useTabItems();
 
-  return <TabBar tabs={items} activeKey={activeKey} />;
+  return <BottomNav items={items} activeKey={activeKey} />;
 }
+
+// Rotas da Entrega 1 que saem da tab bar mas continuam existindo.
+const HIDDEN_TAB_TITLES: Record<string, string> = {
+  activities: "Atividades",
+  reports: "Relatórios",
+  students: "Alunos",
+  appointments: "Agenda",
+};
 
 export default function TabsLayout(): ReactElement {
   const router = useRouter();
 
-  const openComingSoon = (title: string) =>
-    router.push({ pathname: "/shell/coming-soon", params: { title } });
+  const openNotifications = () =>
+    router.push({
+      pathname: "/shell/coming-soon",
+      params: { title: "Notificações" },
+    });
 
   return (
     <Tabs
-      tabBar={() => <TabBarAdapter />}
+      tabBar={() => <BottomNavAdapter />}
       screenOptions={{
         headerShown: true,
         header: ({ options }) => (
           <AppHeader
             title={options.title ?? ""}
-            onMenuPress={() => openComingSoon("Menu")}
-            onAvatarPress={() => openComingSoon("Perfil")}
+            onBellPress={openNotifications}
           />
         ),
       }}
@@ -38,10 +49,16 @@ export default function TabsLayout(): ReactElement {
         <Tabs.Screen
           key={tab.key}
           name={tab.segment}
-          options={{ title: tab.headerTitle ?? tab.label }}
+          options={{ title: tab.label }}
         />
       ))}
-      <Tabs.Screen name="appointments" options={{ href: null }} />
+      {Object.entries(HIDDEN_TAB_TITLES).map(([segment, title]) => (
+        <Tabs.Screen
+          key={segment}
+          name={segment}
+          options={{ title, href: null }}
+        />
+      ))}
     </Tabs>
   );
 }
