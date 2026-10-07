@@ -1,30 +1,32 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { deleteTaskNotebook } from "@/api/endpoints/task-notebook-delete";
 import { listTaskNotebooks } from "@/api/endpoints/content";
+import { deleteTaskNotebook } from "@/api/endpoints/task-notebook-delete";
 import { withOfflineGuard } from "@/api/query-client";
-import { AppHeader } from "@/components/AppHeader";
-import { Button } from "@/components/Button";
-import { EmptyState } from "@/components/EmptyState";
-import { ErrorState } from "@/components/ErrorState";
-import { LoadingState } from "@/components/LoadingState";
-import { Screen } from "@/components/Screen";
-import { CATEGORY_LABELS } from "@/features/activities/selectors";
-import { color, shape, typography } from "@/theme";
+import {
+  AppHeader,
+  Badge,
+  DsButton,
+  InfoCard,
+  SectionTitle,
+} from "@/components/ds";
+import { color, fontFamilies } from "@/theme";
 
-const NOTEBOOK_QUERY_KEY = ["task-notebook"] as const;
-
+const categoryLabels = {
+  reading: "Leitura",
+  writing: "Escrita",
+  vocabulary: "Vocabulário",
+  comprehension: "Compreensão",
+};
+const queryKey = ["task-notebook"] as const;
+const pluralize = (count: number, singular: string, plural: string) =>
+  `${count} ${count === 1 ? singular : plural}`;
 export interface NotebookDetailScreenProps {
   notebookId: string;
-}
-
-function pluralize(count: number, singular: string, plural: string): string {
-  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
 }
 
 export function NotebookDetailScreen({
@@ -32,326 +34,159 @@ export function NotebookDetailScreen({
 }: NotebookDetailScreenProps): ReactElement {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [isConfirmVisible, setConfirmVisible] = useState(false);
-
-  const { data, isPending, isError, refetch } = useQuery({
-    queryKey: NOTEBOOK_QUERY_KEY,
-    queryFn: () => listTaskNotebooks(),
-  });
-
-  const deleteMutation = useMutation({
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const notebooks = useQuery({ queryKey, queryFn: () => listTaskNotebooks() });
+  const deletion = useMutation({
     mutationFn: withOfflineGuard(deleteTaskNotebook),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: NOTEBOOK_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey });
       router.back();
     },
   });
-
-  function goToEdit() {
+  function edit() {
     router.push({
       pathname: "/content/notebook/[id]/edit",
       params: { id: notebookId },
     });
   }
-
-  function goToGroup(groupId: string) {
-    router.push(
-      `/content/group/${groupId}` as Parameters<typeof router.push>[0],
+  const entry = notebooks.data?.find(
+    ({ notebook }) => notebook.id === notebookId,
+  );
+  let body: ReactElement;
+  if (notebooks.isPending && !notebooks.data)
+    body = (
+      <Text accessibilityLabel="Carregando caderno" style={styles.status}>
+        Carregando caderno
+      </Text>
     );
-  }
-
-  const content = (() => {
-    if (isPending && !data) {
-      return (
-        <View style={styles.state}>
-          <LoadingState label="Carregando caderno" />
-        </View>
-      );
-    }
-
-    if (isError && !data) {
-      return (
-        <View style={styles.state}>
-          <ErrorState
-            message="Não foi possível carregar o caderno."
-            onRetry={refetch}
-          />
-        </View>
-      );
-    }
-
-    const entry = data?.find(({ notebook }) => notebook.id === notebookId);
-
-    if (!entry) {
-      return (
-        <View style={styles.state}>
-          <Text style={styles.notFoundMessage} accessibilityRole="alert">
-            Não encontrado
-          </Text>
-          <Button label="Voltar" onPress={router.back} variant="secondary" />
-        </View>
-      );
-    }
-
+  else if (notebooks.isError && !notebooks.data)
+    body = (
+      <View style={styles.status}>
+        <Text accessibilityRole="alert">
+          Não foi possível carregar o caderno.
+        </Text>
+        <DsButton
+          label="Tentar novamente"
+          variant="secondary"
+          onPress={() => notebooks.refetch()}
+        />
+      </View>
+    );
+  else if (!entry)
+    body = (
+      <View style={styles.status}>
+        <Text accessibilityRole="alert">Não encontrado</Text>
+        <DsButton label="Voltar" variant="secondary" onPress={router.back} />
+      </View>
+    );
+  else {
     const { notebook, taskGroups } = entry;
-
-    return (
+    body = (
       <View style={styles.content}>
         <Text style={styles.title}>{notebook.description}</Text>
-
-        <View style={styles.card}>
-          <Pressable
-            onPress={goToEdit}
-            accessibilityRole="button"
-            accessibilityLabel="Editar Caderno (atalho)"
-            style={styles.editButton}
-          >
-            <Ionicons name="create-outline" size={20} color={color.primary} />
-          </Pressable>
-          <Text style={styles.cardLabel}>
-            {CATEGORY_LABELS[notebook.category]}
-          </Text>
-          <Text style={styles.cardValue}>
-            {pluralize(notebook.tasks.length, "tarefa", "tarefas")}
-          </Text>
-        </View>
-
-        <View style={styles.block}>
-          <Text style={styles.blockLabel}>Grupos do Caderno</Text>
-          {taskGroups.length === 0 ? (
-            <EmptyState
-              title="Nenhum grupo neste caderno"
-              message="Este caderno ainda não tem grupos vinculados."
-            />
+        <Badge label={categoryLabels[notebook.category]} />
+        <InfoCard
+          icon="book"
+          title="Atividades"
+          description={pluralize(notebook.tasks.length, "tarefa", "tarefas")}
+        />
+        <View style={styles.section}>
+          <SectionTitle title="Grupos do caderno" />
+          {taskGroups.length ? (
+            taskGroups.map((group) => (
+              <InfoCard
+                key={group.id}
+                icon="file"
+                title={group.name}
+                description={pluralize(
+                  group.tasksIds.length,
+                  "atividade",
+                  "atividades",
+                )}
+                onPress={() =>
+                  router.push(`/content/group/${group.id}` as never)
+                }
+              />
+            ))
           ) : (
-            <View style={styles.list}>
-              {taskGroups.map((group) => (
-                <Pressable
-                  key={group.id}
-                  onPress={() => goToGroup(group.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={group.name}
-                  style={styles.itemRow}
-                >
-                  <View style={styles.itemIcon}>
-                    <Ionicons
-                      name="folder-open-outline"
-                      size={18}
-                      color={color.primary}
-                    />
-                  </View>
-                  <View style={styles.itemContent}>
-                    <Text style={styles.itemTitle}>{group.name}</Text>
-                    <Text style={styles.itemSecondary}>
-                      {pluralize(
-                        group.tasksIds.length,
-                        "atividade",
-                        "atividades",
-                      )}
-                    </Text>
-                  </View>
-                </Pressable>
-              ))}
-            </View>
+            <InfoCard
+              icon="file"
+              title="Nenhum grupo neste caderno"
+              description="Este caderno ainda não tem grupos vinculados."
+            />
           )}
         </View>
-
-        {deleteMutation.isError ? (
-          <Text style={styles.errorMessage} accessibilityRole="alert">
+        {deletion.isError ? (
+          <Text style={styles.error} accessibilityRole="alert">
             Não foi possível excluir o caderno.
           </Text>
         ) : null}
-
-        <View style={styles.footer}>
-          <Pressable
+        <View style={styles.actions}>
+          <DsButton
+            label="Excluir Caderno"
+            variant="secondary"
             onPress={() => setConfirmVisible(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Excluir Caderno"
-            style={styles.deleteButton}
-          >
-            <Ionicons name="trash-outline" size={18} color={color.pink} />
-            <Text style={styles.deleteButtonLabel}>Excluir Caderno</Text>
-          </Pressable>
-          <View style={styles.editAction}>
-            <Button
-              label="Editar Caderno"
-              onPress={goToEdit}
-              variant="primary"
-            />
-          </View>
+          />
+          <DsButton label="Editar Caderno" onPress={edit} />
         </View>
-
-        {isConfirmVisible ? (
-          <Modal
-            transparent
-            animationType="fade"
-            visible
-            onRequestClose={() => setConfirmVisible(false)}
-          >
-            <Pressable
-              style={styles.backdrop}
-              onPress={() => setConfirmVisible(false)}
-              accessibilityRole="button"
-              accessibilityLabel="Fechar"
-            >
-              <Pressable style={styles.dialog} onPress={() => undefined}>
-                <Text style={styles.dialogTitle}>Excluir Caderno?</Text>
-                <View style={styles.dialogActions}>
-                  <View style={styles.dialogAction}>
-                    <Button
-                      label="Cancelar"
-                      onPress={() => setConfirmVisible(false)}
-                      variant="secondary"
-                    />
-                  </View>
-                  <View style={styles.dialogAction}>
-                    <Button
-                      label="Excluir"
-                      onPress={() => {
-                        setConfirmVisible(false);
-                        deleteMutation.mutate(notebookId);
-                      }}
-                      variant="primary"
-                      loading={deleteMutation.isPending}
-                    />
-                  </View>
-                </View>
-              </Pressable>
-            </Pressable>
-          </Modal>
-        ) : null}
+        <Modal
+          transparent
+          visible={confirmVisible}
+          onRequestClose={() => setConfirmVisible(false)}
+        >
+          <View style={styles.backdrop}>
+            <View style={styles.dialog}>
+              <Text style={styles.dialogTitle}>Excluir Caderno?</Text>
+              <View style={styles.actions}>
+                <DsButton
+                  label="Cancelar"
+                  variant="secondary"
+                  onPress={() => setConfirmVisible(false)}
+                />
+                <DsButton
+                  label="Excluir"
+                  onPress={() => deletion.mutate(notebookId)}
+                  loading={deletion.isPending}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
-  })();
-
+  }
   return (
-    <Screen scroll>
+    <View style={styles.screen}>
       <AppHeader
         title="Caderno"
-        onMenuPress={router.back}
-        onAvatarPress={() => undefined}
+        subtitle="Banco de atividades"
+        onBack={router.back}
       />
-      {content}
-    </Screen>
+      <ScrollView contentContainerStyle={styles.scroll}>{body}</ScrollView>
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
-  content: { padding: 16, gap: 16 },
-  state: {
+  screen: { flex: 1, backgroundColor: color.surfaceSoft },
+  scroll: { flexGrow: 1 },
+  content: { padding: 20, gap: 16 },
+  status: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
     padding: 24,
-  },
-  notFoundMessage: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-    textAlign: "center",
+    color: color.ink[600],
   },
   title: {
-    fontSize: typography.screenTitle.fontSize,
-    lineHeight: typography.screenTitle.lineHeight,
-    fontFamily: typography.screenTitle.fontFamily,
-    color: color.text,
+    fontSize: 24,
+    lineHeight: 30,
+    fontFamily: fontFamilies.nunito.extraBold,
+    color: color.ink[950],
   },
-  card: {
-    backgroundColor: "#E6F8F6",
-    borderRadius: shape.cardRadius,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.primary,
-    padding: 16,
-    gap: 4,
-  },
-  editButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    width: shape.minTouchTarget,
-    height: shape.minTouchTarget,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardLabel: {
-    fontSize: typography.tag.fontSize,
-    lineHeight: typography.tag.lineHeight,
-    fontFamily: typography.tag.fontFamily,
-    color: color.primary,
-  },
-  cardValue: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-  },
-  block: { gap: 8 },
-  blockLabel: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  list: { gap: 8 },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: color.surface,
-    borderRadius: shape.cardRadius,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.border,
-    padding: 12,
-  },
-  itemIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: color.selection,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  itemContent: { flex: 1, gap: 2 },
-  itemTitle: {
-    fontSize: typography.cardTitle.fontSize,
-    lineHeight: typography.cardTitle.lineHeight,
-    fontFamily: typography.cardTitle.fontFamily,
-    color: color.text,
-  },
-  itemSecondary: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.textSecondary,
-  },
-  errorMessage: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-    textAlign: "center",
-  },
-  footer: { flexDirection: "row", gap: 8, alignItems: "center" },
-  deleteButton: {
-    flex: 1,
-    minHeight: shape.minTouchTarget,
-    borderRadius: shape.buttonRadius,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.pink,
-    flexDirection: "row",
-    gap: 6,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  deleteButtonLabel: {
-    fontSize: typography.button.fontSize,
-    lineHeight: typography.button.lineHeight,
-    fontFamily: typography.button.fontFamily,
-    color: color.text,
-  },
-  editAction: { flex: 1.4 },
+  section: { gap: 10 },
+  actions: { flexDirection: "row", gap: 12 },
+  error: { color: color.danger, fontSize: 13 },
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -360,17 +195,15 @@ const styles = StyleSheet.create({
   },
   dialog: {
     backgroundColor: color.surface,
-    borderRadius: shape.cardRadius,
+    borderRadius: 16,
     padding: 20,
     gap: 16,
   },
   dialogTitle: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
+    fontSize: 17,
+    lineHeight: 22,
+    fontFamily: fontFamilies.nunito.extraBold,
+    color: color.ink[950],
     textAlign: "center",
   },
-  dialogActions: { flexDirection: "row", gap: 8 },
-  dialogAction: { flex: 1 },
 });

@@ -1,22 +1,27 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { deleteTaskGroup } from "@/api/endpoints/task-group-delete";
 import { withOfflineGuard } from "@/api/query-client";
-import { AppHeader } from "@/components/AppHeader";
-import { Button } from "@/components/Button";
-import { EmptyState } from "@/components/EmptyState";
-import { ErrorState } from "@/components/ErrorState";
-import { LoadingState } from "@/components/LoadingState";
-import { Screen } from "@/components/Screen";
-import { CATEGORY_LABELS } from "@/features/activities/selectors";
+import {
+  AppHeader,
+  Badge,
+  DsButton,
+  InfoCard,
+  SectionTitle,
+} from "@/components/ds";
 import { useGroupDetailData } from "@/features/content-detail/group/useGroupDetailData";
-import { color, shape, typography } from "@/theme";
+import { color, fontFamilies } from "@/theme";
 
+const categoryLabels = {
+  reading: "Leitura",
+  writing: "Escrita",
+  vocabulary: "Vocabulário",
+  comprehension: "Compreensão",
+};
 export interface GroupDetailScreenProps {
   groupId: string;
 }
@@ -28,307 +33,160 @@ export function GroupDetailScreen({
   const queryClient = useQueryClient();
   const { group, tasks, isPending, isError, isNotFound, refetch } =
     useGroupDetailData(groupId);
-  const [isConfirmVisible, setConfirmVisible] = useState(false);
-
-  const deleteMutation = useMutation({
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const deletion = useMutation({
     mutationFn: withOfflineGuard(deleteTaskGroup),
     retry: false,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["task-group"] });
-      setConfirmVisible(false);
       router.back();
     },
   });
-
-  function goToEdit() {
+  function edit() {
     router.push({
       pathname: "/content/group/[id]/edit",
       params: { id: groupId },
     });
   }
-
-  function goToTask(taskId: string) {
-    router.push(`/content/task/${taskId}` as never);
-  }
-
-  function confirmDelete() {
-    if (!group) {
-      return;
-    }
-    deleteMutation.mutate(group.id);
-  }
-
-  const content = (() => {
-    if (isPending) {
-      return (
-        <View style={styles.state}>
-          <LoadingState label="Carregando grupo" />
-        </View>
-      );
-    }
-
-    if (isError) {
-      return (
-        <View style={styles.state}>
-          <ErrorState
-            message="Não foi possível carregar o grupo."
-            onRetry={refetch}
-          />
-        </View>
-      );
-    }
-
-    if (isNotFound || !group) {
-      return (
-        <View style={styles.state}>
-          <Text style={styles.notFoundMessage} accessibilityRole="alert">
-            Não encontrado
-          </Text>
-          <Button label="Voltar" onPress={router.back} variant="secondary" />
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.content}>
-        <Text style={styles.title}>{group.name}</Text>
-
-        <View style={styles.categoryCard}>
-          <Text style={styles.categoryLabel}>
-            {CATEGORY_LABELS[group.category]}
-          </Text>
-          <Ionicons
-            name="pencil-outline"
-            size={18}
-            color={color.primary}
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Atividades do Grupo</Text>
-          {tasks.length === 0 ? (
-            <EmptyState
-              title="Sem atividades"
-              message="Este grupo ainda não tem atividades."
-            />
-          ) : (
-            <View style={styles.list}>
-              {tasks.map((task) => (
-                <Pressable
-                  key={task.id}
-                  onPress={() => goToTask(task.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={task.prompt}
-                  style={styles.taskItem}
-                >
-                  <View style={styles.taskIcon}>
-                    <Ionicons
-                      name="document-text-outline"
-                      size={18}
-                      color={color.primary}
-                    />
-                  </View>
-                  <View style={styles.taskText}>
-                    <Text style={styles.taskPrompt} numberOfLines={2}>
-                      {task.prompt}
-                    </Text>
-                    <Text style={styles.taskSecondary}>
-                      {task.alternatives.length} alternativas
-                    </Text>
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {deleteMutation.error ? (
-          <Text style={styles.error} accessibilityRole="alert">
-            {deleteMutation.error.message}
-          </Text>
-        ) : null}
-
-        <View style={styles.footer}>
-          <Pressable
-            onPress={() => setConfirmVisible(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Excluir Grupo"
-            style={styles.deleteButton}
-          >
-            <Ionicons name="trash-outline" size={18} color={color.pink} />
-            <Text style={styles.deleteButtonLabel}>Excluir Grupo</Text>
-          </Pressable>
-          <View style={styles.editAction}>
-            <Button label="Editar Grupo" onPress={goToEdit} variant="primary" />
-          </View>
-        </View>
-
-        {isConfirmVisible ? (
-          <Modal
-            transparent
-            animationType="fade"
-            visible
-            onRequestClose={() => setConfirmVisible(false)}
-          >
-            <View style={styles.backdrop}>
-              <View style={styles.confirmCard}>
-                <Text style={styles.confirmTitle}>Excluir {group.name}?</Text>
-                <View style={styles.confirmActions}>
-                  <Button
-                    label="Cancelar"
-                    variant="secondary"
-                    onPress={() => setConfirmVisible(false)}
-                  />
-                  <Button
-                    label="Excluir"
-                    onPress={confirmDelete}
-                    loading={deleteMutation.isPending}
-                  />
-                </View>
-              </View>
-            </View>
-          </Modal>
-        ) : null}
+  let body: ReactElement;
+  if (isPending)
+    body = (
+      <Text accessibilityLabel="Carregando grupo" style={styles.status}>
+        Carregando grupo
+      </Text>
+    );
+  else if (isError)
+    body = (
+      <View style={styles.status}>
+        <Text accessibilityRole="alert">
+          Não foi possível carregar o grupo.
+        </Text>
+        <DsButton
+          label="Tentar novamente"
+          variant="secondary"
+          onPress={refetch}
+        />
       </View>
     );
-  })();
-
+  else if (isNotFound || !group)
+    body = (
+      <View style={styles.status}>
+        <Text accessibilityRole="alert">Não encontrado</Text>
+        <DsButton label="Voltar" variant="secondary" onPress={router.back} />
+      </View>
+    );
+  else
+    body = (
+      <View style={styles.content}>
+        <Text style={styles.title}>{group.name}</Text>
+        <Badge label={categoryLabels[group.category]} />
+        <View style={styles.section}>
+          <SectionTitle title="Atividades do grupo" />
+          {tasks.length ? (
+            tasks.map((task) => (
+              <InfoCard
+                key={task.id}
+                icon="file"
+                title={task.prompt}
+                description={`${task.alternatives.length} alternativas`}
+                onPress={() => router.push(`/content/task/${task.id}` as never)}
+              />
+            ))
+          ) : (
+            <InfoCard
+              icon="file"
+              title="Sem atividades"
+              description="Este grupo ainda não tem atividades."
+            />
+          )}
+        </View>
+        {deletion.error ? (
+          <Text style={styles.error} accessibilityRole="alert">
+            {deletion.error.message}
+          </Text>
+        ) : null}
+        <View style={styles.actions}>
+          <DsButton
+            label="Excluir Grupo"
+            variant="secondary"
+            onPress={() => setConfirmVisible(true)}
+          />
+          <DsButton label="Editar Grupo" onPress={edit} />
+        </View>
+        <Modal
+          transparent
+          visible={confirmVisible}
+          onRequestClose={() => setConfirmVisible(false)}
+        >
+          <View style={styles.backdrop}>
+            <View style={styles.dialog}>
+              <Text style={styles.dialogTitle}>Excluir {group.name}?</Text>
+              <View style={styles.actions}>
+                <DsButton
+                  label="Cancelar"
+                  variant="secondary"
+                  onPress={() => setConfirmVisible(false)}
+                />
+                <DsButton
+                  label="Excluir"
+                  onPress={() => deletion.mutate(group.id)}
+                  loading={deletion.isPending}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
   return (
-    <Screen scroll>
+    <View style={styles.screen}>
       <AppHeader
         title="Grupo"
-        onMenuPress={router.back}
-        onAvatarPress={() => undefined}
+        subtitle="Banco de atividades"
+        onBack={router.back}
       />
-      {content}
-    </Screen>
+      <ScrollView contentContainerStyle={styles.scroll}>{body}</ScrollView>
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
-  content: { padding: 16, gap: 16 },
-  state: {
+  screen: { flex: 1, backgroundColor: color.surfaceSoft },
+  scroll: { flexGrow: 1 },
+  content: { padding: 20, gap: 16 },
+  status: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
     padding: 24,
-  },
-  notFoundMessage: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-    textAlign: "center",
+    color: color.ink[600],
   },
   title: {
-    fontSize: typography.screenTitle.fontSize,
-    lineHeight: typography.screenTitle.lineHeight,
-    fontFamily: typography.screenTitle.fontFamily,
-    color: color.text,
-  },
-  categoryCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: color.selection,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.primary,
-    borderRadius: shape.cardRadius,
-    padding: 16,
-  },
-  categoryLabel: {
-    fontSize: typography.tag.fontSize,
-    lineHeight: typography.tag.lineHeight,
-    fontFamily: typography.tag.fontFamily,
-    color: color.primary,
+    fontSize: 24,
+    lineHeight: 30,
+    fontFamily: fontFamilies.nunito.extraBold,
+    color: color.ink[950],
   },
   section: { gap: 10 },
-  sectionTitle: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  list: { gap: 10 },
-  taskItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: color.surface,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.border,
-    borderRadius: shape.cardRadius,
-    padding: 14,
-  },
-  taskIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: color.selection,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  taskText: { flex: 1, gap: 2 },
-  taskPrompt: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-  },
-  taskSecondary: {
-    fontSize: typography.tag.fontSize,
-    lineHeight: typography.tag.lineHeight,
-    fontFamily: typography.tag.fontFamily,
-    color: color.textSecondary,
-  },
-  error: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.pink,
-  },
+  actions: { flexDirection: "row", gap: 12 },
+  error: { color: color.danger, fontSize: 13 },
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
-    alignItems: "center",
     justifyContent: "center",
     padding: 24,
   },
-  confirmCard: {
+  dialog: {
     backgroundColor: color.surface,
-    borderRadius: shape.cardRadius,
+    borderRadius: 16,
     padding: 20,
     gap: 16,
-    width: "100%",
   },
-  confirmTitle: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
+  dialogTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontFamily: fontFamilies.nunito.extraBold,
+    color: color.ink[950],
     textAlign: "center",
   },
-  confirmActions: { flexDirection: "row", gap: 8 },
-  footer: { flexDirection: "row", gap: 8 },
-  deleteButton: {
-    flex: 1,
-    minHeight: shape.minTouchTarget,
-    borderRadius: shape.buttonRadius,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.pink,
-    flexDirection: "row",
-    gap: 6,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  deleteButtonLabel: {
-    fontSize: typography.button.fontSize,
-    lineHeight: typography.button.lineHeight,
-    fontFamily: typography.button.fontFamily,
-    color: color.text,
-  },
-  editAction: { flex: 1.4 },
 });

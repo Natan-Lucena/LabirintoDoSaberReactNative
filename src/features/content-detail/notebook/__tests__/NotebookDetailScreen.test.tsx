@@ -168,7 +168,7 @@ describe("NotebookDetailScreen (D-04, D-05, D-06, D-08)", () => {
       queryClient: createNoRetryQueryClient(),
     });
 
-    await screen.findByRole("alert");
+    await screen.findByText("Não foi possível carregar o caderno.");
     listTaskNotebooks.mockResolvedValue(notebooksData);
     await fireEvent.press(
       screen.getByRole("button", { name: "Tentar novamente" }),
@@ -182,7 +182,7 @@ describe("NotebookDetailScreen (D-04, D-05, D-06, D-08)", () => {
     await render(<NotebookDetailScreen notebookId="notebook-inexistente" />);
 
     expect(await screen.findByText("Não encontrado")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+    await fireEvent.press(screen.getAllByRole("button", { name: "Voltar" })[1]);
     expect(routerBack).toHaveBeenCalledTimes(1);
   });
 });
