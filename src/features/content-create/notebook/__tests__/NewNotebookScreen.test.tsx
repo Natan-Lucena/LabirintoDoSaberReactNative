@@ -17,6 +17,7 @@ vi.mock("expo-router", () => ({
 }));
 
 vi.mock("@/api/endpoints/content", () => ({
+  listTaskNotebooks: () => Promise.resolve([]),
   listTaskGroupsByEducator: () =>
     Promise.resolve([
       {
@@ -32,6 +33,9 @@ vi.mock("@/api/endpoints/content", () => ({
 vi.mock("@/api/endpoints/task-notebook-create", () => ({
   createTaskNotebook: (...args: unknown[]) => createTaskNotebook(...args),
 }));
+vi.mock("@/api/endpoints/task-notebook-update", () => ({
+  updateTaskNotebook: vi.fn(),
+}));
 
 describe("NewNotebookScreen", () => {
   beforeEach(() => {
@@ -44,7 +48,9 @@ describe("NewNotebookScreen", () => {
   it("usa plural no rótulo acessível do grupo (2 atividades)", async () => {
     await render(<NewNotebookScreen />);
     expect(
-      await screen.findByLabelText("Alfabeto e sons, 2 atividades"),
+      await screen.findByRole("checkbox", {
+        name: "Alfabeto e sons (2 atividades)",
+      }),
     ).toBeTruthy();
   });
 
@@ -66,9 +72,12 @@ describe("NewNotebookScreen", () => {
       screen.getByLabelText("Nome do Caderno *"),
       "Meu caderno",
     );
-    await fireEvent.press(screen.getByRole("button", { name: "Leitura" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Categoria *" }));
     await fireEvent.press(
-      screen.getByRole("button", { name: /Alfabeto e sons/i }),
+      await screen.findByRole("button", { name: "Leitura" }),
+    );
+    await fireEvent.press(
+      screen.getByRole("checkbox", { name: /Alfabeto e sons/i }),
     );
     await fireEvent.press(
       screen.getByRole("button", { name: "Criar Caderno" }),

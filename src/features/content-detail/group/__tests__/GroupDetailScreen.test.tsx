@@ -113,7 +113,7 @@ describe("GroupDetailScreen (AC-01..AC-04, D-03, D-05, D-06, D-08)", () => {
     });
     await render(<GroupDetailScreen groupId="group-1" />);
 
-    await screen.findByRole("alert");
+    await screen.findByText("Não foi possível carregar o grupo.");
     await fireEvent.press(
       screen.getByRole("button", { name: "Tentar novamente" }),
     );
@@ -125,18 +125,18 @@ describe("GroupDetailScreen (AC-01..AC-04, D-03, D-05, D-06, D-08)", () => {
     await render(<GroupDetailScreen groupId="grupo-inexistente" />);
 
     expect(screen.getByText("Não encontrado")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+    await fireEvent.press(screen.getAllByRole("button", { name: "Voltar" })[1]);
     expect(routerBack).toHaveBeenCalledTimes(1);
   });
 
-  it("abre 'Em breve' ao tocar em Editar Grupo (D-06)", async () => {
+  it("abre o formulário preenchido ao tocar em Editar Grupo", async () => {
     await render(<GroupDetailScreen groupId="group-1" />);
 
     await fireEvent.press(screen.getByRole("button", { name: "Editar Grupo" }));
 
     expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Editar Grupo" },
+      pathname: "/content/group/[id]/edit",
+      params: { id: "group-1" },
     });
   });
 

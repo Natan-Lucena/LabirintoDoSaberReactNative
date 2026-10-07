@@ -1,114 +1,54 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 
+import {
+  listTaskGroupsByEducator,
+  listTaskNotebooks,
+} from "@/api/endpoints/content";
 import { createTaskNotebook } from "@/api/endpoints/task-notebook-create";
-import { listTaskGroupsByEducator } from "@/api/endpoints/content";
+import { updateTaskNotebook } from "@/api/endpoints/task-notebook-update";
 import { withOfflineGuard } from "@/api/query-client";
 import type { TaskCategory } from "@/api/types";
-import { AppHeader } from "@/components/AppHeader";
-import { FooterActions } from "@/components/FooterActions";
-import { FilterChips } from "@/components/FilterChips";
-import { LoadingState } from "@/components/LoadingState";
-import { Screen } from "@/components/Screen";
-import { TextField } from "@/components/TextField";
-import { color, shape, typography } from "@/theme";
-
-function pluralize(count: number, singular: string, plural: string): string {
-  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
-}
+import {
+  AppHeader,
+  CheckList,
+  DsButton,
+  Field,
+  SelectField,
+} from "@/components/ds";
+import { color, fontFamilies } from "@/theme";
 
 const categoryOptions = [
-  { key: "reading", label: "Leitura" },
-  { key: "writing", label: "Escrita" },
-  { key: "vocabulary", label: "Vocabulário" },
-  { key: "comprehension", label: "Compreensão" },
+  { value: "reading", label: "Leitura" },
+  { value: "writing", label: "Escrita" },
+  { value: "vocabulary", label: "Vocabulário" },
+  { value: "comprehension", label: "Compreensão" },
 ];
-
 const schema = z.object({
   description: z.string().trim().min(1, "Informe o nome do caderno").max(100),
   category: z.enum(["reading", "writing", "vocabulary", "comprehension"]),
 });
-
 type FormValues = z.infer<typeof schema>;
 
-const styles = StyleSheet.create({
-  content: { padding: 16, gap: 20 },
-  section: { gap: 10 },
-  label: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  groupCard: {
-    width: "47%",
-    minHeight: 112,
-    borderRadius: shape.cardRadius,
-    backgroundColor: color.surface,
-    padding: 14,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  groupCardSelected: { borderWidth: 2, borderColor: color.primary },
-  groupName: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  groupCount: {
-    fontSize: typography.tag.fontSize,
-    lineHeight: typography.tag.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.textTertiary,
-  },
-  createGroup: {
-    minHeight: shape.minTouchTarget,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: shape.inputRadius,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.border,
-    backgroundColor: color.surface,
-  },
-  createGroupText: {
-    fontSize: typography.button.fontSize,
-    lineHeight: typography.button.lineHeight,
-    fontFamily: typography.button.fontFamily,
-    color: color.accent,
-  },
-  warning: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.textSecondary,
-  },
-  error: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.pink,
-  },
-});
-
-export function NewNotebookScreen(): ReactElement {
+export function NewNotebookScreen({
+  notebookId,
+}: {
+  notebookId?: string;
+}): ReactElement {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const editing = Boolean(notebookId);
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isValid },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -119,137 +59,137 @@ export function NewNotebookScreen(): ReactElement {
     queryKey: ["task-group"],
     queryFn: listTaskGroupsByEducator,
   });
+  const notebooksQuery = useQuery({
+    queryKey: ["task-notebook"],
+    queryFn: () => listTaskNotebooks(),
+    enabled: editing,
+  });
+  useEffect(() => {
+    const notebook = notebooksQuery.data?.find(
+      (entry) => entry.notebook.id === notebookId,
+    )?.notebook;
+    if (notebook)
+      startTransition(() => {
+        reset({
+          description: notebook.description,
+          category: notebook.category,
+        });
+        setSelectedGroupIds(notebook.taskGroupsIds);
+      });
+  }, [notebookId, notebooksQuery.data, reset]);
   const selectedGroups = (groupsQuery.data ?? []).filter((group) =>
     selectedGroupIds.includes(group.id),
   );
   const tasks = [...new Set(selectedGroups.flatMap((group) => group.tasksIds))];
   const mutation = useMutation({
-    mutationFn: withOfflineGuard(createTaskNotebook),
+    mutationFn: async (values: FormValues) => {
+      if (notebookId)
+        return withOfflineGuard(updateTaskNotebook)({
+          taskNotebookId: notebookId,
+          ...values,
+          taskGroupsIds: selectedGroupIds,
+        });
+      return withOfflineGuard(createTaskNotebook)({
+        ...values,
+        tasks,
+        taskGroupsIds: selectedGroupIds,
+      });
+    },
     retry: false,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["task-notebook"] });
-      router.replace("/(tabs)/activities");
+      if (editing) router.back();
+      else router.replace("/(tabs)/activities");
     },
   });
-  const canSubmit = isValid && tasks.length > 0 && !mutation.isPending;
-
-  function toggleGroup(id: string) {
-    setSelectedGroupIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
-
   function submit(values: FormValues) {
-    mutation.mutate({
-      description: values.description,
-      category: values.category,
-      tasks,
-      taskGroupsIds: selectedGroupIds,
-    });
+    mutation.mutate(values);
   }
-
   return (
-    <Screen scroll>
+    <View style={styles.screen}>
       <AppHeader
-        title="Criar Caderno"
-        onMenuPress={router.back}
-        onAvatarPress={() => undefined}
+        title={editing ? "Editar Caderno" : "Criar Caderno"}
+        subtitle="Banco de atividades"
+        onBack={router.back}
       />
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Controller
           control={control}
           name="description"
-          render={({ field: { value, onChange } }) => (
-            <TextField
+          render={({ field }) => (
+            <Field
               label="Nome do Caderno *"
-              value={value}
-              onChangeText={onChange}
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
               error={errors.description?.message}
-              accessibilityLabel="Nome do Caderno *"
             />
           )}
         />
         <Controller
           control={control}
           name="category"
-          render={({ field: { value, onChange } }) => (
-            <View style={styles.section}>
-              <Text style={styles.label}>Categorias *</Text>
-              <FilterChips
-                options={categoryOptions}
-                selected={value ? [value] : []}
-                onToggle={(key) => onChange(key as TaskCategory)}
-              />
-              {errors.category ? (
-                <Text style={styles.error}>{errors.category.message}</Text>
-              ) : null}
-            </View>
+          render={({ field }) => (
+            <SelectField
+              label="Categoria *"
+              value={field.value ?? null}
+              onChange={(value) => field.onChange(value as TaskCategory)}
+              options={categoryOptions}
+              error={errors.category?.message}
+            />
           )}
         />
         <View style={styles.section}>
-          <Text style={styles.label}>Grupos de Atividades</Text>
-          {groupsQuery.isLoading ? (
-            <LoadingState label="Carregando grupos" />
-          ) : (
-            <View style={styles.grid}>
-              {(groupsQuery.data ?? []).map((group) => (
-                <Pressable
-                  key={group.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${group.name}, ${pluralize(group.tasksIds.length, "atividade", "atividades")}`}
-                  accessibilityState={{
-                    selected: selectedGroupIds.includes(group.id),
-                  }}
-                  onPress={() => toggleGroup(group.id)}
-                  style={[
-                    styles.groupCard,
-                    selectedGroupIds.includes(group.id)
-                      ? styles.groupCardSelected
-                      : null,
-                  ]}
-                >
-                  <Ionicons
-                    name="folder-outline"
-                    size={24}
-                    color={color.accent}
-                  />
-                  <Text style={styles.groupName}>{group.name}</Text>
-                  <Text style={styles.groupCount}>
-                    {group.tasksIds.length} atividades
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-          <Pressable
-            style={styles.createGroup}
-            accessibilityRole="button"
-            onPress={() => router.push("/content/new-group" as never)}
-          >
-            <Text style={styles.createGroupText}>+ Criar Grupo</Text>
-          </Pressable>
+          <Text style={styles.heading}>Grupos de atividades</Text>
+          <CheckList
+            options={(groupsQuery.data ?? []).map((group) => ({
+              key: group.id,
+              label: `${group.name} (${group.tasksIds.length} atividades)`,
+            }))}
+            selected={selectedGroupIds}
+            onChange={setSelectedGroupIds}
+          />
+          {!editing && tasks.length === 0 ? (
+            <Text style={styles.hint}>
+              Selecione ao menos um grupo com atividades para criar o caderno.
+            </Text>
+          ) : null}
         </View>
-        {tasks.length === 0 ? (
-          <Text style={styles.warning}>
-            Selecione ao menos um grupo com atividades para criar o caderno.
-          </Text>
-        ) : null}
         {mutation.error ? (
           <Text style={styles.error} accessibilityRole="alert">
             {mutation.error.message}
           </Text>
         ) : null}
-        <FooterActions
-          onBack={router.back}
-          backLabel="Cancelar"
-          onPrimary={handleSubmit(submit)}
-          primaryLabel="Criar Caderno"
-          primaryDisabled={!canSubmit}
-          primaryLoading={mutation.isPending}
-        />
-      </View>
-    </Screen>
+        <View style={styles.actions}>
+          <DsButton
+            label="Cancelar"
+            variant="secondary"
+            onPress={router.back}
+          />
+          <DsButton
+            label={editing ? "Salvar" : "Criar Caderno"}
+            onPress={handleSubmit(submit)}
+            disabled={
+              !isValid || (!editing && tasks.length === 0) || mutation.isPending
+            }
+            loading={mutation.isPending}
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: color.surfaceSoft },
+  content: { padding: 20, gap: 20 },
+  section: { gap: 12 },
+  heading: {
+    fontFamily: fontFamilies.nunito.extraBold,
+    fontSize: 16,
+    lineHeight: 22,
+    color: color.ink[950],
+  },
+  hint: { color: color.ink[600], fontSize: 12 },
+  error: { color: color.danger, fontSize: 12 },
+  actions: { flexDirection: "row", gap: 12, justifyContent: "flex-end" },
+});

@@ -15,6 +15,8 @@ import "@/mocks/handlers/notebook-delete";
 import "@/mocks/handlers/task-upload-media";
 import "@/mocks/handlers/group-delete";
 import "@/mocks/handlers/task-delete";
+import "@/mocks/handlers/notebook-update";
+import "@/mocks/handlers/group-update";
 
 let installed = false;
 
