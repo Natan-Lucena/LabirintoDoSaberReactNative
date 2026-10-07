@@ -1,5 +1,6 @@
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import {
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -24,6 +25,16 @@ export interface FieldProps {
   keyboardType?: TextInputProps["keyboardType"];
   autoCapitalize?: TextInputProps["autoCapitalize"];
   autoCorrect?: TextInputProps["autoCorrect"];
+  autoComplete?: TextInputProps["autoComplete"];
+  textContentType?: TextInputProps["textContentType"];
+  /** Mascara o valor digitado (ex.: senha). DS-06. */
+  secureTextEntry?: boolean;
+  /** Ícone exibido dentro do campo, à direita (ex.: alternar senha). DS-06. */
+  rightIcon?: ReactNode;
+  /** Quando informado, `rightIcon` vira um alvo de toque acessível. DS-06. */
+  onRightIconPress?: () => void;
+  /** Rótulo acessível do botão do `rightIcon`, quando `onRightIconPress` é usado. DS-06. */
+  rightIconAccessibilityLabel?: string;
 }
 
 // Valores do `.field` do Figma Make (src/index.css, ficha DS-04): coluna gap
@@ -45,13 +56,23 @@ const styles = StyleSheet.create({
   inputWrapperFocused: {
     borderColor: color.brand[100],
   },
-  input: {
-    width: "100%",
-    minHeight: shape.minTouchTarget,
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: color.border,
     borderRadius: shape.radius.button,
     backgroundColor: color.surface,
+  },
+  inputRowFocused: {
+    borderColor: color.brand[500],
+  },
+  inputRowDisabled: {
+    opacity: 0.5,
+  },
+  input: {
+    flex: 1,
+    minHeight: shape.minTouchTarget,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 13,
@@ -59,11 +80,8 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.nunito.semiBold,
     color: color.ink[950],
   },
-  inputFocused: {
-    borderColor: color.brand[500],
-  },
-  inputDisabled: {
-    opacity: 0.5,
+  rightIcon: {
+    paddingHorizontal: 12,
   },
   multiline: {
     minHeight: 110,
@@ -89,6 +107,12 @@ export function Field({
   keyboardType,
   autoCapitalize,
   autoCorrect,
+  autoComplete,
+  textContentType,
+  secureTextEntry,
+  rightIcon,
+  onRightIconPress,
+  rightIconAccessibilityLabel,
 }: FieldProps) {
   const [focused, setFocused] = useState(false);
   const errorId = useId();
@@ -99,31 +123,52 @@ export function Field({
       <View
         style={[styles.inputWrapper, focused && styles.inputWrapperFocused]}
       >
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          onFocus={() => setFocused(true)}
-          onBlur={() => {
-            setFocused(false);
-            onBlur?.();
-          }}
-          multiline={multiline}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          editable={!disabled}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          autoCorrect={autoCorrect}
-          accessibilityLabel={accessibilityLabel ?? label}
-          accessibilityHint={error}
-          nativeID={errorId}
+        <View
           style={[
-            styles.input,
-            focused && styles.inputFocused,
-            multiline && styles.multiline,
-            disabled && styles.inputDisabled,
+            styles.inputRow,
+            focused && styles.inputRowFocused,
+            disabled && styles.inputRowDisabled,
           ]}
-        />
+        >
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            onFocus={() => setFocused(true)}
+            onBlur={() => {
+              setFocused(false);
+              onBlur?.();
+            }}
+            multiline={multiline}
+            placeholder={placeholder}
+            maxLength={maxLength}
+            editable={!disabled}
+            keyboardType={keyboardType}
+            autoCapitalize={autoCapitalize}
+            autoCorrect={autoCorrect}
+            autoComplete={autoComplete}
+            textContentType={textContentType}
+            secureTextEntry={secureTextEntry}
+            accessibilityLabel={accessibilityLabel ?? label}
+            accessibilityHint={error}
+            nativeID={errorId}
+            style={[styles.input, multiline && styles.multiline]}
+          />
+          {rightIcon ? (
+            onRightIconPress ? (
+              <Pressable
+                style={styles.rightIcon}
+                onPress={onRightIconPress}
+                accessibilityRole="button"
+                accessibilityLabel={rightIconAccessibilityLabel}
+                hitSlop={8}
+              >
+                {rightIcon}
+              </Pressable>
+            ) : (
+              <View style={styles.rightIcon}>{rightIcon}</View>
+            )
+          ) : null}
+        </View>
       </View>
       {error ? (
         <Text

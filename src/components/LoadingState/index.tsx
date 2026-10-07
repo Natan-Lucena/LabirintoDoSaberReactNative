@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
-    color: color.text,
+    color: color.ink[950],
   },
 });
 
@@ -29,7 +29,7 @@ export function LoadingState({ label = "Carregando" }: LoadingStateProps) {
       accessibilityRole="progressbar"
       accessibilityLabel={label}
     >
-      <ActivityIndicator color={color.primary} />
+      <ActivityIndicator color={color.brand[600]} />
       <Text style={styles.label}>{label}</Text>
     </View>
   );

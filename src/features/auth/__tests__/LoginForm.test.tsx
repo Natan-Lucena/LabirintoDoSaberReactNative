@@ -6,6 +6,7 @@ import { render } from "@/test-utils/render";
 import LoginScreen from "../../../../app/(auth)/login";
 import { LoginForm } from "@/features/auth/LoginForm";
 import { APP_DESTINATION } from "@/features/auth/routes";
+import * as ds from "@/components/ds";
 
 const routerReplace = vi.fn();
 const routerPush = vi.fn();
@@ -153,6 +154,29 @@ describe("LoginForm", () => {
     expect(screen.queryByText("Lembre-se de mim")).toBeNull();
     expect(screen.queryByText("Continuar com Google")).toBeNull();
     expect(screen.queryByText("Novo por aqui?")).toBeNull();
+  });
+
+  it("DS-06: usa Field (ds) para e-mail/senha e DsButton (ds) para as ações", async () => {
+    const fieldSpy = vi.spyOn(ds, "Field");
+    const dsButtonSpy = vi.spyOn(ds, "DsButton");
+
+    await render(<LoginForm />);
+
+    expect(fieldSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ label: "Email" }),
+      undefined,
+    );
+    expect(fieldSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ label: "Senha", secureTextEntry: true }),
+      undefined,
+    );
+    expect(dsButtonSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ label: "Entrar agora" }),
+      undefined,
+    );
+
+    fieldSpy.mockRestore();
+    dsButtonSpy.mockRestore();
   });
 
   it("mantém título e subtítulo juntos no cabeçalho do cartão", async () => {
