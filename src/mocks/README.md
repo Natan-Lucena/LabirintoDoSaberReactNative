@@ -84,3 +84,10 @@ devolve uma agenda vazia, permitindo observar o estado 03.
 Os endpoints de autenticação e Home acima estão cobertos. Telas seguintes que
 dependam de outros endpoints devem estender o registro (item acima), não criar
 um segundo adaptador.
+
+## Atividades com IA
+
+- `POST /ai-task/generate` devolve rascunhos textuais `multipleChoice`, sem persistir.
+- `POST /task/batch` persiste as tarefas recebidas e cria o grupo correspondente.
+- Envie `quantity` fora de 1--15 para receber `400 INVALID_QUANTITY`; inclua
+  `[AI_GENERATION_FAILED]` nas instruções para simular `500 AI_GENERATION_FAILED`.

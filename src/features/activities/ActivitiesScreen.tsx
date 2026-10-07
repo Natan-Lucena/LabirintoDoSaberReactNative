@@ -236,8 +236,7 @@ export function ActivitiesScreen(): ReactElement {
           {
             key: "ai",
             label: "Atividade com IA",
-            onPress: () =>
-              goToCreate("/shell/coming-soon?title=Criar%20com%20IA"),
+            onPress: () => goToCreate("/content/new-task-ai"),
           },
           {
             key: "notebook",
