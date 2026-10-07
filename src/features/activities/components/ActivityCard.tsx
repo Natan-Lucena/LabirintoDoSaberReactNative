@@ -1,21 +1,35 @@
-import { Ionicons } from "@expo/vector-icons";
 import type { ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { Tag } from "@/components/Tag";
+import { FigmaIcon, type FigmaIconName } from "@/components/FigmaIcon";
 import { CATEGORY_LABELS } from "@/features/activities/selectors";
 import type { ActivityListItem } from "@/features/activities/types";
-import { color, shape, typography } from "@/theme";
+import { color, fontFamilies, shape } from "@/theme";
 
-// Faixas/ícones do Figma (nós 1:25032/1:25165/1:25266/1:25365, D-09): cores
-// fora do tema porque são só decorativas (faixa + fundo do ícone), sem texto.
-const KIND_STYLE: Record<
-  ActivityListItem["kind"],
-  { accent: string; icon: keyof typeof Ionicons.glyphMap }
+const CATEGORY_STYLE: Record<
+  ActivityListItem["category"],
+  { backgroundColor: string; icon: FigmaIconName; iconColor: string }
 > = {
-  notebook: { accent: "#D8F5F3", icon: "book-outline" },
-  group: { accent: "#E3F0FF", icon: "folder-open-outline" },
-  task: { accent: "#FFE8F0", icon: "document-text-outline" },
+  reading: {
+    backgroundColor: color.brand[100],
+    icon: "grid",
+    iconColor: color.brand[700],
+  },
+  writing: {
+    backgroundColor: color.peach,
+    icon: "book",
+    iconColor: color.peachStrong,
+  },
+  vocabulary: {
+    backgroundColor: color.lavender,
+    icon: "print",
+    iconColor: color.lavenderStrong,
+  },
+  comprehension: {
+    backgroundColor: color.yellow,
+    icon: "brain",
+    iconColor: color.warning,
+  },
 };
 
 export interface ActivityCardProps {
@@ -25,41 +39,33 @@ export interface ActivityCardProps {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
+    flexBasis: "48%",
+    flexGrow: 1,
+    gap: 10,
+    padding: 10,
     backgroundColor: color.surface,
-    borderRadius: shape.cardRadius,
-    borderWidth: shape.hairlineWidth,
+    borderWidth: 1,
     borderColor: color.border,
-    overflow: "hidden",
+    borderRadius: shape.radius.md,
+    ...shape.shadow.sm,
   },
-  stripe: { width: 6 },
-  body: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 12,
-    padding: 14,
-    alignItems: "flex-start",
-  },
-  iconSquare: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: "center",
+  thumbnail: {
+    height: 88,
+    borderRadius: shape.radius.sm,
     alignItems: "center",
+    justifyContent: "center",
   },
-  content: { flex: 1, gap: 6 },
   title: {
-    fontSize: typography.cardTitle.fontSize,
-    lineHeight: typography.cardTitle.lineHeight,
-    fontFamily: typography.cardTitle.fontFamily,
-    fontWeight: typography.cardTitle.fontWeight,
+    fontSize: 14,
+    lineHeight: 18,
+    fontFamily: fontFamilies.nunito.extraBold ?? fontFamilies.nunito.regular,
     color: color.text,
   },
-  secondary: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.textSecondary,
+  metadata: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontFamily: fontFamilies.nunito.regular,
+    color: color.ink[600],
   },
 });
 
@@ -67,7 +73,7 @@ export function ActivityCard({
   item,
   onPress,
 }: ActivityCardProps): ReactElement {
-  const kindStyle = KIND_STYLE[item.kind];
+  const categoryStyle = CATEGORY_STYLE[item.category];
 
   return (
     <Pressable
@@ -76,21 +82,24 @@ export function ActivityCard({
       accessibilityLabel={item.title}
       style={styles.card}
     >
-      <View style={[styles.stripe, { backgroundColor: kindStyle.accent }]} />
-      <View style={styles.body}>
-        <View
-          style={[styles.iconSquare, { backgroundColor: kindStyle.accent }]}
-        >
-          <Ionicons name={kindStyle.icon} size={20} color={color.text} />
-        </View>
-        <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-            {item.title}
-          </Text>
-          <Text style={styles.secondary}>{item.secondary}</Text>
-          <Tag label={CATEGORY_LABELS[item.category]} variant="neutral" />
-        </View>
+      <View
+        style={[
+          styles.thumbnail,
+          { backgroundColor: categoryStyle.backgroundColor },
+        ]}
+      >
+        <FigmaIcon
+          name={categoryStyle.icon}
+          size={30}
+          color={categoryStyle.iconColor}
+        />
       </View>
+      <Text style={styles.title} numberOfLines={2}>
+        {item.title}
+      </Text>
+      <Text style={styles.metadata} numberOfLines={1}>
+        {CATEGORY_LABELS[item.category]} · {item.secondary}
+      </Text>
     </Pressable>
   );
 }
