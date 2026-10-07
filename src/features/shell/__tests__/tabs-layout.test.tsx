@@ -31,9 +31,11 @@ vi.mock("expo-router", () => ({
   Tabs: FakeTabs,
 }));
 
-const { default: TabsLayout } = await import("../_layout");
+const { default: TabsLayout } = await import("../../../../app/(tabs)/_layout");
 
 // NAV-01/NAV-02: casca nova (BottomNav + AppHeader) composta no layout das abas.
+// Movido para fora de app/ (regra do projeto: testes nunca dentro de app/,
+// o Expo Router trataria o arquivo como rota).
 describe("app/(tabs)/_layout (NAV-01, NAV-02)", () => {
   beforeEach(() => {
     routerPush.mockClear();
