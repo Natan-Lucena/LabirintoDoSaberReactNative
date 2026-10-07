@@ -19,6 +19,7 @@ import "@/mocks/handlers/notebook-update";
 import "@/mocks/handlers/group-update";
 import "@/mocks/handlers/ai-task";
 import "@/mocks/handlers/task-batch";
+import "@/mocks/handlers/session-analysis";
 
 let installed = false;
 
