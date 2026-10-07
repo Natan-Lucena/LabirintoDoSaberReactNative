@@ -42,8 +42,8 @@ export function GroupDetailScreen({
 
   function goToEdit() {
     router.push({
-      pathname: "/shell/coming-soon",
-      params: { title: "Editar Grupo" },
+      pathname: "/content/group/[id]/edit",
+      params: { id: groupId },
     });
   }
 

@@ -88,7 +88,7 @@ describe("NotebookDetailScreen (D-04, D-05, D-06, D-08)", () => {
     expect(await screen.findByText("Nenhum grupo neste caderno")).toBeTruthy();
   });
 
-  it("Editar Caderno abre Em breve (D-06)", async () => {
+  it("abre o formulário preenchido ao tocar em Editar Caderno", async () => {
     listTaskNotebooks.mockResolvedValue(notebooksData);
     await render(<NotebookDetailScreen notebookId="notebook-1" />);
 
@@ -98,8 +98,8 @@ describe("NotebookDetailScreen (D-04, D-05, D-06, D-08)", () => {
     );
 
     expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Editar Caderno" },
+      pathname: "/content/notebook/[id]/edit",
+      params: { id: "notebook-1" },
     });
   });
 

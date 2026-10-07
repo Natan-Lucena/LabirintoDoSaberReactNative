@@ -49,8 +49,8 @@ export function NotebookDetailScreen({
 
   function goToEdit() {
     router.push({
-      pathname: "/shell/coming-soon",
-      params: { title: "Editar Caderno" },
+      pathname: "/content/notebook/[id]/edit",
+      params: { id: notebookId },
     });
   }
 

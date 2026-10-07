@@ -4,6 +4,7 @@ import type { TaskCategory, TaskGroup } from "@/api/types";
 export interface CreateTaskGroupInput {
   name: string;
   category: TaskCategory;
+  tasksIds?: string[];
 }
 
 /** POST /task-group/create */

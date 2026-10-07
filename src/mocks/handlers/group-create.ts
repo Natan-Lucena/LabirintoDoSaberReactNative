@@ -15,7 +15,11 @@ let nextGroupId = 1;
 registerMockHandler(
   { method: "post", path: "/task-group/create" },
   ({ body }) => {
-    const input = body as { name?: unknown; category?: unknown };
+    const input = body as {
+      name?: unknown;
+      category?: unknown;
+      tasksIds?: unknown;
+    };
     const isValid =
       typeof input.name === "string" &&
       input.name.trim().length >= 1 &&
@@ -31,7 +35,9 @@ registerMockHandler(
       id: `mock-group-${nextGroupId++}`,
       name: (input.name as string).trim(),
       category: input.category as TaskCategory,
-      tasksIds: [],
+      tasksIds: Array.isArray(input.tasksIds)
+        ? (input.tasksIds as string[])
+        : [],
       educatorId: MOCK_EDUCATOR.id,
     };
     MOCK_TASK_GROUPS.push(group);
