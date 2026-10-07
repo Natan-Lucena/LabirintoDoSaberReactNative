@@ -4,7 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 
 import { getTaskById } from "@/api/endpoints/content";
@@ -30,7 +30,7 @@ import {
 import { AudioPickerField } from "@/components/media/AudioPickerField";
 import { AudioPlayer } from "@/components/media/AudioPlayer";
 import { ImagePickerField } from "@/components/media/ImagePickerField";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, shape } from "@/theme";
 
 const categoryOptions = [
   { value: "reading", label: "Leitura" },
@@ -143,8 +143,12 @@ export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
       }
       if (!taskId || !initialTask) throw new Error("Atividade não carregada");
 
-      const imageUrl = imageFile ? await uploadTaskMedia(imageFile) : undefined;
-      const audioUrl = audioFile ? await uploadTaskMedia(audioFile) : undefined;
+      const imageUrl = imageFile
+        ? await withOfflineGuard(uploadTaskMedia)(imageFile)
+        : undefined;
+      const audioUrl = audioFile
+        ? await withOfflineGuard(uploadTaskMedia)(audioFile)
+        : undefined;
       const input = { id: taskId } as Parameters<typeof updateTask>[0];
       if (values.prompt !== initialTask.prompt) input.prompt = values.prompt;
       if (values.category !== initialTask.category)
@@ -307,9 +311,11 @@ export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
         <View style={styles.section}>
           <Text style={styles.heading}>Mídia de apoio</Text>
           {initialTask?.imageFile ? (
-            <Text style={styles.hint}>
-              Imagem atual: {initialTask.imageFile}
-            </Text>
+            <Image
+              source={{ uri: initialTask.imageFile }}
+              style={styles.imagePreview}
+              accessibilityLabel="Imagem atual"
+            />
           ) : null}
           <ImagePickerField
             value={imageFile}
@@ -355,6 +361,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   hint: { color: color.ink[600], fontFamily: fontFamilies.nunito.regular },
+  imagePreview: { width: "100%", height: 180, borderRadius: shape.cardRadius },
   status: {
     color: color.ink[600],
     padding: 20,
