@@ -46,6 +46,14 @@ const analysisSessions: TaskNotebookSession[] = [
       },
     ],
   },
+  {
+    id: "mock-open-session",
+    studentId: "student-5",
+    educatorId: MOCK_EDUCATOR.id,
+    name: "Sessão em andamento",
+    startedAt: "2026-10-07T10:00:00-03:00",
+    answers: [],
+  },
 ];
 
 function sessionsForStudent(studentId: string): TaskNotebookSession[] {
@@ -100,6 +108,49 @@ registerMockHandler(
       throw new MockApiError(400, "INVALID_STUDENT_ID");
     }
     return { status: 200, data: sessionsForStudent(params.studentId) };
+  },
+);
+
+registerMockHandler(
+  { method: "post", path: "/task-notebook-session/start" },
+  ({ body }) => {
+    const input = body as { studentId?: unknown; name?: unknown };
+    if (
+      typeof input.studentId !== "string" ||
+      typeof input.name !== "string" ||
+      input.name.trim().length === 0 ||
+      input.name.length > 100
+    ) {
+      throw new MockApiError(400, "Validation error", "Validation error");
+    }
+    if (input.name === "erro de validação") {
+      throw new MockApiError(400, "Validation error", "Validation error");
+    }
+    const session: TaskNotebookSession = {
+      id: `mock-session-${Date.now()}`,
+      studentId: input.studentId,
+      educatorId: MOCK_EDUCATOR.id,
+      name: input.name,
+      startedAt: new Date().toISOString(),
+      answers: [],
+    };
+    analysisSessions.push(session);
+    return { status: 200, data: session };
+  },
+);
+
+registerMockHandler(
+  { method: "post", path: "/task-notebook-session/finish" },
+  ({ body }) => {
+    const input = body as { sessionId?: unknown };
+    const session = analysisSessions.find(
+      (item) => item.id === input.sessionId,
+    );
+    if (!session) throw new MockApiError(404, "SESSION_NOT_FOUND");
+    if (session.finishedAt)
+      throw new MockApiError(400, "SESSION_ALREADY_FINISHED");
+    session.finishedAt = new Date().toISOString();
+    return { status: 200, data: session };
   },
 );
 
