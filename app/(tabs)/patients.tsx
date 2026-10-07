@@ -1,8 +1,13 @@
 import type { ReactElement } from "react";
+import { Tabs } from "expo-router";
 
-import { StudentsListScreen } from "@/features/students-list/StudentsListScreen";
+import { PatientsListScreen } from "@/features/patients/list/PatientsListScreen";
 
-// NAV-01: reaproveita a listagem de alunos atual; o redesign é da PAC-01.
 export default function PatientsTab(): ReactElement {
-  return <StudentsListScreen />;
+  return (
+    <>
+      <Tabs.Screen options={{ headerShown: false }} />
+      <PatientsListScreen />
+    </>
+  );
 }
