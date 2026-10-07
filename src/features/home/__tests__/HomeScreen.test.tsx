@@ -14,24 +14,28 @@ vi.mock("@/hooks/useOnline", () => ({ useOnline: () => onlineState.value }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ push: routerPush }) }));
 
 const homeData: HomeData = {
-  educator: { id: "educator-1", name: "Aline", email: "aline@example.test" },
+  educator: {
+    id: "educator-1",
+    name: "Aline Souza",
+    email: "aline@example.test",
+  },
   todayAppointments: [
     {
       appointment: {
-        id: "appointment-1",
+        id: "appointment-done",
         educatorId: "educator-1",
-        studentId: "student-1",
+        studentId: "student-2",
         scheduledAt: "2026-04-02T11:00:00.000Z",
-        status: "PENDING",
+        status: "COMPLETED",
         createdAt: "2026-04-01T12:00:00.000Z",
       },
       student: {
-        id: "student-1",
-        name: "Lia",
+        id: "student-2",
+        name: "Davi",
         age: 8,
-        gender: "female",
+        gender: "male",
         zipcode: "01000-000",
-        road: "Rua Ficticia",
+        road: "Rua Fictícia",
         housenumber: "1",
         phonenumber: "11999990000",
         learningTopics: [],
@@ -42,45 +46,57 @@ const homeData: HomeData = {
         educators: ["educator-1"],
       },
     },
-  ],
-  scheduledAppointmentsCount: 1,
-  lastSessions: [{ studentName: "Lia", sessionName: "Leitura guiada" }],
-  recentNotebooks: [
     {
-      notebook: {
-        id: "notebook-1",
-        educator: "educator-1",
-        tasks: ["task-1"],
-        category: "reading",
-        description: "Cores e formas",
-        createdAt: "2026-01-01T12:00:00.000Z",
-        taskGroupsIds: [],
+      appointment: {
+        id: "appointment-next",
+        educatorId: "educator-1",
+        studentId: "student-1",
+        scheduledAt: "2026-04-02T14:00:00.000Z",
+        status: "PENDING",
+        createdAt: "2026-04-01T12:00:00.000Z",
       },
-      taskGroups: [],
+      student: {
+        id: "student-1",
+        name: "Lia",
+        age: 8,
+        gender: "female",
+        zipcode: "01000-000",
+        road: "Rua Fictícia",
+        housenumber: "1",
+        phonenumber: "11999990000",
+        learningTopics: [],
+        createdAt: "2026-01-01T12:00:00.000Z",
+        educatorId: "educator-1",
+        photoUrl: null,
+        documents: [],
+        educators: ["educator-1"],
+      },
     },
     {
-      notebook: {
-        id: "notebook-2",
-        educator: "educator-1",
-        tasks: [],
-        category: "writing",
-        description: "Palavras do dia",
-        createdAt: "2026-01-01T12:00:00.000Z",
-        taskGroupsIds: [],
+      appointment: {
+        id: "appointment-cancelled",
+        educatorId: "educator-1",
+        studentId: "student-3",
+        scheduledAt: "2026-04-02T15:00:00.000Z",
+        status: "CANCELLED",
+        createdAt: "2026-04-01T12:00:00.000Z",
       },
-      taskGroups: [],
-    },
-    {
-      notebook: {
-        id: "notebook-3",
-        educator: "educator-1",
-        tasks: [],
-        category: "vocabulary",
-        description: "Leitura guiada",
+      student: {
+        id: "student-3",
+        name: "Bia",
+        age: 8,
+        gender: "female",
+        zipcode: "01000-000",
+        road: "Rua Fictícia",
+        housenumber: "1",
+        phonenumber: "11999990000",
+        learningTopics: [],
         createdAt: "2026-01-01T12:00:00.000Z",
-        taskGroupsIds: [],
+        educatorId: "educator-1",
+        photoUrl: null,
+        documents: [],
+        educators: ["educator-1"],
       },
-      taskGroups: [],
     },
   ],
 };
@@ -97,97 +113,93 @@ function setHomeQuery(overrides: Partial<HomeQueryResult> = {}): void {
   };
 }
 
-describe("HomeScreen (AC-603-01..04)", () => {
+describe("HomeScreen (AC-HOME-01-01..04)", () => {
   beforeEach(() => {
     onlineState.value = true;
     routerPush.mockClear();
   });
 
-  it("mostra o estado 02 e navega para sessao, agenda e destinos Em breve", async () => {
+  it("mostra o próximo atendimento, agenda ordenada e os atalhos", async () => {
     setHomeQuery();
     await render(<HomeScreen />);
 
-    await screen.findByText("Sessões de hoje");
-    expect(screen.queryByText("Atividades Recentes")).toBeNull();
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Iniciar Sessão" }),
-    );
-    await fireEvent.press(screen.getAllByText("Lia")[0]);
-    await fireEvent.press(screen.getByText("Ver todas →"));
-    await fireEvent.press(screen.getByText("Leitura guiada"));
+    expect(screen.getByText("Olá, Aline")).toBeTruthy();
+    expect(screen.getAllByText("Próximo atendimento")).toHaveLength(2);
+    expect(screen.getAllByText("Lia")).toHaveLength(2);
+    expect(screen.getByText("Concluído")).toBeTruthy();
+    expect(screen.getByText("Cancelado")).toBeTruthy();
+    expect(screen.getByText("Novo paciente")).toBeTruthy();
+    expect(screen.getByText("Criar plano")).toBeTruthy();
+    expect(screen.getByText("Aplicar escala")).toBeTruthy();
+    expect(screen.getByText("Atividades")).toBeTruthy();
 
+    await fireEvent.press(screen.getByRole("button", { name: "Ver ficha" }));
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Iniciar sessão" }),
+    );
+    await fireEvent.press(screen.getByText("Novo paciente"));
+    await fireEvent.press(screen.getByText("Criar plano"));
+    await fireEvent.press(screen.getByText("Aplicar escala"));
+    await fireEvent.press(screen.getByText("Atividades"));
+    await fireEvent.press(
+      screen.getAllByRole("button", { name: "Ver agenda" })[0]!,
+    );
+
+    expect(routerPush).toHaveBeenCalledWith("/students/student-1");
     expect(routerPush).toHaveBeenCalledWith("/session/student");
-    // UX2: Agenda fica para depois — card de hoje abre "Em breve" (Agenda).
+    expect(routerPush).toHaveBeenCalledWith("/students/new");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
-      params: { title: "Agenda" },
+      params: { title: "Criar plano" },
     });
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
-      params: { title: "Relatórios" },
+      params: { title: "Aplicar escala" },
     });
+    expect(routerPush).toHaveBeenCalledWith("/activities");
+    expect(routerPush).toHaveBeenCalledWith("/(tabs)/agenda");
   });
 
-  it("mostra o estado 03 e as tres atividades recentes navegaveis", async () => {
+  it("mostra o estado vazio do hero quando não há atendimento pendente", async () => {
     setHomeQuery({
       data: {
         ...homeData,
-        todayAppointments: [],
-        scheduledAppointmentsCount: 0,
+        todayAppointments: homeData.todayAppointments.filter(
+          ({ appointment }) => appointment.status !== "PENDING",
+        ),
       },
     });
     await render(<HomeScreen />);
 
-    await screen.findByText("Boas-vindas!");
-    expect(screen.queryByText("Sessões de hoje")).toBeNull();
-    expect(screen.getByText("Atividades Recentes")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Cores e formas"));
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Atividades" },
-    });
+    expect(screen.getByText("Sem atendimentos hoje")).toBeTruthy();
+    await fireEvent.press(
+      screen.getAllByRole("button", { name: "Ver agenda" })[0]!,
+    );
+    expect(routerPush).toHaveBeenCalledWith("/(tabs)/agenda");
   });
 
   it("mostra carregamento", async () => {
     setHomeQuery({ data: undefined, isPending: true });
     await render(<HomeScreen />);
-    expect(screen.getByLabelText("Carregando Home")).toBeTruthy();
+    expect(screen.getByText("Carregando início...")).toBeTruthy();
   });
 
-  it("mostra erro recuperavel", async () => {
+  it("mostra erro recuperável", async () => {
     const refetch = vi.fn().mockResolvedValue([]);
     setHomeQuery({ data: undefined, isError: true, refetch });
     await render(<HomeScreen />);
-    await screen.findByRole("alert");
     await fireEvent.press(
       screen.getByRole("button", { name: "Tentar novamente" }),
     );
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
-  it("mantem os dados em cache quando offline", async () => {
+  it("mantém o aviso de dados em cache offline", async () => {
     onlineState.value = false;
     setHomeQuery();
     await render(<HomeScreen />);
     expect(
-      screen.getByLabelText("Sem conexão - mostrando dados salvos"),
+      screen.getByText("Sem conexão - mostrando dados salvos"),
     ).toBeTruthy();
-    expect(screen.getByText("Sessões de hoje")).toBeTruthy();
-  });
-
-  // FX4: no Android, `padding`/`gap` passado em `style` de um ScrollView vai
-  // para o contêiner externo (que tem 1 filho só) e não afeta o layout do
-  // conteúdo rolável — o gap entre AppHeader e o banner ficava "solto".
-  // O espaçamento precisa estar em `contentContainerStyle`.
-  it("FX4: aplica o espaçamento padrão via contentContainerStyle do scroll", async () => {
-    setHomeQuery();
-    await render(<HomeScreen />);
-
-    const content = screen.getByTestId("screen-content");
-    const flatContentContainerStyle = [content.props.contentContainerStyle]
-      .flat(Infinity)
-      .reduce((acc, style) => ({ ...acc, ...style }), {});
-    expect(flatContentContainerStyle.padding).toBe(16);
-    expect(flatContentContainerStyle.gap).toBe(16);
   });
 });

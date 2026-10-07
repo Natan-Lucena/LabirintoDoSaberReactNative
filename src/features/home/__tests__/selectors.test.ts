@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Appointment, TaskNotebookWithGroups } from "@/api/types";
+import type { Appointment } from "@/api/types";
 import {
   countScheduledAppointments,
-  selectRecentNotebooks,
+  selectNextAppointment,
   selectTodayAppointments,
 } from "@/features/home/selectors";
 import { toBrasiliaISOString } from "@/utils/date";
@@ -29,23 +29,7 @@ function appointment(
   };
 }
 
-const notebooks = ["first", "second", "third", "fourth"].map(
-  (id) =>
-    ({
-      notebook: {
-        id,
-        educator: "educator-1",
-        tasks: [],
-        category: "reading",
-        description: id,
-        createdAt: "2026-04-01T12:00:00.000Z",
-        taskGroupsIds: [],
-      },
-      taskGroups: [],
-    }) satisfies TaskNotebookWithGroups,
-);
-
-describe("seletores da Home (AC-601-01, AC-601-05)", () => {
+describe("seletores da Home (AC-HOME-01-01, AC-HOME-01-04)", () => {
   const originalTimeZone = process.env.TZ;
 
   beforeEach(() => {
@@ -98,10 +82,18 @@ describe("seletores da Home (AC-601-01, AC-601-05)", () => {
     ).toEqual(["same-time-first", "same-time-second", "late-sp"]);
   });
 
-  it("preserva os tres primeiros cadernos na ordem da API", () => {
+  it("escolhe o primeiro atendimento pendente e ignora concluídos e cancelados", () => {
+    const appointments = [
+      appointment("done", 8, "COMPLETED"),
+      appointment("cancelled", 9, "CANCELLED"),
+      appointment("next", 10, "PENDING"),
+    ];
+
+    expect(selectNextAppointment(appointments)?.id).toBe("next");
     expect(
-      selectRecentNotebooks(notebooks).map(({ notebook }) => notebook.id),
-    ).toEqual(["first", "second", "third"]);
-    expect(selectRecentNotebooks([])).toEqual([]);
+      selectNextAppointment(
+        appointments.filter(({ status }) => status !== "PENDING"),
+      ),
+    ).toBeUndefined();
   });
 });

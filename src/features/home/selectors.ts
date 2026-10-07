@@ -1,4 +1,4 @@
-import type { Appointment, TaskNotebookWithGroups } from "@/api/types";
+import type { Appointment } from "@/api/types";
 import { isToday } from "@/utils/date";
 
 export function selectTodayAppointments(
@@ -19,8 +19,10 @@ export function countScheduledAppointments(
   return appointments.filter(({ status }) => status !== "CANCELLED").length;
 }
 
-export function selectRecentNotebooks(
-  notebooks: TaskNotebookWithGroups[],
-): TaskNotebookWithGroups[] {
-  return notebooks.slice(0, 3);
+export function selectNextAppointment(
+  appointments: Appointment[],
+): Appointment | undefined {
+  return appointments.find(
+    ({ status }) => status !== "COMPLETED" && status !== "CANCELLED",
+  );
 }
