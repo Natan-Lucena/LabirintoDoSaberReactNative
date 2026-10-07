@@ -90,3 +90,10 @@ export type {
   TimelineItemStatus,
   TimelineProps,
 } from "./Timeline";
+
+// NAV-01/NAV-02: casca nova (abas e cabeçalho) do Figma Make.
+export { BottomNav } from "./BottomNav";
+export type { BottomNavItem, BottomNavProps } from "./BottomNav";
+
+export { AppHeader } from "./AppHeader";
+export type { AppHeaderProps } from "./AppHeader";

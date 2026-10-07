@@ -1,56 +1,67 @@
 import { useRouter, useSegments } from "expo-router";
 
-import type { IconName } from "@/components/Icon";
-import type { TabBarItem } from "@/components/TabBar";
+import type { BottomNavItem } from "@/components/ds/BottomNav";
+import type { FigmaIconName } from "@/components/FigmaIcon";
 
 export interface TabDefinition {
   key: string;
   label: string;
-  headerTitle?: string;
-  icon: IconName;
+  icon: FigmaIconName;
   segment: string;
 }
 
-// UX2 (Figma "Home sem agenda"): 4 abas — Agenda fica para depois (decisão do
-// usuário). Rota /appointments continua existindo mas some da tab bar
-// (app/(tabs)/_layout.tsx, href: null).
+// NAV-01 (Figma Make `navigation`/`.bottom-nav`): 4 abas — Início, Agenda,
+// Pacientes e Recursos. G-31 revogado pelo novo design: Agenda volta às
+// abas (ver docs/entrega-1/GATES.md).
 export const TAB_DEFINITIONS: TabDefinition[] = [
+  { key: "home", label: "Início", icon: "home", segment: "index" },
+  { key: "agenda", label: "Agenda", icon: "calendar", segment: "agenda" },
   {
-    key: "home",
-    label: "Tela Inicial",
-    headerTitle: "Tela Inicial",
-    icon: "home",
-    segment: "index",
+    key: "patients",
+    label: "Pacientes",
+    icon: "users",
+    segment: "patients",
   },
-  {
-    key: "activities",
-    label: "Atividades",
-    icon: "activities",
-    segment: "activities",
-  },
-  { key: "students", label: "Alunos", icon: "students", segment: "students" },
-  {
-    key: "reports",
-    label: "Relatórios",
-    icon: "reports",
-    segment: "reports",
-  },
+  { key: "resources", label: "Recursos", icon: "grid", segment: "resources" },
 ];
 
 export interface UseTabItemsResult {
-  items: TabBarItem[];
+  items: BottomNavItem[];
   activeKey: string;
+}
+
+// Mapa de aba-mãe (Figma `App.tsx`, `rootScreen`): rotas internas mantêm a
+// aba de origem ativa. Alunos/pacientes -> Pacientes; agenda/sessão ->
+// Agenda; qualquer outra rota interna (conteúdo, atividades, relatórios,
+// planos, avaliações etc.) -> Recursos.
+function resolveActiveKey(segments: string[]): string {
+  const meaningful = segments.filter((segment) => segment !== "(tabs)");
+
+  if (meaningful.length === 0) {
+    return "home";
+  }
+
+  const first = meaningful[0];
+
+  if (first === "home" || first === "index") {
+    return "home";
+  }
+  if (first === "patients" || first === "students") {
+    return "patients";
+  }
+  if (first === "session" || first === "agenda" || first === "appointments") {
+    return "agenda";
+  }
+
+  return "resources";
 }
 
 export function useTabItems(): UseTabItemsResult {
   const router = useRouter();
   const segments = useSegments();
-  const lastSegment = segments[segments.length - 1];
-  const activeDefinition =
-    TAB_DEFINITIONS.find((tab) => tab.segment === lastSegment) ??
-    TAB_DEFINITIONS[0];
+  const activeKey = resolveActiveKey(segments as string[]);
 
-  const items: TabBarItem[] = TAB_DEFINITIONS.map((tab) => ({
+  const items: BottomNavItem[] = TAB_DEFINITIONS.map((tab) => ({
     key: tab.key,
     label: tab.label,
     icon: tab.icon,
@@ -62,5 +73,5 @@ export function useTabItems(): UseTabItemsResult {
       ),
   }));
 
-  return { items, activeKey: activeDefinition.key };
+  return { items, activeKey };
 }

@@ -11,27 +11,33 @@ vi.mock("expo-router", () => ({
   useSegments: () => segments,
 }));
 
-describe("useTabItems (AC-501-01)", () => {
+// NAV-01: 4 abas do Figma Make — Início, Agenda, Pacientes, Recursos.
+describe("useTabItems (AC-NAV-01-01/02)", () => {
   beforeEach(() => {
     routerPush.mockClear();
     segments = ["(tabs)"];
   });
 
-  // UX2: 4 abas (Figma "Home sem agenda") — Agenda fica para depois.
-  it("returns the 4 tabs in the design order with the right labels", async () => {
+  it("returns the 4 tabs in the Figma order with the right labels and icons", async () => {
     const { result } = await renderHook(() => useTabItems());
 
     expect(result.current.items.map((item) => item.key)).toEqual([
       "home",
-      "activities",
-      "students",
-      "reports",
+      "agenda",
+      "patients",
+      "resources",
     ]);
     expect(result.current.items.map((item) => item.label)).toEqual([
-      "Tela Inicial",
-      "Atividades",
-      "Alunos",
-      "Relatórios",
+      "Início",
+      "Agenda",
+      "Pacientes",
+      "Recursos",
+    ]);
+    expect(result.current.items.map((item) => item.icon)).toEqual([
+      "home",
+      "calendar",
+      "users",
+      "grid",
     ]);
   });
 
@@ -41,10 +47,10 @@ describe("useTabItems (AC-501-01)", () => {
     expect(result.current.activeKey).toBe("home");
   });
 
-  it("resolves activeKey from the current route segment", async () => {
-    segments = ["(tabs)", "activities"];
+  it("resolves activeKey from the current tab route segment", async () => {
+    segments = ["(tabs)", "agenda"];
     const { result } = await renderHook(() => useTabItems());
-    expect(result.current.activeKey).toBe("activities");
+    expect(result.current.activeKey).toBe("agenda");
   });
 
   it("navigates to the matching route when a tab item is pressed", async () => {
@@ -52,7 +58,7 @@ describe("useTabItems (AC-501-01)", () => {
 
     result.current.items[1]?.onPress();
 
-    expect(routerPush).toHaveBeenCalledWith("/activities");
+    expect(routerPush).toHaveBeenCalledWith("/agenda");
   });
 
   it("navigates to the root route for the home tab", async () => {
@@ -61,5 +67,38 @@ describe("useTabItems (AC-501-01)", () => {
     result.current.items[0]?.onPress();
 
     expect(routerPush).toHaveBeenCalledWith("/");
+  });
+
+  // AC-NAV-01-02: /patients/[id] e /students/* mantêm a aba Pacientes ativa.
+  it.each([
+    ["students", "new"],
+    ["students", "[id]"],
+    ["patients", "[id]"],
+  ])("maps /%s/%s to the patients tab", async (first, second) => {
+    segments = [first, second];
+    const { result } = await renderHook(() => useTabItems());
+    expect(result.current.activeKey).toBe("patients");
+  });
+
+  // AC-NAV-01-02: /session/* mantém a aba Agenda ativa.
+  it.each([
+    ["session", "student"],
+    ["session", "content"],
+  ])("maps /%s/%s to the agenda tab", async (first, second) => {
+    segments = [first, second];
+    const { result } = await renderHook(() => useTabItems());
+    expect(result.current.activeKey).toBe("agenda");
+  });
+
+  // AC-NAV-01-02: /plans (Recursos) — em /plans a aba Recursos fica ativa.
+  it.each([
+    ["(tabs)", "activities"],
+    ["(tabs)", "reports"],
+    ["content", "group"],
+    ["plans", undefined],
+  ])("maps /%s/%s to the resources tab", async (first, second) => {
+    segments = second === undefined ? [first] : [first, second];
+    const { result } = await renderHook(() => useTabItems());
+    expect(result.current.activeKey).toBe("resources");
   });
 });
