@@ -41,11 +41,33 @@ function parseAlternatives(raw: unknown): RawAlternative[] | undefined {
   return Array.isArray(raw) ? (raw as RawAlternative[]) : undefined;
 }
 
+function readFileUri(
+  raw: unknown,
+  field: "image" | "audio",
+): string | undefined {
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "uri" in raw &&
+    typeof raw.uri === "string"
+  ) {
+    return raw.uri;
+  }
+  // No ambiente de teste, FormData serializa o descritor nativo como string.
+  // Basta preservar a existência do arquivo, pois o endpoint real recebe o binário.
+  return raw === null || raw === undefined
+    ? undefined
+    : `mock://task-media/${field}`;
+}
+
 registerMockHandler({ method: "post", path: "/task/create" }, ({ body }) => {
   const category = readField(body, "category");
   const type = readField(body, "type");
   const prompt = readField(body, "prompt");
   const alternatives = parseAlternatives(readField(body, "alternatives"));
+  const imageFile = readFileUri(readField(body, "imageFile"), "image");
+  const audioFile = readFileUri(readField(body, "audioFile"), "audio");
+  const hasMedia = Boolean(imageFile || audioFile);
 
   const isValid =
     typeof category === "string" &&
@@ -72,6 +94,12 @@ registerMockHandler({ method: "post", path: "/task/create" }, ({ body }) => {
   if (!hasCorrectAlternative) {
     throw new MockApiError(500, "AT_LEAST_ONE_ALTERNATIVE_MUST_BE_CORRECT");
   }
+  if (type === "multipleChoice" && hasMedia) {
+    throw new MockApiError(500, "TEXT_TASK_CANNOT_HAVE_MEDIA");
+  }
+  if (type === "multipleChoiceWithMedia" && !hasMedia) {
+    throw new MockApiError(500, "MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO");
+  }
 
   const task: Task = {
     id: `mock-task-${nextTaskId++}`,
@@ -84,6 +112,8 @@ registerMockHandler({ method: "post", path: "/task/create" }, ({ body }) => {
       isCorrect: alt.isCorrect as boolean,
     })),
     createdAt: new Date().toISOString(),
+    ...(imageFile ? { imageFile } : {}),
+    ...(audioFile ? { audioFile } : {}),
   };
   MOCK_TASKS.push(task);
 

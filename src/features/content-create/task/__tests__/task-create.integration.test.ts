@@ -47,6 +47,38 @@ describe("createTask com mockAdapter", () => {
     });
   });
 
+  it("cria uma atividade com imagem e áudio como multipleChoiceWithMedia", async () => {
+    const countBeforeCreate = MOCK_TASKS.length;
+
+    await expect(
+      createTask({
+        category: "reading",
+        prompt: "Qual animal aparece na imagem?",
+        alternatives: [
+          { text: "Gato", isCorrect: true },
+          { text: "Cachorro", isCorrect: false },
+        ],
+        imageFile: {
+          uri: "file:///gato.jpg",
+          name: "gato.jpg",
+          mimeType: "image/jpeg",
+        },
+        audioFile: {
+          uri: "file:///instrucao.mp3",
+          name: "instrucao.mp3",
+          mimeType: "audio/mpeg",
+        },
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(MOCK_TASKS).toHaveLength(countBeforeCreate + 1);
+    expect(MOCK_TASKS.at(-1)).toMatchObject({
+      type: "multipleChoiceWithMedia",
+      imageFile: "mock://task-media/image",
+      audioFile: "mock://task-media/audio",
+    });
+  });
+
   it("rejeita menos de 2 alternativas com 400 INVALID_ALTERNATIVES_FORMAT", async () => {
     await expect(
       createTask({

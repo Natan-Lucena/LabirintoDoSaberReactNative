@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { getTaskById } from "@/api/endpoints/content";
 import { deleteTask } from "@/api/endpoints/task-delete";
@@ -15,6 +15,7 @@ import { Button } from "@/components/Button";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
 import { Screen } from "@/components/Screen";
+import { AudioPlayer } from "@/components/media/AudioPlayer";
 import { color, shape, typography } from "@/theme";
 
 const CATEGORY_LABEL: Record<TaskCategory, string> = {
@@ -62,8 +63,8 @@ export function TaskDetailScreen({
 
   function goToEdit() {
     router.push({
-      pathname: "/shell/coming-soon",
-      params: { title: "Editar Atividade" },
+      pathname: "/content/task/[id]/edit",
+      params: { id: taskId },
     });
   }
 
@@ -156,24 +157,21 @@ export function TaskDetailScreen({
                     <Text style={styles.itemFileName}>
                       {fileName(task.audioFile)}
                     </Text>
+                    <AudioPlayer url={task.audioFile} />
                   </View>
                 </View>
               ) : null}
               {task.imageFile ? (
-                <View style={styles.itemCard}>
-                  <View style={styles.itemIcon}>
-                    <Ionicons
-                      name="image-outline"
-                      size={18}
-                      color={color.accent}
-                    />
-                  </View>
-                  <View style={styles.itemTextGroup}>
-                    <Text style={styles.itemText}>Imagem da Atividade</Text>
-                    <Text style={styles.itemFileName}>
-                      {fileName(task.imageFile)}
-                    </Text>
-                  </View>
+                <View style={styles.mediaPreview}>
+                  <Text style={styles.itemText}>Imagem da Atividade</Text>
+                  <Image
+                    source={{ uri: task.imageFile }}
+                    accessibilityLabel="Imagem da atividade"
+                    style={styles.imagePreview}
+                  />
+                  <Text style={styles.itemFileName}>
+                    {fileName(task.imageFile)}
+                  </Text>
                 </View>
               ) : null}
             </>
@@ -332,6 +330,13 @@ const styles = StyleSheet.create({
     color: color.text,
   },
   itemTextGroup: { flex: 1, gap: 2 },
+  mediaPreview: { gap: 8 },
+  imagePreview: {
+    width: "100%",
+    height: 180,
+    borderRadius: shape.cardRadius,
+    backgroundColor: color.selection,
+  },
   itemFileName: {
     fontSize: typography.tag.fontSize,
     lineHeight: typography.tag.lineHeight,

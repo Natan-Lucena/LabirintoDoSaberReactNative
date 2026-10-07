@@ -1,316 +1,368 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 
+import { getTaskById } from "@/api/endpoints/content";
 import {
   createTask,
   type CreateTaskAlternativeInput,
 } from "@/api/endpoints/task-create";
+import { updateTask } from "@/api/endpoints/task-update";
+import {
+  uploadTaskMedia,
+  type TaskMediaFile,
+} from "@/api/endpoints/task-upload-media";
+import { ApiError } from "@/api/errors";
 import { withOfflineGuard } from "@/api/query-client";
-import type { TaskCategory } from "@/api/types";
-import { AppHeader } from "@/components/AppHeader";
-import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
-import { FilterChips } from "@/components/FilterChips";
-import { FooterActions } from "@/components/FooterActions";
-import { Screen } from "@/components/Screen";
-import { Tag } from "@/components/Tag";
-import { color, semanticColor, shape, typography } from "@/theme";
+import type { Task, TaskCategory } from "@/api/types";
+import {
+  AppHeader,
+  Checkbox,
+  DsButton,
+  Field,
+  SelectField,
+} from "@/components/ds";
+import { AudioPickerField } from "@/components/media/AudioPickerField";
+import { AudioPlayer } from "@/components/media/AudioPlayer";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
+import { color, fontFamilies } from "@/theme";
 
 const categoryOptions = [
-  { key: "reading", label: "Leitura" },
-  { key: "writing", label: "Escrita" },
-  { key: "vocabulary", label: "Vocabulário" },
-  { key: "comprehension", label: "Compreensão" },
+  { value: "reading", label: "Leitura" },
+  { value: "writing", label: "Escrita" },
+  { value: "vocabulary", label: "Vocabulário" },
+  { value: "comprehension", label: "Compreensão" },
 ];
-
 const alternativeLetters = ["A", "B", "C", "D"] as const;
 
 const schema = z.object({
-  prompt: z
-    .string()
-    .trim()
-    .min(1, "Informe o enunciado")
-    .max(500, "O enunciado deve ter até 500 caracteres"),
+  prompt: z.string().trim().min(1, "Informe o enunciado").max(500),
   category: z.enum(["reading", "writing", "vocabulary", "comprehension"]),
 });
-
 type FormValues = z.infer<typeof schema>;
 
-const styles = StyleSheet.create({
-  content: { padding: 16, gap: 20 },
-  section: { gap: 10 },
-  label: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  fieldLabel: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-  },
-  promptInput: {
-    minHeight: 96,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.border,
-    borderRadius: shape.inputRadius,
-    backgroundColor: color.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 13,
-    fontSize: typography.body.fontSize,
-    color: color.text,
-    textAlignVertical: "top",
-  },
-  mediaRow: { flexDirection: "row", gap: 12 },
-  mediaCard: { flex: 1, opacity: 0.6 },
-  mediaCardContent: { gap: 8, alignItems: "flex-start" },
-  mediaLabel: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  alternativeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  letterCircle: {
-    width: shape.minTouchTarget,
-    height: shape.minTouchTarget,
-    borderRadius: shape.minTouchTarget / 2,
-    backgroundColor: color.tagNeutral,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  letterCircleMarked: { backgroundColor: semanticColor.primaryFill },
-  letterText: {
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: semanticColor.textOnTagNeutral,
-  },
-  letterTextMarked: { color: semanticColor.textOnPrimary },
-  alternativeInput: {
-    flex: 1,
-    minHeight: shape.minTouchTarget,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.border,
-    borderRadius: shape.inputRadius,
-    backgroundColor: color.surface,
-    paddingHorizontal: 10,
-    fontSize: typography.body.fontSize,
-    color: color.text,
-  },
-  markButton: { width: 92 },
-  hint: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.textSecondary,
-  },
-  error: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.pink,
-  },
-});
+function alternativesFrom(
+  values: string[],
+  correctIndex: number | null,
+): CreateTaskAlternativeInput[] {
+  return values
+    .map((text, index) => ({
+      text: text.trim(),
+      isCorrect: index === correctIndex,
+    }))
+    .filter((alternative) => alternative.text.length > 0);
+}
 
-export function NewTaskScreen(): ReactElement {
+function sameAlternatives(
+  left: CreateTaskAlternativeInput[],
+  right: Task["alternatives"],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every(
+      (alternative, index) =>
+        alternative.text === right[index]?.text &&
+        alternative.isCorrect === right[index]?.isCorrect,
+    )
+  );
+}
+
+function readableTaskError(error: unknown): string {
+  const code = error instanceof ApiError ? error.code : undefined;
+  const messages: Record<string, string> = {
+    TEXT_TASK_CANNOT_HAVE_MEDIA:
+      "Uma atividade de texto não pode conter imagem ou áudio.",
+    MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO:
+      "Adicione uma imagem ou um áudio para a atividade com mídia.",
+    AT_LEAST_ONE_ALTERNATIVE_MUST_BE_CORRECT:
+      "Marque pelo menos uma alternativa correta.",
+    INVALID_ALTERNATIVES_FORMAT: "Revise as alternativas antes de salvar.",
+  };
+  return code && messages[code]
+    ? messages[code]
+    : "Não foi possível salvar a atividade. Tente novamente.";
+}
+
+export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [alternatives, setAlternatives] = useState<string[]>(["", "", "", ""]);
+  const editing = Boolean(taskId);
+  const [alternatives, setAlternatives] = useState<string[]>(["", ""]);
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
+  const [imageFile, setImageFile] = useState<TaskMediaFile | null>(null);
+  const [audioFile, setAudioFile] = useState<TaskMediaFile | null>(null);
+  const [initialTask, setInitialTask] = useState<Task | null>(null);
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isValid },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: { prompt: "", category: undefined },
   });
+  const taskQuery = useQuery({
+    queryKey: ["task", taskId],
+    queryFn: () => getTaskById(taskId ?? ""),
+    enabled: editing,
+    retry: false,
+  });
 
-  const filledAlternatives = alternatives
-    .map((text, index) => ({
-      text: text.trim(),
-      isCorrect: index === correctIndex,
-    }))
-    .filter((alternative) => alternative.text.length > 0);
-  const alternativesValid =
-    filledAlternatives.length >= 2 &&
-    correctIndex !== null &&
-    alternatives[correctIndex].trim().length > 0;
+  useEffect(() => {
+    if (!taskQuery.data || !editing) return;
+    const task = taskQuery.data;
+    startTransition(() => {
+      reset({ prompt: task.prompt, category: task.category });
+      setAlternatives(task.alternatives.map((alternative) => alternative.text));
+      setCorrectIndex(
+        task.alternatives.findIndex((alternative) => alternative.isCorrect),
+      );
+      setInitialTask(task);
+    });
+  }, [editing, reset, taskQuery.data]);
 
   const mutation = useMutation({
-    mutationFn: withOfflineGuard(createTask),
+    mutationFn: async (values: FormValues) => {
+      const submittedAlternatives = alternativesFrom(
+        alternatives,
+        correctIndex,
+      );
+      if (!editing) {
+        return withOfflineGuard(createTask)({
+          ...values,
+          alternatives: submittedAlternatives,
+          ...(imageFile ? { imageFile } : {}),
+          ...(audioFile ? { audioFile } : {}),
+        });
+      }
+      if (!taskId || !initialTask) throw new Error("Atividade não carregada");
+
+      const imageUrl = imageFile ? await uploadTaskMedia(imageFile) : undefined;
+      const audioUrl = audioFile ? await uploadTaskMedia(audioFile) : undefined;
+      const input = { id: taskId } as Parameters<typeof updateTask>[0];
+      if (values.prompt !== initialTask.prompt) input.prompt = values.prompt;
+      if (values.category !== initialTask.category)
+        input.category = values.category;
+      if (!sameAlternatives(submittedAlternatives, initialTask.alternatives)) {
+        input.alternatives = submittedAlternatives;
+      }
+      if (imageUrl) input.imageFile = imageUrl;
+      if (audioUrl) input.audioFile = audioUrl;
+      if (imageUrl || audioUrl) input.type = "multipleChoiceWithMedia";
+      return withOfflineGuard(updateTask)(input);
+    },
     retry: false,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["task"] });
+      if (editing && taskId) {
+        router.replace(`/content/task/${taskId}`);
+        return;
+      }
       router.replace("/(tabs)/activities");
     },
   });
+
+  const filledAlternatives = alternativesFrom(alternatives, correctIndex);
+  const alternativesValid =
+    filledAlternatives.length >= 2 &&
+    correctIndex !== null &&
+    alternatives[correctIndex]?.trim().length > 0;
   const canSubmit = isValid && alternativesValid && !mutation.isPending;
 
   function updateAlternative(index: number, text: string) {
     setAlternatives((current) =>
-      current.map((value, i) => (i === index ? text : value)),
+      current.map((value, currentIndex) =>
+        currentIndex === index ? text : value,
+      ),
     );
   }
 
-  function toggleCorrect(index: number) {
-    setCorrectIndex((current) => (current === index ? null : index));
+  function addAlternative() {
+    setAlternatives((current) => [...current, ""]);
   }
 
-  function submit(values: FormValues) {
-    const input: CreateTaskAlternativeInput[] = filledAlternatives;
-    mutation.mutate({
-      category: values.category,
-      prompt: values.prompt,
-      alternatives: input,
+  function removeAlternative(index: number) {
+    setAlternatives((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
+    setCorrectIndex((current) => {
+      if (current === null || current === index) return null;
+      return current > index ? current - 1 : current;
     });
   }
 
+  function submit(values: FormValues) {
+    mutation.mutate(values);
+  }
+
+  if (editing && taskQuery.isPending) {
+    return (
+      <View style={styles.screen}>
+        <AppHeader
+          title="Editar atividade"
+          subtitle="Banco de atividades"
+          onBack={router.back}
+        />
+        <Text style={styles.status}>Carregando atividade...</Text>
+      </View>
+    );
+  }
+
+  if (editing && (taskQuery.isError || !initialTask)) {
+    return (
+      <View style={styles.screen}>
+        <AppHeader
+          title="Editar atividade"
+          subtitle="Banco de atividades"
+          onBack={router.back}
+        />
+        <Text style={styles.error} accessibilityRole="alert">
+          Não foi possível carregar a atividade.
+        </Text>
+      </View>
+    );
+  }
+
   return (
-    <Screen scroll>
+    <View style={styles.screen}>
       <AppHeader
-        title="Criar Atividade"
-        onMenuPress={router.back}
-        onAvatarPress={() => undefined}
+        title={editing ? "Editar atividade" : "Nova atividade"}
+        subtitle="Banco de atividades"
+        onBack={router.back}
       />
-      <View style={styles.content}>
-        <View style={styles.mediaRow}>
-          <View style={styles.mediaCard}>
-            <Card accessibilityLabel="Imagem da Atividade, em breve">
-              <View style={styles.mediaCardContent}>
-                <Ionicons
-                  name="cloud-upload-outline"
-                  size={24}
-                  color={color.textSecondary}
-                />
-                <Text style={styles.mediaLabel}>Imagem da Atividade</Text>
-                <Tag label="Em breve" />
-              </View>
-            </Card>
-          </View>
-          <View style={styles.mediaCard}>
-            <Card accessibilityLabel="Áudio da Atividade, em breve">
-              <View style={styles.mediaCardContent}>
-                <Ionicons
-                  name="cloud-upload-outline"
-                  size={24}
-                  color={color.textSecondary}
-                />
-                <Text style={styles.mediaLabel}>Áudio da Atividade</Text>
-                <Tag label="Em breve" />
-              </View>
-            </Card>
-          </View>
-        </View>
+      <ScrollView contentContainerStyle={styles.content}>
         <Controller
           control={control}
           name="prompt"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <View style={styles.section}>
-              <Text style={styles.fieldLabel}>Enunciado *</Text>
-              <TextInput
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                multiline
-                numberOfLines={4}
-                placeholder="Ex: Identifique a sílaba inicial da palavra mostrada na imagem"
-                accessibilityLabel="Enunciado *"
-                style={styles.promptInput}
-              />
-              {errors.prompt ? (
-                <Text style={styles.error} accessibilityRole="alert">
-                  {errors.prompt.message}
-                </Text>
-              ) : null}
-            </View>
+          render={({ field }) => (
+            <Field
+              label="Enunciado *"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.prompt?.message}
+              multiline
+              placeholder="Digite o enunciado da atividade"
+            />
           )}
         />
         <Controller
           control={control}
           name="category"
-          render={({ field: { value, onChange } }) => (
-            <View style={styles.section}>
-              <Text style={styles.label}>Categoria *</Text>
-              <FilterChips
-                options={categoryOptions}
-                selected={value ? [value] : []}
-                onToggle={(key) => onChange(key as TaskCategory)}
-              />
-              {errors.category ? (
-                <Text style={styles.error} accessibilityRole="alert">
-                  {errors.category.message}
-                </Text>
-              ) : null}
-            </View>
+          render={({ field }) => (
+            <SelectField
+              label="Categoria *"
+              value={field.value ?? null}
+              onChange={(value) => field.onChange(value as TaskCategory)}
+              options={categoryOptions}
+              error={errors.category?.message}
+            />
           )}
         />
         <View style={styles.section}>
-          <Text style={styles.label}>Alternativas de Resposta *</Text>
-          {alternativeLetters.map((letter, index) => {
-            const isMarked = correctIndex === index;
+          <Text style={styles.heading}>Alternativas</Text>
+          {alternatives.map((alternative, index) => {
+            const letter = alternativeLetters[index];
             return (
-              <View key={letter} style={styles.alternativeRow}>
-                <View
-                  style={[
-                    styles.letterCircle,
-                    isMarked ? styles.letterCircleMarked : null,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.letterText,
-                      isMarked ? styles.letterTextMarked : null,
-                    ]}
-                  >
-                    {letter}
-                  </Text>
-                </View>
-                <TextInput
-                  value={alternatives[index]}
+              <View key={letter} style={styles.alternative}>
+                <Field
+                  label={`Alternativa ${letter}`}
+                  value={alternative}
                   onChangeText={(text) => updateAlternative(index, text)}
                   accessibilityLabel={`Alternativa ${letter}`}
-                  placeholder={`Alternativa ${letter}`}
-                  style={styles.alternativeInput}
                 />
-                <View style={styles.markButton}>
-                  <Button
-                    label="Marcar"
-                    onPress={() => toggleCorrect(index)}
-                    variant={isMarked ? "primary" : "secondary"}
-                    accessibilityLabel={`Marcar alternativa ${letter} como correta`}
+                <Checkbox
+                  label={`Marcar alternativa ${letter} como correta`}
+                  checked={correctIndex === index}
+                  onChange={() => setCorrectIndex(index)}
+                  disabled={mutation.isPending}
+                />
+                {alternatives.length > 2 ? (
+                  <DsButton
+                    label={`Remover alternativa ${letter}`}
+                    variant="ghost"
+                    onPress={() => removeAlternative(index)}
+                    disabled={mutation.isPending}
                   />
-                </View>
+                ) : null}
               </View>
             );
           })}
-          <Text style={styles.hint}>
-            Preencha as alternativas e marque qual é a correta
-          </Text>
+          {alternatives.length < 4 ? (
+            <DsButton
+              label="Adicionar alternativa"
+              variant="soft"
+              icon="plus"
+              onPress={addAlternative}
+              disabled={mutation.isPending}
+            />
+          ) : null}
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.heading}>Mídia de apoio</Text>
+          {initialTask?.imageFile ? (
+            <Text style={styles.hint}>
+              Imagem atual: {initialTask.imageFile}
+            </Text>
+          ) : null}
+          <ImagePickerField
+            value={imageFile}
+            onChange={setImageFile}
+            loading={mutation.isPending}
+          />
+          {initialTask?.audioFile ? (
+            <AudioPlayer url={initialTask.audioFile} />
+          ) : null}
+          <AudioPickerField
+            value={audioFile}
+            onChange={setAudioFile}
+            loading={mutation.isPending}
+          />
+          {audioFile ? <AudioPlayer url={audioFile.uri} /> : null}
         </View>
         {mutation.error ? (
           <Text style={styles.error} accessibilityRole="alert">
-            {mutation.error.message}
+            {readableTaskError(mutation.error)}
           </Text>
         ) : null}
-        <FooterActions
-          onBack={router.back}
-          backLabel="Cancelar"
-          onPrimary={handleSubmit(submit)}
-          primaryLabel="Criar Atividade"
-          primaryDisabled={!canSubmit}
-          primaryLoading={mutation.isPending}
+        <DsButton
+          label="Salvar atividade"
+          fullWidth
+          onPress={handleSubmit(submit)}
+          disabled={!canSubmit}
+          loading={mutation.isPending}
         />
-      </View>
-    </Screen>
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: color.surfaceSoft },
+  content: { padding: 20, gap: 20 },
+  section: { gap: 12 },
+  alternative: { gap: 8 },
+  heading: {
+    color: color.ink[950],
+    fontFamily: fontFamilies.nunito.extraBold,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  hint: { color: color.ink[600], fontFamily: fontFamilies.nunito.regular },
+  status: {
+    color: color.ink[600],
+    padding: 20,
+    fontFamily: fontFamilies.nunito.regular,
+  },
+  error: {
+    color: color.danger,
+    padding: 20,
+    fontFamily: fontFamilies.nunito.regular,
+  },
+});

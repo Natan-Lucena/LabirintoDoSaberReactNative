@@ -20,6 +20,10 @@ vi.mock("expo-router", () => ({
   useRouter: () => ({ push: routerPush, back: routerBack }),
 }));
 
+vi.mock("@/components/media/AudioPlayer", () => ({
+  AudioPlayer: () => null,
+}));
+
 const { TaskDetailScreen } =
   await import("@/features/content-detail/task/TaskDetailScreen");
 
@@ -113,7 +117,7 @@ describe("TaskDetailScreen (UX5-A)", () => {
     ).toBeTruthy();
   });
 
-  it("editar abre 'Em breve' (D-06/AC-04)", async () => {
+  it("editar abre a rota de edição da atividade", async () => {
     await render(<TaskDetailScreen taskId="task-1" />, {
       queryClient: noRetryClient(),
     });
@@ -123,8 +127,8 @@ describe("TaskDetailScreen (UX5-A)", () => {
       screen.getByRole("button", { name: "Editar Atividade" }),
     );
     expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Editar Atividade" },
+      pathname: "/content/task/[id]/edit",
+      params: { id: "task-1" },
     });
   });
 
