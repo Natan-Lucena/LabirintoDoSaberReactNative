@@ -52,7 +52,11 @@ export function buildActivityItems(
     id: task.id,
     kind: "task",
     title: task.prompt,
-    secondary: `${task.alternatives.length} alternativas`,
+    secondary: pluralize(
+      task.alternatives.length,
+      "alternativa",
+      "alternativas",
+    ),
     category: task.category,
   }));
 

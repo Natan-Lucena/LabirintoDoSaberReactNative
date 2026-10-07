@@ -51,15 +51,21 @@ function setActivitiesQuery(
   };
 }
 
-describe("ActivitiesScreen (AC-L-01..03, AC-X-01)", () => {
+describe("ActivitiesScreen (ATV-01)", () => {
   beforeEach(() => {
     routerPush.mockClear();
     setActivitiesQuery();
   });
 
-  it("lista os itens carregados", async () => {
+  it("mostra o banco pedagógico em grade com metadados dos dados", async () => {
     await render(<ActivitiesScreen />);
 
+    expect(screen.getByRole("header", { name: "Atividades" })).toBeTruthy();
+    expect(screen.getByText("Banco pedagógico")).toBeTruthy();
+    expect(
+      screen.getByPlaceholderText("Buscar por habilidade ou tema"),
+    ).toBeTruthy();
+    expect(screen.getByText("Atividades prontas")).toBeTruthy();
     expect(screen.getByText("Sons e Letras")).toBeTruthy();
     expect(screen.getByText("Alfabeto e sons")).toBeTruthy();
     expect(screen.getByText("O que significa 'veloz'?")).toBeTruthy();
@@ -78,7 +84,7 @@ describe("ActivitiesScreen (AC-L-01..03, AC-X-01)", () => {
     await render(<ActivitiesScreen />);
 
     await fireEvent.changeText(
-      screen.getByPlaceholderText("Buscar por nome..."),
+      screen.getByPlaceholderText("Buscar por habilidade ou tema"),
       "não existe",
     );
 
@@ -123,5 +129,30 @@ describe("ActivitiesScreen (AC-L-01..03, AC-X-01)", () => {
     expect(
       screen.getByText("Não foi possível carregar as atividades."),
     ).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Tentar novamente" }),
+    );
+    expect(activitiesQuery.refetch).toHaveBeenCalledOnce();
+  });
+
+  it("filtra por categoria", async () => {
+    await render(<ActivitiesScreen />);
+
+    await fireEvent.press(screen.getByText("Vocabulário"));
+
+    expect(screen.queryByText("Sons e Letras")).toBeNull();
+  });
+
+  it("abre as quatro opções de criação", async () => {
+    await render(<ActivitiesScreen />);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Criar" }));
+
+    expect(screen.getByRole("button", { name: "Atividade" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Atividade com IA" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Caderno" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Grupo" })).toBeTruthy();
   });
 });

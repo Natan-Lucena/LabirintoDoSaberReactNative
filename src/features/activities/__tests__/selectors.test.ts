@@ -58,13 +58,20 @@ describe("buildActivityItems (AC-L-01)", () => {
     const singularGroups: TaskGroup[] = [
       { ...groups[0], tasksIds: ["task-1"] },
     ];
+    const singularTasks: Task[] = [
+      { ...tasks[0], alternatives: [tasks[0].alternatives[0]] },
+    ];
 
-    const items = buildActivityItems(singularNotebooks, singularGroups, []);
+    const items = buildActivityItems(
+      singularNotebooks,
+      singularGroups,
+      singularTasks,
+    );
 
     expect(items[0].secondary).toBe("1 tarefa");
     expect(items[1].secondary).toBe("1 atividade");
+    expect(items[2].secondary).toBe("1 alternativa");
   });
-
 
   it("mapeia cadernos, grupos e atividades com título e linha secundária derivados dos dados", () => {
     const items = buildActivityItems(notebooks, groups, tasks);
