@@ -2,6 +2,6 @@ import type { ReactElement } from "react";
 
 import { PatientFormScreen } from "@/features/patients/form/PatientFormScreen";
 
-export default function NewStudentRoute(): ReactElement {
+export default function NewPatientRoute(): ReactElement {
   return <PatientFormScreen />;
 }
