@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
-    color: color.text,
+    color: color.ink[950],
   },
 });
 

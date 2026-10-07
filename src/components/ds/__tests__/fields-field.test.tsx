@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { Text } from "react-native";
 
 import { fireEvent, render, screen } from "@/test-utils/render";
 import { Field } from "../Field";
@@ -67,5 +68,52 @@ describe("AC-DS-04-01 Field rótulo e erro acessíveis", () => {
       <Field label="Observações" value="" onChangeText={vi.fn()} multiline />,
     );
     expect(screen.getByLabelText("Observações").props.multiline).toBe(true);
+  });
+});
+
+describe("DS-06 Field: secureTextEntry e rightIcon (retrocompatível)", () => {
+  it("mascara o valor quando secureTextEntry é true", async () => {
+    await render(
+      <Field
+        label="Senha"
+        value="segredo"
+        onChangeText={vi.fn()}
+        secureTextEntry
+      />,
+    );
+    expect(screen.getByLabelText("Senha").props.secureTextEntry).toBe(true);
+  });
+
+  it("não mascara o valor quando secureTextEntry é omitido", async () => {
+    await render(<Field label="Nome" value="" onChangeText={vi.fn()} />);
+    expect(screen.getByLabelText("Nome").props.secureTextEntry).toBeFalsy();
+  });
+
+  it("exibe o rightIcon informado", async () => {
+    await render(
+      <Field
+        label="Senha"
+        value=""
+        onChangeText={vi.fn()}
+        rightIcon={<Text>olho</Text>}
+      />,
+    );
+    expect(screen.getByText("olho")).toBeTruthy();
+  });
+
+  it("torna o rightIcon um botão acessível quando onRightIconPress é informado", async () => {
+    const onRightIconPress = vi.fn();
+    await render(
+      <Field
+        label="Senha"
+        value=""
+        onChangeText={vi.fn()}
+        rightIcon={<Text>olho</Text>}
+        onRightIconPress={onRightIconPress}
+        rightIconAccessibilityLabel="Mostrar senha"
+      />,
+    );
+    fireEvent.press(screen.getByLabelText("Mostrar senha"));
+    expect(onRightIconPress).toHaveBeenCalledTimes(1);
   });
 });

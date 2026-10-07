@@ -1,13 +1,12 @@
-import { useEffect, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 
-import { Button } from "@/components/Button";
-import { TextField } from "@/components/TextField";
-import { color, typography } from "@/theme";
+import { DsButton, Field } from "@/components/ds";
+import { color, semanticColor, typography } from "@/theme";
 import {
   acknowledgeSessionExpired,
   wasSessionExpired,
@@ -22,19 +21,19 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
-    color: color.text,
+    color: color.ink[950],
   },
   formError: {
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
-    color: color.pink,
+    color: color.danger,
   },
   forgotPassword: {
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
-    color: color.primary,
+    color: semanticColor.textAccentOnSurface,
     textAlign: "right",
   },
   forgotPasswordButton: {
@@ -48,6 +47,7 @@ export function LoginForm(): ReactElement {
   const router = useRouter();
   const { submit, isSubmitting, formError, clearFormError } = useSignIn();
   const showSessionExpiredNotice = wasSessionExpired();
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (showSessionExpiredNotice) {
@@ -97,7 +97,7 @@ export function LoginForm(): ReactElement {
         control={control}
         name="email"
         render={({ field: { onChange, value } }) => (
-          <TextField
+          <Field
             label="Email"
             value={value}
             onChangeText={(text) => {
@@ -108,13 +108,6 @@ export function LoginForm(): ReactElement {
             error={errors.email?.message}
             accessibilityLabel="Email"
             placeholder="seu@email.com"
-            leftIcon={
-              <Ionicons
-                name="mail-outline"
-                size={20}
-                color={color.textSecondary}
-              />
-            }
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
@@ -128,23 +121,27 @@ export function LoginForm(): ReactElement {
         control={control}
         name="password"
         render={({ field: { onChange, value } }) => (
-          <TextField
+          <Field
             label="Senha"
             value={value}
             onChangeText={onChange}
             error={errors.password?.message}
-            secureTextEntry
+            secureTextEntry={!showPassword}
             accessibilityLabel="Senha"
             placeholder="••••••••"
-            leftIcon={
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color={color.textSecondary}
-              />
-            }
             autoCapitalize="none"
             autoCorrect={false}
+            rightIcon={
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color={color.ink[600]}
+              />
+            }
+            onRightIconPress={() => setShowPassword((current) => !current)}
+            rightIconAccessibilityLabel={
+              showPassword ? "Ocultar senha" : "Mostrar senha"
+            }
           />
         )}
       />
@@ -168,7 +165,7 @@ export function LoginForm(): ReactElement {
           >
             {formError}
           </Text>
-          <Button
+          <DsButton
             label="Tentar novamente"
             onPress={handleRetry}
             variant="secondary"
@@ -177,11 +174,12 @@ export function LoginForm(): ReactElement {
         </View>
       ) : null}
 
-      <Button
+      <DsButton
         label="Entrar agora"
         onPress={handleSubmit(onSubmit)}
         loading={isSubmitting}
         disabled={isSubmitting}
+        fullWidth
       />
     </View>
   );

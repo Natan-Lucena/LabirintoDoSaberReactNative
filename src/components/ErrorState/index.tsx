@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { Button } from "../Button";
+import { DsButton } from "../ds";
 import { color, typography } from "../../theme";
 
 export interface ErrorStateProps {
@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
-    color: color.text,
+    color: color.ink[950],
     textAlign: "center",
   },
 });
@@ -40,7 +40,7 @@ export function ErrorState({
       >
         {message}
       </Text>
-      <Button label={retryLabel} onPress={onRetry} variant="secondary" />
+      <DsButton label={retryLabel} onPress={onRetry} variant="secondary" />
     </View>
   );
 }

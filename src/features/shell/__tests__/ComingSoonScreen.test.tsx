@@ -17,4 +17,12 @@ describe("ComingSoonScreen (AC-501-02)", () => {
       screen.getByText("Esta área ainda não está disponível nesta entrega."),
     ).toBeTruthy();
   });
+
+  it("DS-06: renders the EmptyState icon", async () => {
+    await render(<ComingSoonScreen title="Menu" />);
+
+    expect(
+      screen.getByTestId("figma-icon-clock", { includeHiddenElements: true }),
+    ).toBeTruthy();
+  });
 });

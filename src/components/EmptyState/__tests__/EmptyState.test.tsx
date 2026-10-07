@@ -29,4 +29,16 @@ describe("EmptyState", () => {
     await fireEvent.press(screen.getByRole("button"));
     expect(onActionPress).toHaveBeenCalledTimes(1);
   });
+
+  it("DS-06: não renderiza o círculo de ícone quando icon não é informado", async () => {
+    await render(<EmptyState title="Nada por aqui" />);
+    expect(screen.queryByTestId(/figma-icon-/)).toBeNull();
+  });
+
+  it("DS-06: renderiza o ícone em círculo brand-50 quando informado", async () => {
+    await render(<EmptyState title="Nada por aqui" icon="clock" />);
+    expect(
+      screen.getByTestId("figma-icon-clock", { includeHiddenElements: true }),
+    ).toBeTruthy();
+  });
 });

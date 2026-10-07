@@ -15,6 +15,7 @@ export function ComingSoonScreen({
       <EmptyState
         title={title}
         message="Esta área ainda não está disponível nesta entrega."
+        icon="clock"
       />
     </Screen>
   );
