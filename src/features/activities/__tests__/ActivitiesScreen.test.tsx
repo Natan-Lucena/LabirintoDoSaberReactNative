@@ -155,4 +155,15 @@ describe("ActivitiesScreen (ATV-01)", () => {
     expect(screen.getByRole("button", { name: "Caderno" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Grupo" })).toBeTruthy();
   });
+
+  it("leva a criação com IA para a rota dedicada", async () => {
+    await render(<ActivitiesScreen />);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Criar" }));
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Atividade com IA" }),
+    );
+
+    expect(routerPush).toHaveBeenCalledWith("/content/new-task-ai");
+  });
 });

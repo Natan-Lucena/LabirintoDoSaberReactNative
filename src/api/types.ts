@@ -52,6 +52,23 @@ export interface TaskAlternative {
   isCorrect: boolean;
 }
 
+/** Alternativa ainda não persistida, usada por geração IA e lote. */
+export interface Alternative {
+  id?: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+/** POST /ai-task/generate (resposta) e POST /task/batch (entrada). */
+export interface TaskInput {
+  category: TaskCategory;
+  type: TaskType;
+  prompt: string;
+  alternatives: Alternative[];
+  imageFile?: string;
+  audioFile?: string;
+}
+
 export interface Task {
   id: string;
   category: TaskCategory;
