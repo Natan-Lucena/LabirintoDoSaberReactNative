@@ -24,9 +24,6 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
         email: "aline@example.test",
       },
       todayAppointments: [],
-      scheduledAppointmentsCount: 0,
-      lastSessions: [],
-      recentNotebooks: [],
     };
   });
 
