@@ -10,6 +10,7 @@ import "@/mocks/handlers/content";
 import "@/mocks/handlers/notebook-create";
 import "@/mocks/handlers/group-create";
 import "@/mocks/handlers/task-create";
+import "@/mocks/handlers/task-update";
 import "@/mocks/handlers/student-create";
 import "@/mocks/handlers/notebook-delete";
 import "@/mocks/handlers/task-upload-media";

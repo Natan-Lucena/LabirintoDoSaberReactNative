@@ -17,6 +17,10 @@ vi.mock("expo-router", () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
 }));
 
+vi.mock("@/components/media/AudioPlayer", () => ({
+  AudioPlayer: () => null,
+}));
+
 const { default: TaskDetailRoute } =
   await import("../../../../../app/content/task/[id]");
 
