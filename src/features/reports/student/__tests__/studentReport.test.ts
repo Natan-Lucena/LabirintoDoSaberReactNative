@@ -74,4 +74,21 @@ describe("buildStudentReportHtml", () => {
 
     expect(empty).toContain("Nenhuma sessão no período.");
   });
+
+  it("REL-06: inclui a análise com IA convertida e escapada quando informada", () => {
+    const withAi = buildStudentReportHtml({
+      studentName: "Ana",
+      periodLabel: "Últimas 6 sessões",
+      analysis: ANALYSIS,
+      aiAnalysis: "## Visão Geral\n\nBom desempenho <script>x()</script>",
+    });
+
+    expect(withAi).toContain("Análise psicopedagógica (IA)");
+    expect(withAi).toContain("<h2>Visão Geral</h2>");
+    expect(withAi).not.toContain("<script>");
+  });
+
+  it("REL-06: sem análise o documento não tem a seção de IA", () => {
+    expect(html).not.toContain("Análise psicopedagógica");
+  });
 });

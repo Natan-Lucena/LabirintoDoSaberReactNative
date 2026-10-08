@@ -208,6 +208,61 @@ registerMockHandler(
   },
 );
 
+export type MockAiAnalysisScenario = "success" | "failure";
+
+let aiAnalysisScenario: MockAiAnalysisScenario = "success";
+
+/** Cenário manual da análise com IA; só vale com EXPO_PUBLIC_USE_MOCKS=true. */
+export function setMockAiAnalysisScenario(
+  scenario: MockAiAnalysisScenario,
+): void {
+  aiAnalysisScenario = scenario;
+}
+
+registerMockHandler(
+  {
+    method: "get",
+    path: "/task-notebook-session/analysis/student/:studentId/ai",
+  },
+  ({ params }) => {
+    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+      throw new MockApiError(404, "STUDENT_NOT_FOUND");
+    }
+    if (params.limit && (params.startDate || params.endDate)) {
+      throw new MockApiError(400, "Bad Request", "Bad Request");
+    }
+    if (aiAnalysisScenario === "failure") {
+      throw new MockApiError(500, "AI_ANALYSIS_FAILED");
+    }
+
+    const analysis = analysisFor(params.studentId, params);
+    const anamnese = params.templateId
+      ? "\n\nA análise considerou as respostas da anamnese informada."
+      : "";
+    return {
+      status: 200,
+      data: {
+        analysis: [
+          "## Visão Geral",
+          `O paciente respondeu ${analysis.total.total} questões no período, com ${analysis.total.correct} acertos.${anamnese}`,
+          "## Maiores Acertos e Pontos Fortes",
+          "- Boa atenção durante a leitura\n- Reconhece **palavras do cotidiano** com facilidade",
+          "## Principais Fraquezas e Dificuldades",
+          "- Hesita em enunciados mais longos",
+          "## Observações de Padrões",
+          "Os erros aparecem quando há mais de uma alternativa parecida.",
+          "## Pontos de Melhoria",
+          "1. Ampliar o vocabulário\n2. Praticar a releitura do enunciado",
+          "## Guia de Intervenção",
+          "- Atividades curtas com apoio de imagem\n- Reforço positivo a cada acerto",
+          "## Considerações Finais",
+          "Manter o acompanhamento e reavaliar em seis sessões.",
+        ].join("\n\n"),
+      },
+    };
+  },
+);
+
 registerMockHandler(
   { method: "get", path: "/task-notebook-session/analysis/student/:studentId" },
   ({ params }) => {

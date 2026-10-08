@@ -7,11 +7,13 @@ import type {
 } from "@/api/endpoints/session-analysis";
 import {
   createStudentSnapshot,
+  getStudentAiAnalysis,
   getStudentAnalysis,
   listStudentSnapshots,
 } from "@/api/endpoints/session-analysis";
+import { listAnamneseTemplates } from "@/api/endpoints/anamnese";
 import { listStudents } from "@/api/endpoints/student";
-import type { Student } from "@/api/types";
+import type { AnamneseTemplate, Student } from "@/api/types";
 import { createQueryClient } from "@/api/query-client";
 import { render } from "@/test-utils/render";
 import { StudentReportsScreen } from "../StudentReportsScreen";
@@ -21,9 +23,11 @@ vi.mock("expo-router", () => ({ useRouter: () => ({ back: vi.fn() }) }));
 vi.mock("@/api/endpoints/student", () => ({ listStudents: vi.fn() }));
 vi.mock("@/api/endpoints/session-analysis", () => ({
   getStudentAnalysis: vi.fn(),
+  getStudentAiAnalysis: vi.fn(),
   createStudentSnapshot: vi.fn(),
   listStudentSnapshots: vi.fn(),
 }));
+vi.mock("@/api/endpoints/anamnese", () => ({ listAnamneseTemplates: vi.fn() }));
 vi.mock("../pdf", () => ({
   printStudentReport: vi.fn(),
   shareStudentReport: vi.fn(),
@@ -64,19 +68,27 @@ const SNAPSHOT: StudentAnalysisReport = {
   accuracy: 66.6,
 };
 
+let lastQueryClient = createQueryClient();
+
 function renderScreen() {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({
     queries: { retry: false },
     mutations: { retry: false },
   });
+  lastQueryClient = queryClient;
   return render(<StudentReportsScreen />, { queryClient });
 }
 
+const AI_MARKDOWN =
+  "## Visão Geral\n\nBom desempenho geral.\n\n## Guia de Intervenção\n\n- Atividades curtas com apoio de imagem";
+
+const TEMPLATES = [
+  { id: "template-1", title: "Anamnese inicial" },
+] as AnamneseTemplate[];
+
 async function chooseStudent() {
-  await waitFor(() =>
-    expect(screen.getByLabelText("Paciente")).toBeTruthy(),
-  );
+  await waitFor(() => expect(screen.getByLabelText("Paciente")).toBeTruthy());
   await fireEvent.press(screen.getByLabelText("Paciente"));
   await fireEvent.press(screen.getByLabelText("Ana Souza"));
 }
@@ -93,6 +105,8 @@ beforeEach(() => {
   vi.mocked(getStudentAnalysis).mockResolvedValue(ANALYSIS);
   vi.mocked(listStudentSnapshots).mockResolvedValue([]);
   vi.mocked(createStudentSnapshot).mockResolvedValue(SNAPSHOT);
+  vi.mocked(getStudentAiAnalysis).mockResolvedValue({ analysis: AI_MARKDOWN });
+  vi.mocked(listAnamneseTemplates).mockResolvedValue(TEMPLATES);
 });
 
 describe("StudentReportsScreen", () => {
@@ -141,7 +155,10 @@ describe("StudentReportsScreen", () => {
     await renderScreen();
     await chooseStudent();
 
-    await fireEvent.changeText(screen.getByLabelText("Quantidade de sessões"), "0");
+    await fireEvent.changeText(
+      screen.getByLabelText("Quantidade de sessões"),
+      "0",
+    );
     await generate();
 
     expect(
@@ -172,9 +189,7 @@ describe("StudentReportsScreen", () => {
     await chooseStudent();
     await generate();
 
-    await waitFor(() =>
-      expect(screen.getByRole("alert")).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
     await act(async () =>
       fireEvent.press(screen.getByRole("button", { name: "Tentar novamente" })),
     );
@@ -221,7 +236,9 @@ describe("StudentReportsScreen", () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByText("Não foi possível salvar o snapshot.")).toBeTruthy(),
+      expect(
+        screen.getByText("Não foi possível salvar o snapshot."),
+      ).toBeTruthy(),
     );
     expect(createStudentSnapshot).toHaveBeenCalledTimes(1);
   });
@@ -249,5 +266,155 @@ describe("StudentReportsScreen", () => {
       periodLabel: "Últimas 6 sessões",
       analysis: ANALYSIS,
     });
+  });
+});
+
+async function openSynthesis() {
+  await renderScreen();
+  await chooseStudent();
+  await generate();
+  await waitFor(() => expect(screen.getByText("Acerto geral")).toBeTruthy());
+}
+
+async function generateAi() {
+  await act(async () =>
+    fireEvent.press(
+      screen.getByRole("button", { name: "Gerar análise com IA" }),
+    ),
+  );
+}
+
+describe("StudentReportsScreen — análise com IA (REL-06)", () => {
+  it("só oferece a análise depois da síntese e avisa sobre privacidade", async () => {
+    await renderScreen();
+    expect(
+      screen.queryByRole("button", { name: "Gerar análise com IA" }),
+    ).toBeNull();
+
+    await chooseStudent();
+    await generate();
+    await waitFor(() => expect(screen.getByText("Acerto geral")).toBeTruthy());
+
+    expect(
+      screen.getByRole("button", { name: "Gerar análise com IA" }),
+    ).toBeTruthy();
+    expect(screen.getByText(/não é salvo no aparelho/i)).toBeTruthy();
+  });
+
+  it("AC-REL-06-02: mostra o Markdown com títulos e listas", async () => {
+    await openSynthesis();
+
+    await generateAi();
+
+    await waitFor(() =>
+      expect(screen.getByText("Bom desempenho geral.")).toBeTruthy(),
+    );
+    expect(getStudentAiAnalysis).toHaveBeenCalledWith(
+      "student-1",
+      { limit: 6 },
+      undefined,
+    );
+    expect(screen.getByText("Visão Geral")).toBeTruthy();
+    expect(screen.getByText("Guia de Intervenção")).toBeTruthy();
+    expect(
+      screen.getByText("Atividades curtas com apoio de imagem"),
+    ).toBeTruthy();
+    expect(screen.queryByText(/##/)).toBeNull();
+  });
+
+  it("envia o templateId quando um modelo de anamnese é escolhido", async () => {
+    await openSynthesis();
+
+    await fireEvent.press(screen.getByLabelText("Modelo de anamnese"));
+    await fireEvent.press(screen.getByLabelText("Anamnese inicial"));
+    await generateAi();
+
+    await waitFor(() =>
+      expect(getStudentAiAnalysis).toHaveBeenCalledWith(
+        "student-1",
+        { limit: 6 },
+        { templateId: "template-1" },
+      ),
+    );
+  });
+
+  it("AC-REL-06-01: AI_ANALYSIS_FAILED mostra tentar novamente, sem reenvio automático", async () => {
+    vi.mocked(getStudentAiAnalysis).mockRejectedValueOnce(
+      new Error("AI_ANALYSIS_FAILED"),
+    );
+    await openSynthesis();
+
+    await generateAi();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Não foi possível gerar a análise."),
+      ).toBeTruthy(),
+    );
+    expect(getStudentAiAnalysis).toHaveBeenCalledTimes(1);
+
+    await act(async () =>
+      fireEvent.press(screen.getByRole("button", { name: "Tentar novamente" })),
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("Bom desempenho geral.")).toBeTruthy(),
+    );
+    expect(getStudentAiAnalysis).toHaveBeenCalledTimes(2);
+  });
+
+  it("AC-REL-06-03: o texto da análise não entra no cache de consultas (persistido)", async () => {
+    await openSynthesis();
+    await generateAi();
+    await waitFor(() =>
+      expect(screen.getByText("Bom desempenho geral.")).toBeTruthy(),
+    );
+
+    const cached = JSON.stringify(
+      lastQueryClient
+        .getQueryCache()
+        .getAll()
+        .map((query) => query.state.data),
+    );
+    expect(cached).not.toContain("Bom desempenho geral.");
+  });
+
+  it("inclui a análise no PDF por padrão e deixa desligar", async () => {
+    await openSynthesis();
+    await generateAi();
+    await waitFor(() =>
+      expect(screen.getByText("Bom desempenho geral.")).toBeTruthy(),
+    );
+
+    await act(async () =>
+      fireEvent.press(screen.getByRole("button", { name: "Imprimir" })),
+    );
+    expect(printStudentReport).toHaveBeenLastCalledWith(
+      expect.objectContaining({ aiAnalysis: AI_MARKDOWN }),
+    );
+
+    await fireEvent.press(
+      screen.getByRole("switch", { name: "Incluir análise com IA no PDF" }),
+    );
+    await act(async () =>
+      fireEvent.press(screen.getByRole("button", { name: "Enviar" })),
+    );
+    expect(shareStudentReport).toHaveBeenLastCalledWith(
+      expect.not.objectContaining({ aiAnalysis: expect.anything() }),
+    );
+  });
+
+  it("gerar uma nova síntese descarta a análise anterior", async () => {
+    await openSynthesis();
+    await generateAi();
+    await waitFor(() =>
+      expect(screen.getByText("Bom desempenho geral.")).toBeTruthy(),
+    );
+
+    await generate();
+
+    await waitFor(() =>
+      expect(screen.queryByText("Bom desempenho geral.")).toBeNull(),
+    );
   });
 });

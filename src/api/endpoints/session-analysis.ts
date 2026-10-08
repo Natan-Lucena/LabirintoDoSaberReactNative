@@ -78,3 +78,31 @@ export async function listStudentSnapshots(
 
   return response.data;
 }
+
+export interface StudentAiAnalysis {
+  /** Markdown com as seções do contrato (Visão Geral … Considerações Finais). */
+  analysis: string;
+}
+
+/**
+ * GET /task-notebook-session/analysis/student/:studentId/ai
+ * Gera a análise sem persistir nada no servidor. O texto contém dado
+ * sensível: quem chama não deve gravá-lo em cache persistido nem em log.
+ */
+export async function getStudentAiAnalysis(
+  studentId: string,
+  filter?: StudentAnalysisFilter,
+  options?: { templateId?: string },
+): Promise<StudentAiAnalysis> {
+  const params = new URLSearchParams(
+    Object.entries({ ...filter, ...options }).map(([key, value]) => [
+      key,
+      String(value),
+    ]),
+  ).toString();
+  const response = await apiClient.get<StudentAiAnalysis>(
+    `/task-notebook-session/analysis/student/${studentId}/ai${params ? `?${params}` : ""}`,
+  );
+
+  return response.data;
+}

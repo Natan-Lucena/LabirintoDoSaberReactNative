@@ -113,3 +113,12 @@ um segundo adaptador.
   data de criação.
 - `GET /task-notebook-session/analysis/student/:studentId/history` lista os
   snapshots salvos do paciente; vazio quando não há nenhum.
+
+## Análise psicopedagógica com IA
+
+- `GET /task-notebook-session/analysis/student/:studentId/ai` devolve `{ analysis }`
+  em Markdown com as sete seções do contrato. `templateId` acrescenta uma frase
+  sobre a anamnese. `limit` junto de datas devolve `400 Bad Request`.
+- Para simular `500 AI_ANALYSIS_FAILED`, chame `setMockAiAnalysisScenario("failure")`
+  de `src/mocks/handlers/session-analysis`; `"success"` volta ao normal.
+- `GET /anamnese/templates/` lista dois modelos fictícios.

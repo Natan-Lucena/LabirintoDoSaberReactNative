@@ -1,15 +1,13 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
+import { listAnamneseTemplates } from "@/api/endpoints/anamnese";
 import {
   createStudentSnapshot,
+  getStudentAiAnalysis,
   getStudentAnalysis,
   listStudentSnapshots,
   type StudentAnalysisFilter,
@@ -27,6 +25,7 @@ import {
   SegmentedControl,
   SelectField,
   SuccessPanel,
+  Switch,
 } from "@/components/ds";
 import { LoadingState } from "@/components/LoadingState";
 import {
@@ -43,6 +42,7 @@ import {
   describeSnapshotPeriod,
   type PeriodMode,
 } from "./analysisFilter";
+import { AnalysisMarkdown } from "./AnalysisMarkdown";
 import { printStudentReport, shareStudentReport } from "./pdf";
 
 const PERIOD_OPTIONS = [
@@ -78,6 +78,8 @@ export function StudentReportsScreen(): ReactElement {
   const [periodError, setPeriodError] = useState<string | null>(null);
   const [request, setRequest] = useState<AnalysisRequest | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [templateId, setTemplateId] = useState("");
+  const [includeAiInPdf, setIncludeAiInPdf] = useState(true);
 
   const analysis = useQuery({
     queryKey: ["student-analysis", request?.studentId, request?.filter],
@@ -100,6 +102,24 @@ export function StudentReportsScreen(): ReactElement {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: historyKey }),
   });
 
+  const templates = useQuery({
+    queryKey: ["anamnese-templates"],
+    queryFn: listAnamneseTemplates,
+    enabled: request !== null,
+  });
+
+  // REL-06: mutação (e não query) para o texto da análise ficar só em memória,
+  // fora do cache persistido do TanStack Query (AC-REL-06-03).
+  const aiAnalysis = useMutation({
+    mutationFn: withOfflineGuard(() =>
+      getStudentAiAnalysis(
+        request!.studentId,
+        request!.filter,
+        templateId ? { templateId } : undefined,
+      ),
+    ),
+  });
+
   const studentName =
     students.data?.find((item) => item.id === request?.studentId)?.name ??
     "Paciente";
@@ -119,6 +139,7 @@ export function StudentReportsScreen(): ReactElement {
     setPeriodError(null);
     setExportError(null);
     snapshot.reset();
+    aiAnalysis.reset();
     setRequest({
       studentId,
       filter: result.filter,
@@ -131,11 +152,13 @@ export function StudentReportsScreen(): ReactElement {
       return;
     }
     setExportError(null);
+    const aiText = includeAiInPdf ? aiAnalysis.data?.analysis : undefined;
     try {
       await action({
         studentName,
         periodLabel: request.periodLabel,
         analysis: analysis.data,
+        ...(aiText ? { aiAnalysis: aiText } : {}),
       });
     } catch {
       setExportError("Não foi possível gerar o PDF.");
@@ -277,6 +300,61 @@ export function StudentReportsScreen(): ReactElement {
                     description={`${formatLongDate(new Date(session.startedAt))} · ${questionsLabel(session.answers.length)}`}
                   />
                 ))}
+
+                <SectionTitle title="Análise com IA" />
+                <PrivacyNote text="A análise é gerada por IA com os dados do paciente. O texto fica só nesta tela: não é salvo no aparelho." />
+                <SelectField
+                  label="Modelo de anamnese"
+                  value={templateId || null}
+                  options={[
+                    { label: "Não incluir anamnese", value: "" },
+                    ...(templates.data ?? []).map((item) => ({
+                      label: item.title,
+                      value: item.id,
+                    })),
+                  ]}
+                  onChange={setTemplateId}
+                  placeholder="Não incluir anamnese"
+                />
+                <DsButton
+                  label="Gerar análise com IA"
+                  icon="sparkles"
+                  variant="secondary"
+                  fullWidth
+                  loading={aiAnalysis.isPending}
+                  onPress={() => aiAnalysis.mutate()}
+                />
+                {aiAnalysis.isError ? (
+                  <View style={styles.block}>
+                    <Text
+                      style={styles.error}
+                      accessibilityRole="alert"
+                      accessible
+                    >
+                      Não foi possível gerar a análise.
+                    </Text>
+                    <DsButton
+                      label="Tentar novamente"
+                      variant="secondary"
+                      onPress={() => aiAnalysis.mutate()}
+                    />
+                  </View>
+                ) : null}
+                {aiAnalysis.data ? (
+                  <View style={styles.card}>
+                    <AnalysisMarkdown text={aiAnalysis.data.analysis} />
+                    <View style={styles.row}>
+                      <Text style={styles.rowLabel}>
+                        Incluir análise com IA no PDF
+                      </Text>
+                      <Switch
+                        value={includeAiInPdf}
+                        onValueChange={setIncludeAiInPdf}
+                        accessibilityLabel="Incluir análise com IA no PDF"
+                      />
+                    </View>
+                  </View>
+                ) : null}
 
                 {snapshot.isSuccess ? (
                   <SuccessPanel title="Snapshot salvo" />
