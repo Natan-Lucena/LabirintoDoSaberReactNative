@@ -2,7 +2,7 @@ import type { TaskNotebookSession } from "@/api/types";
 import type { StudentAnalysis } from "@/api/endpoints/session-analysis";
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
 import { registerMockHandler } from "./registry";
-import { MockApiError } from "./types";
+import { MockApiError, MockNetworkError } from "./types";
 
 const analysisSessions: TaskNotebookSession[] = [
   {
@@ -47,6 +47,18 @@ const analysisSessions: TaskNotebookSession[] = [
     ],
   },
 ];
+
+export type MockSessionAnswerScenario =
+  "success" | "already-answered" | "network-error";
+
+let answerScenario: MockSessionAnswerScenario = "success";
+
+/** Cenário manual do player; só é usado com EXPO_PUBLIC_USE_MOCKS=true. */
+export function setMockSessionAnswerScenario(
+  scenario: MockSessionAnswerScenario,
+): void {
+  answerScenario = scenario;
+}
 
 function sessionsForStudent(studentId: string): TaskNotebookSession[] {
   return analysisSessions.filter((session) => session.studentId === studentId);
@@ -100,6 +112,45 @@ registerMockHandler(
       throw new MockApiError(400, "INVALID_STUDENT_ID");
     }
     return { status: 200, data: sessionsForStudent(params.studentId) };
+  },
+);
+
+registerMockHandler(
+  { method: "post", path: "/task-notebook-session/answer" },
+  ({ body }) => {
+    if (answerScenario === "network-error") {
+      throw new MockNetworkError();
+    }
+    if (answerScenario === "already-answered") {
+      throw new MockApiError(400, "TASK_ALREADY_ANSWERED");
+    }
+
+    const input = body as {
+      sessionId: string;
+      taskId: string;
+      selectedAlternativeId: string;
+      timeToAnswer: number;
+    };
+    return {
+      status: 200,
+      data: {
+        id: input.sessionId,
+        studentId: "student-1",
+        educatorId: MOCK_EDUCATOR.id,
+        name: "Sessão mock",
+        startedAt: "2026-10-07T10:00:00-03:00",
+        answers: [
+          {
+            taskId: input.taskId,
+            selectedAlternativeId: input.selectedAlternativeId,
+            // O contrato retorna este campo na sessão atualizada; o player não o revela.
+            isCorrect: false,
+            timeToAnswer: input.timeToAnswer,
+            answeredAt: "2026-10-07T10:01:00-03:00",
+          },
+        ],
+      } satisfies TaskNotebookSession,
+    };
   },
 );
 

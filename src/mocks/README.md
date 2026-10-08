@@ -91,3 +91,13 @@ um segundo adaptador.
 - `POST /task/batch` persiste as tarefas recebidas e cria o grupo correspondente.
 - Envie `quantity` fora de 1--15 para receber `400 INVALID_QUANTITY`; inclua
   `[AI_GENERATION_FAILED]` nas instruções para simular `500 AI_GENERATION_FAILED`.
+
+## Player da sessão (SES-02)
+
+`POST /task-notebook-session/answer` responde com sucesso por padrão. Durante o
+desenvolvimento, importe `setMockSessionAnswerScenario` de
+`src/mocks/handlers/session-analysis` e passe `"already-answered"` para retornar
+`400 TASK_ALREADY_ANSWERED`, ou `"network-error"` para uma falha sem resposta;
+volte para `"success"` ao terminar. Os cenários mantêm o contrato do endpoint:
+corpo com `sessionId`, `taskId`, `selectedAlternativeId` e `timeToAnswer`, e
+sucesso com `200 TaskNotebookSession`.

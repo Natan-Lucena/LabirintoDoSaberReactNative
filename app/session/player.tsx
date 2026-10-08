@@ -1,8 +1,7 @@
 import type { ReactElement } from "react";
 
-import { ComingSoonScreen } from "@/features/shell/ComingSoonScreen";
+import { SessionPlayerScreen } from "@/features/sessions/player/SessionPlayerScreen";
 
-// Placeholder (T-703): a T-704/T-802 substituem pelo player real.
 export default function PlayerRoute(): ReactElement {
-  return <ComingSoonScreen title="Sessão" />;
+  return <SessionPlayerScreen />;
 }
