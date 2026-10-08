@@ -39,7 +39,13 @@ function openSession(
 export function StudentStep(): ReactElement {
   const router = useRouter();
   const params = useLocalSearchParams<{ studentId?: string }>();
-  const { selectStudent, cancel, confirmStart } = useSessionFlowStore();
+  const {
+    selectStudent,
+    cancel,
+    finish,
+    step: flowStep,
+    sessionId: flowSessionId,
+  } = useSessionFlowStore();
   const { data, isLoading, isError, refetch } = useStudents();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Student | null>(null);
@@ -79,15 +85,26 @@ export function StudentStep(): ReactElement {
     router.back();
   }
 
-  async function resume(session: TaskNotebookSession) {
-    await selectStudent(selected!);
-    await confirmStart(session.id);
+  // G-06: o conteúdo da sessão só é conhecido no fluxo salvo neste aparelho.
+  // Uma sessão aberta em outro lugar não tem como ser retomada aqui.
+  const hasLocalFlow =
+    Boolean(existing) &&
+    flowStep === "running" &&
+    flowSessionId === existing?.id;
+
+  function resume() {
     router.push("/session/player");
   }
 
   async function finishExisting() {
     if (!existing) return;
     try {
+      if (hasLocalFlow) {
+        // Passa pelo encerramento do app (SES-04) para registrar a observação.
+        await finish();
+        router.push("/session/finish");
+        return;
+      }
       await finishSession({ sessionId: existing.id });
       setExisting(null);
     } catch {
@@ -171,9 +188,17 @@ export function StudentStep(): ReactElement {
             description={`“${existing.name}” ainda não foi encerrada.`}
           />
         ) : null}
+        {existing && !hasLocalFlow ? (
+          <Text style={styles.description}>
+            Esta sessão foi iniciada em outro aparelho e não pode ser retomada
+            aqui. Encerre-a para iniciar outra.
+          </Text>
+        ) : null}
         {existing ? (
           <View style={styles.actions}>
-            <DsButton label="Retomar" onPress={() => void resume(existing)} />
+            {hasLocalFlow ? (
+              <DsButton label="Retomar" onPress={resume} />
+            ) : null}
             <DsButton
               label="Encerrar agora"
               variant="secondary"

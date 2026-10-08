@@ -25,9 +25,13 @@ vi.mock("@/api/endpoints/session", () => ({
 
 const selectStudent = vi.fn().mockResolvedValue(undefined);
 const cancel = vi.fn().mockResolvedValue(undefined);
-const confirmStart = vi.fn().mockResolvedValue(undefined);
+const finish = vi.fn().mockResolvedValue(undefined);
+let flowState: { step: string; sessionId: string | null } = {
+  step: "idle",
+  sessionId: null,
+};
 vi.mock("@/stores/session-flow", () => ({
-  useSessionFlowStore: () => ({ selectStudent, cancel, confirmStart }),
+  useSessionFlowStore: () => ({ selectStudent, cancel, finish, ...flowState }),
 }));
 
 const ANA: Student = {
@@ -57,6 +61,7 @@ describe("normalizeForSearch", () => {
 
 describe("StudentStep", () => {
   beforeEach(() => {
+    flowState = { step: "idle", sessionId: null };
     vi.mocked(listSessionsByStudent).mockResolvedValue([]);
   });
   it("AC-702-05: mostra LoadingState enquanto busca", async () => {
@@ -156,40 +161,65 @@ describe("StudentStep", () => {
     expect(back).toHaveBeenCalledTimes(1);
   });
 
-  it("AC-SES-01-02: oferece retomar ou encerrar uma sessão aberta", async () => {
-    vi.mocked(listStudents).mockResolvedValue([ANA]);
-    vi.mocked(listSessionsByStudent).mockResolvedValue([
-      {
-        id: "open-session",
-        studentId: ANA.id,
-        educatorId: "e1",
-        name: "Sessão aberta",
-        startedAt: "2026-10-07T10:00:00.000Z",
-        answers: [],
-      },
-    ]);
-    vi.mocked(finishSession).mockResolvedValue({
-      id: "open-session",
-      studentId: ANA.id,
-      educatorId: "e1",
-      name: "Sessão aberta",
-      startedAt: "2026-10-07T10:00:00.000Z",
-      finishedAt: "2026-10-07T11:00:00.000Z",
-      answers: [],
-    });
+  const OPEN_SESSION = {
+    id: "open-session",
+    studentId: ANA.id,
+    educatorId: "e1",
+    name: "Sessão aberta",
+    startedAt: "2026-10-07T10:00:00.000Z",
+    answers: [],
+  };
 
+  async function chooseAnaWithOpenSession() {
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+    vi.mocked(listSessionsByStudent).mockResolvedValue([OPEN_SESSION]);
     await render(<StudentStep />);
     await waitFor(() => expect(screen.getByText("Ana Souza")).toBeTruthy());
     fireEvent.press(screen.getByRole("button", { name: "Ana Souza" }));
-
     await waitFor(() =>
       expect(screen.getByText("Sessão em andamento")).toBeTruthy(),
     );
+  }
+
+  it("AC-SES-01-02: com o fluxo salvo neste aparelho, oferece Retomar e Encerrar agora", async () => {
+    flowState = { step: "running", sessionId: "open-session" };
+    await chooseAnaWithOpenSession();
+
     fireEvent.press(screen.getByRole("button", { name: "Retomar" }));
-    await waitFor(() =>
-      expect(confirmStart).toHaveBeenCalledWith("open-session"),
-    );
+
     expect(push).toHaveBeenCalledWith("/session/player");
+    expect(selectStudent).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Encerrar agora" })).toBeTruthy();
+  });
+
+  it("Encerrar agora com o fluxo local passa pelo encerramento com registro", async () => {
+    flowState = { step: "running", sessionId: "open-session" };
+    await chooseAnaWithOpenSession();
+
+    fireEvent.press(screen.getByRole("button", { name: "Encerrar agora" }));
+
+    await waitFor(() => expect(finish).toHaveBeenCalledTimes(1));
+    expect(push).toHaveBeenCalledWith("/session/finish");
+    expect(finishSession).not.toHaveBeenCalled();
+  });
+
+  it("sessão aberta em outro aparelho não oferece Retomar, só encerrar no servidor", async () => {
+    flowState = { step: "idle", sessionId: null };
+    vi.mocked(finishSession).mockResolvedValue({
+      ...OPEN_SESSION,
+      finishedAt: "2026-10-07T11:00:00.000Z",
+    });
+    await chooseAnaWithOpenSession();
+
+    expect(screen.queryByRole("button", { name: "Retomar" })).toBeNull();
+    expect(screen.getByText(/outro aparelho/)).toBeTruthy();
+
+    fireEvent.press(screen.getByRole("button", { name: "Encerrar agora" }));
+
+    await waitFor(() =>
+      expect(finishSession).toHaveBeenCalledWith({ sessionId: "open-session" }),
+    );
+    expect(finish).not.toHaveBeenCalled();
   });
 
   it("mostra cabeçalho novo com voltar", async () => {
