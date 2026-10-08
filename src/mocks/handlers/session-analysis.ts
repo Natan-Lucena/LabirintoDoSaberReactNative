@@ -206,6 +206,29 @@ registerMockHandler(
 );
 
 registerMockHandler(
+  { method: "post", path: "/task-notebook-session/observation" },
+  ({ body }) => {
+    const input = body as { sessionId?: unknown; observation?: unknown };
+    if (
+      typeof input.sessionId !== "string" ||
+      typeof input.observation !== "string" ||
+      input.observation.length < 1
+    ) {
+      throw new MockApiError(400, "Validation error", "Validation error");
+    }
+    const session = analysisSessions.find(
+      (item) => item.id === input.sessionId,
+    );
+    if (!session) throw new MockApiError(404, "SESSION_NOT_FOUND");
+    if (!session.finishedAt) {
+      throw new MockApiError(400, "SESSION_NOT_FINISHED");
+    }
+    session.observation = input.observation;
+    return { status: 200, data: session };
+  },
+);
+
+registerMockHandler(
   { method: "get", path: "/task-notebook-session/analysis/student/:studentId" },
   ({ params }) => {
     if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {

@@ -124,10 +124,7 @@ describe("SessionPlayerScreen", () => {
       fireEvent.press(screen.getByRole("button", { name: "Próxima" })),
     );
     expect(finish).toHaveBeenCalledTimes(1);
-    expect(replace).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Encerrar sessão" },
-    });
+    expect(replace).toHaveBeenCalledWith("/session/finish");
   });
 
   it("AC-SES-02-03: falha de rede fica pendente e só reenvia por ação manual", async () => {
@@ -228,10 +225,7 @@ describe("SessionPlayerScreen", () => {
       fireEvent.press(screen.getByRole("button", { name: "Encerrar sessão" })),
     );
     expect(finish).toHaveBeenCalledTimes(1);
-    expect(replace).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Encerrar sessão" },
-    });
+    expect(replace).toHaveBeenCalledWith("/session/finish");
   });
 
   it("volta para /session/student quando não há sessão na store", async () => {
