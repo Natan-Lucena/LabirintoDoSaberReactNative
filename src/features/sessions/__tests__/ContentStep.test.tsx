@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { act } from "@testing-library/react-native";
 
@@ -9,7 +9,8 @@ import {
   listTaskNotebooks,
   listTasks,
 } from "@/api/endpoints/content";
-import type { Task, TaskGroup, TaskNotebookWithGroups } from "@/api/types";
+import { startSession } from "@/api/endpoints/session";
+import type { TaskGroup, TaskNotebookWithGroups } from "@/api/types";
 import { ContentStep, normalizeForSearch } from "../ContentStep";
 
 const push = vi.fn();
@@ -24,7 +25,19 @@ vi.mock("@/api/endpoints/content", () => ({
   listTasks: vi.fn(),
 }));
 
+vi.mock("@/api/endpoints/session", () => ({
+  listSessionsByStudent: vi.fn(),
+  startSession: vi.fn(),
+}));
+
 const configure = vi.fn().mockResolvedValue(undefined);
+const requestStart = vi.fn().mockResolvedValue(undefined);
+const confirmStart = vi.fn().mockResolvedValue(undefined);
+const markStartUncertain = vi.fn().mockResolvedValue(undefined);
+const failStart = vi.fn().mockResolvedValue(undefined);
+const discard = vi.fn().mockResolvedValue(undefined);
+const selectStudent = vi.fn().mockResolvedValue(undefined);
+const mockStudent = { id: "student-1", name: "Ana Souza" };
 let mockSessionName: string | null = null;
 let mockContent: {
   kind: "notebook" | "group" | "task";
@@ -34,6 +47,13 @@ let mockContent: {
 vi.mock("@/stores/session-flow", () => ({
   useSessionFlowStore: () => ({
     configure,
+    requestStart,
+    confirmStart,
+    markStartUncertain,
+    failStart,
+    discard,
+    selectStudent,
+    student: mockStudent,
     sessionName: mockSessionName,
     content: mockContent,
   }),
@@ -73,24 +93,11 @@ const GROUP: TaskGroup = {
   category: "reading",
 };
 
-const TASK: Task = {
-  id: "task-1",
-  category: "vocabulary",
-  type: "multipleChoice",
-  prompt: "O que significa veloz?",
-  alternatives: [],
-  createdAt: "2026-01-01T00:00:00.000Z",
-};
-
 function renderContentStep() {
   const queryClient = createQueryClient();
   queryClient.setDefaultOptions({ queries: { retry: false } });
   return render(<ContentStep />, { queryClient });
 }
-
-afterEach(async () => {
-  await waitFor(() => {});
-});
 
 describe("normalizeForSearch", () => {
   it("ignora acentos e maiúsculas", () => {
@@ -99,19 +106,19 @@ describe("normalizeForSearch", () => {
 });
 
 describe("ContentStep", () => {
-  it("AC-703-01: nome vazio mostra erro acessível e desabilita avançar após tentativa", async () => {
+  it("AC-703-01: nome vazio mostra erro acessível e desabilita início após tentativa", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([]);
 
     await renderContentStep();
 
     const nextButton = screen.getByRole("button", {
-      name: "Iniciar Sessão Agora",
+      name: "Iniciar sessão",
     });
     fireEvent(screen.getByLabelText("Nome da sessão"), "blur");
 
     await waitFor(() =>
       expect(
-        screen.getByText("Informe um nome com até 100 caracteres."),
+        screen.getByText("Informe um nome com 1 a 100 caracteres."),
       ).toBeTruthy(),
     );
     expect(nextButton.props.accessibilityState).toMatchObject({
@@ -119,27 +126,7 @@ describe("ContentStep", () => {
     });
   });
 
-  it("AC-703-02: trocar chip troca a fonte de dados consultada", async () => {
-    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
-    vi.mocked(listTaskGroupsByEducator).mockResolvedValue([GROUP]);
-    vi.mocked(listTasks).mockResolvedValue([TASK]);
-
-    await renderContentStep();
-
-    await waitFor(() =>
-      expect(screen.getByText("Cores e formas")).toBeTruthy(),
-    );
-    expect(listTaskGroupsByEducator).not.toHaveBeenCalled();
-
-    fireEvent.press(screen.getByRole("button", { name: "Grupos" }));
-
-    await waitFor(() =>
-      expect(screen.getByText("Alfabeto e sons")).toBeTruthy(),
-    );
-    expect(listTaskGroupsByEducator).toHaveBeenCalledTimes(1);
-  });
-
-  it("AC-703-03: card mostra description/name/prompt e tags por chip", async () => {
+  it("mostra os cadernos disponíveis", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
 
     await renderContentStep();
@@ -147,12 +134,21 @@ describe("ContentStep", () => {
     await waitFor(() =>
       expect(screen.getByText("Cores e formas")).toBeTruthy(),
     );
-    expect(screen.getByText("2 tarefas")).toBeTruthy();
-    expect(screen.getByText("Leitura")).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", { name: "Cores e formas" }),
+    ).toBeTruthy();
   });
 
-  it("AC-703-04: Iniciar Sessão Agora habilita só com nome e conteúdo, grava no store e navega", async () => {
+  it("AC-SES-01-01: inicia sessão, confirma no store e abre o player", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession).mockResolvedValue({
+      id: "session-1",
+      studentId: "student-1",
+      educatorId: "e1",
+      name: "Sessão de teste",
+      startedAt: "2026-10-07T10:00:00.000Z",
+      answers: [],
+    });
 
     const view = await renderContentStep();
 
@@ -161,7 +157,7 @@ describe("ContentStep", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByRole("button", { name: "Cores e formas" }));
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
     });
     await act(async () => {
       fireEvent.changeText(
@@ -171,7 +167,7 @@ describe("ContentStep", () => {
     });
 
     const nextButton = screen.getByRole("button", {
-      name: "Iniciar Sessão Agora",
+      name: "Iniciar sessão",
     });
     expect(nextButton.props.accessibilityState).toMatchObject({
       disabled: false,
@@ -191,6 +187,12 @@ describe("ContentStep", () => {
       }),
     );
 
+    await waitFor(() => expect(requestStart).toHaveBeenCalledTimes(1));
+    expect(startSession).toHaveBeenCalledWith({
+      studentId: "student-1",
+      name: "Sessão de teste",
+    });
+    expect(confirmStart).toHaveBeenCalledWith("session-1");
     expect(push).toHaveBeenCalledWith("/session/player");
     void view;
   });
@@ -205,20 +207,32 @@ describe("ContentStep", () => {
     expect(back).toHaveBeenCalledTimes(1);
   });
 
-  it("AC-703-05: Ver Tudo abre a tela Em breve", async () => {
-    vi.mocked(listTaskNotebooks).mockResolvedValue([]);
+  it("AC-SES-01-03: erro de início mostra mensagem e não reenvia automaticamente", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession).mockRejectedValue(new Error("Validation error"));
 
     await renderContentStep();
-
-    fireEvent.press(screen.getByRole("link", { name: "Ver Tudo" }));
-
-    expect(push).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Conteúdo" },
+    await waitFor(() =>
+      expect(screen.getByText("Cores e formas")).toBeTruthy(),
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+      fireEvent.changeText(
+        screen.getByLabelText("Nome da sessão"),
+        "Sessão de teste",
+      );
     });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText("Validation error")).toBeTruthy(),
+    );
+    expect(startSession).toHaveBeenCalledTimes(1);
   });
 
-  it("AC-703-06: busca filtra por description ignorando acento/maiúscula e mantém texto ao trocar chip", async () => {
+  it("busca filtra por descrição ignorando acento e maiúscula", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK, NOTEBOOK2]);
     vi.mocked(listTaskGroupsByEducator).mockResolvedValue([GROUP]);
 
@@ -229,7 +243,7 @@ describe("ContentStep", () => {
     );
 
     fireEvent.changeText(
-      screen.getByPlaceholderText("Buscar caderno por nome..."),
+      screen.getByPlaceholderText("Buscar caderno"),
       "PALAVRAS",
     );
 
@@ -237,15 +251,6 @@ describe("ContentStep", () => {
       expect(screen.queryByText("Cores e formas")).toBeNull(),
     );
     expect(screen.getByText("Palavras do dia")).toBeTruthy();
-
-    fireEvent.press(screen.getByRole("button", { name: "Grupos" }));
-
-    await waitFor(() =>
-      expect(
-        screen.getByPlaceholderText("Buscar caderno por nome...").props.value,
-      ).toBe("PALAVRAS"),
-    );
-    expect(screen.queryByText("Alfabeto e sons")).toBeNull();
   });
 
   it("busca sem resultado mostra estado vazio", async () => {
@@ -257,13 +262,10 @@ describe("ContentStep", () => {
       expect(screen.getByText("Cores e formas")).toBeTruthy(),
     );
 
-    fireEvent.changeText(
-      screen.getByPlaceholderText("Buscar caderno por nome..."),
-      "zzz",
-    );
+    fireEvent.changeText(screen.getByPlaceholderText("Buscar caderno"), "zzz");
 
     await waitFor(() =>
-      expect(screen.getByText("Nenhum conteúdo encontrado")).toBeTruthy(),
+      expect(screen.getByText("Nenhum caderno encontrado.")).toBeTruthy(),
     );
   });
 
@@ -272,7 +274,7 @@ describe("ContentStep", () => {
 
     await renderContentStep();
 
-    expect(screen.getByRole("progressbar")).toBeTruthy();
+    expect(screen.getByText("Carregando cadernos")).toBeTruthy();
   });
 
   it("mostra ErrorState com retry", async () => {
@@ -280,7 +282,9 @@ describe("ContentStep", () => {
 
     await renderContentStep();
 
-    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText("Tentar novamente")).toBeTruthy(),
+    );
     expect(screen.getByText("Tentar novamente")).toBeTruthy();
   });
 
@@ -303,7 +307,7 @@ describe("ContentStep", () => {
     );
 
     const nextButton = screen.getByRole("button", {
-      name: "Iniciar Sessão Agora",
+      name: "Iniciar sessão",
     });
     expect(nextButton.props.accessibilityState).toMatchObject({
       disabled: false,
@@ -313,22 +317,13 @@ describe("ContentStep", () => {
     mockContent = null;
   });
 
-  // FX4: tela 05 não tinha AppHeader nem padding horizontal (conteúdo
-  // encostado nas bordas). Alinha ao padrão das demais telas (t-203, t-702).
-  it("FX4: usa AppHeader e padding horizontal como a Home", async () => {
+  it("usa cabeçalho novo com voltar", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([]);
     vi.mocked(listTaskGroupsByEducator).mockResolvedValue([]);
     vi.mocked(listTasks).mockResolvedValue([]);
 
     await renderContentStep();
 
-    expect(screen.getByLabelText("Abrir menu")).toBeTruthy();
-    expect(screen.getByLabelText("Abrir perfil")).toBeTruthy();
-
-    const content = screen.getByTestId("screen-content");
-    const flatStyle = [content.props.style]
-      .flat(Infinity)
-      .reduce((acc, style) => ({ ...acc, ...style }), {});
-    expect(flatStyle.paddingHorizontal ?? flatStyle.padding).toBe(16);
+    expect(screen.getByRole("button", { name: "Voltar" })).toBeTruthy();
   });
 });

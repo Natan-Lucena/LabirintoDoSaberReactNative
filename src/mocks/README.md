@@ -37,6 +37,12 @@ Agendamentos (T-901):
 - `PUT /appointment/:id`
 - `DELETE /appointment/:id`
 
+Sessão (SES-01, provisório por G-06/G-29):
+
+- `POST /task-notebook-session/start` aceita somente `studentId` e `name`; retorna uma sessão fictícia aberta. O nome literal `erro de validação` simula `400 { message: "Validation error" }`.
+- `GET /task-notebook-session/student/:studentId` retorna as sessões fictícias; `student-5` inicia com uma sessão aberta para o cenário de retomada.
+- `POST /task-notebook-session/finish` finaliza uma sessão aberta. O mock não cria vínculo com caderno porque esse campo não existe no contrato da API (G-06).
+
 Os handlers de agendamento mantem estado somente em memoria durante a sessao do
 app, usam ids ficticios e devolvem `400 NOT_FOUND` para PUT/DELETE de id ausente.
 
