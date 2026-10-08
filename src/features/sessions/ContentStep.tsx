@@ -1,230 +1,221 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { AppHeader } from "@/components/AppHeader";
-import { EmptyState } from "@/components/EmptyState";
-import { ErrorState } from "@/components/ErrorState";
-import { FilterChips } from "@/components/FilterChips";
-import type { FilterChipOption } from "@/components/FilterChips";
-import { FooterActions } from "@/components/FooterActions";
-import { LoadingState } from "@/components/LoadingState";
-import { Screen } from "@/components/Screen";
-import { SearchField } from "@/components/SearchField";
-import { StepIndicator } from "@/components/StepIndicator";
-import { TextField } from "@/components/TextField";
-import { ContentCard } from "@/features/content/ContentCard";
+import { listSessionsByStudent, startSession } from "@/api/endpoints/session";
+import { normalizeApiError } from "@/api/errors";
+import {
+  AppHeader,
+  CheckList,
+  DsButton,
+  Field,
+  InfoCard,
+  SearchField,
+} from "@/components/ds";
 import {
   useContentCatalog,
   type ContentCatalogItem,
 } from "@/features/sessions/useContentCatalog";
 import { useSessionFlowStore } from "@/stores/session-flow";
-import type { SessionFlowContentKind } from "@/stores/session-flow";
-import { color, typography } from "@/theme";
+import { color, fontFamilies } from "@/theme";
 
 export function normalizeForSearch(value: string): string {
-  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
-
-const CHIP_OPTIONS: FilterChipOption[] = [
-  { key: "notebook", label: "Cadernos" },
-  { key: "group", label: "Grupos" },
-  { key: "task", label: "Atividades" },
-];
 
 const NAME_MAX_LENGTH = 100;
-
-function isNameValid(name: string): boolean {
-  const trimmed = name.trim();
-  return trimmed.length >= 1 && trimmed.length <= NAME_MAX_LENGTH;
-}
+const isNameValid = (name: string) =>
+  name.trim().length >= 1 && name.trim().length <= NAME_MAX_LENGTH;
 
 export function ContentStep(): ReactElement {
   const router = useRouter();
-  const { configure, sessionName, content } = useSessionFlowStore();
+  const {
+    configure,
+    requestStart,
+    confirmStart,
+    markStartUncertain,
+    failStart,
+    discard,
+    selectStudent,
+    sessionName,
+    content,
+    student,
+  } = useSessionFlowStore();
   const [nameInput, setNameInput] = useState(sessionName ?? "");
   const [nameTouched, setNameTouched] = useState(false);
-  const [activeChip, setActiveChip] = useState<SessionFlowContentKind>(
-    content?.kind ?? "notebook",
-  );
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ContentCatalogItem | null>(
-    content
-      ? { kind: content.kind, id: content.id, name: content.name, tags: [] }
-      : null,
+    content ? { ...content, tags: [] } : null,
   );
-
-  const { items, isLoading, isError, refetch } = useContentCatalog(activeChip);
-
-  const normalizedQuery = normalizeForSearch(query);
+  const [message, setMessage] = useState<string | null>(null);
+  const [uncertainSessionId, setUncertainSessionId] = useState<string | null>(
+    null,
+  );
+  const { items, isLoading, isError, refetch } = useContentCatalog("notebook");
   const filtered = useMemo(
     () =>
-      normalizedQuery
+      query
         ? items.filter((item) =>
-            normalizeForSearch(item.name).includes(normalizedQuery),
+            normalizeForSearch(item.name).includes(normalizeForSearch(query)),
           )
         : items,
-    [items, normalizedQuery],
+    [items, query],
   );
-
-  const nameValid = isNameValid(nameInput);
   const nameError =
-    nameTouched && !nameValid
-      ? "Informe um nome com até 100 caracteres."
+    nameTouched && !isNameValid(nameInput)
+      ? "Informe um nome com 1 a 100 caracteres."
       : undefined;
 
-  function handleChipToggle(key: string) {
-    setActiveChip(key as SessionFlowContentKind);
-  }
-
-  function handleSeeAll() {
-    router.push({
-      pathname: "/shell/coming-soon",
-      params: { title: "Conteúdo" },
-    });
-  }
-
-  function handleBack() {
-    router.back();
-  }
-
-  function openComingSoon(title: string) {
-    router.push({ pathname: "/shell/coming-soon", params: { title } });
-  }
-
-  async function handleNext() {
+  async function handleStart() {
     setNameTouched(true);
-    if (!nameValid || !selected) {
-      return;
+    if (!student || !selected || !isNameValid(nameInput)) return;
+    const name = nameInput.trim();
+    await configure({
+      name,
+      content: { kind: selected.kind, id: selected.id, name: selected.name },
+    });
+    await requestStart();
+    try {
+      const session = await startSession({ studentId: student.id, name });
+      await confirmStart(session.id);
+      router.push("/session/player");
+    } catch (error) {
+      const apiError = normalizeApiError(error);
+      if (apiError.isNetworkError || apiError.isTimeout) {
+        await markStartUncertain();
+        try {
+          const active = (await listSessionsByStudent(student.id)).find(
+            (session) => !session.finishedAt,
+          );
+          if (active) {
+            setUncertainSessionId(active.id);
+            setMessage(
+              "Não foi possível confirmar o início, mas há uma sessão aberta.",
+            );
+            return;
+          }
+        } catch {
+          /* preserve the uncertain state for an explicit retry */
+        }
+      }
+      await failStart(apiError.message || "Não foi possível iniciar a sessão.");
+      setMessage(apiError.message || "Não foi possível iniciar a sessão.");
     }
+  }
+
+  async function resumeUncertain() {
+    if (!uncertainSessionId) return;
+    await confirmStart(uncertainSessionId);
+    router.push("/session/player");
+  }
+
+  async function retry() {
+    if (!student || !selected || !isNameValid(nameInput)) return;
+    await discard({ confirmed: true });
+    await selectStudent(student);
     await configure({
       name: nameInput.trim(),
       content: { kind: selected.kind, id: selected.id, name: selected.name },
     });
-    router.push("/session/player");
+    setMessage(null);
   }
 
   return (
-    <Screen style={styles.content}>
+    <SafeAreaView style={styles.screen}>
       <AppHeader
         title="Nova sessão"
-        onMenuPress={() => openComingSoon("Menu")}
-        onAvatarPress={() => openComingSoon("Perfil")}
+        subtitle="Nova sessão"
+        onBack={() => router.back()}
       />
-      <View
-        accessible
-        accessibilityLabel="Passo 2"
-        style={styles.stepIndicator}
-      >
-        <View
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          <StepIndicator totalSteps={2} currentStep={2} />
-        </View>
+      <View style={styles.content}>
+        <Field
+          label="Nome da sessão"
+          value={nameInput}
+          onChangeText={setNameInput}
+          onBlur={() => setNameTouched(true)}
+          error={nameError}
+          maxLength={NAME_MAX_LENGTH}
+          accessibilityLabel="Nome da sessão"
+          placeholder="Ex: Leitura de hoje"
+        />
+        <Text style={styles.title}>Escolha o caderno</Text>
+        <SearchField
+          value={query}
+          onChangeText={setQuery}
+          onClear={() => setQuery("")}
+          placeholder="Buscar caderno"
+        />
+        {isLoading ? (
+          <Text accessibilityRole="progressbar">Carregando cadernos</Text>
+        ) : null}
+        {isError ? (
+          <DsButton
+            label="Tentar novamente"
+            variant="secondary"
+            onPress={() => void refetch()}
+          />
+        ) : null}
+        {!isLoading && !isError ? (
+          <FlatList
+            data={filtered}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <Text style={styles.description}>Nenhum caderno encontrado.</Text>
+            }
+            renderItem={({ item }) => (
+              <CheckList
+                options={[{ key: item.id, label: item.name }]}
+                selected={selected?.id === item.id ? [item.id] : []}
+                onChange={() => setSelected(item)}
+              />
+            )}
+          />
+        ) : null}
+        {message ? (
+          <InfoCard
+            icon="close"
+            title="Não foi possível iniciar"
+            description={message}
+          />
+        ) : null}
+        {message && !uncertainSessionId ? (
+          <DsButton
+            label="Tentar novamente"
+            variant="secondary"
+            onPress={() => void retry()}
+          />
+        ) : null}
+        {uncertainSessionId ? (
+          <DsButton label="Retomar" onPress={() => void resumeUncertain()} />
+        ) : null}
+        <DsButton
+          label="Iniciar sessão"
+          fullWidth
+          loading={false}
+          disabled={!student || !selected || !isNameValid(nameInput)}
+          onPress={() => void handleStart()}
+        />
       </View>
-
-      <TextField
-        label="Dê um nome à sessão"
-        value={nameInput}
-        onChangeText={(value) => {
-          setNameInput(value);
-        }}
-        onBlur={() => setNameTouched(true)}
-        error={nameError}
-        accessibilityLabel="Nome da sessão"
-        placeholder="Ex: Sessão de Alfabetização - 08/04/2026"
-      />
-
-      <Text style={styles.title} accessibilityRole="header">
-        Como gostaria de começar?
-      </Text>
-
-      <SearchField
-        value={query}
-        onChangeText={setQuery}
-        onClear={() => setQuery("")}
-        placeholder="Buscar caderno por nome..."
-      />
-
-      <View style={styles.chipsRow}>
-        <FilterChips
-          options={CHIP_OPTIONS}
-          selected={[activeChip]}
-          onToggle={handleChipToggle}
-        />
-        <Pressable onPress={handleSeeAll} accessibilityRole="link" hitSlop={12}>
-          <Text style={styles.seeAll}>Ver Tudo</Text>
-        </Pressable>
-      </View>
-
-      {isLoading ? (
-        <LoadingState label="Carregando conteúdo" />
-      ) : isError ? (
-        <ErrorState
-          message="Não foi possível carregar o conteúdo."
-          onRetry={() => refetch()}
-        />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          title="Nenhum conteúdo encontrado"
-          message={
-            items.length === 0
-              ? "Nenhum item disponível para este chip."
-              : "Nenhum item corresponde à busca."
-          }
-        />
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => `${item.kind}:${item.id}`}
-          renderItem={({ item }) => (
-            <ContentCard
-              description={item.name}
-              tags={item.tags}
-              selected={
-                selected?.kind === item.kind && selected?.id === item.id
-              }
-              onPress={() => setSelected(item)}
-              accessibilityLabel={item.name}
-            />
-          )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-        />
-      )}
-
-      <FooterActions
-        onBack={handleBack}
-        onPrimary={handleNext}
-        primaryLabel="Iniciar Sessão Agora"
-        primaryDisabled={!nameValid || !selected}
-      />
-    </Screen>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, padding: 16 },
-  stepIndicator: { marginTop: 12, marginBottom: 12 },
+  screen: { flex: 1, backgroundColor: color.surfaceSoft },
+  content: { flex: 1, padding: 20, gap: 14 },
   title: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
     color: color.text,
-    marginTop: 16,
-    marginBottom: 12,
+    fontFamily: fontFamilies.nunito.extraBold,
+    fontSize: 20,
+    lineHeight: 26,
   },
-  chipsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
+  description: {
+    color: color.ink[600],
+    fontFamily: fontFamilies.nunito.regular,
+    fontSize: 14,
   },
-  seeAll: {
-    fontSize: typography.body.fontSize,
-    fontFamily: typography.body.fontFamily,
-    color: color.primary,
-  },
-  separator: { height: 8 },
 });
