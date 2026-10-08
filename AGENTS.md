@@ -13,9 +13,11 @@ O projeto é identificado no README como `LabirintoDoSaberReactNative`. Sua arqu
 mobile está definida em [Documentação do projeto](docs/PROJECT.md), que reúne a
 arquitetura React Native + TypeScript e a referência global da API fornecida pelo
 usuário. **Leia esse documento antes de planejar ou implementar funcionalidades.**
-O app Expo SDK 57 já tem as telas da Entrega 1 (com dados mockados) e 475 testes. Desde
-2026-10-03 o trabalho segue a **Entrega 2** (novo design do Figma Make), começando pelo
-marco **V1**. Decisões documentadas não equivalem a recursos implementados. O estado
+O app Expo SDK 57 roda no Expo Go e tem 649 testes. Desde 2026-10-03 o trabalho segue a
+**Entrega 2** (novo design do Figma Make), começando pelo marco **V1**; em 2026-10-08 as
+ondas V1-0 a V1-4 estão na `main` (design system, casca nova, pacientes, banco de
+atividades, cadernos e grupos, atividades com mídia e com IA) e a sessão e os relatórios
+estão em andamento. Decisões documentadas não equivalem a recursos implementados. O estado
 atual está no [TRACKING da Entrega 2](docs/entrega-2/TRACKING.md) e o contexto para
 retomar o trabalho em [CONTEXTO-SESSAO](docs/CONTEXTO-SESSAO.md). O histórico da
 Entrega 1 fica no [TRACKING da Entrega 1](docs/entrega-1/TRACKING.md).
@@ -35,7 +37,11 @@ Entrega 1 fica no [TRACKING da Entrega 1](docs/entrega-1/TRACKING.md).
   o app roda no **Expo Go** (`pnpm start` + leitura do QR); o development build via
   EAS (T-108) é opcional, só para recursos que o Expo Go não cobrir. Desde
   2026-09-25 (G-29), as telas são desenvolvidas com dados mockados (`src/mocks/`,
-  flag `EXPO_PUBLIC_USE_MOCKS`); a integração real é a T-1004.
+  flag `EXPO_PUBLIC_USE_MOCKS`); a integração real é a T-1004 (na Entrega 2, INT-01).
+  Desde 2026-10-07 não há backend acessível e o usuário decidiu seguir com mocks: o
+  código fica "pronto para integração" (endpoints tipados em `src/api/endpoints`, mocks
+  fiéis ao contrato, teste de integração pelo `apiClient` real e funções provisórias
+  marcadas com o gate, como G-06 e G-07).
 - O backend é externo a este repositório. Sua referência fornecida descreve o
   contrato de integração; não alegue validação contra seu código ou produção sem
   evidência. Preserve métodos, caminhos, formatos e erros, inclusive peculiaridades.
@@ -408,8 +414,12 @@ copy factual, regras de negócio ou testes para mascarar falhas.
 - Não registre credenciais, tokens ou dados pessoais em contratos, logs ou commits.
 - Antes de editar, confira alterações preexistentes. Não faça reset, clean, checkout
   destrutivo ou remoções para obter uma árvore limpa.
-- Commit, push e criação de PR exigem pedido explícito do usuário e ficam a cargo
-  do orquestrador. Revise status e diff; inclua apenas arquivos da entrega autorizada.
+- **Uma tarefa = um PR** (pedido do usuário em 2026-10-06): o executor cria a branch
+  a partir de `origin/main`, commita, dá push e abre o PR; não há push direto na
+  `main`. O orquestrador não commita (nem docs): delega a um worker. O merge é do
+  usuário, ou do orquestrador quando o usuário autoriza; antes dele, atualize a
+  branch e espere o CI verde. Revise status e diff; inclua apenas arquivos da entrega
+  autorizada.
 
 ## 8. Definição de pronto e comunicação
 
