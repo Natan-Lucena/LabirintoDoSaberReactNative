@@ -158,9 +158,9 @@ O que é a V1 (decisão do usuário em 2026-10-03, registrada como G-38 a G-41):
 | V1-1 | DS-01, DS-02, DS-03, DS-04, DS-05, ATV-08                           | Design system e upload de mídia em paralelo     |
 | V1-2 | NAV-01, NAV-02, DS-06                                               | Casca nova                                      |
 | V1-3 | HOME-01 (V1), PAC-01, PAC-02 (V1), ATV-01 (V1), CNT-01, REC-01 (V1) | Telas raiz                                      |
-| V1-4 | PAC-03 (V1), ATV-06, ATV-07, SES-01                                 | SES-01 depende de G-06                          |
+| V1-4 | PAC-03 (V1), ATV-06, ATV-07, SES-01                                 | G-06 só bloqueia a INT-01 (G-29, mocks)         |
 | V1-5 | ATV-02, ATV-03, SES-02                                              |                                                 |
-| V1-6 | SES-03, SES-04, REL-04                                              |                                                 |
+| V1-6 | SES-03, SES-04, REL-04                                              | REL-04 adiantada para junto da V1-5             |
 | V1-7 | REL-05, REL-06                                                      |                                                 |
 | V1-8 | INT-01, QA-05                                                       | Integração real e teste ponta a ponta           |
 
