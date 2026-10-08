@@ -22,6 +22,7 @@ import "@/mocks/handlers/ai-task";
 import "@/mocks/handlers/task-batch";
 import "@/mocks/handlers/session-analysis";
 import "@/mocks/handlers/session-report";
+import "@/mocks/handlers/anamnese";
 
 let installed = false;
 
