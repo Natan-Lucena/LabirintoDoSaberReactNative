@@ -97,3 +97,10 @@ um segundo adaptador.
 - `POST /task/batch` persiste as tarefas recebidas e cria o grupo correspondente.
 - Envie `quantity` fora de 1--15 para receber `400 INVALID_QUANTITY`; inclua
   `[AI_GENERATION_FAILED]` nas instruções para simular `500 AI_GENERATION_FAILED`.
+
+## Relatório da sessão
+
+- `GET /task-notebook-session/report/:sessionId` responde aos relatórios fictícios
+  de `mock-session-1` e `mock-session-2`, incluindo métricas nulas para validar a
+  apresentação de "—".
+- Use `session-not-found` como `sessionId` para receber `404 SESSION_NOT_FOUND`.
