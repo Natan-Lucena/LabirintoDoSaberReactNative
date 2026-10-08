@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
 
-import { ComingSoonScreen } from "@/features/shell/ComingSoonScreen";
+import { StudentReportsScreen } from "@/features/reports/student/StudentReportsScreen";
 
-// G-10: aba fora do escopo desta entrega.
+// REL-05: relatórios do paciente. Aba fora da barra, acessada pelo Recursos.
 export default function ReportsTab(): ReactElement {
-  return <ComingSoonScreen title="Relatórios" />;
+  return <StudentReportsScreen />;
 }

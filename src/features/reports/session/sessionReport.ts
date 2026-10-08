@@ -38,7 +38,7 @@ export function getTypeLabel(type: string): string {
   return typeLabels[type] ?? type;
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")

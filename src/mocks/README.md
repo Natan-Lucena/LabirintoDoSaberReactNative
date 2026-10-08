@@ -104,3 +104,12 @@ um segundo adaptador.
   de `mock-session-1` e `mock-session-2`, incluindo métricas nulas para validar a
   apresentação de "—".
 - Use `session-not-found` como `sessionId` para receber `404 SESSION_NOT_FOUND`.
+
+## Relatórios do aluno
+
+- `POST /task-notebook-session/analysis/student/:studentId/snapshot` gera e guarda
+  em memória um snapshot com o mesmo filtro da análise (`limit` ou datas; os dois
+  juntos devolvem `400 INVALID_ANALYSIS_FILTER`). O contrato não devolve `id` nem
+  data de criação.
+- `GET /task-notebook-session/analysis/student/:studentId/history` lista os
+  snapshots salvos do paciente; vazio quando não há nenhum.

@@ -1,5 +1,8 @@
 import type { TaskNotebookSession } from "@/api/types";
-import type { StudentAnalysis } from "@/api/endpoints/session-analysis";
+import type {
+  StudentAnalysis,
+  StudentAnalysisReport,
+} from "@/api/endpoints/session-analysis";
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
@@ -151,6 +154,57 @@ registerMockHandler(
       throw new MockApiError(400, "SESSION_ALREADY_FINISHED");
     session.finishedAt = new Date().toISOString();
     return { status: 200, data: session };
+  },
+);
+
+const analysisSnapshots: StudentAnalysisReport[] = [];
+
+registerMockHandler(
+  {
+    method: "post",
+    path: "/task-notebook-session/analysis/student/:studentId/snapshot",
+  },
+  ({ params }) => {
+    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+      throw new MockApiError(404, "STUDENT_NOT_FOUND");
+    }
+    const analysis = analysisFor(params.studentId, params);
+    const snapshot: StudentAnalysisReport = {
+      studentId: params.studentId,
+      ...(params.limit ? { limit: Number(params.limit) } : {}),
+      ...(params.startDate ? { startDate: params.startDate } : {}),
+      ...(params.endDate ? { endDate: params.endDate } : {}),
+      sessionIds: analysis.sessions.map((session) => session.id),
+      categories: Object.values(analysis.categories).map((item) => ({
+        category: item.category,
+        total: item.total,
+        correct: item.correct,
+        accuracy: item.accuracy,
+      })),
+      totalQuestions: analysis.total.total,
+      totalCorrect: analysis.total.correct,
+      accuracy: analysis.total.accuracy,
+    };
+    analysisSnapshots.push(snapshot);
+    return { status: 200, data: snapshot };
+  },
+);
+
+registerMockHandler(
+  {
+    method: "get",
+    path: "/task-notebook-session/analysis/student/:studentId/history",
+  },
+  ({ params }) => {
+    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+      throw new MockApiError(400, "INVALID_STUDENT_ID");
+    }
+    return {
+      status: 200,
+      data: analysisSnapshots.filter(
+        (snapshot) => snapshot.studentId === params.studentId,
+      ),
+    };
   },
 );
 
