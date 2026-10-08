@@ -6,22 +6,24 @@
 > propõe mudança de contrato por conta própria. Cada resposta precisa ser registrada
 > no histórico de GATES e no TRACKING antes de liberar as tarefas afetadas.
 
-| # | Gate | Bloqueia | Enviada em | Respondida em |
-|---|---|---|---|---|
-| P1 | G-05 | T-404 (etapa Senha da recuperação) | — | — |
-| P2 | G-06 | T-703, T-704, T-802 (tela 05, início e player) — **caminho crítico** | — | — |
-| P3 | G-07 | T-802 (envio de respostas) | — | — |
-| P4 | G-08 | Não bloqueia (melhoria de robustez) | — | — |
+| #   | Gate | Bloqueia                                                             | Enviada em | Respondida em |
+| --- | ---- | -------------------------------------------------------------------- | ---------- | ------------- |
+| P1  | G-05 | T-404 (etapa Senha da recuperação)                                   | —          | —             |
+| P2  | G-06 | T-703, T-704, T-802 (tela 05, início e player) — **caminho crítico** | —          | —             |
+| P3  | G-07 | T-802 (envio de respostas)                                           | —          | —             |
+| P4  | G-08 | Não bloqueia (melhoria de robustez)                                  | —          | —             |
+| P5  | G-43 | INT-01 (evolução na ficha do paciente, REL-05)                       | —          | —             |
 
 ## Mensagem pronta para enviar
 
 > Oi, pessoal! Estamos começando o app mobile do Labirinto do Saber e, ao conferir a
-> referência da API, ficaram 3 dúvidas que bloqueiam telas, mais um pedido opcional.
+> referência da API, ficaram algumas dúvidas que bloqueiam a integração, mais um pedido opcional.
 >
 > **1. Recuperação de senha (`PUT /educator/generate-token` → `POST /educator/update-password`)**
 > O `generate-token` envia um código por e-mail, mas o `update-password` recebe só
 > `email` e `newPassword`, sem o código. Como o servidor garante que quem troca a senha
 > recebeu o código?
+>
 > - Existe um campo (ex.: `token`) ou um endpoint de validação do código que não está
 >   na documentação? Se existe, qual o nome, o formato e os erros?
 > - Se não existe, hoje qualquer pessoa que saiba o e-mail de um educador consegue
@@ -31,6 +33,7 @@
 > O `start` recebe só `studentId` e `name` e devolve a `TaskNotebookSession` sem
 > tarefas, mas pode retornar `404 NOTEBOOK_NOT_FOUND`, e o `answer` retorna
 > `TASK_NOT_IN_NOTEBOOK`. Então:
+>
 > - Como a sessão é associada a um caderno? Há um campo no body do `start` que não
 >   está documentado (ex.: `notebookId`)?
 > - Como o app obtém a lista de tarefas que a criança vai responder nessa sessão?
@@ -39,6 +42,7 @@
 >   Atividades.)
 >
 > **3. Unidade de `timeToAnswer` (`POST /task-notebook-session/answer`)**
+>
 > - O valor é em milissegundos ou em segundos? Inteiro ou pode ter casas decimais?
 > - Os relatórios (`totalTimeSession`, `averageTimePerQuestion` etc.) usam a mesma unidade?
 >
@@ -48,6 +52,12 @@
 > `GET /task-notebook-session/student/:studentId`, o que é uma heurística no caso do
 > `start`. Vocês considerariam aceitar uma chave de idempotência (ex.: header
 > `Idempotency-Key`) nesses endpoints, ou expor um `GET` de sessão individual?
+>
+> **5. Escala do `accuracy` na análise do aluno (`GET /task-notebook-session/analysis/student/:studentId`)**
+>
+> - `categories[*].accuracy` e `total.accuracy` vêm de 0 a 100 (percentual) ou de 0 a 1?
+> - Os percentuais do relatório da sessão (`percentageByCategory`, `percentageByType`)
+>   usam a mesma escala?
 >
 > Obrigado!
 

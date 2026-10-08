@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { render, screen, fireEvent, waitFor } from "@/test-utils/render";
 import { createQueryClient } from "@/api/query-client";
 import { listStudents } from "@/api/endpoints/student";
+import { listSessionsByStudent, finishSession } from "@/api/endpoints/session";
 import type { Student } from "@/api/types";
 import { StudentStep, normalizeForSearch } from "../StudentStep";
 
@@ -10,16 +11,27 @@ const push = vi.fn();
 const back = vi.fn();
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push, back }),
+  useLocalSearchParams: () => ({}),
 }));
 
 vi.mock("@/api/endpoints/student", () => ({
   listStudents: vi.fn(),
 }));
 
+vi.mock("@/api/endpoints/session", () => ({
+  listSessionsByStudent: vi.fn(),
+  finishSession: vi.fn(),
+}));
+
 const selectStudent = vi.fn().mockResolvedValue(undefined);
 const cancel = vi.fn().mockResolvedValue(undefined);
+const finish = vi.fn().mockResolvedValue(undefined);
+let flowState: { step: string; sessionId: string | null } = {
+  step: "idle",
+  sessionId: null,
+};
 vi.mock("@/stores/session-flow", () => ({
-  useSessionFlowStore: () => ({ selectStudent, cancel }),
+  useSessionFlowStore: () => ({ selectStudent, cancel, finish, ...flowState }),
 }));
 
 const ANA: Student = {
@@ -48,12 +60,16 @@ describe("normalizeForSearch", () => {
 });
 
 describe("StudentStep", () => {
+  beforeEach(() => {
+    flowState = { step: "idle", sessionId: null };
+    vi.mocked(listSessionsByStudent).mockResolvedValue([]);
+  });
   it("AC-702-05: mostra LoadingState enquanto busca", async () => {
     vi.mocked(listStudents).mockReturnValue(new Promise(() => {}));
 
     await render(<StudentStep />);
 
-    expect(screen.getByRole("progressbar")).toBeTruthy();
+    expect(screen.getByText("Carregando pacientes")).toBeTruthy();
   });
 
   it("AC-702-05: mostra EmptyState sem alunos", async () => {
@@ -62,9 +78,7 @@ describe("StudentStep", () => {
     await render(<StudentStep />);
 
     await waitFor(() =>
-      expect(
-        screen.getByText("Escolha o aluno que participará desta sessão"),
-      ).toBeTruthy(),
+      expect(screen.getByText("Escolha o paciente")).toBeTruthy(),
     );
   });
 
@@ -75,7 +89,9 @@ describe("StudentStep", () => {
 
     await render(<StudentStep />, { queryClient });
 
-    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText("Tentar novamente")).toBeTruthy(),
+    );
     expect(screen.getByText("Tentar novamente")).toBeTruthy();
   });
 
@@ -87,7 +103,7 @@ describe("StudentStep", () => {
     await waitFor(() => expect(screen.getByText("Ana Souza")).toBeTruthy());
 
     fireEvent.changeText(
-      screen.getByPlaceholderText("Buscar Aluno..."),
+      screen.getByPlaceholderText("Buscar paciente"),
       "joao",
     );
 
@@ -95,14 +111,14 @@ describe("StudentStep", () => {
     expect(screen.getByText("João Pedro")).toBeTruthy();
   });
 
-  it("AC-702-03: Próximo Passo desabilitado sem seleção", async () => {
+  it("AC-702-03: Continuar desabilitado sem seleção", async () => {
     vi.mocked(listStudents).mockResolvedValue([ANA]);
 
     await render(<StudentStep />);
 
     await waitFor(() => expect(screen.getByText("Ana Souza")).toBeTruthy());
 
-    const nextButton = screen.getByRole("button", { name: "Próximo Passo" });
+    const nextButton = screen.getByRole("button", { name: "Continuar" });
     expect(nextButton.props.accessibilityState).toMatchObject({
       disabled: true,
     });
@@ -117,7 +133,7 @@ describe("StudentStep", () => {
 
     fireEvent.press(screen.getByRole("button", { name: "Ana Souza" }));
 
-    const nextButton = screen.getByRole("button", { name: "Próximo Passo" });
+    const nextButton = screen.getByRole("button", { name: "Continuar" });
     await waitFor(() =>
       expect(nextButton.props.accessibilityState).toMatchObject({
         disabled: false,
@@ -136,9 +152,7 @@ describe("StudentStep", () => {
     await render(<StudentStep />);
 
     await waitFor(() =>
-      expect(
-        screen.getByText("Escolha o aluno que participará desta sessão"),
-      ).toBeTruthy(),
+      expect(screen.getByText("Escolha o paciente")).toBeTruthy(),
     );
 
     fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
@@ -147,28 +161,74 @@ describe("StudentStep", () => {
     expect(back).toHaveBeenCalledTimes(1);
   });
 
-  it("mostra marcador de passo único com rótulo acessível 'Passo 1'", async () => {
-    vi.mocked(listStudents).mockResolvedValue([]);
+  const OPEN_SESSION = {
+    id: "open-session",
+    studentId: ANA.id,
+    educatorId: "e1",
+    name: "Sessão aberta",
+    startedAt: "2026-10-07T10:00:00.000Z",
+    answers: [],
+  };
 
+  async function chooseAnaWithOpenSession() {
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+    vi.mocked(listSessionsByStudent).mockResolvedValue([OPEN_SESSION]);
     await render(<StudentStep />);
+    await waitFor(() => expect(screen.getByText("Ana Souza")).toBeTruthy());
+    fireEvent.press(screen.getByRole("button", { name: "Ana Souza" }));
+    await waitFor(() =>
+      expect(screen.getByText("Sessão em andamento")).toBeTruthy(),
+    );
+  }
 
-    await waitFor(() => expect(screen.getByLabelText("Passo 1")).toBeTruthy());
+  it("AC-SES-01-02: com o fluxo salvo neste aparelho, oferece Retomar e Encerrar agora", async () => {
+    flowState = { step: "running", sessionId: "open-session" };
+    await chooseAnaWithOpenSession();
+
+    fireEvent.press(screen.getByRole("button", { name: "Retomar" }));
+
+    expect(push).toHaveBeenCalledWith("/session/player");
+    expect(selectStudent).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Encerrar agora" })).toBeTruthy();
   });
 
-  // FX4: tela 04 não tinha AppHeader nem padding horizontal (conteúdo
-  // encostado nas bordas). Alinha ao padrão das demais telas (t-203, t-702).
-  it("FX4: usa AppHeader (t-702, pendência 8) e padding horizontal como a Home", async () => {
+  it("Encerrar agora com o fluxo local passa pelo encerramento com registro", async () => {
+    flowState = { step: "running", sessionId: "open-session" };
+    await chooseAnaWithOpenSession();
+
+    fireEvent.press(screen.getByRole("button", { name: "Encerrar agora" }));
+
+    await waitFor(() => expect(finish).toHaveBeenCalledTimes(1));
+    expect(push).toHaveBeenCalledWith("/session/finish");
+    expect(finishSession).not.toHaveBeenCalled();
+  });
+
+  it("sessão aberta em outro aparelho não oferece Retomar, só encerrar no servidor", async () => {
+    flowState = { step: "idle", sessionId: null };
+    vi.mocked(finishSession).mockResolvedValue({
+      ...OPEN_SESSION,
+      finishedAt: "2026-10-07T11:00:00.000Z",
+    });
+    await chooseAnaWithOpenSession();
+
+    expect(screen.queryByRole("button", { name: "Retomar" })).toBeNull();
+    expect(screen.getByText(/outro aparelho/)).toBeTruthy();
+
+    fireEvent.press(screen.getByRole("button", { name: "Encerrar agora" }));
+
+    await waitFor(() =>
+      expect(finishSession).toHaveBeenCalledWith({ sessionId: "open-session" }),
+    );
+    expect(finish).not.toHaveBeenCalled();
+  });
+
+  it("mostra cabeçalho novo com voltar", async () => {
     vi.mocked(listStudents).mockResolvedValue([]);
 
     await render(<StudentStep />);
 
-    expect(screen.getByLabelText("Abrir menu")).toBeTruthy();
-    expect(screen.getByLabelText("Abrir perfil")).toBeTruthy();
-
-    const content = screen.getByTestId("screen-content");
-    const flatStyle = [content.props.style]
-      .flat(Infinity)
-      .reduce((acc, style) => ({ ...acc, ...style }), {});
-    expect(flatStyle.paddingHorizontal ?? flatStyle.padding).toBe(16);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Voltar" })).toBeTruthy(),
+    );
   });
 });

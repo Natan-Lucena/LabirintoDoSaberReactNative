@@ -25,7 +25,7 @@ import { useSessionFlowStore } from "@/stores/session-flow";
 import { resolveSessionTasks } from "./sessionTasks";
 import { toApiTimeToAnswer } from "./time";
 
-export const SESSION_FINISH_DESTINATION = "/shell/coming-soon";
+export const SESSION_FINISH_DESTINATION = "/session/finish";
 
 function answerFor(
   task: Task,
@@ -169,10 +169,7 @@ export function SessionPlayerScreen(): ReactElement | null {
 
   async function handleFinish() {
     await finish();
-    router.replace({
-      pathname: SESSION_FINISH_DESTINATION,
-      params: { title: "Encerrar sessão" },
-    });
+    router.replace(SESSION_FINISH_DESTINATION);
   }
 
   async function handleNext() {

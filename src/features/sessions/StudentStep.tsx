@@ -1,135 +1,273 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
-import { AppHeader } from "@/components/AppHeader";
-import { EmptyState } from "@/components/EmptyState";
-import { ErrorState } from "@/components/ErrorState";
-import { FooterActions } from "@/components/FooterActions";
-import { LoadingState } from "@/components/LoadingState";
-import { Screen } from "@/components/Screen";
-import { SearchField } from "@/components/SearchField";
-import { StepIndicator } from "@/components/StepIndicator";
-import { StudentRow } from "@/features/students/StudentRow";
+import { listSessionsByStudent, finishSession } from "@/api/endpoints/session";
+import type { Student, TaskNotebookSession } from "@/api/types";
+import {
+  AppHeader,
+  Avatar,
+  DsButton,
+  InfoCard,
+  SearchField,
+} from "@/components/ds";
 import { useStudents } from "@/features/students/useStudents";
 import { useSessionFlowStore } from "@/stores/session-flow";
-import { color, typography } from "@/theme";
-import type { Student } from "@/api/types";
+import { color, fontFamilies } from "@/theme";
 
 export function normalizeForSearch(value: string): string {
-  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function openSession(
+  sessions: TaskNotebookSession[],
+): TaskNotebookSession | undefined {
+  return sessions.find((session) => !session.finishedAt);
 }
 
 export function StudentStep(): ReactElement {
   const router = useRouter();
-  const { selectStudent, cancel } = useSessionFlowStore();
+  const params = useLocalSearchParams<{ studentId?: string }>();
+  const {
+    selectStudent,
+    cancel,
+    finish,
+    step: flowStep,
+    sessionId: flowSessionId,
+  } = useSessionFlowStore();
   const { data, isLoading, isError, refetch } = useStudents();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Student | null>(null);
+  const [existing, setExisting] = useState<TaskNotebookSession | null>(null);
+  const [checkingExisting, setCheckingExisting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const students = data ?? [];
-  const normalizedQuery = normalizeForSearch(query);
-  const filtered = normalizedQuery
+  const filtered = normalizeForSearch(query)
     ? students.filter((student) =>
-        normalizeForSearch(student.name).includes(normalizedQuery),
+        normalizeForSearch(student.name).includes(normalizeForSearch(query)),
       )
     : students;
+
+  useEffect(() => {
+    if (!params.studentId || selected || !data) return;
+    const matched = data.find((student) => student.id === params.studentId);
+    if (matched) void chooseStudent(matched);
+  }, [data, params.studentId, selected]);
+
+  async function chooseStudent(student: Student) {
+    setSelected(student);
+    setExisting(null);
+    setError(null);
+    setCheckingExisting(true);
+    try {
+      setExisting(openSession(await listSessionsByStudent(student.id)) ?? null);
+    } catch {
+      setError("Não foi possível verificar sessões em andamento.");
+    } finally {
+      setCheckingExisting(false);
+    }
+  }
 
   async function handleBack() {
     await cancel();
     router.back();
   }
 
-  function openComingSoon(title: string) {
-    router.push({ pathname: "/shell/coming-soon", params: { title } });
+  // G-06: o conteúdo da sessão só é conhecido no fluxo salvo neste aparelho.
+  // Uma sessão aberta em outro lugar não tem como ser retomada aqui.
+  const hasLocalFlow =
+    Boolean(existing) &&
+    flowStep === "running" &&
+    flowSessionId === existing?.id;
+
+  function resume() {
+    router.push("/session/player");
+  }
+
+  async function finishExisting() {
+    if (!existing) return;
+    try {
+      if (hasLocalFlow) {
+        // Passa pelo encerramento do app (SES-04) para registrar a observação.
+        await finish();
+        router.push("/session/finish");
+        return;
+      }
+      await finishSession({ sessionId: existing.id });
+      setExisting(null);
+    } catch {
+      setError("Não foi possível encerrar a sessão agora.");
+    }
   }
 
   async function handleNext() {
-    if (!selected) {
-      return;
-    }
+    if (!selected || existing) return;
     await selectStudent(selected);
     router.push("/session/content");
   }
 
   return (
-    <Screen style={styles.content}>
+    <SafeAreaView style={styles.screen}>
       <AppHeader
         title="Nova sessão"
-        onMenuPress={() => openComingSoon("Menu")}
-        onAvatarPress={() => openComingSoon("Perfil")}
+        subtitle="Nova sessão"
+        onBack={() => void handleBack()}
       />
-      <View
-        accessible
-        accessibilityLabel="Passo 1"
-        style={styles.stepIndicator}
-      >
-        <View
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          <StepIndicator totalSteps={1} currentStep={1} />
-        </View>
-      </View>
-      <Text style={styles.title} accessibilityRole="header">
-        Escolha o aluno que participará desta sessão
-      </Text>
-      <SearchField
-        value={query}
-        onChangeText={setQuery}
-        onClear={() => setQuery("")}
-        placeholder="Buscar Aluno..."
-      />
-      {isLoading ? (
-        <LoadingState label="Carregando alunos" />
-      ) : isError ? (
-        <ErrorState
-          message="Não foi possível carregar os alunos."
-          onRetry={() => refetch()}
+      <View style={styles.content}>
+        <Text style={styles.title}>Escolha o paciente</Text>
+        <Text style={styles.description}>
+          Selecione quem participará desta sessão.
+        </Text>
+        <SearchField
+          value={query}
+          onChangeText={setQuery}
+          onClear={() => setQuery("")}
+          placeholder="Buscar paciente"
         />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          title="Nenhum aluno encontrado"
-          message={
-            students.length === 0
-              ? "Nenhum aluno cadastrado."
-              : "Nenhum aluno corresponde à busca."
-          }
-        />
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(student) => student.id}
-          renderItem={({ item }) => (
-            <StudentRow
-              student={item}
-              selected={selected?.id === item.id}
-              onPress={setSelected}
+        {isLoading ? (
+          <Text accessibilityRole="progressbar">Carregando pacientes</Text>
+        ) : null}
+        {isError ? (
+          <DsButton
+            label="Tentar novamente"
+            variant="secondary"
+            onPress={() => void refetch()}
+          />
+        ) : null}
+        {!isLoading && !isError ? (
+          <FlatList
+            style={styles.list}
+            data={filtered}
+            keyExtractor={(student) => student.id}
+            ListEmptyComponent={
+              <Text style={styles.description}>
+                Nenhum paciente encontrado.
+              </Text>
+            }
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => void chooseStudent(item)}
+                accessibilityRole="button"
+                accessibilityLabel={item.name}
+                accessibilityState={{ selected: selected?.id === item.id }}
+                style={[
+                  styles.patient,
+                  selected?.id === item.id && styles.patientSelected,
+                ]}
+              >
+                <Avatar name={item.name} />
+                <View style={styles.patientCopy}>
+                  <Text style={styles.patientName}>{item.name}</Text>
+                  <Text style={styles.patientDetail}>{item.age} anos</Text>
+                </View>
+              </Pressable>
+            )}
+          />
+        ) : null}
+        {checkingExisting ? (
+          <Text style={styles.description}>
+            Verificando sessões em andamento...
+          </Text>
+        ) : null}
+        {existing ? (
+          <InfoCard
+            icon="play"
+            title="Sessão em andamento"
+            description={`“${existing.name}” ainda não foi encerrada.`}
+          />
+        ) : null}
+        {existing && !hasLocalFlow ? (
+          <Text style={styles.description}>
+            Esta sessão foi iniciada em outro aparelho e não pode ser retomada
+            aqui. Encerre-a para iniciar outra.
+          </Text>
+        ) : null}
+        {existing ? (
+          <View style={styles.actions}>
+            {hasLocalFlow ? (
+              <DsButton label="Retomar" onPress={resume} />
+            ) : null}
+            <DsButton
+              label="Encerrar agora"
+              variant="secondary"
+              onPress={() => void finishExisting()}
             />
-          )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          </View>
+        ) : null}
+        {error ? (
+          <Text accessibilityRole="alert" style={styles.error}>
+            {error}
+          </Text>
+        ) : null}
+        <DsButton
+          label="Continuar"
+          fullWidth
+          disabled={!selected || !!existing || checkingExisting}
+          onPress={() => void handleNext()}
         />
-      )}
-      <FooterActions
-        onBack={handleBack}
-        onPrimary={handleNext}
-        primaryLabel="Próximo Passo"
-        primaryDisabled={!selected}
-      />
-    </Screen>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, padding: 16 },
-  stepIndicator: { marginTop: 12, marginBottom: 12 },
+  screen: { flex: 1, backgroundColor: color.surfaceSoft },
+  content: { flex: 1, padding: 20, gap: 14 },
   title: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
     color: color.text,
-    marginBottom: 12,
+    fontFamily: fontFamilies.nunito.extraBold,
+    fontSize: 22,
+    lineHeight: 28,
   },
-  separator: { height: 8 },
+  description: {
+    color: color.ink[600],
+    fontFamily: fontFamilies.nunito.regular,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  list: { flex: 1 },
+  patient: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: 16,
+    backgroundColor: color.surface,
+  },
+  patientSelected: {
+    borderColor: color.brand[500],
+    backgroundColor: color.brand[50],
+  },
+  patientCopy: { flex: 1 },
+  patientName: {
+    color: color.text,
+    fontFamily: fontFamilies.nunito.bold,
+    fontSize: 15,
+  },
+  patientDetail: {
+    color: color.ink[600],
+    fontFamily: fontFamilies.nunito.regular,
+    fontSize: 13,
+  },
+  actions: { flexDirection: "row", gap: 8 },
+  error: {
+    color: color.danger,
+    fontFamily: fontFamilies.nunito.semiBold,
+    fontSize: 13,
+  },
 });

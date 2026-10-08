@@ -8,6 +8,7 @@ import { QueryProvider } from "@/api/QueryProvider";
 import { setTokenProvider } from "@/api/client";
 import { connectStorageToAuth } from "@/storage/mmkv";
 import { connectSessionExpiry } from "@/features/auth/session-expiry";
+import { ResumeSessionPrompt } from "@/features/sessions/resume/ResumeSessionPrompt";
 import { useAuthStore } from "@/stores/auth";
 import { installApiMocks } from "@/mocks/install"; // T-401: instala o adaptador de mocks (G-29)
 
@@ -35,9 +36,8 @@ export function AppProviders({ children }: PropsWithChildren): ReactElement {
   return (
     <QueryProvider educatorId={educatorId}>
       <AppShellWiring>{children}</AppShellWiring>
-      {/* Ponto de extensão para T-803: montar <ResumeSessionPrompt /> aqui,
-          dentro da árvore do QueryProvider (edição em série, sem tocar no
-          restante da composição). */}
+      {/* SES-03: oferta de retomada da sessão salva (G-21). */}
+      <ResumeSessionPrompt />
     </QueryProvider>
   );
 }

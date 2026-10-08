@@ -19,7 +19,8 @@ vi.mock("expo-router", () => ({
   Stack: () => <Text>stack</Text>,
 }));
 
-vi.mock("@/theme/fonts", () => ({
+vi.mock("@/theme/fonts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/theme/fonts")>()),
   useAppFonts: () => ({ fontsLoaded, fontError: null }),
 }));
 
