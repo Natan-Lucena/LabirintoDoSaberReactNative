@@ -107,6 +107,7 @@ desenvolvimento, importe `setMockSessionAnswerScenario` de
 volte para `"success"` ao terminar. Os cenários mantêm o contrato do endpoint:
 corpo com `sessionId`, `taskId`, `selectedAlternativeId` e `timeToAnswer`, e
 sucesso com `200 TaskNotebookSession`.
+
 ## Relatório da sessão
 
 - `GET /task-notebook-session/report/:sessionId` responde aos relatórios fictícios
@@ -131,3 +132,18 @@ sucesso com `200 TaskNotebookSession`.
 - Para simular `500 AI_ANALYSIS_FAILED`, chame `setMockAiAnalysisScenario("failure")`
   de `src/mocks/handlers/session-analysis`; `"success"` volta ao normal.
 - `GET /anamnese/templates/` lista dois modelos fictícios.
+
+## Fidelidade ao backend real (2026-10-09)
+
+Conferido contra `https://labirinto-do-saber.vercel.app`; os mocks seguem estas escalas:
+
+- `accuracy` da análise do aluno é **fração de 0 a 1** (G-43); `percentageByCategory` e
+  `percentageByType` do relatório da sessão são de 0 a 100.
+- `timeToAnswer` e as médias do relatório (`averageTimePerQuestion`, `averageCorrectTime`,
+  `averageIncorrectTime`) são em **milissegundos**; `totalTimeSession` é em **segundos** (G-07).
+- `GET /educator/me` exige token no backend real (o mock não exige, o que escondeu o defeito do
+  login: ver PR #65). O login real chama `getMe(token)` com o token recém-emitido.
+- As rotas de IA (`/ai-task/generate`, `.../analysis/student/:id/ai`) levam de 30 a 45 s no
+  backend real; o cliente usa `AI_TIMEOUT_MS` (90 s) nelas.
+- O backend real não devolve tarefas no `start` da sessão (G-06): o player usa o conteúdo
+  escolhido no app.

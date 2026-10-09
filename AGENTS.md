@@ -13,11 +13,12 @@ O projeto é identificado no README como `LabirintoDoSaberReactNative`. Sua arqu
 mobile está definida em [Documentação do projeto](docs/PROJECT.md), que reúne a
 arquitetura React Native + TypeScript e a referência global da API fornecida pelo
 usuário. **Leia esse documento antes de planejar ou implementar funcionalidades.**
-O app Expo SDK 57 roda no Expo Go e tem 649 testes. Desde 2026-10-03 o trabalho segue a
-**Entrega 2** (novo design do Figma Make), começando pelo marco **V1**; em 2026-10-08 as
-ondas V1-0 a V1-4 estão na `main` (design system, casca nova, pacientes, banco de
-atividades, cadernos e grupos, atividades com mídia e com IA) e a sessão e os relatórios
-estão em andamento. Decisões documentadas não equivalem a recursos implementados. O estado
+O app Expo SDK 57 roda no Expo Go e tem 763 testes. Desde 2026-10-03 o trabalho segue a
+**Entrega 2** (novo design do Figma Make), começando pelo marco **V1**; em 2026-10-09 as
+30 tarefas da V1 estão implementadas: 21 já na `main` e as outras 8 (sessão, atividades 02/03
+e relatórios) mais as correções em PRs abertos, **integradas na branch
+`integracao/v1-entrega-2`** e validadas no emulador Android contra o backend real. Ver
+[ENTREGA-V1](docs/entrega-2/ENTREGA-V1.md). Decisões documentadas não equivalem a recursos implementados. O estado
 atual está no [TRACKING da Entrega 2](docs/entrega-2/TRACKING.md) e o contexto para
 retomar o trabalho em [CONTEXTO-SESSAO](docs/CONTEXTO-SESSAO.md). O histórico da
 Entrega 1 fica no [TRACKING da Entrega 1](docs/entrega-1/TRACKING.md).
@@ -38,10 +39,14 @@ Entrega 1 fica no [TRACKING da Entrega 1](docs/entrega-1/TRACKING.md).
   EAS (T-108) é opcional, só para recursos que o Expo Go não cobrir. Desde
   2026-09-25 (G-29), as telas são desenvolvidas com dados mockados (`src/mocks/`,
   flag `EXPO_PUBLIC_USE_MOCKS`); a integração real é a T-1004 (na Entrega 2, INT-01).
-  Desde 2026-10-07 não há backend acessível e o usuário decidiu seguir com mocks: o
-  código fica "pronto para integração" (endpoints tipados em `src/api/endpoints`, mocks
+  O código ficou "pronto para integração" (endpoints tipados em `src/api/endpoints`, mocks
   fiéis ao contrato, teste de integração pelo `apiClient` real e funções provisórias
-  marcadas com o gate, como G-06 e G-07).
+  marcadas com o gate). Desde 2026-10-09 há um backend acessível
+  (`https://labirinto-do-saber.vercel.app`, Swagger em `/api-docs/`, incompleto): a V1 foi
+  testada contra ele com `EXPO_PUBLIC_USE_MOCKS=false`. G-07 e G-43 foram resolvidos pela
+  evidência; G-06 segue aberto. Mocks continuam ligados por padrão em desenvolvimento.
+  Cuidados do Expo Go (NativeWind e `Pressable`, PDF, timeout de IA) em
+  [CONTEXTO-SESSAO §5](docs/CONTEXTO-SESSAO.md).
 - O backend é externo a este repositório. Sua referência fornecida descreve o
   contrato de integração; não alegue validação contra seu código ou produção sem
   evidência. Preserve métodos, caminhos, formatos e erros, inclusive peculiaridades.

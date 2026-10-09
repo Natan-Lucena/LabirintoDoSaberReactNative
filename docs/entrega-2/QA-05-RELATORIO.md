@@ -4,26 +4,26 @@
 > `Medium_Phone`) com **Expo Go**, `EXPO_PUBLIC_USE_MOCKS=false` e
 > `EXPO_PUBLIC_API_BASE_URL=https://labirinto-do-saber.vercel.app`, usando uma conta de teste
 > criada para a execução. O código testado foi a branch local de integração (`main` +
-> PRs #58 a #64 + correções #65 a #71). **iOS não foi testado.**
+> PRs #58 a #64 + correções #65 a #74). **iOS não foi testado.**
 
 ## 1. Resultado por tarefa
 
-| Tarefa                  | Resultado | Observação                                                                  |
-| ----------------------- | --------- | --------------------------------------------------------------------------- |
-| EXPO-01                 | OK        | Reabrir o Expo Go mantém a sessão (volta direto ao Início)                  |
-| Login, NAV-01/02, DS-06 | OK        | Login só passou depois da correção #65; botão sem fundo corrigido em #66    |
-| HOME-01, REC-01         | OK        | Início com o nome real; Recursos com nome e e-mail reais                    |
-| PAC-01, PAC-02, PAC-03  | OK        | Cadastro, lista, busca e ficha; percentuais corrigidos em #67               |
-| ATV-01, ATV-06          | OK        | Criar atividade manual e achar na busca                                     |
-| ATV-02, ATV-03          | OK        | Detalhe e motor ("Muito bem!", "acertou 1 de 1")                            |
-| ATV-07                  | OK        | Gerar com IA e salvar em lote (gera um grupo no backend)                    |
-| CNT-01                  | Parcial   | Criar caderno OK; editar e excluir caderno e grupo **não testados**         |
-| SES-01 a SES-04         | OK        | Iniciar, retomar, 10 respostas, encerrar com observação; lista em #71       |
-| REL-04                  | OK        | Tempos corrigidos em #68; "Enviar" corrigido em #70; "Imprimir" não testado |
-| REL-05                  | Parcial   | Síntese OK; salvar snapshot e histórico **não testados**                    |
-| REL-06                  | OK        | Análise em Markdown, depois do timeout de 90 s (#69)                        |
-| ATV-08 (imagem e áudio) | Não feito | Galeria, câmera e áudio não foram automatizados                             |
-| Agenda                  | n/a       | "Ainda não disponível nesta entrega" (previsto)                             |
+| Tarefa                  | Resultado | Observação                                                                                     |
+| ----------------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| EXPO-01                 | OK        | Reabrir o Expo Go mantém a sessão (volta direto ao Início)                                     |
+| Login, NAV-01/02, DS-06 | OK        | Login só passou depois da correção #65; botão sem fundo corrigido em #66                       |
+| HOME-01, REC-01         | OK        | Início com o nome real; Recursos com nome e e-mail reais                                       |
+| PAC-01, PAC-02, PAC-03  | OK        | Cadastro, lista, busca e ficha; percentuais corrigidos em #67                                  |
+| ATV-01, ATV-06          | OK        | Criar atividade manual e achar na busca                                                        |
+| ATV-02, ATV-03          | OK        | Detalhe e motor ("Muito bem!", "acertou 1 de 1")                                               |
+| ATV-07                  | OK        | Gerar com IA e salvar em lote (gera um grupo no backend)                                       |
+| CNT-01                  | Parcial   | Criar caderno OK; editar e excluir caderno e grupo **não testados**                            |
+| SES-01 a SES-04         | OK        | Iniciar, retomar, 10 respostas, encerrar com observação; lista em #71                          |
+| REL-04                  | OK        | Tempos corrigidos em #68; "Enviar" corrigido em #70; "Imprimir" abre a pré-visualização do PDF |
+| REL-05                  | Parcial   | Síntese e snapshot salvo OK; o histórico de snapshots **não foi verificado**                   |
+| REL-06                  | OK        | Análise em Markdown, depois do timeout de 90 s (#69)                                           |
+| ATV-08 (imagem e áudio) | OK        | Galeria e arquivo de áudio: upload e exibição validados. Câmera não testada                    |
+| Agenda                  | n/a       | "Ainda não disponível nesta entrega" (previsto)                                                |
 
 ## 2. Rotas exercitadas pelo app contra o backend real
 
@@ -38,7 +38,7 @@ Pelo `curl` (fora do app): `POST /educator/register`.
 
 **Não exercitadas:** `/appointment/*` (a Início carrega, sem agendamentos), `/task-group/*`,
 `PUT /task-notebook/update`, `DELETE /task-notebook/delete/:id`, `PUT /task/update`,
-`DELETE /task/delete/:id`, `POST /task/upload-media`, snapshots da análise,
+`DELETE /task/delete/:id`, o histórico de snapshots da análise,
 `GET /educator/get-last-sessions`, `/educator/update-password` e `/educator/generate-token`.
 O Swagger público (`/api-docs/`) lista só 18 rotas e **não inclui** várias das rotas acima.
 `GET /educator/me`, `/ai-task/generate` e `/task/batch` existem mesmo fora do Swagger.
@@ -71,7 +71,7 @@ Nenhum dado real de usuário foi usado. As credenciais da conta de teste não s�
 ## 6. O que falta para fechar INT-01 e QA-05
 
 1. Mergear os PRs #58 a #64 e as correções #65 a #71 (ordem no corpo de cada PR).
-2. Exercitar as rotas não exercitadas da seção 2 e ATV-08, CNT-01 (editar e excluir), snapshots e "Imprimir".
+2. Exercitar as rotas não exercitadas da seção 2, a câmera (ATV-08), CNT-01 (editar e excluir) e o histórico de snapshots.
 3. Validar a Agenda e os agendamentos quando a tela existir.
 4. Repetir no iOS.
 5. Decidir o G-06 com o dono do backend.

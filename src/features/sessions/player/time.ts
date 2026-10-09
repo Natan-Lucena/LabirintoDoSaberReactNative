@@ -1,6 +1,6 @@
 /**
- * G-07: o contrato não documenta a unidade. Mantemos milissegundos até a
- * confirmação do backend para concentrar a migração da unidade nesta borda.
+ * G-07: confirmado no backend real (2026-10-09): `timeToAnswer` é em
+ * milissegundos. Esta é a única borda de conversão do envio.
  */
 export function toApiTimeToAnswer(milliseconds: number): number {
   return Math.max(0, Math.floor(milliseconds));

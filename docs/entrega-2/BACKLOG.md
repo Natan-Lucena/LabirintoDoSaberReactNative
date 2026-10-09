@@ -128,6 +128,8 @@ design. O detalhe está em cada ficha.
 
 ### 4.0 Marco V1 (prioridade)
 
+> Estado em 2026-10-09: todas as fichas abaixo estão implementadas; o estado de cada uma (e as pendências) está no [TRACKING](TRACKING.md) e em [ENTREGA-V1](ENTREGA-V1.md).
+
 O que é a V1 (decisão do usuário em 2026-10-03, registrada como G-38 a G-41):
 
 - **Escopo:** primeira versão funcionando ponta a ponta com o backend real:
