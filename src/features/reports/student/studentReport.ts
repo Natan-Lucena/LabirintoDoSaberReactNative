@@ -1,5 +1,6 @@
 import type { StudentAnalysis } from "@/api/endpoints/session-analysis";
 import {
+  accuracyToPercent,
   escapeHtml,
   formatMetric,
   getCategoryLabel,
@@ -33,7 +34,7 @@ export function buildStudentReportHtml({
   const categories = Object.values(analysis.categories)
     .map(
       (item) =>
-        `<tr><td>${escapeHtml(getCategoryLabel(item.category))}</td><td>${formatMetric(item.accuracy)} (${item.correct} de ${item.total})</td></tr>`,
+        `<tr><td>${escapeHtml(getCategoryLabel(item.category))}</td><td>${formatMetric(accuracyToPercent(item.accuracy))} (${item.correct} de ${item.total})</td></tr>`,
     )
     .join("");
   const sessions = analysis.sessions.length
@@ -49,5 +50,5 @@ export function buildStudentReportHtml({
     ? `<h2>Análise psicopedagógica (IA)</h2>${markdownToHtml(aiAnalysis)}`
     : "";
 
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><style>body{font-family:Arial,sans-serif;color:#173331;padding:28px}h1{color:#116f69}h2{font-size:16px;margin-top:24px}table{width:100%;border-collapse:collapse}td{border-bottom:1px solid #dfeae8;padding:8px 0}td:last-child{text-align:right;font-weight:bold}.metric{background:#f6faf9;border-radius:10px;padding:12px;margin:8px 0}small{color:#5a7471;font-weight:normal}</style></head><body><h1>Relatório do paciente</h1><p><strong>Paciente:</strong> ${escapeHtml(studentName)}</p><p><strong>Período:</strong> ${escapeHtml(periodLabel)}</p><div class="metric"><strong>Acerto geral:</strong> ${formatMetric(analysis.total.accuracy)} (${analysis.total.correct} de ${analysis.total.total})</div><h2>Acerto por categoria</h2><table>${categories}</table><h2>Sessões do período</h2>${sessions}${aiSection}</body></html>`;
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><style>body{font-family:Arial,sans-serif;color:#173331;padding:28px}h1{color:#116f69}h2{font-size:16px;margin-top:24px}table{width:100%;border-collapse:collapse}td{border-bottom:1px solid #dfeae8;padding:8px 0}td:last-child{text-align:right;font-weight:bold}.metric{background:#f6faf9;border-radius:10px;padding:12px;margin:8px 0}small{color:#5a7471;font-weight:normal}</style></head><body><h1>Relatório do paciente</h1><p><strong>Paciente:</strong> ${escapeHtml(studentName)}</p><p><strong>Período:</strong> ${escapeHtml(periodLabel)}</p><div class="metric"><strong>Acerto geral:</strong> ${formatMetric(accuracyToPercent(analysis.total.accuracy))} (${analysis.total.correct} de ${analysis.total.total})</div><h2>Acerto por categoria</h2><table>${categories}</table><h2>Sessões do período</h2>${sessions}${aiSection}</body></html>`;
 }

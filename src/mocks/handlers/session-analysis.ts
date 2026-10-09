@@ -100,7 +100,7 @@ function analysisFor(
 
   const answers = sessions.flatMap((session) => session.answers);
   const correct = answers.filter((answer) => answer.isCorrect).length;
-  const accuracy = answers.length === 0 ? 0 : (correct / answers.length) * 100;
+  const accuracy = answers.length === 0 ? 0 : correct / answers.length;
 
   return {
     categories: {

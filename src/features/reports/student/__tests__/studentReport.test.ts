@@ -5,9 +5,9 @@ import { buildStudentReportHtml } from "../studentReport";
 
 const ANALYSIS: StudentAnalysis = {
   categories: {
-    reading: { category: "reading", total: 3, correct: 2, accuracy: 66.6 },
+    reading: { category: "reading", total: 3, correct: 2, accuracy: 0.666 },
   },
-  total: { total: 3, correct: 2, accuracy: 66.6 },
+  total: { total: 3, correct: 2, accuracy: 0.666 },
   sessions: [
     {
       id: "session-1",
