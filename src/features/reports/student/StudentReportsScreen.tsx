@@ -1,11 +1,7 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import {
@@ -30,6 +26,7 @@ import {
 } from "@/components/ds";
 import { LoadingState } from "@/components/LoadingState";
 import {
+  accuracyToPercent,
   formatMetric,
   getCategoryLabel,
 } from "@/features/reports/session/sessionReport";
@@ -62,8 +59,8 @@ function questionsLabel(total: number): string {
 
 /**
  * REL-05: análise numérica do paciente por período, com snapshot salvo no
- * histórico e exportação em PDF gerado no aparelho. A escala do `accuracy`
- * (0–100) é uma suposição aberta no G-43, concentrada em `formatMetric`.
+ * histórico e exportação em PDF gerado no aparelho. O `accuracy` vem como
+ * fração de 0 a 1 (G-43, confirmado no backend) e é convertido por `accuracyToPercent`.
  */
 export function StudentReportsScreen(): ReactElement {
   const router = useRouter();
@@ -246,13 +243,13 @@ export function StudentReportsScreen(): ReactElement {
                 <InfoCard
                   icon="chart"
                   title="Acerto geral"
-                  description={`${formatMetric(data.total.accuracy)} · ${data.total.correct} de ${questionsLabel(data.total.total)}`}
+                  description={`${formatMetric(accuracyToPercent(data.total.accuracy))} · ${data.total.correct} de ${questionsLabel(data.total.total)}`}
                 />
 
                 <View style={styles.card}>
                   <MiniBars
-                    values={Object.values(data.categories).map(
-                      (item) => item.accuracy,
+                    values={Object.values(data.categories).map((item) =>
+                      accuracyToPercent(item.accuracy),
                     )}
                     accessibilityLabel="Acerto por categoria"
                   />
@@ -262,7 +259,7 @@ export function StudentReportsScreen(): ReactElement {
                         {getCategoryLabel(item.category)}
                       </Text>
                       <Text style={styles.rowValue}>
-                        {formatMetric(item.accuracy)}
+                        {formatMetric(accuracyToPercent(item.accuracy))}
                       </Text>
                     </View>
                   ))}
@@ -336,7 +333,7 @@ export function StudentReportsScreen(): ReactElement {
                   key={`${item.studentId}-${index}`}
                   icon="file"
                   title={describeSnapshotPeriod(item)}
-                  description={`${questionsLabel(item.totalQuestions)} · ${formatMetric(item.accuracy)} de acerto`}
+                  description={`${questionsLabel(item.totalQuestions)} · ${formatMetric(accuracyToPercent(item.accuracy))} de acerto`}
                 />
               ))
             ) : (

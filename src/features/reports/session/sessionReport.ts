@@ -30,6 +30,15 @@ export function formatMetric(value: number | null): string {
   return value === null ? "—" : `${Math.round(value)}%`;
 }
 
+/**
+ * G-43: `accuracy` das análises do aluno vem como fração de 0 a 1
+ * (confirmado no backend: `0.8` para 8 de 10). Os percentuais do relatório da
+ * sessão já vêm de 0 a 100 e usam `formatMetric` direto.
+ */
+export function accuracyToPercent(accuracy: number): number {
+  return accuracy * 100;
+}
+
 export function getCategoryLabel(category: string): string {
   return categoryLabels[category] ?? category;
 }

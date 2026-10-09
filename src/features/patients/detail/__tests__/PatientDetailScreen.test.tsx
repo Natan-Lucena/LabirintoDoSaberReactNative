@@ -96,9 +96,9 @@ function setQueries(): void {
   appointmentsQuery = query([]);
   analysisQuery = query({
     categories: {
-      reading: { category: "reading", total: 2, correct: 1, accuracy: 50 },
+      reading: { category: "reading", total: 2, correct: 1, accuracy: 0.5 },
     },
-    total: { total: 2, correct: 1, accuracy: 50 },
+    total: { total: 2, correct: 1, accuracy: 0.5 },
     sessions,
   });
   sessionsQuery = query(sessions);
@@ -144,9 +144,10 @@ describe("PatientDetailScreen (PAC-03)", () => {
 
     expect(screen.getAllByText("Lia Monteiro")).toHaveLength(2);
     expect(screen.getByText("8 anos · Ativo")).toBeTruthy();
-    expect(screen.getByText("Leitura")).toBeTruthy();
+    // dificuldade mapeada + rótulo traduzido da categoria "reading"
+    expect(screen.getAllByText("Leitura")).toHaveLength(2);
     expect(screen.getByText("50% de acerto geral")).toBeTruthy();
-    expect(screen.getByLabelText("reading: 50%")).toBeTruthy();
+    expect(screen.getByLabelText("Leitura: 50%")).toBeTruthy();
     expect(screen.getByText("Leitura inicial")).toBeTruthy();
 
     await fireEvent.press(

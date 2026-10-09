@@ -38,9 +38,9 @@ const ANA = {
 
 const ANALYSIS: StudentAnalysis = {
   categories: {
-    reading: { category: "reading", total: 3, correct: 2, accuracy: 66.6 },
+    reading: { category: "reading", total: 3, correct: 2, accuracy: 0.666 },
   },
-  total: { total: 3, correct: 2, accuracy: 66.6 },
+  total: { total: 3, correct: 2, accuracy: 0.666 },
   sessions: [
     {
       id: "session-1",
@@ -61,7 +61,7 @@ const SNAPSHOT: StudentAnalysisReport = {
   categories: [],
   totalQuestions: 3,
   totalCorrect: 2,
-  accuracy: 66.6,
+  accuracy: 0.666,
 };
 
 function renderScreen() {
@@ -74,9 +74,7 @@ function renderScreen() {
 }
 
 async function chooseStudent() {
-  await waitFor(() =>
-    expect(screen.getByLabelText("Paciente")).toBeTruthy(),
-  );
+  await waitFor(() => expect(screen.getByLabelText("Paciente")).toBeTruthy());
   await fireEvent.press(screen.getByLabelText("Paciente"));
   await fireEvent.press(screen.getByLabelText("Ana Souza"));
 }
@@ -141,7 +139,10 @@ describe("StudentReportsScreen", () => {
     await renderScreen();
     await chooseStudent();
 
-    await fireEvent.changeText(screen.getByLabelText("Quantidade de sessões"), "0");
+    await fireEvent.changeText(
+      screen.getByLabelText("Quantidade de sessões"),
+      "0",
+    );
     await generate();
 
     expect(
@@ -172,9 +173,7 @@ describe("StudentReportsScreen", () => {
     await chooseStudent();
     await generate();
 
-    await waitFor(() =>
-      expect(screen.getByRole("alert")).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
     await act(async () =>
       fireEvent.press(screen.getByRole("button", { name: "Tentar novamente" })),
     );
@@ -221,7 +220,9 @@ describe("StudentReportsScreen", () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByText("Não foi possível salvar o snapshot.")).toBeTruthy(),
+      expect(
+        screen.getByText("Não foi possível salvar o snapshot."),
+      ).toBeTruthy(),
     );
     expect(createStudentSnapshot).toHaveBeenCalledTimes(1);
   });
