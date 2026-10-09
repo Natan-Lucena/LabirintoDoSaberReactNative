@@ -1,10 +1,11 @@
 // `InfoCard` do Figma Make (`.info-card`). Ver ficha DS-05.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { color, fontFamilies, shape } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface InfoCardAction {
   label: string;
@@ -84,7 +85,7 @@ export function InfoCard({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
         {action ? (
-          <Pressable
+          <StaticPressable
             onPress={action.onPress}
             accessibilityRole="button"
             accessibilityLabel={action.label}
@@ -96,7 +97,7 @@ export function InfoCard({
           >
             <Text style={styles.actionLabel}>{action.label}</Text>
             <FigmaIcon name="arrow" size={14} color={color.brand[700]} />
-          </Pressable>
+          </StaticPressable>
         ) : null}
       </View>
     </>
@@ -104,7 +105,7 @@ export function InfoCard({
 
   if (onPress) {
     return (
-      <Pressable
+      <StaticPressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? title}
@@ -114,7 +115,7 @@ export function InfoCard({
         ]}
       >
         {content}
-      </Pressable>
+      </StaticPressable>
     );
   }
 

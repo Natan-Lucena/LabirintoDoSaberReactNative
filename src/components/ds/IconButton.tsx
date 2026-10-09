@@ -1,10 +1,11 @@
 // `IconButton` do Figma Make (`.icon-button`, 42×42). Ver ficha DS-03.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { color } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface IconButtonProps {
   icon: FigmaIconName;
@@ -46,7 +47,7 @@ export function IconButton({
   }
 
   return (
-    <Pressable
+    <StaticPressable
       onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -61,6 +62,6 @@ export function IconButton({
       ]}
     >
       <FigmaIcon name={icon} size={18} color={color.ink[800]} />
-    </Pressable>
+    </StaticPressable>
   );
 }

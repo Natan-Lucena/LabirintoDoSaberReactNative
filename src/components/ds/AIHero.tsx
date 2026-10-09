@@ -2,10 +2,11 @@
 // sólido. G-42: fundo `semanticColor.primaryFill` (brand-700) com texto
 // `semanticColor.textOnPrimary` (branco).
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { color, fontFamilies, semanticColor, shape } from "../../theme";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface AIHeroAction {
   label: string;
@@ -65,7 +66,7 @@ export function AIHero({
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       {action ? (
-        <Pressable
+        <StaticPressable
           onPress={action.onPress}
           accessibilityRole="button"
           accessibilityLabel={action.label}
@@ -75,7 +76,7 @@ export function AIHero({
           ]}
         >
           <Text style={styles.actionLabel}>{action.label}</Text>
-        </Pressable>
+        </StaticPressable>
       ) : null}
     </View>
   );

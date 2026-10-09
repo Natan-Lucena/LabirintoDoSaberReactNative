@@ -2,13 +2,8 @@ import type { ReactElement } from "react";
 import { useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { Appointment, Student } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
@@ -32,6 +27,7 @@ import {
   sortPatientsByName,
   type PatientFilter,
 } from "./selectors";
+import { StaticPressable } from "@/components/ds/StaticPressable";
 
 const filterOptions = [
   { key: "all", label: "Todos" },
@@ -61,7 +57,7 @@ function PatientCard({
   onPress: () => void;
 }): ReactElement {
   return (
-    <Pressable
+    <StaticPressable
       accessibilityRole="button"
       accessibilityLabel={`Abrir ficha de ${patient.name}`}
       onPress={onPress}
@@ -88,7 +84,7 @@ function PatientCard({
         ) : null}
       </View>
       <FigmaIcon name="chevron" size={18} color={color.ink[500]} />
-    </Pressable>
+    </StaticPressable>
   );
 }
 
@@ -115,6 +111,7 @@ function StatePanel({
 
 export function PatientsListScreen(): ReactElement {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const studentsQuery = useStudents();
   const appointmentsQuery = useAppointments();
   const [search, setSearch] = useState("");
@@ -159,7 +156,7 @@ export function PatientsListScreen(): ReactElement {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.controls}>
+      <View style={[styles.controls, { paddingTop: 20 + insets.top }]}>
         <Text style={styles.eyebrow}>{patients.length} pacientes ativos</Text>
         <Text style={styles.title} accessibilityRole="header">
           Pacientes
