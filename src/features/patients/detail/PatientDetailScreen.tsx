@@ -271,8 +271,8 @@ export function PatientDetailScreen({
                 accessibilityLabel={`Ver relatório da sessão ${session.name}`}
                 onPress={() =>
                   router.push({
-                    pathname: "/shell/coming-soon",
-                    params: { title: "Relatório da sessão" },
+                    pathname: "/reports/session/[id]",
+                    params: { id: session.id },
                   })
                 }
                 style={styles.sessionRow}

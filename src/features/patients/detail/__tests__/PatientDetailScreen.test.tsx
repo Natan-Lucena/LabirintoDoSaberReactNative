@@ -164,8 +164,8 @@ describe("PatientDetailScreen (PAC-03)", () => {
       params: { title: "Editar paciente" },
     });
     expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Relatório da sessão" },
+      pathname: "/reports/session/[id]",
+      params: { id: "session-1" },
     });
     expect(routerPush).toHaveBeenCalledWith("/session/student");
   });
