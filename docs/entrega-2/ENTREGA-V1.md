@@ -9,8 +9,9 @@
 
 - As **30 tarefas** da lista da V1 (Base, Telas principais, Atividades, Sessão, Relatórios e
   Fechamento) estão implementadas.
-- Elas estão reunidas na branch **`integracao/v1-entrega-2`**: a `main` (21 tarefas já
-  mergeadas) mais os PRs #58 a #74, que ainda **não foram mergeados** na `main` do repositório.
+- Elas entraram na `main` pelo **PR #75** (branch `integracao/v1-entrega-2`, merge commit):
+  a `main` (21 tarefas já mergeadas) + os PRs dos colegas (#51 a #57, autoria preservada) +
+  as correções do teste no backend real (#65 a #74).
 - A branch passa em `pnpm run typecheck`, `pnpm run lint`, `pnpm run test` (**763 testes**) e
   `python scripts/check-docs.py`, todos com código 0.
 - O app foi testado **no emulador Android (Expo Go), com o backend real e os mocks desligados**,
@@ -49,11 +50,16 @@ e na branch de integração. "Validada" quer dizer testada no emulador contra o 
 | INT-01 Integração real          | n/a    | Parcial                 | 17 rotas exercitadas pelo app (seção 5 do QA)                                        |
 | QA-05 Teste ponta a ponta       | n/a    | Parcial                 | Só Android                                                                           |
 
-## 3. PRs e ordem
+## 3. PRs
 
-Todos foram abertos a partir de um fork (`VictorVeras7`) contra
-`Natan-Lucena/LabirintoDoSaberReactNative`. Vários **empilham** sobre outros: o diff deles inclui
-os commits dos PRs anteriores.
+**Integração:** PR #75 (`integracao/v1-entrega-2` → `main`, merge commit). Ele reúne todos os
+PRs abaixo e traz os conflitos já resolvidos.
+
+Os PRs **#51 a #57** são os dos colegas (Natan Lucena e emytonton): #51 SES-02, #52 REL-04,
+#53 SES-04, #54 SES-03, #55 ATV-02/ATV-03, #56 REL-05 e #57 REL-06. Os PRs **#58 a #74** foram
+abertos a partir de um fork (`VictorVeras7`): #58 a #64 são cópias dos mesmos commits dos
+colegas e #65 a #74 são as correções do teste no backend real. Vários empilhavam sobre outros
+(o diff incluía os commits dos PRs anteriores) e o #58 conflitava com a `main`.
 
 | PR  | Conteúdo                                       | Depende de                                        |
 | --- | ---------------------------------------------- | ------------------------------------------------- |
@@ -75,10 +81,8 @@ os commits dos PRs anteriores.
 | #71 | Atualizar a ficha ao encerrar a sessão         | #58, #61                                          |
 | #72 | Relatório QA-05 e gates (docs)                 | `main`                                            |
 
-**Caminho recomendado:** mergear a branch `integracao/v1-entrega-2` de uma vez (um PR só), com
-"Create a merge commit", e fechar #58 a #74 como substituídos. A alternativa é mergear um a um na
-ordem acima, com merge commit (não squash, por causa das pilhas), rodando `gh pr update-branch`
-e esperando o CI entre cada um.
+**Como entrou:** um PR só (#75), com "Create a merge commit" (não squash), preservando os
+commits e a autoria dos colegas. Os PRs #51 a #74 ficam incluídos nele.
 
 ## 4. O que foi encontrado e corrigido no teste contra o backend real
 

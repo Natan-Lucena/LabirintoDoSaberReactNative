@@ -8,17 +8,19 @@
 
 Estado em 2026-10-09:
 
-- **As 30 tarefas da V1 estão implementadas e integradas** na branch `integracao/v1-entrega-2`
-  (a `main` + os PRs #58 a #74 da seção 2), com **763 testes**, typecheck, lint e checagem de
-  documentação com código 0. A integração ainda **não foi mergeada na `main` do repositório**.
+- **As 30 tarefas da V1 estão implementadas e integradas na `main` pelo PR #75** (branch
+  `integracao/v1-entrega-2`): a `main` + os PRs dos colegas (#51 a #57, autoria preservada) +
+  as correções do teste no backend real (#65 a #74), com **763 testes**, typecheck, lint e
+  checagem de documentação com código 0.
 - O app foi validado **no emulador Android (Expo Go) contra o backend real**
   (`labirinto-do-saber.vercel.app`), com mocks desligados. Resultado e evidências em
   [QA-05-RELATORIO](QA-05-RELATORIO.md) e em [ENTREGA-V1](ENTREGA-V1.md).
 - **iOS, aparelho físico (câmera) e várias rotas** ainda não foram exercitados (INT-01 e QA-05
   seguem parciais).
-- Desde 2026-10-06, cada tarefa entra por PR. Nesta etapa os 17 PRs foram abertos a partir de
-  um fork (a conta não tinha escrita) e **empilham uns sobre os outros**; o caminho recomendado
-  é mergear a integração de uma vez (ENTREGA-V1 §6).
+- Desde 2026-10-06, cada tarefa entra por PR. Os PRs da V1 empilhavam uns sobre os outros e
+  conflitavam entre si, então a integração entrou de uma vez (PR #75, merge commit). Os PRs
+  #51 a #57 (colegas) e #58 a #74 (cópias e correções abertas de um fork) ficam incluídos no
+  #75; os autores podem reabrir qualquer um se preferirem outro fluxo.
 - G-07 e G-43 foram **resolvidos pela evidência do backend**; G-06 segue aberto (o player usa o
   caderno escolhido no app). G-44 a G-46 registram decisões técnicas desta etapa.
 
