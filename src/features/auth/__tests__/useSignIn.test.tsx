@@ -83,6 +83,7 @@ describe("useSignIn (AC-401-02, AC-401-03, AC-401-04)", () => {
     await screen.findByText("no-error");
 
     expect(lastSucceeded).toBe(true);
+    expect(getMeMock).toHaveBeenCalledWith("tok-1");
     expect(activateEducatorMock).toHaveBeenCalledWith("edu-1");
     expect(useAuthStore.getState().status).toBe("authenticated");
     expect(useAuthStore.getState().educatorId).toBe("edu-1");
