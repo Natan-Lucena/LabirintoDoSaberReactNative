@@ -1,8 +1,11 @@
 import type { TaskNotebookSession } from "@/api/types";
-import type { StudentAnalysis } from "@/api/endpoints/session-analysis";
+import type {
+  StudentAnalysis,
+  StudentAnalysisReport,
+} from "@/api/endpoints/session-analysis";
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
 import { registerMockHandler } from "./registry";
-import { MockApiError } from "./types";
+import { MockApiError, MockNetworkError } from "./types";
 
 const analysisSessions: TaskNotebookSession[] = [
   {
@@ -56,6 +59,18 @@ const analysisSessions: TaskNotebookSession[] = [
   },
 ];
 
+export type MockSessionAnswerScenario =
+  "success" | "already-answered" | "network-error";
+
+let answerScenario: MockSessionAnswerScenario = "success";
+
+/** Cenário manual do player; só é usado com EXPO_PUBLIC_USE_MOCKS=true. */
+export function setMockSessionAnswerScenario(
+  scenario: MockSessionAnswerScenario,
+): void {
+  answerScenario = scenario;
+}
+
 function sessionsForStudent(studentId: string): TaskNotebookSession[] {
   return analysisSessions.filter((session) => session.studentId === studentId);
 }
@@ -85,7 +100,7 @@ function analysisFor(
 
   const answers = sessions.flatMap((session) => session.answers);
   const correct = answers.filter((answer) => answer.isCorrect).length;
-  const accuracy = answers.length === 0 ? 0 : (correct / answers.length) * 100;
+  const accuracy = answers.length === 0 ? 0 : correct / answers.length;
 
   return {
     categories: {
@@ -108,6 +123,45 @@ registerMockHandler(
       throw new MockApiError(400, "INVALID_STUDENT_ID");
     }
     return { status: 200, data: sessionsForStudent(params.studentId) };
+  },
+);
+
+registerMockHandler(
+  { method: "post", path: "/task-notebook-session/answer" },
+  ({ body }) => {
+    if (answerScenario === "network-error") {
+      throw new MockNetworkError();
+    }
+    if (answerScenario === "already-answered") {
+      throw new MockApiError(400, "TASK_ALREADY_ANSWERED");
+    }
+
+    const input = body as {
+      sessionId: string;
+      taskId: string;
+      selectedAlternativeId: string;
+      timeToAnswer: number;
+    };
+    return {
+      status: 200,
+      data: {
+        id: input.sessionId,
+        studentId: "student-1",
+        educatorId: MOCK_EDUCATOR.id,
+        name: "Sessão mock",
+        startedAt: "2026-10-07T10:00:00-03:00",
+        answers: [
+          {
+            taskId: input.taskId,
+            selectedAlternativeId: input.selectedAlternativeId,
+            // O contrato retorna este campo na sessão atualizada; o player não o revela.
+            isCorrect: false,
+            timeToAnswer: input.timeToAnswer,
+            answeredAt: "2026-10-07T10:01:00-03:00",
+          },
+        ],
+      } satisfies TaskNotebookSession,
+    };
   },
 );
 
@@ -150,6 +204,135 @@ registerMockHandler(
     if (session.finishedAt)
       throw new MockApiError(400, "SESSION_ALREADY_FINISHED");
     session.finishedAt = new Date().toISOString();
+    return { status: 200, data: session };
+  },
+);
+
+const analysisSnapshots: StudentAnalysisReport[] = [];
+
+registerMockHandler(
+  {
+    method: "post",
+    path: "/task-notebook-session/analysis/student/:studentId/snapshot",
+  },
+  ({ params }) => {
+    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+      throw new MockApiError(404, "STUDENT_NOT_FOUND");
+    }
+    const analysis = analysisFor(params.studentId, params);
+    const snapshot: StudentAnalysisReport = {
+      studentId: params.studentId,
+      ...(params.limit ? { limit: Number(params.limit) } : {}),
+      ...(params.startDate ? { startDate: params.startDate } : {}),
+      ...(params.endDate ? { endDate: params.endDate } : {}),
+      sessionIds: analysis.sessions.map((session) => session.id),
+      categories: Object.values(analysis.categories).map((item) => ({
+        category: item.category,
+        total: item.total,
+        correct: item.correct,
+        accuracy: item.accuracy,
+      })),
+      totalQuestions: analysis.total.total,
+      totalCorrect: analysis.total.correct,
+      accuracy: analysis.total.accuracy,
+    };
+    analysisSnapshots.push(snapshot);
+    return { status: 200, data: snapshot };
+  },
+);
+
+registerMockHandler(
+  {
+    method: "get",
+    path: "/task-notebook-session/analysis/student/:studentId/history",
+  },
+  ({ params }) => {
+    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+      throw new MockApiError(400, "INVALID_STUDENT_ID");
+    }
+    return {
+      status: 200,
+      data: analysisSnapshots.filter(
+        (snapshot) => snapshot.studentId === params.studentId,
+      ),
+    };
+  },
+);
+
+export type MockAiAnalysisScenario = "success" | "failure";
+
+let aiAnalysisScenario: MockAiAnalysisScenario = "success";
+
+/** Cenário manual da análise com IA; só vale com EXPO_PUBLIC_USE_MOCKS=true. */
+export function setMockAiAnalysisScenario(
+  scenario: MockAiAnalysisScenario,
+): void {
+  aiAnalysisScenario = scenario;
+}
+
+registerMockHandler(
+  {
+    method: "get",
+    path: "/task-notebook-session/analysis/student/:studentId/ai",
+  },
+  ({ params }) => {
+    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+      throw new MockApiError(404, "STUDENT_NOT_FOUND");
+    }
+    if (params.limit && (params.startDate || params.endDate)) {
+      throw new MockApiError(400, "Bad Request", "Bad Request");
+    }
+    if (aiAnalysisScenario === "failure") {
+      throw new MockApiError(500, "AI_ANALYSIS_FAILED");
+    }
+
+    const analysis = analysisFor(params.studentId, params);
+    const anamnese = params.templateId
+      ? "\n\nA análise considerou as respostas da anamnese informada."
+      : "";
+    return {
+      status: 200,
+      data: {
+        analysis: [
+          "## Visão Geral",
+          `O paciente respondeu ${analysis.total.total} questões no período, com ${analysis.total.correct} acertos.${anamnese}`,
+          "## Maiores Acertos e Pontos Fortes",
+          "- Boa atenção durante a leitura\n- Reconhece **palavras do cotidiano** com facilidade",
+          "## Principais Fraquezas e Dificuldades",
+          "- Hesita em enunciados mais longos",
+          "## Observações de Padrões",
+          "Os erros aparecem quando há mais de uma alternativa parecida.",
+          "## Pontos de Melhoria",
+          "1. Ampliar o vocabulário\n2. Praticar a releitura do enunciado",
+          "## Guia de Intervenção",
+          "- Atividades curtas com apoio de imagem\n- Reforço positivo a cada acerto",
+          "## Considerações Finais",
+          "Manter o acompanhamento e reavaliar em seis sessões.",
+        ].join("\n\n"),
+      },
+    };
+  },
+);
+
+registerMockHandler(
+  { method: "post", path: "/task-notebook-session/observation" },
+  ({ body }) => {
+    const input = body as { sessionId?: unknown; observation?: unknown };
+    if (
+      typeof input.sessionId !== "string" ||
+      typeof input.observation !== "string" ||
+      input.observation.length < 1
+    ) {
+      throw new MockApiError(400, "Validation error", "Validation error");
+    }
+    const session = analysisSessions.find(
+      (item) => item.id === input.sessionId,
+    );
+    if (!session) throw new MockApiError(404, "SESSION_NOT_FOUND");
+    if (!session.finishedAt) {
+      throw new MockApiError(400, "SESSION_NOT_FINISHED");
+    }
+    session.observation = input.observation;
     return { status: 200, data: session };
   },
 );

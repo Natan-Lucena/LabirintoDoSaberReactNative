@@ -2,11 +2,12 @@
 // G-42: ícone sobre fundo de marca usa `semanticColor.primaryFill`
 // (brand-700) com `semanticColor.textOnPrimary` (branco).
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { semanticColor, shape } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface FabProps {
   onPress: () => void;
@@ -34,7 +35,7 @@ export function Fab({
   const reduceMotion = useReduceMotion();
 
   return (
-    <Pressable
+    <StaticPressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -44,6 +45,6 @@ export function Fab({
       ]}
     >
       <FigmaIcon name={icon} size={22} color={semanticColor.textOnPrimary} />
-    </Pressable>
+    </StaticPressable>
   );
 }

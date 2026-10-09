@@ -105,6 +105,8 @@ N2, N3, N4 e N5 podem andar em paralelo depois de N1, com arquivos disjuntos.
 
 ### 4.1 Marco V1 — primeira versão funcionando (prioridade)
 
+> Estado em 2026-10-09: as 30 tarefas da V1 estão implementadas e entraram na `main` pelo PR #75 (integração, merge commit). Ver [ENTREGA-V1](ENTREGA-V1.md) e [TRACKING](TRACKING.md).
+
 **Decisões do usuário (2026-10-03):**
 
 - **Visual:** a V1 segue o Figma Make e reaproveita componentes e lógica da Entrega 1 (G-38).

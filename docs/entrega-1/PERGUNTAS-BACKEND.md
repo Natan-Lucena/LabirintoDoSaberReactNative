@@ -66,7 +66,9 @@
 Preencher com data, quem respondeu, resposta e o impacto no BACKLOG. Não copiar
 credenciais nem dados reais.
 
-- P1:
-- P2:
-- P3:
-- P4:
+- P1: sem resposta. A recuperação de senha não foi exercitada.
+- P2: sem resposta do dono do backend. Observado em 2026-10-09: o `start` não devolve tarefas; o app usa o caderno escolhido localmente (G-06 aberto).
+- P3: **respondida por observação do backend real em 2026-10-09** (não por resposta do dono). `timeToAnswer` e as médias do relatório vêm em milissegundos (ex.: `12679`, `6816.2`); `totalTimeSession` vem em segundos (`159.852`). G-07 resolvido.
+- P4: sem resposta.
+- P5: **respondida por observação em 2026-10-09.** `total.accuracy` e `categories[*].accuracy` são frações de 0 a 1 (`0.8`, `0.888…`); `percentageByCategory` e `percentageByType` do relatório da sessão são de 0 a 100. G-43 resolvido.
+- P6 (nova, 2026-10-09): o Swagger público (`/api-docs/`) lista só 18 rotas e não inclui rotas que o app usa e que existem no deploy: `GET /educator/me`, `POST /ai-task/generate`, `POST /task/batch`, `GET /task-notebook-session/analysis/student/:id` (e `/ai`). Pedir ao dono para atualizar o Swagger. Outras rotas do app (`/appointment/*`, `/task-group/*`, `PUT /task-notebook/update`, `POST /task/upload-media`) responderam 401 sem token, mas **não foram exercitadas**.

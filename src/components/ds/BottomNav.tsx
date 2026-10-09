@@ -3,12 +3,13 @@
 // `@/components/TabBar` (Entrega 1) na nova casca; o componente antigo
 // permanece até a limpeza da NAV-03.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { color, fontFamilies, shape } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface BottomNavItem {
   key: string;
@@ -33,7 +34,7 @@ export function BottomNav({ items, activeKey }: BottomNavProps): ReactElement {
         const tint = isActive ? color.brand[700] : color.ink[500];
 
         return (
-          <Pressable
+          <StaticPressable
             key={item.key}
             onPress={item.onPress}
             accessibilityRole="tab"
@@ -60,7 +61,7 @@ export function BottomNav({ items, activeKey }: BottomNavProps): ReactElement {
             >
               {item.label}
             </Text>
-          </Pressable>
+          </StaticPressable>
         );
       })}
     </View>

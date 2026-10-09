@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/client";
+import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
 import type { TaskCategory, TaskInput } from "@/api/types";
 
 export interface GenerateAiTasksInput {
@@ -19,6 +20,7 @@ export async function generateAiTasks(
   const response = await apiClient.post<GenerateAiTasksResponse>(
     "/ai-task/generate",
     input,
+    { timeout: AI_TIMEOUT_MS },
   );
   return response.data;
 }

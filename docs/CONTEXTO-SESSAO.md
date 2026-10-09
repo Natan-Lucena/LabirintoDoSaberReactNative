@@ -1,4 +1,4 @@
-# Contexto da sessão de orquestração — handoff (atualizado em 2026-10-08)
+# Contexto da sessão de orquestração — handoff (atualizado em 2026-10-09)
 
 > Este arquivo resume o que não está óbvio nos outros documentos, para retomar sem refazer o
 > discovery, seja no Claude Code, seja no OpenCode. A fonte canônica do progresso é o
@@ -6,17 +6,17 @@
 
 ## 1. Onde estamos
 
-| Item                  | Estado                                                                                                                                                                                                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                                           |
-| Entrega vigente       | **Entrega 2**, novo design do Figma Make (`L7sCNfMhrzOzhtlNpS3cHr`). Marco atual: **V1**, ver [ROADMAP §4.1](entrega-2/ROADMAP.md#41-marco-v1--primeira-versão-funcionando-prioridade) e [BACKLOG §4.0](entrega-2/BACKLOG.md#40-marco-v1-prioridade)             |
-| Escopo da V1          | Criar atividade (manual com imagem e áudio, e com IA), cadernos e grupos, pacientes, sessão (player + registro) e relatórios (sessão, aluno, análise por IA em Markdown), ponta a ponta com o backend real                                                       |
-| O que já está na main | V1-0 a V1-4: Expo Go, design system, upload de mídia, casca nova (abas Início, Agenda, Pacientes, Recursos), Home, lista, cadastro e ficha de paciente, banco de atividades, cadernos e grupos com edição, criar e editar atividade com mídia, atividades com IA |
-| Em andamento          | SES-01 (PR #50), SES-02 (player, worktree `w4`) e REL-04 (relatório da sessão, worktree `vis`)                                                                                                                                                                   |
-| Próximas              | SES-03, SES-04, REL-05, REL-06, ATV-02/ATV-03; depois INT-01 e QA-05                                                                                                                                                                                             |
-| Backend               | **Nenhum backend acessível** (2026-10-07). Decisão do usuário: **seguir com mocks**. Gates abertos G-06, G-07 e G-43 (§3 do TRACKING), com perguntas em [PERGUNTAS-BACKEND](entrega-1/PERGUNTAS-BACKEND.md)                                                      |
-| Qualidade             | 649 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links                                                                                                                                                        |
-| Validação manual      | Pendente no Expo Go, pelo usuário: EXPO-01, ATV-08 e as telas da V1-2 a V1-4                                                                                                                                                                                     |
+| Item                  | Estado                                                                                                                                                                                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                               |
+| Entrega vigente       | **Entrega 2**, novo design do Figma Make (`L7sCNfMhrzOzhtlNpS3cHr`). Marco atual: **V1**, ver [ROADMAP §4.1](entrega-2/ROADMAP.md#41-marco-v1--primeira-versão-funcionando-prioridade) e [BACKLOG §4.0](entrega-2/BACKLOG.md#40-marco-v1-prioridade) |
+| Escopo da V1          | Criar atividade (manual com imagem e áudio, e com IA), cadernos e grupos, pacientes, sessão (player + registro) e relatórios (sessão, aluno, análise por IA em Markdown), ponta a ponta com o backend real                                           |
+| O que já está na main | 21 tarefas da V1 (EXPO-01, DS-01 a DS-06, NAV, HOME, REC, PAC-01 a PAC-03, ATV-01, ATV-06, ATV-07, ATV-08, CNT-01 e SES-01)                                                                                                                          |
+| Em andamento          | Nada em worker. A V1 inteira (inclusive SES-02, SES-03, SES-04, ATV-02, ATV-03, REL-04, REL-05 e REL-06) entrou na `main` pelo PR #75 (integração com as correções do teste no backend real)                                                         |
+| Próximas              | Validar no iOS e no aparelho físico; fechar INT-01 e QA-05; decidir G-06 com o dono do backend; aprovar G-44 a G-46                                                                                                                                  |
+| Backend               | **Acessível desde 2026-10-09**: `https://labirinto-do-saber.vercel.app` (Express na Vercel; Swagger em `/api-docs/`, incompleto). Testado com mocks desligados. G-07 e G-43 resolvidos pela evidência; G-06 e G-05 abertos                           |
+| Qualidade             | 763 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links                                                                                                                                            |
+| Validação manual      | Feita em 2026-10-09 no emulador Android (Expo Go) contra o backend real; relatório em `docs/entrega-2/QA-05-RELATORIO.md`. Pendente: iOS, aparelho físico (câmera) e as rotas listadas no relatório                                                  |
 
 ## 2. Regras combinadas com o usuário
 
@@ -143,3 +143,26 @@ A sessão mock fica em memória: fechar o app pede login de novo.
 | [src/mocks/README.md](../src/mocks/README.md)                                                          | Cenários de mock acionáveis por endpoint                                                    |
 | [COMPATIBILIDADE](bootstrap/COMPATIBILIDADE.md)                                                        | Versões, achados A-01 a A-22 e auditoria do Expo Go (§9)                                    |
 | [Reunião 25/09](entrega-1/reuniao25-09.md) e [plano de testes da Entrega 1](entrega-1/PLANO-TESTES.md) | Histórico e roteiro manual                                                                  |
+
+## 5. Lições de 2026-10-09 (teste contra o backend real)
+
+- **Expo Go + NativeWind:** o `style` em função do `Pressable` é descartado. Use
+  `StaticPressable` (`src/components/ds`) ou estilo estático (G-44). Não confie só nos testes:
+  o ambiente de teste resolve o estilo em função e não reproduz o defeito.
+- **Mocks escondem defeitos de autenticação e de unidade.** O login só falhou contra o backend
+  real; as unidades de tempo e a escala do `accuracy` também só apareceram lá (G-07, G-43).
+- **O arquivo do `expo-print` não é legível no Expo Go:** gere em base64 e regrave no cache do
+  app antes de compartilhar (G-45).
+- **A IA leva 30 a 45 s:** as rotas de IA usam `AI_TIMEOUT_MS` (G-46).
+- **Metro:** não percebeu algumas edições de arquivo. Reinicie com `--clear` ao testar uma
+  correção e confirme se o bundle novo foi carregado.
+- **`node_modules` por branch:** depois de trocar de branch, rode `pnpm install --frozen-lockfile`
+  antes de subir o Metro (faltou `expo-print` ao voltar de uma branch sem ele).
+- **`.expo/types`:** gerado pelo Metro. Se o typecheck acusar erro de rota depois de trocar de
+  branch, apague a pasta e rode de novo.
+- **Windows/Git Bash:** `adb push` converte caminhos que começam com `/`; use
+  `MSYS_NO_PATHCONV=1`. `uiautomator dump` serve para tocar em elementos pelo texto.
+- **Aviso amarelo do React Native (LogBox)** cobre a barra inferior e o botão "Salvar" durante
+  os testes; dispense-o antes de tocar.
+- **PRs abertos por fork:** o CI dos PRs de fork precisa de aprovação para rodar; os PRs
+  empilhados incluem os commits dos anteriores (ENTREGA-V1 §3).

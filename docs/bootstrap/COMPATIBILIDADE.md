@@ -362,15 +362,35 @@ Nenhuma dependência do `package.json` exige development build após esta tarefa
 
 ### 9.5 Dependências futuras da V1 (auditadas, ainda não instaladas)
 
-| Pacote                 | Roda no Expo Go                            | Por quê                                                                                                                         |
-| ---------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `expo-image-picker`    | sim                                        | Bundled no Expo Go                                                                                                              |
-| `expo-document-picker` | sim                                        | Bundled no Expo Go                                                                                                              |
-| `expo-audio`           | sim                                        | Já instalado (Entrega 1); bundled no Expo Go                                                                                    |
-| `expo-print`           | sim                                        | Bundled no Expo Go                                                                                                              |
-| `expo-sharing`         | sim                                        | Bundled no Expo Go                                                                                                              |
-| `expo-file-system`     | sim                                        | Bundled no Expo Go                                                                                                              |
-| Lib de Markdown        | sim (a confirmar na tarefa que a escolher) | Deve ser JS puro (ex.: parser de Markdown sem módulo nativo); nenhuma foi escolhida ainda, então não há versão para travar aqui |
+| Pacote                 | Roda no Expo Go | Por quê                                                            |
+| ---------------------- | --------------- | ------------------------------------------------------------------ |
+| `expo-image-picker`    | sim             | Bundled no Expo Go                                                 |
+| `expo-document-picker` | sim             | Bundled no Expo Go                                                 |
+| `expo-audio`           | sim             | Já instalado (Entrega 1); bundled no Expo Go                       |
+| `expo-print`           | sim             | Bundled no Expo Go                                                 |
+| `expo-sharing`         | sim             | Bundled no Expo Go                                                 |
+| `expo-file-system`     | sim             | Bundled no Expo Go                                                 |
+| Lib de Markdown        | sim (validada)  | `react-native-markdown-display` 7.0.2 (REL-06, G-40), JS puro aqui |
 
 Qualquer dependência nova fora desta lista precisa repetir esta auditoria antes
 de entrar no `package.json` (AC-EXPO-01-05).
+
+### 9.6 Instaladas na V1 e comportamento observado no Expo Go (2026-10-09)
+
+Validado no emulador Android (Expo Go, SDK 57) com o app contra o backend real.
+
+| Pacote                          | Versão   | Roda no Expo Go   | Observação                                                                                                                                                   |
+| ------------------------------- | -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `expo-image-picker`             | ~57.0.19 | sim               | Galeria validada (ATV-08). A câmera não foi testada no emulador                                                                                              |
+| `expo-document-picker`          | ~57.0.3  | sim               | Seleção de áudio validada (ATV-08)                                                                                                                           |
+| `expo-print`                    | ~57.0.2  | sim, com ressalva | `printAsync` (pré-visualização) funciona. O arquivo de `printToFileAsync` **não é legível** no Expo Go: peça `base64: true` e regrave no cache do app (G-45) |
+| `expo-sharing`                  | ~57.0.22 | sim               | Só compartilha arquivos do escopo do app; ver `sharePdfFromBase64` (G-45)                                                                                    |
+| `expo-file-system`              | ~57.0.7  | sim               | Dependência direta desde G-45 (`File`, `Paths`). Não lê o arquivo gerado pelo `expo-print` ("Missing READ permission")                                       |
+| `react-native-markdown-display` | 7.0.2    | sim               | JS puro; renderiza a análise com IA (REL-06, G-40)                                                                                                           |
+
+Limitações do Expo Go que afetam o código (não são dependências):
+
+- **NativeWind:** o `style` em função do `Pressable` é descartado; use `StaticPressable` (G-44).
+- **Texto do botão:** o Android guardava a largura medida durante o "carregando"; o `DsButton`
+  remonta o rótulo quando o estado muda.
+- **Metro:** reinicie com `--clear` ao trocar de branch e depois de `pnpm install`.

@@ -1,6 +1,12 @@
 // `Button` do Figma Make (`.button`, `.button--*`, `.full-button`). Ver ficha DS-03.
-import type { ReactElement } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useState, type ReactElement } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { color, fontFamilies, semanticColor, shape } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
@@ -58,6 +64,13 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
   },
   disabled: { opacity: 0.5 },
+  spinner: {
+    position: "absolute",
+    left: 16,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
   label: {
     fontSize: 14,
     lineHeight: 18,
@@ -83,6 +96,7 @@ export function DsButton({
   accessibilityLabel,
 }: DsButtonProps): ReactElement {
   const reduceMotion = useReduceMotion();
+  const [pressed, setPressed] = useState(false);
   const isBlocked = disabled || loading;
   const textColor = variantTextColor[variant];
 
@@ -96,10 +110,12 @@ export function DsButton({
   return (
     <Pressable
       onPress={handlePress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isBlocked, busy: loading }}
-      style={({ pressed }) => [
+      style={[
         styles.base,
         variantStyles[variant],
         fullWidth ? styles.fullWidth : null,
@@ -108,13 +124,23 @@ export function DsButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={textColor} />
+        // Fora do fluxo: se o spinner ocupasse espaço na linha, o Android
+        // media o rótulo mais estreito e deixava "Entrar ag…" mesmo depois.
+        <View style={styles.spinner}>
+          <ActivityIndicator color={textColor} />
+        </View>
       ) : icon ? (
         <View>
           <FigmaIcon name={icon} size={18} color={textColor} />
         </View>
       ) : null}
-      <Text style={[styles.label, { color: textColor }]} numberOfLines={1}>
+      <Text
+        // `key`: o Android guardava a largura medida durante o "carregando" e
+        // o rótulo ficava truncado ("Entrar ag…") depois do erro.
+        key={loading ? "loading" : "idle"}
+        style={[styles.label, { color: textColor }]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
     </Pressable>

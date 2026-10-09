@@ -1,9 +1,10 @@
 // `SectionTitle` do Figma Make (`.section-title`). Ver ficha DS-05.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { color, fontFamilies } from "../../theme";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface SectionTitleProps {
   title: string;
@@ -42,7 +43,7 @@ export function SectionTitle({
     <View style={styles.row}>
       <Text style={styles.title}>{title}</Text>
       {actionLabel && onActionPress ? (
-        <Pressable
+        <StaticPressable
           onPress={onActionPress}
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
@@ -50,7 +51,7 @@ export function SectionTitle({
           style={({ pressed }) => getPressScaleStyle(pressed, reduceMotion)}
         >
           <Text style={styles.action}>{actionLabel}</Text>
-        </Pressable>
+        </StaticPressable>
       ) : null}
     </View>
   );

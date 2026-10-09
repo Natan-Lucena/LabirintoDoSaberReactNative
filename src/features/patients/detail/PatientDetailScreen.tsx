@@ -20,6 +20,10 @@ import {
   SectionTitle,
 } from "@/components/ds";
 import { useAppointments } from "@/features/appointments/useAppointments";
+import {
+  accuracyToPercent,
+  getCategoryLabel,
+} from "@/features/reports/session/sessionReport";
 import { useStudents } from "@/features/students/useStudents";
 import { color, getContentPadding, shape, typography } from "@/theme";
 import { formatTime } from "@/utils/date";
@@ -235,17 +239,18 @@ export function PatientDetailScreen({
           ) : analysis && analysis.total.total > 0 ? (
             <View style={styles.evolutionCard}>
               <Text style={styles.accuracy}>
-                {Math.round(analysis.total.accuracy)}% de acerto geral
+                {Math.round(accuracyToPercent(analysis.total.accuracy))}% de
+                acerto geral
               </Text>
               {categoryEntries.map((category) =>
                 category ? (
                   <View key={category.category} style={styles.category}>
                     <Text style={styles.categoryLabel}>
-                      {category.category}
+                      {getCategoryLabel(category.category)}
                     </Text>
                     <ProgressBar
-                      value={category.accuracy}
-                      accessibilityLabel={`${category.category}: ${Math.round(category.accuracy)}%`}
+                      value={accuracyToPercent(category.accuracy)}
+                      accessibilityLabel={`${getCategoryLabel(category.category)}: ${Math.round(accuracyToPercent(category.accuracy))}%`}
                     />
                   </View>
                 ) : null,
@@ -271,8 +276,8 @@ export function PatientDetailScreen({
                 accessibilityLabel={`Ver relatório da sessão ${session.name}`}
                 onPress={() =>
                   router.push({
-                    pathname: "/shell/coming-soon",
-                    params: { title: "Relatório da sessão" },
+                    pathname: "/reports/session/[id]",
+                    params: { id: session.id },
                   })
                 }
                 style={styles.sessionRow}

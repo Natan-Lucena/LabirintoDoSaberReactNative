@@ -27,3 +27,26 @@ Um development build (EAS, T-108) continua disponível, mas é **opcional**: só
 necessário para recursos nativos fora do Expo Go do SDK 57. A lista de
 dependências auditadas contra o Expo Go está em
 [`docs/bootstrap/COMPATIBILIDADE.md`](docs/bootstrap/COMPATIBILIDADE.md).
+
+## Backend e mocks
+
+Por padrão, em desenvolvimento, o app usa dados **mockados** (`EXPO_PUBLIC_USE_MOCKS`
+ausente = `true`; veja `src/mocks/README.md`; login fictício `educadora.mock@labirinto.test` /
+`senha123`). Para usar o backend real, crie um `.env` (não versionado):
+
+```bash
+EXPO_PUBLIC_APP_ENV=development
+EXPO_PUBLIC_API_BASE_URL=https://labirinto-do-saber.vercel.app
+EXPO_PUBLIC_USE_MOCKS=false
+```
+
+e reinicie com `pnpm start --clear`. O Expo só lê o `.env` ao subir.
+
+## Documentação
+
+- [`docs/entrega-2/ENTREGA-V1.md`](docs/entrega-2/ENTREGA-V1.md): o que foi feito na V1, PRs e
+  como integrar.
+- [`docs/entrega-2/TRACKING.md`](docs/entrega-2/TRACKING.md): estado de cada tarefa.
+- [`docs/entrega-2/QA-05-RELATORIO.md`](docs/entrega-2/QA-05-RELATORIO.md): teste contra o
+  backend real.
+- [`docs/CONTEXTO-SESSAO.md`](docs/CONTEXTO-SESSAO.md): contexto e lições para retomar o trabalho.

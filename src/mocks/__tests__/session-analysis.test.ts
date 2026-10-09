@@ -23,6 +23,7 @@ describe("handler de análise de sessão", () => {
     const analysis = await getStudentAnalysis("student-1", { limit: 6 });
 
     expect(analysis.total.accuracy).toBeGreaterThanOrEqual(0);
+    expect(analysis.total.accuracy).toBeLessThanOrEqual(1);
     expect(analysis.sessions).toHaveLength(2);
     expect(analysis.categories.reading?.category).toBe("reading");
   });

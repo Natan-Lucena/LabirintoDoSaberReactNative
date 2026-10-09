@@ -141,3 +141,22 @@ export interface TaskNotebookWithGroups {
   notebook: TaskNotebook;
   taskGroups: TaskGroup[];
 }
+
+export type AnamneseQuestionType =
+  "Descriptive" | "MultipleChoice" | "Checkbox" | "FileUpload";
+
+export interface AnamneseTemplate {
+  id: string;
+  educatorId: string;
+  title: string;
+  description?: string;
+  questions: {
+    id: string;
+    text: string;
+    type: AnamneseQuestionType;
+    required: boolean;
+    order: number;
+    options: { id: string; text: string }[];
+  }[];
+  createdAt: string;
+}
