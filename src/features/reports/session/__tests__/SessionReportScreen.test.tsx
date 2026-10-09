@@ -6,8 +6,13 @@ import { fireEvent, render, screen } from "@/test-utils/render";
 
 const routerBack = vi.fn();
 const printAsync = vi.fn();
-const printToFileAsync = vi.fn(async () => ({ uri: "file://report.pdf" }));
+const printToFileAsync = vi.fn(async () => ({
+  uri: "file://print/report.pdf",
+  base64: "JVBERi0=",
+}));
 const shareAsync = vi.fn();
+const fileCreate = vi.fn();
+const fileWrite = vi.fn();
 let query: QueryState;
 
 interface QueryState {
@@ -23,6 +28,18 @@ vi.mock("expo-router", () => ({
 }));
 vi.mock("expo-print", () => ({ printAsync, printToFileAsync }));
 vi.mock("expo-sharing", () => ({ shareAsync }));
+// O arquivo do expo-print não é legível no Expo Go: o PDF é regravado no cache do app.
+vi.mock("expo-file-system", () => ({
+  Paths: { cache: "file://cache/" },
+  File: class {
+    uri: string;
+    constructor(directory: string, name: string) {
+      this.uri = `${directory}${name}`;
+    }
+    create = fileCreate;
+    write = fileWrite;
+  },
+}));
 vi.mock("@/features/reports/session/useSessionReport", () => ({
   useSessionReport: () => query,
 }));
@@ -76,10 +93,18 @@ describe("SessionReportScreen (REL-04)", () => {
         html: expect.stringContaining("Leitura inicial"),
       }),
     );
-    expect(printToFileAsync).toHaveBeenCalledTimes(1);
-    expect(shareAsync).toHaveBeenCalledWith("file://report.pdf", {
-      mimeType: "application/pdf",
-    });
+    expect(printToFileAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ base64: true }),
+    );
+    expect(fileCreate).toHaveBeenCalledWith({ overwrite: true });
+    expect(fileWrite).toHaveBeenCalledWith("JVBERi0=", { encoding: "base64" });
+    expect(shareAsync).toHaveBeenCalledWith(
+      "file://cache/relatorio-sessao.pdf",
+      {
+        mimeType: "application/pdf",
+        UTI: "com.adobe.pdf",
+      },
+    );
   });
 
   it("mostra erro recuperável e o estado de sessão ausente", async () => {

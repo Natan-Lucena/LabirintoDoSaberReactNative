@@ -1,7 +1,7 @@
 import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 
 import type { SessionReport } from "@/api/endpoints/session-report";
+import { sharePdfFromBase64 } from "../sharePdf";
 import { buildSessionReportHtml } from "./sessionReport";
 
 export async function printSessionReport(
@@ -17,6 +17,7 @@ export async function shareSessionReport(
 ): Promise<void> {
   const file = await Print.printToFileAsync({
     html: buildSessionReportHtml(report, patientName),
+    base64: true,
   });
-  await Sharing.shareAsync(file.uri, { mimeType: "application/pdf" });
+  await sharePdfFromBase64(file.base64 ?? "", "relatorio-sessao.pdf");
 }
