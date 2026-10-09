@@ -1,6 +1,12 @@
 // `Button` do Figma Make (`.button`, `.button--*`, `.full-button`). Ver ficha DS-03.
-import type { ReactElement } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useState, type ReactElement } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { color, fontFamilies, semanticColor, shape } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
@@ -83,6 +89,7 @@ export function DsButton({
   accessibilityLabel,
 }: DsButtonProps): ReactElement {
   const reduceMotion = useReduceMotion();
+  const [pressed, setPressed] = useState(false);
   const isBlocked = disabled || loading;
   const textColor = variantTextColor[variant];
 
@@ -96,10 +103,12 @@ export function DsButton({
   return (
     <Pressable
       onPress={handlePress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isBlocked, busy: loading }}
-      style={({ pressed }) => [
+      style={[
         styles.base,
         variantStyles[variant],
         fullWidth ? styles.fullWidth : null,
