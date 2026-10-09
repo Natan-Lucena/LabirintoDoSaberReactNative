@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 
 import {
   addSessionObservation,
@@ -129,7 +129,7 @@ export function FinishSessionScreen(): ReactElement | null {
     if (educatorId) {
       await hydrate(educatorId);
     }
-    router.replace(SESSION_REPORT_ROUTE(finishedSessionId));
+    router.replace(SESSION_REPORT_ROUTE(finishedSessionId) as Href);
   }
 
   async function save() {
