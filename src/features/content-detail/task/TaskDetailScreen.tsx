@@ -16,6 +16,7 @@ import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
 import { Screen } from "@/components/Screen";
 import { AudioPlayer } from "@/components/media/AudioPlayer";
+import { isActivityTypePlayable } from "@/features/activities/engine/registry";
 import { color, shape, typography } from "@/theme";
 
 const CATEGORY_LABEL: Record<TaskCategory, string> = {
@@ -60,6 +61,10 @@ export function TaskDetailScreen({
       router.back();
     },
   });
+
+  function goToPlay() {
+    router.push({ pathname: "/activities/[id]", params: { id: taskId } });
+  }
 
   function goToEdit() {
     router.push({
@@ -189,6 +194,10 @@ export function TaskDetailScreen({
           >
             Não foi possível excluir a atividade.
           </Text>
+        ) : null}
+
+        {isActivityTypePlayable(task.type) ? (
+          <Button label="Jogar" onPress={goToPlay} />
         ) : null}
 
         <View style={styles.footer}>

@@ -132,6 +132,19 @@ describe("TaskDetailScreen (UX5-A)", () => {
     });
   });
 
+  it("ATV-02: o botão Jogar abre o player da atividade", async () => {
+    await render(<TaskDetailScreen taskId="task-1" />, {
+      queryClient: noRetryClient(),
+    });
+
+    await screen.findByText("Atividade de Leitura");
+    await fireEvent.press(screen.getByRole("button", { name: "Jogar" }));
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/activities/[id]",
+      params: { id: "task-1" },
+    });
+  });
+
   it("excluir pede confirmação, chama o endpoint e volta (D-05/AC-03)", async () => {
     await render(<TaskDetailScreen taskId="task-2" />, {
       queryClient: noRetryClient(),
