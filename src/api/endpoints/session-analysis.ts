@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/client";
+import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
 import type { TaskCategory, TaskNotebookSession } from "@/api/types";
 
 export interface StudentAnalysisCategory {
@@ -102,6 +103,7 @@ export async function getStudentAiAnalysis(
   ).toString();
   const response = await apiClient.get<StudentAiAnalysis>(
     `/task-notebook-session/analysis/student/${studentId}/ai${params ? `?${params}` : ""}`,
+    { timeout: AI_TIMEOUT_MS },
   );
 
   return response.data;
