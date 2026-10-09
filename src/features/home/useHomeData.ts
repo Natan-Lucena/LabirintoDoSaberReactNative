@@ -71,7 +71,7 @@ export async function loadHomeData(): Promise<HomeData> {
 export function useHomeData(): HomeData {
   const educatorQuery = useQuery({
     queryKey: homeQueryKeys.educator,
-    queryFn: getMe,
+    queryFn: () => getMe(),
   });
   const appointmentsQuery = useQuery({
     queryKey: homeQueryKeys.appointments,
@@ -91,7 +91,7 @@ export function useHomeData(): HomeData {
 export function useHomeQuery(): HomeQueryResult {
   const educatorQuery = useQuery({
     queryKey: homeQueryKeys.educator,
-    queryFn: getMe,
+    queryFn: () => getMe(),
   });
   const appointmentsQuery = useQuery({
     queryKey: homeQueryKeys.appointments,

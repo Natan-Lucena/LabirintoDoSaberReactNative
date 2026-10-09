@@ -15,7 +15,7 @@ const NETWORK_ERROR_MESSAGE =
 
 async function signInAndLoadEducator(values: LoginFormValues): Promise<void> {
   const { token } = await signIn(values);
-  const me = await getMe();
+  const me = await getMe(token);
 
   await activateEducator(me.id);
   await useAuthStore.getState().login(token, me.id);

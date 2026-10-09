@@ -20,9 +20,17 @@ export async function signIn(input: SignInInput): Promise<SignInOutput> {
   return response.data;
 }
 
-/** GET /educator/me */
-export async function getMe(): Promise<Educator> {
-  const response = await apiClient.get<Educator>("/educator/me");
+/**
+ * GET /educator/me
+ *
+ * `token` é usado no login, quando o token recém-emitido ainda não está na
+ * store de autenticação e o interceptor não consegue anexá-lo.
+ */
+export async function getMe(token?: string): Promise<Educator> {
+  const response = await apiClient.get<Educator>(
+    "/educator/me",
+    token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+  );
 
   return response.data;
 }
