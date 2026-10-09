@@ -1,7 +1,10 @@
 import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 
-import { buildStudentReportHtml, type StudentReportInput } from "./studentReport";
+import { sharePdfFromBase64 } from "../sharePdf";
+import {
+  buildStudentReportHtml,
+  type StudentReportInput,
+} from "./studentReport";
 
 export async function printStudentReport(
   input: StudentReportInput,
@@ -14,6 +17,7 @@ export async function shareStudentReport(
 ): Promise<void> {
   const file = await Print.printToFileAsync({
     html: buildStudentReportHtml(input),
+    base64: true,
   });
-  await Sharing.shareAsync(file.uri, { mimeType: "application/pdf" });
+  await sharePdfFromBase64(file.base64 ?? "", "relatorio-aluno.pdf");
 }
