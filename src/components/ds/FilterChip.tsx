@@ -1,9 +1,10 @@
 // `.filter-chip` / `.filter-row` do Figma Make. Ver ficha DS-03.
 import type { ReactElement } from "react";
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
 
 import { color, fontFamilies } from "../../theme";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface FilterChipProps {
   label: string;
@@ -52,7 +53,7 @@ export function FilterChip({
   }
 
   return (
-    <Pressable
+    <StaticPressable
       onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -67,7 +68,7 @@ export function FilterChip({
       <Text style={[styles.label, active ? styles.labelActive : null]}>
         {label}
       </Text>
-    </Pressable>
+    </StaticPressable>
   );
 }
 

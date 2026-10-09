@@ -1,10 +1,11 @@
 // `.feature-row` do Figma Make. Ver ficha DS-05.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { color, fontFamilies } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface FeatureRowProps {
   icon: FigmaIconName;
@@ -58,7 +59,7 @@ export function FeatureRow({
   const reduceMotion = useReduceMotion();
 
   return (
-    <Pressable
+    <StaticPressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
@@ -75,6 +76,6 @@ export function FeatureRow({
         <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
       <FigmaIcon name="chevron" size={16} color={color.ink[500]} />
-    </Pressable>
+    </StaticPressable>
   );
 }

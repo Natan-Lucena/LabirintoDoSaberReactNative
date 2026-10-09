@@ -1,10 +1,11 @@
 // `.timeline-item` do Figma Make, com marcadores `--done` e `--active`. Ver ficha DS-05.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { color, fontFamilies } from "../../theme";
 import { FigmaIcon } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export type TimelineItemStatus = "default" | "done" | "active";
 
@@ -118,7 +119,7 @@ function TimelineItemRow({
           <Text style={styles.subtitle}>{item.subtitle}</Text>
         ) : null}
         {item.actionLabel && item.onActionPress ? (
-          <Pressable
+          <StaticPressable
             onPress={item.onActionPress}
             accessibilityRole="button"
             accessibilityLabel={item.actionLabel}
@@ -126,7 +127,7 @@ function TimelineItemRow({
             style={({ pressed }) => getPressScaleStyle(pressed, reduceMotion)}
           >
             <Text style={styles.actionLabel}>{item.actionLabel}</Text>
-          </Pressable>
+          </StaticPressable>
         ) : null}
       </View>
     </View>

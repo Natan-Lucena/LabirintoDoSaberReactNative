@@ -1,10 +1,11 @@
 // `.insight-card` do Figma Make. Ver ficha DS-05.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { color, fontFamilies, shape } from "../../theme";
 import { FigmaIcon } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface InsightCardProps {
   title: string;
@@ -75,7 +76,7 @@ export function InsightCard({
   }
 
   return (
-    <Pressable
+    <StaticPressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
@@ -85,6 +86,6 @@ export function InsightCard({
       ]}
     >
       {content}
-    </Pressable>
+    </StaticPressable>
   );
 }

@@ -1,10 +1,11 @@
 // `.back-button` do Figma Make: 40×40, círculo, ícone `arrow` girado 180°.
 import type { ReactElement } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { color } from "../../theme";
 import { FigmaIcon } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
+import { StaticPressable } from "./StaticPressable";
 
 export interface BackButtonProps {
   onPress: () => void;
@@ -30,7 +31,7 @@ export function BackButton({
   const reduceMotion = useReduceMotion();
 
   return (
-    <Pressable
+    <StaticPressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -42,6 +43,6 @@ export function BackButton({
       <View style={styles.icon}>
         <FigmaIcon name="arrow" size={18} color={color.brand[700]} />
       </View>
-    </Pressable>
+    </StaticPressable>
   );
 }
