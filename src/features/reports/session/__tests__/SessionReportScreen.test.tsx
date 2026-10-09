@@ -34,7 +34,7 @@ const report: SessionReport = {
   sessionName: "Leitura inicial",
   totalTimeSession: 125,
   totalQuestions: 4,
-  averageTimePerQuestion: 31,
+  averageTimePerQuestion: 31000,
   averageCorrectTime: null,
   averageIncorrectTime: null,
   percentageByCategory: { reading: 75, writing: null },
@@ -60,6 +60,8 @@ describe("SessionReportScreen (REL-04)", () => {
     await render(<SessionReportScreen sessionId="mock-session-1" />);
 
     expect(screen.getByText("4 questões respondidas")).toBeTruthy();
+    expect(screen.getByText("2 min 5 s")).toBeTruthy();
+    expect(screen.getByText("31,0 s")).toBeTruthy();
     expect(screen.getAllByText("—")).toHaveLength(3);
     expect(screen.getByText("Sem registro")).toBeTruthy();
     expect(screen.getByLabelText("Leitura: 75%")).toBeTruthy();

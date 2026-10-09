@@ -17,6 +17,7 @@ import { color, getContentPadding, shape, typography } from "@/theme";
 import { printSessionReport, shareSessionReport } from "./pdf";
 import {
   formatMetric,
+  formatAnswerDuration,
   formatSessionDuration,
   getCategoryLabel,
   getTypeLabel,
@@ -114,15 +115,15 @@ function ReportContent({ report }: { report: SessionReport }): ReactElement {
           />
           <MetricCard
             label="Tempo médio por questão"
-            value={formatSessionDuration(report.averageTimePerQuestion)}
+            value={formatAnswerDuration(report.averageTimePerQuestion)}
           />
           <MetricCard
             label="Média de acerto"
-            value={formatSessionDuration(report.averageCorrectTime)}
+            value={formatAnswerDuration(report.averageCorrectTime)}
           />
           <MetricCard
             label="Média de erro"
-            value={formatSessionDuration(report.averageIncorrectTime)}
+            value={formatAnswerDuration(report.averageIncorrectTime)}
           />
         </View>
         <PercentageSection
