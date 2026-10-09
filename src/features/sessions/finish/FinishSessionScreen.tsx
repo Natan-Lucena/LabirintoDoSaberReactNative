@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import {
@@ -29,6 +30,7 @@ function questionsLabel(total: number): string {
  */
 export function FinishSessionScreen(): ReactElement | null {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     step,
     sessionId,
@@ -125,6 +127,11 @@ export function FinishSessionScreen(): ReactElement | null {
     }
     completedRef.current = true;
     await close();
+    // A ficha do paciente e a análise passam a incluir a sessão recém-encerrada.
+    await queryClient.invalidateQueries({
+      queryKey: ["task-notebook-session"],
+    });
+    await queryClient.invalidateQueries({ queryKey: ["student-analysis"] });
     // `close` deixa a store em "closed"; volta a "idle" para a próxima sessão.
     if (educatorId) {
       await hydrate(educatorId);

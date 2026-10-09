@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { createQueryClient } from "@/api/query-client";
 import { render } from "@/test-utils/render";
 import type { TaskNotebookSession } from "@/api/types";
 import {
@@ -123,7 +124,9 @@ describe("FinishSessionScreen — encerramento", () => {
     await render(<FinishSessionScreen />);
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeTruthy(),
+      expect(
+        screen.getByRole("button", { name: "Tentar novamente" }),
+      ).toBeTruthy(),
     );
     expect(awaitObservation).not.toHaveBeenCalled();
     expect(finishSession).toHaveBeenCalledTimes(1);
@@ -184,6 +187,28 @@ describe("FinishSessionScreen — registro descritivo", () => {
     expect(replace).toHaveBeenCalledWith("/reports/session/session-1");
   });
 
+  it("ao concluir, invalida sessões e análise para a ficha do paciente atualizar", async () => {
+    const queryClient = createQueryClient();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    await render(<FinishSessionScreen />, { queryClient });
+
+    await fireEvent.changeText(
+      screen.getByLabelText("Registro descritivo"),
+      "Boa participação.",
+    );
+    await act(async () => {
+      fireEvent.press(
+        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
+      );
+    });
+
+    await waitFor(() => expect(replace).toHaveBeenCalled());
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["task-notebook-session"],
+    });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["student-analysis"] });
+  });
+
   it("não permite salvar com o registro vazio", async () => {
     await render(<FinishSessionScreen />);
 
@@ -217,7 +242,10 @@ describe("FinishSessionScreen — registro descritivo", () => {
     );
     await render(<FinishSessionScreen />);
 
-    await fireEvent.changeText(screen.getByLabelText("Registro descritivo"), "Texto");
+    await fireEvent.changeText(
+      screen.getByLabelText("Registro descritivo"),
+      "Texto",
+    );
     await act(async () =>
       fireEvent.press(
         screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
@@ -244,7 +272,10 @@ describe("FinishSessionScreen — registro descritivo", () => {
     ]);
     await render(<FinishSessionScreen />);
 
-    await fireEvent.changeText(screen.getByLabelText("Registro descritivo"), "Texto");
+    await fireEvent.changeText(
+      screen.getByLabelText("Registro descritivo"),
+      "Texto",
+    );
     await act(async () =>
       fireEvent.press(
         screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
