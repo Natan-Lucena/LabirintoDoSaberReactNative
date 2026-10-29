@@ -340,4 +340,92 @@ describe("stores/session-flow", () => {
     expect(useSessionFlowStore.getState().student).toBeNull();
     expect(useSessionFlowStore.getState().sessionName).toBeNull();
   });
+
+  // AC-SES-05-02: semeia o fluxo a partir de uma sessão aberta do servidor.
+  it("seedFromServerSession semeia o fluxo em running com caderno e respostas", async () => {
+    const { useSessionFlowStore } = await loadStore();
+    const answer = makeAnswer("task-1");
+
+    await useSessionFlowStore.getState().seedFromServerSession({
+      student: STUDENT,
+      session: {
+        id: "session-9",
+        studentId: STUDENT.id,
+        educatorId: EDUCATOR_A,
+        name: "Sessão de outro aparelho",
+        startedAt: "2026-10-07T10:00:00.000Z",
+        taskNotebookId: "notebook-1",
+        appointmentId: "appointment-1",
+        answers: [answer],
+      },
+      content: CONTENT,
+    });
+
+    const state = useSessionFlowStore.getState();
+    expect(state.step).toBe("running");
+    expect(state.educatorId).toBe(EDUCATOR_A);
+    expect(state.student).toEqual(STUDENT);
+    expect(state.sessionId).toBe("session-9");
+    expect(state.sessionName).toBe("Sessão de outro aparelho");
+    expect(state.content).toEqual(CONTENT);
+    expect(state.confirmedAnswers).toEqual([answer]);
+    expect(state.activityIndex).toBe(1);
+    expect(state.appointmentId).toBe("appointment-1");
+
+    await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+    expect(useSessionFlowStore.getState().sessionId).toBe("session-9");
+  });
+
+  it("seedFromServerSession é recusado em etapa que não seja ociosa ou de seleção", async () => {
+    const { useSessionFlowStore, SessionFlowInvalidTransitionError } =
+      await loadStore();
+    await useSessionFlowStore.getState().selectStudent(STUDENT);
+    await useSessionFlowStore
+      .getState()
+      .configure({ name: "Sessão 1", content: CONTENT });
+    await useSessionFlowStore.getState().requestStart();
+
+    await expect(
+      useSessionFlowStore.getState().seedFromServerSession({
+        student: STUDENT,
+        session: {
+          id: "s",
+          studentId: STUDENT.id,
+          educatorId: EDUCATOR_A,
+          name: "x",
+          startedAt: "2026-10-07T10:00:00.000Z",
+          answers: [],
+        },
+        content: CONTENT,
+      }),
+    ).rejects.toBeInstanceOf(SessionFlowInvalidTransitionError);
+  });
+
+  it("appointmentId começa nulo e tem setter persistido", async () => {
+    const { useSessionFlowStore } = await loadStore();
+    expect(useSessionFlowStore.getState().appointmentId).toBeNull();
+
+    await useSessionFlowStore.getState().selectStudent(STUDENT);
+    await useSessionFlowStore.getState().setAppointmentId("appointment-7");
+    expect(useSessionFlowStore.getState().appointmentId).toBe("appointment-7");
+
+    await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+    expect(useSessionFlowStore.getState().appointmentId).toBe("appointment-7");
+  });
+
+  it("hydrate tolera fluxo salvo antes do appointmentId", async () => {
+    const { useSessionFlowStore } = await loadStore();
+    await useSessionFlowStore.getState().selectStudent(STUDENT);
+    const storage = await (
+      await import("@/storage/mmkv")
+    ).getStorage(EDUCATOR_A);
+    const saved = JSON.parse(storage.getString("session:flow") as string);
+    delete saved.appointmentId;
+    storage.set("session:flow", JSON.stringify(saved));
+
+    await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+
+    expect(useSessionFlowStore.getState().step).toBe("studentSelected");
+    expect(useSessionFlowStore.getState().appointmentId).toBeNull();
+  });
 });

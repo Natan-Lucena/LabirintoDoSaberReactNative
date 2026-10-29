@@ -3,7 +3,11 @@ import type {
   StudentAnalysis,
   StudentAnalysisReport,
 } from "@/api/endpoints/session-analysis";
-import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
+import {
+  MOCK_EDUCATOR,
+  MOCK_STUDENTS,
+  MOCK_TASK_NOTEBOOKS,
+} from "@/mocks/fixtures";
 import { registerMockHandler } from "./registry";
 import { MockApiError, MockNetworkError } from "./types";
 
@@ -152,6 +156,19 @@ registerMockHandler(
       selectedAlternativeId: string;
       timeToAnswer: number;
     };
+    const stored = analysisSessions.find((item) => item.id === input.sessionId);
+    if (stored?.taskNotebookId) {
+      const notebook = MOCK_TASK_NOTEBOOKS.find(
+        (item) => item.notebook.id === stored.taskNotebookId,
+      );
+      const allowed = new Set([
+        ...(notebook?.notebook.tasks ?? []),
+        ...(notebook?.taskGroups.flatMap((group) => group.tasksIds) ?? []),
+      ]);
+      if (!allowed.has(input.taskId)) {
+        throw new MockApiError(400, "TASK_NOT_IN_NOTEBOOK");
+      }
+    }
     return {
       status: 200,
       data: {

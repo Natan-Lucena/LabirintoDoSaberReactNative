@@ -1,6 +1,10 @@
 import { create } from "zustand";
 
-import type { Student, TaskNotebookSessionAnswer } from "@/api/types";
+import type {
+  Student,
+  TaskNotebookSession,
+  TaskNotebookSessionAnswer,
+} from "@/api/types";
 import {
   clearSessionFlow,
   getActiveEducatorId,
@@ -34,6 +38,8 @@ export type SessionFlowData = {
   sessionName: string | null;
   content: SessionFlowContent | null;
   sessionId: string | null;
+  /** Consulta da agenda que originou a sessão (AGE-04); `null` quando avulsa. */
+  appointmentId: string | null;
   startRequestedAt: string | null;
   activityIndex: number;
   confirmedAnswers: TaskNotebookSessionAnswer[];
@@ -48,6 +54,16 @@ export type SessionFlowState = SessionFlowData & {
     name: string;
     content: SessionFlowContent;
   }) => Promise<void>;
+  /**
+   * SES-05 (G-06): retoma, neste aparelho, uma sessão aberta no servidor que
+   * está ligada a um caderno, já com as respostas confirmadas.
+   */
+  seedFromServerSession: (input: {
+    student: Student;
+    session: TaskNotebookSession;
+    content: SessionFlowContent;
+  }) => Promise<void>;
+  setAppointmentId: (appointmentId: string | null) => Promise<void>;
   requestStart: () => Promise<void>;
   confirmStart: (sessionId: string) => Promise<void>;
   markStartUncertain: () => Promise<void>;
@@ -79,6 +95,7 @@ export const initialSessionFlowData: SessionFlowData = {
   sessionName: null,
   content: null,
   sessionId: null,
+  appointmentId: null,
   startRequestedAt: null,
   activityIndex: 0,
   confirmedAnswers: [],
@@ -149,6 +166,46 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       sessionName: name,
       content,
     };
+    set(next);
+    await persist(next);
+  },
+
+  seedFromServerSession: async ({ student, session, content }) => {
+    const state = get();
+    requireStep("seedFromServerSession", state.step, [
+      "idle",
+      "studentSelected",
+      "configured",
+    ]);
+
+    const educatorId =
+      state.step === "idle" ? getActiveEducatorId() : state.educatorId;
+    if (!educatorId) {
+      throw new SessionFlowInvalidTransitionError(
+        "seedFromServerSession",
+        state.step,
+      );
+    }
+
+    const next: SessionFlowData = {
+      ...initialSessionFlowData,
+      step: "running",
+      educatorId,
+      student,
+      sessionName: session.name,
+      content,
+      sessionId: session.id,
+      appointmentId: session.appointmentId ?? null,
+      confirmedAnswers: session.answers,
+      activityIndex: session.answers.length,
+    };
+    set(next);
+    await persist(next);
+  },
+
+  setAppointmentId: async (appointmentId) => {
+    const state = get();
+    const next: SessionFlowData = { ...state, appointmentId };
     set(next);
     await persist(next);
   },
@@ -336,6 +393,7 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       return;
     }
 
-    set(persisted);
+    // Fluxos salvos antes de campos novos (ex.: appointmentId) não os trazem.
+    set({ ...initialSessionFlowData, ...persisted });
   },
 }));

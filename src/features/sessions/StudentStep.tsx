@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
+import { listTaskNotebooks } from "@/api/endpoints/content";
 import { listSessionsByStudent, finishSession } from "@/api/endpoints/session";
 import type { Student, TaskNotebookSession } from "@/api/types";
 import {
@@ -43,6 +44,7 @@ export function StudentStep(): ReactElement {
     selectStudent,
     cancel,
     finish,
+    seedFromServerSession,
     step: flowStep,
     sessionId: flowSessionId,
   } = useSessionFlowStore();
@@ -85,15 +87,43 @@ export function StudentStep(): ReactElement {
     router.back();
   }
 
-  // G-06: o conteúdo da sessão só é conhecido no fluxo salvo neste aparelho.
-  // Uma sessão aberta em outro lugar não tem como ser retomada aqui.
   const hasLocalFlow =
     Boolean(existing) &&
     flowStep === "running" &&
     flowSessionId === existing?.id;
+  // SES-05 (G-06): com `taskNotebookId` o servidor sabe o conteúdo, então a
+  // sessão abre em qualquer aparelho. Sem ele, só o fluxo local conhece o
+  // conteúdo e a sessão de outro aparelho só pode ser encerrada.
+  const canResumeFromServer = Boolean(existing?.taskNotebookId);
+  const canResume = hasLocalFlow || canResumeFromServer;
 
-  function resume() {
-    router.push("/session/player");
+  async function resume() {
+    if (hasLocalFlow || !existing || !selected) {
+      router.push("/session/player");
+      return;
+    }
+    setError(null);
+    try {
+      const notebook = (await listTaskNotebooks()).find(
+        (item) => item.notebook.id === existing.taskNotebookId,
+      );
+      if (!notebook) {
+        setError("O caderno desta sessão não está mais disponível.");
+        return;
+      }
+      await seedFromServerSession({
+        student: selected,
+        session: existing,
+        content: {
+          kind: "notebook",
+          id: notebook.notebook.id,
+          name: notebook.notebook.description,
+        },
+      });
+      router.push("/session/player");
+    } catch {
+      setError("Não foi possível retomar a sessão agora.");
+    }
   }
 
   async function finishExisting() {
@@ -188,7 +218,7 @@ export function StudentStep(): ReactElement {
             description={`“${existing.name}” ainda não foi encerrada.`}
           />
         ) : null}
-        {existing && !hasLocalFlow ? (
+        {existing && !canResume ? (
           <Text style={styles.description}>
             Esta sessão foi iniciada em outro aparelho e não pode ser retomada
             aqui. Encerre-a para iniciar outra.
@@ -196,8 +226,8 @@ export function StudentStep(): ReactElement {
         ) : null}
         {existing ? (
           <View style={styles.actions}>
-            {hasLocalFlow ? (
-              <DsButton label="Retomar" onPress={resume} />
+            {canResume ? (
+              <DsButton label="Retomar" onPress={() => void resume()} />
             ) : null}
             <DsButton
               label="Encerrar agora"
