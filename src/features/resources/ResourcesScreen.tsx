@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { FigmaIcon } from "@/components/FigmaIcon";
 import { AppHeader, Avatar, FeatureRow, SectionTitle } from "@/components/ds";
+import { StaticPressable } from "@/components/ds/StaticPressable";
 import { useHomeData } from "@/features/home/useHomeData";
 import { color, fontFamilies, shape } from "@/theme";
 
@@ -98,6 +99,7 @@ const styles = StyleSheet.create({
     borderColor: color.border,
   },
   profileCopy: { flex: 1, gap: 2 },
+  profilePhoto: { width: 46, height: 46, borderRadius: 23 },
   profileName: {
     fontSize: 15,
     lineHeight: 20,
@@ -132,21 +134,31 @@ export function ResourcesScreen(): ReactElement {
     <View style={styles.screen}>
       <AppHeader title="Recursos" subtitle="Tudo em um só lugar" />
       <ScrollView contentContainerStyle={styles.content}>
-        <Pressable
+        <StaticPressable
           accessibilityRole="button"
           accessibilityLabel="Perfil"
-          onPress={() => openComingSoon("Perfil")}
+          onPress={() => router.push("/profile")}
           style={styles.profileBanner}
         >
-          <Avatar name={educatorName} tone="lavender" />
+          {educator?.photoUrl ? (
+            <Image
+              source={{ uri: educator.photoUrl }}
+              style={styles.profilePhoto}
+              accessibilityLabel={educatorName}
+            />
+          ) : (
+            <Avatar name={educatorName} tone="lavender" />
+          )}
           <View style={styles.profileCopy}>
             <Text style={styles.profileName}>{educatorName}</Text>
-            {educator?.email ? (
-              <Text style={styles.profileRole}>{educator.email}</Text>
+            {educator?.profession || educator?.email ? (
+              <Text style={styles.profileRole}>
+                {educator.profession || educator.email}
+              </Text>
             ) : null}
           </View>
           <FigmaIcon name="chevron" size={18} color={color.ink[500]} />
-        </Pressable>
+        </StaticPressable>
 
         {featureGroups.map((group) => (
           <View key={group.title} style={styles.group}>
