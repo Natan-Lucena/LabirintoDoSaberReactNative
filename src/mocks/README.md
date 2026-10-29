@@ -205,3 +205,8 @@ STUDENT_NOT_FOUND`.
   O endpoint do app remove `educators` antes de expor a resposta ao cache.
 - O educador fictício tem `profession: null`. Sessões devolvem `taskNotebookId` e
   `appointmentId` como `null` quando não vinculadas; o início aceita os dois IDs.
+
+## Perfil e conta (REC-02)
+
+- `PUT /educator/update-educator` aceita somente `newName`, `newContact` e `newProfession` opcionais de 3 a 100 caracteres. A resposta imita o formato real com campos `_name`, `_contact`, `_profession`, `_photoUrl` e `_password`; o app a descarta e refaz `GET /educator/me`.
+- `PUT /educator/update-profile-picture` exige multipart `photo` e atualiza a URL fictícia da foto. O cliente recusa arquivos acima de 5 MB.

@@ -4,6 +4,7 @@ import { apiClient } from "@/api/client";
 import { getRuntimeUseMocks } from "@/config/env";
 import { mockAdapter } from "@/mocks/adapter";
 import "@/mocks/handlers/educator";
+import "@/mocks/handlers/educator-update";
 import "@/mocks/handlers/appointment";
 import "@/mocks/handlers/student";
 import "@/mocks/handlers/content";

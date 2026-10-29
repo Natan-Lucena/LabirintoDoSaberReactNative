@@ -86,10 +86,7 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     expect(routerPush).toHaveBeenCalledWith("/activities");
     expect(routerPush).toHaveBeenCalledWith("/reports");
     expect(routerPush).toHaveBeenCalledWith("/anamnese/templates");
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Perfil" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/profile");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
       params: { title: "Planos com IA" },
@@ -110,5 +107,19 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
       pathname: "/shell/coming-soon",
       params: { title: "Central de ajuda" },
     });
+  });
+
+  it("mostra profissão e foto quando disponíveis no banner", async () => {
+    homeData.educator = {
+      id: "educator-1",
+      name: "Aline Martins",
+      email: "aline@example.test",
+      profession: "Psicopedagoga",
+      photoUrl: "https://example.test/aline.jpg",
+    };
+    const view = await render(<ResourcesScreen />);
+    expect(view.getByText("Psicopedagoga")).toBeTruthy();
+    expect(view.queryByText("aline@example.test")).toBeNull();
+    expect(view.getByLabelText("Aline Martins")).toBeTruthy();
   });
 });
