@@ -20,6 +20,7 @@ import {
   useToast,
 } from "@/components/ds";
 import { afterSavePlanRoute, planDetailRoute } from "@/features/plans/routes";
+import { planQueryKeys } from "@/features/plans/hub/usePlans";
 import { color, typography } from "@/theme";
 
 const schema = z.object({
@@ -108,7 +109,7 @@ export function DraftPreview({
       }),
     retry: false,
     onSuccess: async (plan) => {
-      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all });
       onSaved();
       setSavedId(plan.id);
       toast.show("Plano salvo");

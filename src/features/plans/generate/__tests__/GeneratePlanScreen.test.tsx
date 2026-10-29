@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Alert, Share } from "react-native";
+import { createQueryClient } from "@/api/query-client";
+import { planQueryKeys } from "@/features/plans/hub/usePlans";
 import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 
 const params = vi.hoisted(() => ({
@@ -280,6 +282,32 @@ describe("GeneratePlanScreen (PLN-02)", () => {
       ),
     );
     expect(screen.getByText("Plano salvo")).toBeTruthy();
+  });
+
+  it("invalida a consulta real da lista depois de salvar", async () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(planQueryKeys.list(), []);
+    expect(queryClient.getQueryState(planQueryKeys.list())?.isInvalidated).toBe(
+      false,
+    );
+    params.studentId = "student-1";
+    generate.mockResolvedValue(editableDraft);
+    create.mockResolvedValue({ id: "new-plan" });
+    await render(<GeneratePlanScreen />, { queryClient });
+    await fireEvent.changeText(
+      screen.getByLabelText("Foco do planejamento"),
+      "Leitura",
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Gerar planejamento com IA" }),
+    );
+    await waitFor(() => expect(screen.getByLabelText("Título")).toBeTruthy());
+    await fireEvent.press(screen.getByRole("button", { name: "Salvar PDI" }));
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryState(planQueryKeys.list())?.isInvalidated,
+      ).toBe(true),
+    );
   });
 
   it("compartilha uma síntese com metas numeradas", async () => {
