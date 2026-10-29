@@ -9,6 +9,13 @@
 > ([`L7sCNfMhrzOzhtlNpS3cHr`](https://www.figma.com/make/L7sCNfMhrzOzhtlNpS3cHr/Receive-.fig-files)).
 > Telas sem desenho no Make usam o design system de `src/components/ds` (G-18, G-38).
 
+> **Atualização 2026-10-29:** o backend entregou o domínio de planos e os pequenos pedidos
+> ([BACKEND-ENTREGUE](BACKEND-ENTREGUE.md), com a conferência do Swagger). As fichas abaixo ainda
+> descrevem a API anterior em "Sem API"; **para AGE-03, AGE-04, PAC-06, PAC-07, REC-02, FEC-03 e
+> o bloco de planos, vale o BACKEND-ENTREGUE** e a spec de cada dispatch, que traz os ajustes.
+> Tarefas novas: API-03 (tipos e mocks do contrato novo), SES-05 (sessão ligada ao caderno, G-06)
+> e FEC-04 (grupo de caderno pelo `GET /task-group/:id`).
+
 ## 1. Convenções
 
 - **IDs:** os da [Entrega 2](../entrega-2/BACKLOG.md#1-convenções). Tarefas que vêm da
