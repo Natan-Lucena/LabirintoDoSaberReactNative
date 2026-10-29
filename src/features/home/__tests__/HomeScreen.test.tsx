@@ -145,9 +145,9 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
       screen.getAllByRole("button", { name: "Ver agenda" })[0]!,
     );
 
-    expect(routerPush).toHaveBeenCalledWith("/students/student-1");
+    expect(routerPush).toHaveBeenCalledWith("/patients/student-1");
     expect(routerPush).toHaveBeenCalledWith("/session/student");
-    expect(routerPush).toHaveBeenCalledWith("/students/new");
+    expect(routerPush).toHaveBeenCalledWith("/patients/new");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
       params: { title: "Criar plano" },

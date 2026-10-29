@@ -6,21 +6,18 @@ import { BottomNav } from "@/components/ds/BottomNav";
 import { TAB_DEFINITIONS, useTabItems } from "@/features/shell/useTabItems";
 
 // NAV-01/NAV-02: casca nova do Figma Make (BottomNav + AppHeader) em vez do
-// TabBar/AppHeader da Entrega 1. Mantemos as abas antigas (Atividades,
-// Alunos, Relatórios) e /appointments como rotas escondidas (href: null)
-// para não quebrar links internos; a limpeza é da NAV-03.
+// TabBar/AppHeader da Entrega 1. Atividades e Relatórios continuam como
+// rotas escondidas (href: null) porque são telas da V1.
 function BottomNavAdapter(): ReactElement {
   const { items, activeKey } = useTabItems();
 
   return <BottomNav items={items} activeKey={activeKey} />;
 }
 
-// Rotas da Entrega 1 que saem da tab bar mas continuam existindo.
+// Rotas da V1 fora da tab bar.
 const HIDDEN_TAB_TITLES: Record<string, string> = {
   activities: "Atividades",
   reports: "Relatórios",
-  students: "Alunos",
-  appointments: "Agenda",
 };
 
 export default function TabsLayout(): ReactElement {
