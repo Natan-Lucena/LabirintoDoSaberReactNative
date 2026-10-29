@@ -15,6 +15,14 @@ const onlineState = vi.hoisted(() => ({ value: true }));
 vi.mock("@/features/home/useHomeData", () => ({
   useHomeQuery: () => homeQuery,
 }));
+const suggestionsState = vi.hoisted(() => ({ count: 0 }));
+vi.mock("@/features/plans/suggestions/usePlanSuggestions", () => ({
+  usePendingSuggestions: () => ({
+    data: Array.from({ length: suggestionsState.count }, (_, index) => ({
+      id: `s-${index}`,
+    })),
+  }),
+}));
 vi.mock("@/hooks/useOnline", () => ({ useOnline: () => onlineState.value }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ push: routerPush }) }));
 
@@ -121,6 +129,7 @@ function setHomeQuery(overrides: Partial<HomeQueryResult> = {}): void {
 describe("HomeScreen (AC-HOME-01-01..04)", () => {
   beforeEach(() => {
     onlineState.value = true;
+    suggestionsState.count = 0;
     routerPush.mockClear();
     openURL.mockReset().mockResolvedValue(undefined);
   });
@@ -232,5 +241,19 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
     expect(
       screen.getByText("Sem conexão - mostrando dados salvos"),
     ).toBeTruthy();
+  });
+
+  it("AC-PLN-05-04 mostra o cartão com a contagem de pendentes e abre as sugestões", async () => {
+    suggestionsState.count = 3;
+    setHomeQuery();
+    await render(<HomeScreen />);
+    await fireEvent.press(screen.getByText("3 sugestões da IA para revisar"));
+    expect(routerPush).toHaveBeenCalledWith("/plans/suggestions");
+  });
+
+  it("AC-PLN-05-04 esconde o cartão quando não há pendentes", async () => {
+    setHomeQuery();
+    await render(<HomeScreen />);
+    expect(screen.queryByText(/sugestões? da IA para revisar/)).toBeNull();
   });
 });

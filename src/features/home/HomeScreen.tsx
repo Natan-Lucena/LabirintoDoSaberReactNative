@@ -16,13 +16,18 @@ import {
   AppHeader,
   Avatar,
   DsButton,
+  InsightCard,
   SectionTitle,
   Timeline,
   Toast,
   useToast,
   type TimelineItemData,
 } from "@/components/ds";
-import { NEW_PLAN_ROUTE } from "@/features/plans/routes";
+import {
+  NEW_PLAN_ROUTE,
+  PLAN_SUGGESTIONS_ROUTE,
+} from "@/features/plans/routes";
+import { usePendingSuggestions } from "@/features/plans/suggestions/usePlanSuggestions";
 import { selectNextAppointment } from "@/features/home/selectors";
 import { useHomeQuery } from "@/features/home/useHomeData";
 import { useOnline } from "@/hooks/useOnline";
@@ -188,6 +193,7 @@ export function HomeScreen(): ReactElement {
   const isOnline = useOnline();
   const { data, isPending, isError, refetch } = useHomeQuery();
   const toast = useToast();
+  const pendingSuggestions = usePendingSuggestions().data?.length ?? 0;
 
   if (isPending && !data) return <HomeState />;
   if (isError && !data)
@@ -317,6 +323,17 @@ export function HomeScreen(): ReactElement {
             </>
           )}
         </View>
+        {pendingSuggestions > 0 ? (
+          <InsightCard
+            title={
+              pendingSuggestions === 1
+                ? "1 sugestão da IA para revisar"
+                : `${pendingSuggestions} sugestões da IA para revisar`
+            }
+            text="Veja o que a IA propõe para os planos dos seus pacientes."
+            onPress={() => router.push(PLAN_SUGGESTIONS_ROUTE)}
+          />
+        ) : null}
         <View style={{ gap: 12 }}>
           <SectionTitle title="Acesso rápido" />
           <View style={styles.quickGrid}>
