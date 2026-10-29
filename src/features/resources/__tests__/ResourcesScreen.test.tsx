@@ -42,6 +42,7 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
       "Planos com IA",
       "Evolução da sessão",
       "Avaliações e escalas",
+      "Modelos de anamnese",
       "Banco de atividades",
       "Cadernos e grupos",
       "Relatórios",
@@ -64,6 +65,9 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     );
     await fireEvent.press(screen.getByRole("button", { name: "Relatórios" }));
     await fireEvent.press(
+      screen.getByRole("button", { name: "Modelos de anamnese" }),
+    );
+    await fireEvent.press(
       screen.getByRole("button", { name: "Planos com IA" }),
     );
     await fireEvent.press(
@@ -81,6 +85,7 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
 
     expect(routerPush).toHaveBeenCalledWith("/activities");
     expect(routerPush).toHaveBeenCalledWith("/reports");
+    expect(routerPush).toHaveBeenCalledWith("/anamnese/templates");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
       params: { title: "Perfil" },

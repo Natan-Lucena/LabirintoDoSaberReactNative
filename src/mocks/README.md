@@ -134,6 +134,12 @@ sucesso com `200 TaskNotebookSession`.
   de `src/mocks/handlers/session-analysis`; `"success"` volta ao normal.
 - `GET /anamnese/templates/` lista dois modelos fictícios.
 
+## Modelos de anamnese (PAC-08)
+
+- `GET /anamnese/templates/` lista os modelos do educador mockado; `GET /anamnese/templates/:templateId` detalha um modelo.
+- `POST /anamnese/templates/` cria e `PUT /anamnese/templates/:templateId` edita com título, descrição e perguntas; `DELETE /anamnese/templates/:templateId` remove e devolve `200 null`.
+- Um ID inexistente devolve `404 TEMPLATE_NOT_FOUND`. Use `has-responses` como ID em PUT ou DELETE para receber `400 TEMPLATE_HAS_RESPONSES`.
+
 ## Fidelidade ao backend real (2026-10-09)
 
 Conferido contra `https://labirinto-do-saber.vercel.app`; os mocks seguem estas escalas:
