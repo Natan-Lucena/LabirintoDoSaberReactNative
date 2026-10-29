@@ -115,7 +115,9 @@ em 2026-10-29 (`taskNotebookId` no `start`; implementação no app pela SES-05).
 | E3-12 | QA-02, QA-03, QA-04                        | QA-04 exige aparelho físico e Mac/iPhone                              |
 
 O trabalho segue **faseado** (pedido do usuário, 2026-10-29): o orquestrador avisa ao fim de cada
-fase antes de seguir. No máximo 2 workers ao mesmo tempo (pedido do usuário); a ordem dentro de cada onda segue a
+fase antes de seguir. **O emulador só roda depois de todas as tarefas de código** (pedido do usuário, 2026-10-29):
+PLN-04, depois PLN-05 com QA-06 (roteiro escrito); por último, a rodada no emulador (FEC-01,
+validação manual das telas, QA-02 e QA-03) e a QA-04 nos aparelhos, com autorização. No máximo 2 workers ao mesmo tempo (pedido do usuário); a ordem dentro de cada onda segue a
 disponibilidade.
 
 Caminho crítico:
