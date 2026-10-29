@@ -19,7 +19,8 @@ foram validadas no emulador Android contra o backend real (ver
 [ENTREGA-V1](docs/entrega-2/ENTREGA-V1.md)). Desde 2026-10-28 o trabalho segue a **Entrega 3**:
 fechar a V1, completar as telas que já têm API (Agenda, editar paciente, anamnese, perfil) e
 o domínio **Planos com IA**, entregue pelo backend (G-48). Decisões documentadas não equivalem
-a recursos implementados. O estado atual está no
+a recursos implementados. Em 2026-10-29, as **23 tarefas de código** da Entrega 3 estão na `main` (ver
+[ENTREGA-3](docs/entrega-3/ENTREGA-3.md)); faltam 4 de validação no emulador e em aparelhos. O estado atual está no
 [TRACKING da Entrega 3](docs/entrega-3/TRACKING.md) e o contexto para retomar o trabalho em
 [CONTEXTO-SESSAO](docs/CONTEXTO-SESSAO.md). O histórico fica nos TRACKING da
 [Entrega 2](docs/entrega-2/TRACKING.md) e da [Entrega 1](docs/entrega-1/TRACKING.md).
@@ -44,9 +45,9 @@ a recursos implementados. O estado atual está no
   fiéis ao contrato, teste de integração pelo `apiClient` real e funções provisórias
   marcadas com o gate). Desde 2026-10-09 há um backend acessível
   (`https://labirinto-do-saber.vercel.app`, Swagger em `/api-docs/`, incompleto): a V1 foi
-  testada contra ele com `EXPO_PUBLIC_USE_MOCKS=false`. G-07 e G-43 foram resolvidos pela
-  evidência; G-06 segue aberto. Mocks continuam ligados por padrão em desenvolvimento.
-  Cuidados do Expo Go (NativeWind e `Pressable`, PDF, timeout de IA) em
+  testada contra ele com `EXPO_PUBLIC_USE_MOCKS=false`. G-06, G-07 e G-43 foram resolvidos. Desde
+  2026-10-29 (G-51) os mocks ficam **desligados por padrão**; o modo mock exige
+  `EXPO_PUBLIC_USE_MOCKS=true`. Cuidados do Expo Go (NativeWind e `Pressable`, PDF, timeout de IA) em
   [CONTEXTO-SESSAO §5](docs/CONTEXTO-SESSAO.md).
 - O backend é externo a este repositório. Sua referência fornecida descreve o
   contrato de integração; não alegue validação contra seu código ou produção sem
@@ -95,7 +96,7 @@ Antes de iniciar qualquer implementação, leia nesta ordem:
 6. [Especificação para o backend](docs/entrega-3/ESPECIFICACAO-BACKEND.md): o domínio de
    planos (PLN-00) e os pequenos pedidos, com regras de negócio; resumo em
    [PEDIDOS-BACKEND](docs/entrega-3/PEDIDOS-BACKEND.md).
-7. [Gates e decisões](docs/entrega-1/GATES.md): decisões G-01 a G-51, compartilhadas pelas
+7. [Gates e decisões](docs/entrega-1/GATES.md): decisões G-01 a G-53, compartilhadas pelas
    entregas.
 
 As fichas da Entrega 2 ([BACKLOG](docs/entrega-2/BACKLOG.md)) continuam sendo a referência do

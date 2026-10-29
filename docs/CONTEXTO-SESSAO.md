@@ -1,4 +1,4 @@
-# Contexto da sessão de orquestração — handoff (atualizado em 2026-10-28)
+# Contexto da sessão de orquestração — handoff (atualizado em 2026-10-29)
 
 > Este arquivo resume o que não está óbvio nos outros documentos, para retomar sem refazer o
 > discovery, seja no Claude Code, seja no OpenCode. A fonte canônica do progresso é o
@@ -6,23 +6,24 @@
 
 ## 1. Onde estamos
 
-| Item                  | Estado                                                                                                                                                                                                                                                                                               |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                                                                               |
-| Entrega vigente       | **Entrega 3** (planejada em 2026-10-28): fechar a V1, telas com API pronta (Agenda, editar paciente, anamnese, perfil) e **Planos com IA** (único domínio novo pedido ao backend, G-48). Ver [ROADMAP da Entrega 3](entrega-3/ROADMAP.md). O design continua o Figma Make (`L7sCNfMhrzOzhtlNpS3cHr`) |
-| Escopo da V1          | Criar atividade (manual com imagem e áudio, e com IA), cadernos e grupos, pacientes, sessão (player + registro) e relatórios (sessão, aluno, análise por IA em Markdown), ponta a ponta com o backend real                                                                                           |
-| O que já está na main | Toda a V1 da Entrega 2 (PR #75) e **todas as tarefas de código da Entrega 3** (23 de 27, #78 a #111), inclusive o roteiro de testes (QA-06)                                                                                                                                                          |
-| Em andamento          | Nada. Aguardando o usuário liberar o emulador                                                                                                                                                                                                                                                        |
-| Próximas              | Rodada no emulador, **só quando o usuário mandar**: FEC-01, validação manual pelo [PLANO-TESTES](entrega-3/PLANO-TESTES.md), QA-02 (Maestro, pedir autorização para instalar) e QA-03; depois a QA-04 nos aparelhos                                                                                  |
-| Backend               | `https://labirinto-do-saber.vercel.app` (Swagger em `/api-docs/`, 70 rotas). Em 2026-10-29 entregou planos, sugestões sob demanda e os pequenos pedidos; achado de segurança: senha de educador nas respostas de aluno e do `update-educator` (pedido urgente, PEDIDOS-BACKEND item 18)              |
-| Qualidade             | 933 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links. Com pouca memória, use `--maxWorkers=1 --testTimeout=30000`                                                                                                                               |
-| Validação manual      | Feita em 2026-10-09 no emulador Android (Expo Go) contra o backend real; relatório em `docs/entrega-2/QA-05-RELATORIO.md`. Pendente: iOS, aparelho físico (câmera) e as rotas listadas no relatório                                                                                                  |
+| Item                  | Estado                                                                                                                                                                                                                                         |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                         |
+| Entrega vigente       | **Entrega 3**: 23 de 27 tarefas na `main` (todas as de código). Resumo em [ENTREGA-3](entrega-3/ENTREGA-3.md); plano em [ROADMAP](entrega-3/ROADMAP.md). Design: Figma Make `L7sCNfMhrzOzhtlNpS3cHr`                                           |
+| Escopo da Entrega 3   | Fechar a V1; Agenda completa (com WhatsApp por `wa.me`); editar paciente e responsável; anamnese e modelos; perfil e sair; sessão ligada ao caderno; Planos com IA (lista, geração, rascunho, detalhe, revisões e sugestões)                   |
+| O que já está na main | Toda a V1 da Entrega 2 (PR #75) e **todas as tarefas de código da Entrega 3** (23 de 27, #78 a #111), inclusive o roteiro de testes (QA-06)                                                                                                    |
+| Em andamento          | Nada. Aguardando o usuário liberar o emulador                                                                                                                                                                                                  |
+| Próximas              | Rodada no emulador, **só quando o usuário mandar**: FEC-01, validação manual pelo [PLANO-TESTES](entrega-3/PLANO-TESTES.md), QA-02 (Maestro, pedir autorização para instalar) e QA-03; depois a QA-04 nos aparelhos                            |
+| Backend               | `https://labirinto-do-saber.vercel.app` (Swagger em `/api-docs/`, 70 rotas). Contrato da Entrega 3 em [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md)                                                                                        |
+| Qualidade             | 933 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links. Com pouca memória, use `--maxWorkers=1 --testTimeout=30000`                                                                         |
+| Validação manual      | V1: feita em 2026-10-09 no emulador Android ([QA-05-RELATORIO](entrega-2/QA-05-RELATORIO.md)). **Entrega 3: nenhuma tela aberta ainda**; o roteiro é o [PLANO-TESTES](entrega-3/PLANO-TESTES.md) e roda só quando o usuário liberar o emulador |
 
 ## 2. Regras combinadas com o usuário
 
-1. **Workers pelo Orca CLI**, priorizando o **OpenCode** (`openai/gpt-5.6-terra`). Claude
-   Sonnet (`claude-sonnet-5`) e Haiku (`claude-haiku-4-5-20251001`) só como alternativa:
-   quando o OpenCode bater o limite de uso, quando o worker morrer, ou quando o usuário pedir.
+1. **Workers pelo Orca CLI**, priorizando o **Codex** (desde 2026-10-28, enquanto houver cota),
+   depois o **OpenCode** (`openai/gpt-5.6-terra`) e, por último, o Claude Sonnet. Codex e
+   OpenCode usam a mesma conta OpenAI: quando um bate o limite, o outro também. Haiku para
+   trabalho mecânico (commit e PR de docs).
 2. **O orquestrador não implementa nem commita**: planeja, escreve specs e docs, revisa diffs e
    faz o merge quando autorizado. Commits e pushes ficam com um worker (o executor ou um Haiku),
    inclusive os de documentação.
@@ -38,22 +39,26 @@
    real. O que o contrato não define fica numa função provisória marcada com o gate (ex.:
    `resolveSessionTasks` para G-06, `toApiTimeToAnswer` para G-07).
 5. **Nunca abrir, instalar ou mexer no emulador ou no app sem o usuário mandar** naquele
-   momento.
-6. **Testes antes da implementação**, com o vermelho registrado (AGENTS §4). Nunca usar
+   momento. Na Entrega 3, o emulador só roda **depois de todas as tarefas de código** (pedido de
+   2026-10-29).
+6. **Trabalho faseado** (desde 2026-10-29): ao fim de cada fase (PRs revisados, CI verde,
+   merge e PR de docs), avisar o usuário e esperar "pode seguir".
+7. **Testes antes da implementação**, com o vermelho registrado (AGENTS §4). Nunca usar
    `--no-verify`.
-7. **Proibido editar arquivos com PowerShell** (`Set-Content`/`Out-File`): isso já corrompeu a
+8. **Proibido editar arquivos com PowerShell** (`Set-Content`/`Out-File`): isso já corrompeu a
    codificação (BOM + codificação dupla). Usar a ferramenta de edição ou Python com
    `encoding="utf-8"`.
-8. **Workers não criam subagentes nem forks** e não usam pergunta interativa no terminal (ex.:
+9. **Workers não criam subagentes nem forks** e não usam pergunta interativa no terminal (ex.:
    `AskUserQuestion` do Claude Code): ela trava sem ninguém para responder. Dúvidas vão por
    `orca orchestration ask`, e o orquestrador precisa responder em até 10 minutos (o `ask`
    expira).
-9. **Não inventar endpoint nem campo**: cada ficha lista os "Endpoints existentes" e o que
-   "Ainda não existe na API".
-10. Testes nunca dentro de `app/` (o Expo Router trata como rota). Dados sempre fictícios.
-11. **Poucos workers ao mesmo tempo** (até 3): a máquina trava com muitos processos Node.
+10. **Não inventar endpoint nem campo**: cada ficha lista os "Endpoints existentes" e o que
+    "Ainda não existe na API".
+11. Testes nunca dentro de `app/` (o Expo Router trata como rota). Dados sempre fictícios.
+12. **No máximo 2 workers ao mesmo tempo** (pedido de 2026-10-28): a máquina trava com muitos
+    processos Node e costuma ficar abaixo de 1 GB de memória livre.
     Feche os terminais de workers que já terminaram (`orca terminal close`).
-12. Responder ao usuário em **português**.
+13. Responder ao usuário em **português**.
 
 ## 3. Como disparar workers (Orca)
 
@@ -83,6 +88,24 @@
 
   Depois de abrir o terminal, confira se ele não mostra "usage limit".
 
+- **Codex (preferido):** lançado pelo Orca precisa de `--no-daemon` e de um Enter depois do
+  despacho; prompts longos chegam divididos. Use uma spec curta que aponte para o arquivo com a
+  spec completa:
+
+  ```bash
+  CX='C:\Users\zerog\AppData\Roaming\fnm\node-versions\v22.22.3\installation\codex.cmd'
+  orca terminal create --worktree "path:C:/Users/zerog/lds-wt/<wt>" --title "<ID>" \
+    --command "& '$CX' --no-daemon -c check_for_update_on_startup=false -a never -s danger-full-access" --json
+  orca orchestration task-create --json --run run_0f0031abd486 --task-title "<ID>" \
+    --display-name "<ID>" --spec "Leia COMPLETAMENTE e execute a spec em <arquivo>. Comece lendo os arquivos."
+  orca orchestration worker-start --run run_0f0031abd486 --task <task> --terminal <handle> \
+    --worktree "path:C:/Users/zerog/lds-wt/<wt>" --timeout-ms 180000 --json
+  orca terminal send --terminal <handle> --enter   # só se o texto estiver parado na caixa
+  ```
+
+  O despacho do Codex aparece como `failed` no Orca mesmo quando funciona: acompanhe pelo
+  terminal, pela branch e pelo PR.
+
 - **Claude (alternativa):** `worker-start ... --agent claude --model claude-sonnet-5 --worktree path:...`
   (ou `claude-haiku-4-5-20251001` para tarefas pequenas, como commit de docs ou correção de
   uma linha).
@@ -98,8 +121,8 @@
   - `orca terminal list --json` lista os terminais; `terminal_handle_stale` = worker morreu.
 - **O sinal confiável de fim é o PR**: `gh pr list --state open`. Os workers Claude disparados
   pelo Orca às vezes não conseguem mandar `worker_done` ("capability revoked").
-- **Worktrees de trabalho:** `C:\Users\zerog\lds-wt\{w4,c1,c2,v2,vis}`.
-  - `t201` é a worktree onde o app rodou no emulador; não use para trabalho.
+- **Worktrees de trabalho:** `C:\Users\zerog\lds-wt\{e1,e2,e3}` (as antigas foram removidas em
+  2026-10-28). Cada worker cria a branch com `git checkout -B <branch> origin/main` na worktree.
   - A GUI do Orca mostra cada worker **dentro da sua worktree**, não na pasta principal.
   - Uma branch usada por uma worktree não pode ser apagada no merge; use `gh pr merge` sem
     `--delete-branch` ou ignore o aviso.
@@ -128,29 +151,33 @@
 
 ## 5. Rodar o app (quando o usuário pedir)
 
-1. `pnpm install`;
-2. `pnpm start`;
-3. abrir no **Expo Go**: QR no celular ou tecla `a` no emulador `Pixel_3a_API_34`.
+1. `pnpm install --frozen-lockfile`;
+2. `.env` com `EXPO_PUBLIC_API_BASE_URL=https://labirinto-do-saber.vercel.app` (os mocks ficam
+   desligados por padrão desde a FEC-02);
+3. `pnpm start --clear`;
+4. abrir no **Expo Go**: QR no celular ou tecla `a` no emulador `Pixel_3a_API_34`.
 
-Conta mock (com `EXPO_PUBLIC_USE_MOCKS=true`): `educadora.mock@labirinto.test` / `senha123`.
-A sessão mock fica em memória: fechar o app pede login de novo.
+Modo mock (opcional): `EXPO_PUBLIC_USE_MOCKS=true`, login `educadora.mock@labirinto.test` /
+`senha123`. A sessão mock fica em memória: fechar o app pede login de novo.
 
 ## 6. Documentos-chave
 
-| Documento                                                                                              | Para quê                                                                                    |
-| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| [AGENTS.md](../AGENTS.md)                                                                              | Metodologia, papéis e fluxo obrigatório                                                     |
-| [ROADMAP da Entrega 2](entrega-2/ROADMAP.md)                                                           | Mapa de telas do Make, marcos, V1, decisões e riscos                                        |
-| [BACKLOG da Entrega 2](entrega-2/BACKLOG.md)                                                           | Histórias, tokens e componentes do Make, cobertura da API (§2.3), fichas V1 (§4.0) e demais |
-| [TRACKING da Entrega 2](entrega-2/TRACKING.md)                                                         | Estado de cada tarefa, PRs e commits                                                        |
-| [GATES](entrega-1/GATES.md)                                                                            | Decisões G-01 a G-43                                                                        |
-| [PERGUNTAS-BACKEND](entrega-1/PERGUNTAS-BACKEND.md)                                                    | Perguntas abertas ao backend (G-05, G-06, G-07, G-43)                                       |
-| [PROJECT.md](PROJECT.md)                                                                               | Arquitetura e contrato da API (55 endpoints)                                                |
-| [src/mocks/README.md](../src/mocks/README.md)                                                          | Cenários de mock acionáveis por endpoint                                                    |
-| [COMPATIBILIDADE](bootstrap/COMPATIBILIDADE.md)                                                        | Versões, achados A-01 a A-22 e auditoria do Expo Go (§9)                                    |
-| [Reunião 25/09](entrega-1/reuniao25-09.md) e [plano de testes da Entrega 1](entrega-1/PLANO-TESTES.md) | Histórico e roteiro manual                                                                  |
+| Documento                                                                              | Para quê                                             |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [AGENTS.md](../AGENTS.md)                                                              | Metodologia, papéis e fluxo obrigatório              |
+| [ENTREGA-3](entrega-3/ENTREGA-3.md)                                                    | O que a Entrega 3 entregou e o que falta             |
+| [ROADMAP da Entrega 3](entrega-3/ROADMAP.md)                                           | Escopo, telas, decisões e ondas                      |
+| [BACKLOG da Entrega 3](entrega-3/BACKLOG.md)                                           | Fichas com endpoints, arquivos e critérios de aceite |
+| [TRACKING da Entrega 3](entrega-3/TRACKING.md)                                         | Estado de cada tarefa, PRs e commits                 |
+| [PLANO-TESTES da Entrega 3](entrega-3/PLANO-TESTES.md)                                 | Roteiro da rodada manual no emulador                 |
+| [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md)                                      | Contrato das rotas novas de 2026-10-29               |
+| [GATES](entrega-1/GATES.md)                                                            | Decisões G-01 a G-53                                 |
+| [PROJECT.md](PROJECT.md)                                                               | Arquitetura e contrato da API                        |
+| [src/mocks/README.md](../src/mocks/README.md)                                          | Cenários de mock acionáveis por endpoint             |
+| [COMPATIBILIDADE](bootstrap/COMPATIBILIDADE.md)                                        | Versões e auditoria do Expo Go                       |
+| [ENTREGA-V1](entrega-2/ENTREGA-V1.md) e [TRACKING da Entrega 2](entrega-2/TRACKING.md) | Histórico da V1                                      |
 
-## 5. Lições de 2026-10-09 (teste contra o backend real)
+## 7. Lições de 2026-10-09 (teste contra o backend real)
 
 - **Expo Go + NativeWind:** o `style` em função do `Pressable` é descartado. Use
   `StaticPressable` (`src/components/ds`) ou estilo estático (G-44). Não confie só nos testes:

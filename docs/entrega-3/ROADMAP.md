@@ -5,6 +5,9 @@
 > fica no [TRACKING](TRACKING.md). Os pedidos ao backend estão em
 > [PEDIDOS-BACKEND](PEDIDOS-BACKEND.md). Este documento não marca nenhuma implementação como
 > pronta.
+>
+> **Estado em 2026-10-29:** as 23 tarefas de código estão na `main` (ver
+> [ENTREGA-3](ENTREGA-3.md)); faltam FEC-01, QA-02, QA-03 e QA-04, de validação.
 
 ## 1. Objetivo
 
@@ -98,21 +101,21 @@ em 2026-10-29 (`taskNotebookId` no `start`; implementação no app pela SES-05).
 
 ## 6. Ondas
 
-| Onda  | Tarefas                                    | Observação                                                            |
-| ----- | ------------------------------------------ | --------------------------------------------------------------------- |
-| E3-0  | NAV-03 ✓, FEC-02 ✓, PLN-00 ✓               | Concluídas                                                            |
-| E3-1  | AGE-01 ✓, ATV-02 ✓, FEC-03 ✓               | Concluídas                                                            |
-| E3-2  | API-03 ✓, PAC-08 ✓                         | Concluídas                                                            |
-| E3-3  | AGE-03 ✓, SES-05 ✓, PAC-07, REC-02, FEC-04 | Arquivos disjuntos (BACKLOG §3)                                       |
-| E3-4  | AGE-04 ✓, FEC-01                           | FEC-01 exige o emulador, com autorização do usuário                   |
-| E3-5  | AGE-02                                     | Botão do WhatsApp (G-53); depois de PAC-07 e AGE-04 (mesmos arquivos) |
-| E3-6  | PAC-06, PLN-01                             |                                                                       |
-| E3-7  | PLN-02                                     |                                                                       |
-| E3-8  | PLN-03, PAC-04                             |                                                                       |
-| E3-9  | PLN-04                                     |                                                                       |
-| E3-10 | PLN-05                                     | Sugestões sob demanda (G-52)                                          |
-| E3-11 | QA-06                                      |                                                                       |
-| E3-12 | QA-02, QA-03, QA-04                        | QA-04 exige aparelho físico e Mac/iPhone                              |
+| Onda  | Tarefas                                          | Observação                                                            |
+| ----- | ------------------------------------------------ | --------------------------------------------------------------------- |
+| E3-0  | NAV-03 ✓, FEC-02 ✓, PLN-00 ✓                     | Concluídas                                                            |
+| E3-1  | AGE-01 ✓, ATV-02 ✓, FEC-03 ✓                     | Concluídas                                                            |
+| E3-2  | API-03 ✓, PAC-08 ✓                               | Concluídas                                                            |
+| E3-3  | AGE-03 ✓, SES-05 ✓, PAC-07 ✓, REC-02 ✓, FEC-04 ✓ | Arquivos disjuntos (BACKLOG §3)                                       |
+| E3-4  | AGE-04 ✓, FEC-01                                 | FEC-01 exige o emulador, com autorização do usuário                   |
+| E3-5  | AGE-02 ✓                                         | Botão do WhatsApp (G-53); depois de PAC-07 e AGE-04 (mesmos arquivos) |
+| E3-6  | PAC-06 ✓, PLN-01 ✓                               | Concluídas                                                            |
+| E3-7  | PLN-02 ✓                                         | Concluídas                                                            |
+| E3-8  | PLN-03 ✓, PAC-04 ✓                               | Concluídas                                                            |
+| E3-9  | PLN-04 ✓                                         | Concluídas                                                            |
+| E3-10 | PLN-05 ✓                                         | Sugestões sob demanda (G-52)                                          |
+| E3-11 | QA-06 ✓                                          | Concluídas                                                            |
+| E3-12 | QA-02, QA-03, QA-04                              | QA-04 exige aparelho físico e Mac/iPhone                              |
 
 O trabalho segue **faseado** (pedido do usuário, 2026-10-29): o orquestrador avisa ao fim de cada
 fase antes de seguir. **O emulador só roda depois de todas as tarefas de código** (pedido do usuário, 2026-10-29):
