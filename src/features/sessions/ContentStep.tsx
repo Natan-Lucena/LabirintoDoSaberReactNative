@@ -80,7 +80,14 @@ export function ContentStep(): ReactElement {
     });
     await requestStart();
     try {
-      const session = await startSession({ studentId: student.id, name });
+      // Só o caderno tem vínculo no backend (G-06); grupo e atividade ficam sem.
+      const session = await startSession({
+        studentId: student.id,
+        name,
+        ...(selected.kind === "notebook"
+          ? { taskNotebookId: selected.id }
+          : {}),
+      });
       await confirmStart(session.id);
       router.push("/session/player");
     } catch (error) {

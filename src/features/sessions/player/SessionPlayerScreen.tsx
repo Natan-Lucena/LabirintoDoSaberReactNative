@@ -154,6 +154,11 @@ export function SessionPlayerScreen(): ReactElement | null {
         setMessage("Resposta registrada");
         return;
       }
+      if (apiError.code === "TASK_NOT_IN_NOTEBOOK") {
+        // Resposta recusada de vez: não fica pendente nem trava a sequência.
+        setMessage("Esta atividade não faz parte do caderno da sessão.");
+        return;
+      }
       await markAnswerPending(nextAnswer);
       setPendingAnswer(nextAnswer);
       setMessage(

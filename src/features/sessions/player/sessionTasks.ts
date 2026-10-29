@@ -11,8 +11,11 @@ async function loadTasks(ids: string[]): Promise<Task[]> {
 }
 
 /**
- * G-06: substituída na INT-01 pela lista ordenada devolvida pela sessão.
- * A API atual não documenta esse vínculo, então usa o conteúdo escolhido localmente.
+ * Resolve as tarefas do conteúdo da sessão. G-06 (resolvido em 2026-10-29): o
+ * backend guarda `taskNotebookId` na sessão, então o caderno vale em qualquer
+ * aparelho; a lista ordenada continua vindo de `notebook.tasks` em
+ * `GET /task-notebook/`. Grupo e atividade avulsa não têm vínculo no servidor e
+ * seguem o conteúdo salvo neste aparelho.
  */
 export async function resolveSessionTasks(
   content: SessionFlowContent,

@@ -172,6 +172,78 @@ describe("SessionPlayerScreen", () => {
     ).toBeNull();
   });
 
+  it("AC-SES-05-03: TASK_NOT_IN_NOTEBOOK mostra mensagem neutra e deixa seguir", async () => {
+    vi.mocked(answerSession).mockRejectedValueOnce(
+      Object.assign(new Error("TASK_NOT_IN_NOTEBOOK"), {
+        isAxiosError: true,
+        response: { status: 400, data: { message: "TASK_NOT_IN_NOTEBOOK" } },
+      }),
+    );
+    await renderPlayer();
+    await waitFor(() =>
+      expect(screen.getByText("Escolha uma letra")).toBeTruthy(),
+    );
+
+    await act(async () =>
+      fireEvent.press(screen.getByRole("button", { name: "A" })),
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Esta atividade não faz parte do caderno da sessão."),
+      ).toBeTruthy(),
+    );
+    expect(confirmAnswer).not.toHaveBeenCalled();
+    expect(markAnswerPending).not.toHaveBeenCalled();
+    expect(markAnswerConflict).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Tentar reenviar" }),
+    ).toBeNull();
+
+    await act(async () =>
+      fireEvent.press(screen.getByRole("button", { name: "Próxima" })),
+    );
+    expect(finish).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC-SES-05-02: retomada semeada pula as tarefas já respondidas", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([
+      {
+        notebook: {
+          id: "notebook-1",
+          educator: "educator-1",
+          tasks: ["task-0", "task-1"],
+          category: "reading",
+          description: "Leitura",
+          createdAt: "2026-10-07T12:00:00.000Z",
+          taskGroupsIds: [],
+        },
+        taskGroups: [],
+      },
+    ]);
+    storeState = {
+      ...storeState,
+      activityIndex: 1,
+      confirmedAnswers: [
+        {
+          taskId: "task-0",
+          selectedAlternativeId: "alternative-1",
+          isCorrect: true,
+          timeToAnswer: 2,
+          answeredAt: "2026-10-07T12:01:00.000Z",
+        },
+      ],
+    };
+
+    await renderPlayer();
+
+    await waitFor(() =>
+      expect(screen.getByText("Escolha uma letra")).toBeTruthy(),
+    );
+    expect(screen.getByText("Atividade 2 de 2")).toBeTruthy();
+    expect(getTaskById).toHaveBeenCalledWith("task-1");
+  });
+
   it("exibe o estado de carregamento das atividades", async () => {
     let resolveNotebooks: (
       value: Awaited<ReturnType<typeof listTaskNotebooks>>,

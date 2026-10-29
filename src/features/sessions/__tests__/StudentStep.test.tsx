@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@/test-utils/render";
 import { createQueryClient } from "@/api/query-client";
 import { listStudents } from "@/api/endpoints/student";
+import { listTaskNotebooks } from "@/api/endpoints/content";
 import { listSessionsByStudent, finishSession } from "@/api/endpoints/session";
 import type { Student } from "@/api/types";
 import { StudentStep, normalizeForSearch } from "../StudentStep";
@@ -18,6 +19,10 @@ vi.mock("@/api/endpoints/student", () => ({
   listStudents: vi.fn(),
 }));
 
+vi.mock("@/api/endpoints/content", () => ({
+  listTaskNotebooks: vi.fn(),
+}));
+
 vi.mock("@/api/endpoints/session", () => ({
   listSessionsByStudent: vi.fn(),
   finishSession: vi.fn(),
@@ -26,12 +31,19 @@ vi.mock("@/api/endpoints/session", () => ({
 const selectStudent = vi.fn().mockResolvedValue(undefined);
 const cancel = vi.fn().mockResolvedValue(undefined);
 const finish = vi.fn().mockResolvedValue(undefined);
+const seedFromServerSession = vi.fn().mockResolvedValue(undefined);
 let flowState: { step: string; sessionId: string | null } = {
   step: "idle",
   sessionId: null,
 };
 vi.mock("@/stores/session-flow", () => ({
-  useSessionFlowStore: () => ({ selectStudent, cancel, finish, ...flowState }),
+  useSessionFlowStore: () => ({
+    selectStudent,
+    cancel,
+    finish,
+    seedFromServerSession,
+    ...flowState,
+  }),
 }));
 
 const ANA: Student = {
@@ -219,6 +231,87 @@ describe("StudentStep", () => {
       expect(finishSession).toHaveBeenCalledWith({ sessionId: "open-session" }),
     );
     expect(finish).not.toHaveBeenCalled();
+  });
+
+  describe("AC-SES-05-02: sessão do servidor ligada a um caderno", () => {
+    const NOTEBOOK_SESSION = {
+      ...OPEN_SESSION,
+      taskNotebookId: "notebook-1",
+      answers: [
+        {
+          taskId: "t1",
+          selectedAlternativeId: "a1",
+          isCorrect: true,
+          timeToAnswer: 3,
+          answeredAt: "2026-10-07T10:01:00.000Z",
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      vi.mocked(listTaskNotebooks).mockResolvedValue([
+        {
+          notebook: {
+            id: "notebook-1",
+            educator: "e1",
+            tasks: ["t1", "t2"],
+            category: "reading",
+            description: "Cores e formas",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            taskGroupsIds: [],
+          },
+          taskGroups: [],
+        },
+      ]);
+    });
+
+    async function chooseAnaWithNotebookSession() {
+      vi.mocked(listStudents).mockResolvedValue([ANA]);
+      vi.mocked(listSessionsByStudent).mockResolvedValue([NOTEBOOK_SESSION]);
+      await render(<StudentStep />);
+      await waitFor(() => expect(screen.getByText("Ana Souza")).toBeTruthy());
+      fireEvent.press(screen.getByRole("button", { name: "Ana Souza" }));
+      await waitFor(() =>
+        expect(screen.getByText("Sessão em andamento")).toBeTruthy(),
+      );
+    }
+
+    it("sem fluxo local, Retomar semeia o fluxo com o caderno e abre o player", async () => {
+      flowState = { step: "idle", sessionId: null };
+      await chooseAnaWithNotebookSession();
+
+      expect(screen.queryByText(/outro aparelho/)).toBeNull();
+      fireEvent.press(screen.getByRole("button", { name: "Retomar" }));
+
+      await waitFor(() =>
+        expect(seedFromServerSession).toHaveBeenCalledWith({
+          student: ANA,
+          session: NOTEBOOK_SESSION,
+          content: {
+            kind: "notebook",
+            id: "notebook-1",
+            name: "Cores e formas",
+          },
+        }),
+      );
+      expect(push).toHaveBeenCalledWith("/session/player");
+    });
+
+    it("caderno que não existe mais não retoma e avisa", async () => {
+      flowState = { step: "idle", sessionId: null };
+      vi.mocked(listTaskNotebooks).mockResolvedValue([]);
+      await chooseAnaWithNotebookSession();
+
+      fireEvent.press(screen.getByRole("button", { name: "Retomar" }));
+
+      await waitFor(() =>
+        expect(
+          screen.getByText("O caderno desta sessão não está mais disponível."),
+        ).toBeTruthy(),
+      );
+      expect(seedFromServerSession).not.toHaveBeenCalled();
+      expect(push).not.toHaveBeenCalledWith("/session/player");
+    });
   });
 
   it("mostra cabeçalho novo com voltar", async () => {
