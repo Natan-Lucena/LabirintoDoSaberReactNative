@@ -114,7 +114,10 @@ describe("AgendaScreen (AGE-01)", () => {
     expect(screen.getByText("Concluído")).toBeTruthy();
     expect(screen.getByText("Cancelado")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: /Lia/ }));
-    expect(push).toHaveBeenCalledWith("/agenda/lia");
+    expect(push).toHaveBeenCalledWith({
+      pathname: "/agenda/[id]",
+      params: { id: "lia" },
+    });
     await fireEvent.press(
       screen.getByRole("button", { name: "Novo atendimento" }),
     );
@@ -122,6 +125,25 @@ describe("AgendaScreen (AGE-01)", () => {
       pathname: "/agenda/new",
       params: { date: "2026-04-02" },
     });
+  });
+
+  it("mostra duração e tipo de cada atendimento (AGE-03)", async () => {
+    appointments = [
+      {
+        ...appointment("lia", "2026-04-02", 10),
+        type: "Psicopedagogia",
+        durationMinutes: 50,
+      },
+      { ...appointment("davi", "2026-04-02", 9), durationMinutes: 30 },
+    ];
+    await render(<AgendaScreen />);
+    expect(screen.getByText("50 min · Psicopedagogia")).toBeTruthy();
+    expect(screen.getByText("30 min")).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: "10:00, Lia, 50 min · Psicopedagogia",
+      }),
+    ).toBeTruthy();
   });
 
   it("mostra carregando (AC-AGE-01-05)", async () => {

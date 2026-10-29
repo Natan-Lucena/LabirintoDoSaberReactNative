@@ -32,8 +32,9 @@ Dados da Home (T-601):
 - `GET /educator/get-last-sessions`
 - `GET /task-notebook/`
 
-Agendamentos (T-901):
+Agendamentos (T-901, AGE-03):
 
+- `GET /appointment/:id`
 - `POST /appointment/`
 - `PUT /appointment/:id`
 - `DELETE /appointment/:id`
@@ -45,7 +46,21 @@ Sessão (SES-01, provisório por G-06/G-29):
 - `POST /task-notebook-session/finish` finaliza uma sessão aberta. O mock não cria vínculo com caderno porque esse campo não existe no contrato da API (G-06).
 
 Os handlers de agendamento mantem estado somente em memoria durante a sessao do
-app, usam ids ficticios e devolvem `400 NOT_FOUND` para PUT/DELETE de id ausente.
+app, usam ids ficticios e devolvem `400 NOT_FOUND` para GET/PUT/DELETE de id
+ausente. O `DELETE` responde o texto `OK`. As regras do backend (AGE-03):
+
+- Transições de status: `PENDING → COMPLETED | CANCELLED` e `CANCELLED → PENDING`;
+  qualquer outra devolve `409 { message: "INVALID_STATUS_TRANSITION" }`.
+- Mudar `scheduledAt`, `type` ou `durationMinutes` de um atendimento que continua
+  `CANCELLED` ou `COMPLETED` devolve `409 { message: "APPOINTMENT_NOT_EDITABLE" }`; a
+  observação pode mudar. Reativar e remarcar juntos (`{ status: "PENDING", scheduledAt }`) vale.
+- Se o intervalo `[scheduledAt, scheduledAt + durationMinutes)` se sobrepõe ao de outro
+  `PENDING`, devolve `409 { message: "APPOINTMENT_CONFLICT", conflictingAppointmentId }`;
+  horários encostados não conflitam. A duração padrão é 50 minutos.
+- Os `409` são entregues como resposta com `status: 409` (o adaptador não carrega
+  campos extras num erro); `src/api/endpoints/appointment.ts` aceita o `409` por
+  `validateStatus` e lança `AppointmentApiError` com `conflictingAppointmentId`.
+  Para acionar no app: crie dois atendimentos sobrepostos no mesmo horário.
 
 ## Cenários (e-mails reservados, `src/mocks/fixtures.ts`)
 
