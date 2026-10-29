@@ -41,9 +41,11 @@ export function ContentStep(): ReactElement {
     failStart,
     discard,
     selectStudent,
+    setAppointmentId,
     sessionName,
     content,
     student,
+    appointmentId,
   } = useSessionFlowStore();
   const [nameInput, setNameInput] = useState(sessionName ?? "");
   const [nameTouched, setNameTouched] = useState(false);
@@ -55,6 +57,7 @@ export function ContentStep(): ReactElement {
   const [uncertainSessionId, setUncertainSessionId] = useState<string | null>(
     null,
   );
+  const [appointmentMissing, setAppointmentMissing] = useState(false);
   const { items, isLoading, isError, refetch } = useContentCatalog("notebook");
   const filtered = useMemo(
     () =>
@@ -70,8 +73,11 @@ export function ContentStep(): ReactElement {
       ? "Informe um nome com 1 a 100 caracteres."
       : undefined;
 
-  async function handleStart() {
+  async function handleStart(
+    linkedAppointmentId: string | null = appointmentId,
+  ) {
     setNameTouched(true);
+    setAppointmentMissing(false);
     if (!student || !selected || !isNameValid(nameInput)) return;
     const name = nameInput.trim();
     await configure({
@@ -87,6 +93,7 @@ export function ContentStep(): ReactElement {
         ...(selected.kind === "notebook"
           ? { taskNotebookId: selected.id }
           : {}),
+        ...(linkedAppointmentId ? { appointmentId: linkedAppointmentId } : {}),
       });
       await confirmStart(session.id);
       router.push("/session/player");
@@ -109,6 +116,15 @@ export function ContentStep(): ReactElement {
           /* preserve the uncertain state for an explicit retry */
         }
       }
+      if (apiError.code === "APPOINTMENT_NOT_FOUND") {
+        // Sem reenvio automático: o educador decide iniciar sem o vínculo.
+        const notFound =
+          "Atendimento não encontrado. Inicie a sessão sem vínculo?";
+        await failStart(notFound);
+        setAppointmentMissing(true);
+        setMessage(notFound);
+        return;
+      }
       await failStart(apiError.message || "Não foi possível iniciar a sessão.");
       setMessage(apiError.message || "Não foi possível iniciar a sessão.");
     }
@@ -129,6 +145,15 @@ export function ContentStep(): ReactElement {
       content: { kind: selected.kind, id: selected.id, name: selected.name },
     });
     setMessage(null);
+  }
+
+  async function startWithoutAppointment() {
+    if (!student) return;
+    await discard({ confirmed: true });
+    await selectStudent(student);
+    await setAppointmentId(null);
+    setMessage(null);
+    await handleStart(null);
   }
 
   return (
@@ -189,7 +214,13 @@ export function ContentStep(): ReactElement {
             description={message}
           />
         ) : null}
-        {message && !uncertainSessionId ? (
+        {appointmentMissing ? (
+          <DsButton
+            label="Iniciar sem vínculo"
+            onPress={() => void startWithoutAppointment()}
+          />
+        ) : null}
+        {message && !uncertainSessionId && !appointmentMissing ? (
           <DsButton
             label="Tentar novamente"
             variant="secondary"

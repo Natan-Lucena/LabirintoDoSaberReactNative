@@ -8,6 +8,7 @@ import {
   MOCK_STUDENTS,
   MOCK_TASK_NOTEBOOKS,
 } from "@/mocks/fixtures";
+import { completeMockAppointment, mockAppointmentExists } from "./appointment";
 import { registerMockHandler } from "./registry";
 import { MockApiError, MockNetworkError } from "./types";
 
@@ -216,6 +217,12 @@ registerMockHandler(
     if (input.name === "erro de validação") {
       throw new MockApiError(400, "Validation error", "Validation error");
     }
+    if (
+      typeof input.appointmentId === "string" &&
+      !mockAppointmentExists(input.appointmentId, input.studentId)
+    ) {
+      throw new MockApiError(404, "APPOINTMENT_NOT_FOUND");
+    }
     const session: TaskNotebookSession = {
       id: `mock-session-${Date.now()}`,
       studentId: input.studentId,
@@ -246,6 +253,7 @@ registerMockHandler(
     if (session.finishedAt)
       throw new MockApiError(400, "SESSION_ALREADY_FINISHED");
     session.finishedAt = new Date().toISOString();
+    if (session.appointmentId) completeMockAppointment(session.appointmentId);
     return { status: 200, data: session };
   },
 );

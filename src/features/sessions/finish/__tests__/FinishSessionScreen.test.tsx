@@ -12,6 +12,9 @@ import {
 import { ApiError } from "@/api/errors";
 import { FinishSessionScreen } from "../FinishSessionScreen";
 
+vi.mock("@/config/env", () => ({
+  getRuntimeApiBaseUrl: () => "http://mock.local",
+}));
 const replace = vi.fn();
 vi.mock("expo-router", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("@/api/endpoints/session", () => ({
@@ -207,6 +210,25 @@ describe("FinishSessionScreen — registro descritivo", () => {
       queryKey: ["task-notebook-session"],
     });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["student-analysis"] });
+  });
+
+  it("AC-AGE-04-03: ao concluir, invalida os atendimentos para a Agenda e a Início", async () => {
+    const queryClient = createQueryClient();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    await render(<FinishSessionScreen />, { queryClient });
+
+    await fireEvent.changeText(
+      screen.getByLabelText("Registro descritivo"),
+      "Boa participação.",
+    );
+    await act(async () => {
+      fireEvent.press(
+        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
+      );
+    });
+
+    await waitFor(() => expect(replace).toHaveBeenCalled());
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["appointment"] });
   });
 
   it("não permite salvar com o registro vazio", async () => {

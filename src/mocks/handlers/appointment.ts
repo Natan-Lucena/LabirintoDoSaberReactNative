@@ -10,6 +10,24 @@ import { MockApiError } from "./types";
 let appointments = MOCK_APPOINTMENTS.map((appointment) => ({ ...appointment }));
 let nextAppointmentId = 1;
 
+/** Usado pelo mock de `/task-notebook-session/start` (AGE-04). */
+export function mockAppointmentExists(id: string, studentId: string): boolean {
+  return appointments.some(
+    (appointment) =>
+      appointment.id === id &&
+      appointment.studentId === studentId &&
+      appointment.educatorId === MOCK_EDUCATOR.id,
+  );
+}
+
+/** Espelha o `finish` do backend: só um atendimento `PENDING` vira `COMPLETED`. */
+export function completeMockAppointment(id: string): void {
+  const appointment = appointments.find((item) => item.id === id);
+  if (appointment?.status === "PENDING") {
+    appointment.status = "COMPLETED";
+  }
+}
+
 registerMockHandler({ method: "get", path: "/appointment/" }, () => {
   return {
     status: 200,

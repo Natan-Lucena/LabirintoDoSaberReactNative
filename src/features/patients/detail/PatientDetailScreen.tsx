@@ -304,7 +304,12 @@ export function PatientDetailScreen({
           label="Iniciar sessão"
           icon="play"
           fullWidth
-          onPress={() => router.push("/session/student")}
+          onPress={() =>
+            router.push({
+              pathname: "/session/student",
+              params: { studentId: patient.id },
+            })
+          }
         />
       </ScrollView>
     </View>

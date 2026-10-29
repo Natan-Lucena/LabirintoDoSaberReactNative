@@ -8,11 +8,12 @@ import { listSessionsByStudent, finishSession } from "@/api/endpoints/session";
 import type { Student } from "@/api/types";
 import { StudentStep, normalizeForSearch } from "../StudentStep";
 
+let mockParams: { studentId?: string; appointmentId?: string } = {};
 const push = vi.fn();
 const back = vi.fn();
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push, back }),
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => mockParams,
 }));
 
 vi.mock("@/api/endpoints/student", () => ({
@@ -29,6 +30,7 @@ vi.mock("@/api/endpoints/session", () => ({
 }));
 
 const selectStudent = vi.fn().mockResolvedValue(undefined);
+const setAppointmentId = vi.fn().mockResolvedValue(undefined);
 const cancel = vi.fn().mockResolvedValue(undefined);
 const finish = vi.fn().mockResolvedValue(undefined);
 const seedFromServerSession = vi.fn().mockResolvedValue(undefined);
@@ -39,6 +41,7 @@ let flowState: { step: string; sessionId: string | null } = {
 vi.mock("@/stores/session-flow", () => ({
   useSessionFlowStore: () => ({
     selectStudent,
+    setAppointmentId,
     cancel,
     finish,
     seedFromServerSession,
@@ -73,8 +76,43 @@ describe("normalizeForSearch", () => {
 describe("StudentStep", () => {
   beforeEach(() => {
     flowState = { step: "idle", sessionId: null };
+    mockParams = {};
+    setAppointmentId.mockClear();
     vi.mocked(listSessionsByStudent).mockResolvedValue([]);
   });
+  it("AC-AGE-04-02: guarda o appointmentId da rota ao continuar com o paciente do atendimento", async () => {
+    mockParams = { studentId: "s1", appointmentId: "appt-1" };
+    vi.mocked(listStudents).mockResolvedValue([ANA, JOAO]);
+
+    await render(<StudentStep />);
+
+    const next = await screen.findByRole("button", { name: "Continuar" });
+    await waitFor(() =>
+      expect(next.props.accessibilityState).toMatchObject({ disabled: false }),
+    );
+    await fireEvent.press(next);
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/session/content"));
+    expect(setAppointmentId).toHaveBeenCalledWith("appt-1");
+  });
+
+  it("sessão avulsa limpa o appointmentId herdado", async () => {
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+
+    await render(<StudentStep />);
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Ana Souza" }),
+    );
+    const next = screen.getByRole("button", { name: "Continuar" });
+    await waitFor(() =>
+      expect(next.props.accessibilityState).toMatchObject({ disabled: false }),
+    );
+    await fireEvent.press(next);
+
+    await waitFor(() => expect(setAppointmentId).toHaveBeenCalledWith(null));
+  });
+
   it("AC-702-05: mostra LoadingState enquanto busca", async () => {
     vi.mocked(listStudents).mockReturnValue(new Promise(() => {}));
 

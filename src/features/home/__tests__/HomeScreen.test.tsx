@@ -146,7 +146,10 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
     );
 
     expect(routerPush).toHaveBeenCalledWith("/patients/student-1");
-    expect(routerPush).toHaveBeenCalledWith("/session/student");
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/session/student",
+      params: { studentId: "student-1", appointmentId: expect.any(String) },
+    });
     expect(routerPush).toHaveBeenCalledWith("/patients/new");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",

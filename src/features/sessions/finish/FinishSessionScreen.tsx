@@ -12,6 +12,7 @@ import {
 import { normalizeApiError } from "@/api/errors";
 import type { TaskNotebookSession } from "@/api/types";
 import { AppHeader, DsButton, Field, InfoCard } from "@/components/ds";
+import { appointmentQueryKeys } from "@/features/appointments/useAppointments";
 import { useSessionFlowStore } from "@/stores/session-flow";
 import { color, fontFamilies, shape } from "@/theme";
 
@@ -132,6 +133,8 @@ export function FinishSessionScreen(): ReactElement | null {
       queryKey: ["task-notebook-session"],
     });
     await queryClient.invalidateQueries({ queryKey: ["student-analysis"] });
+    // O backend conclui o atendimento ligado à sessão (AGE-04): Agenda e Início.
+    await queryClient.invalidateQueries({ queryKey: appointmentQueryKeys.all });
     // `close` deixa a store em "closed"; volta a "idle" para a próxima sessão.
     if (educatorId) {
       await hydrate(educatorId);
