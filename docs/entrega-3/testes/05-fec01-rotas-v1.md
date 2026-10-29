@@ -3,7 +3,7 @@
 Roteiro completo da tarefa **FEC-01** ([BACKLOG](../BACKLOG.md#fec-01--rotas-da-v1-ainda-não-exercitadas-contra-o-backend-real)):
 exercitar, no emulador Android com o Expo Go e a conta de teste, cada rota da V1 que o
 [QA-05](../../entrega-2/QA-05-RELATORIO.md) deixou sem evidência, **pela tela que a usa**, e registrar o resultado. É a
-versão detalhada do [PLANO-TESTES §2.8](../PLANO-TESTES.md#28-rotas-da-v1-contra-o-backend-real-fec-01) (casos
+versão detalhada do [PLANO-TESTES](../PLANO-TESTES.md#2-casos-por-área-índice) (casos
 FEC-01.1 a FEC-01.9, IDs preservados). Nada foi executado: a copy e o código foram conferidos em 2026-10-29.
 
 **Regras da tarefa** (BACKLOG FEC-01): exige **autorização do usuário no momento** para abrir o emulador (AGENTS §7);
@@ -460,7 +460,7 @@ task-delete.ts` › `deleteTask`; mock `task-delete.ts` (`500 TASK_NOT_FOUND`).
 - **Se falhar:** não há sintoma de tela. Se a rota for chamada de fora do app e devolver `404`/`403`, registre o status e o
   `message` (contrato do PROJECT.md).
 - **Evidência:** a captura da Início (sem a seção) **ou** o status da chamada de apoio (sem token e sem nomes).
-- **Divergência encontrada:** a ficha FEC-01 e o PLANO-TESTES §2.8 mandam exercitar a rota "pela tela que a usa", mas
+- **Divergência encontrada:** a ficha FEC-01 e a primeira versão do PLANO-TESTES (§2.8) mandavam exercitar a rota "pela tela que a usa", mas
   **nenhuma tela do app a usa** (o desenho da V1 não tem "Últimas sessões" na Início; `docs/entrega-2/BACKLOG.md`
   diz "se o Início mostrar sessões recentes" e a `ENTREGA-V1` a lista como não exercitada). **Decisão pendente do
   orquestrador** para fechar o AC-FEC-01-01: (a) registrar **N/A com o motivo** "rota sem consumidor no app" e

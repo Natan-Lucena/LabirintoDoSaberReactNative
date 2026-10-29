@@ -96,6 +96,7 @@ tarefas seguintes partem da `main` já atualizada.
 #### FEC-01 — Rotas da V1 ainda não exercitadas contra o backend real
 
 - **Onda:** E3-4 · **Classe:** C (execução) com revisão B
+- **Roteiro detalhado:** [testes/05-fec01-rotas-v1](testes/05-fec01-rotas-v1.md), rota a rota, com a tela que dispara, o corpo e a resposta esperados, o código envolvido, os mocks, os testes automatizados e o que verificar se falhar; decisões pendentes em [testes/00-divergencias](testes/00-divergencias.md) (item 15).
 - **Dep.:** FEC-02. **Exige autorização do usuário no momento** para abrir o emulador (AGENTS §7).
 - **Endpoints** (todos existem no contrato e já têm função no app):
   - `PUT /task-notebook/update`, `DELETE /task-notebook/delete/:taskNotebookId`
@@ -804,6 +805,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 #### QA-06 — Plano de testes da Entrega 3
 
 - **Onda:** E3-11 · **Classe:** B
+- **Roteiro detalhado:** o [PLANO-TESTES](PLANO-TESTES.md) é o índice; os casos completos estão em [testes/](testes/01-agenda.md) (148 casos, 103 P1), e as divergências encontradas ao escrevê-los em [testes/00-divergencias](testes/00-divergencias.md).
 - **Dep.:** blocos A, B e C concluídos (ou o que estiver pronto, registrado).
 - **Escopo:** roteiro manual no formato do [plano da Entrega 1](../entrega-1/PLANO-TESTES.md):
   um caso por AC `MAN` e um por fluxo entre telas (Agenda → atendimento → sessão; ficha →
@@ -815,6 +817,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 #### QA-02 — E2E com Maestro
 
 - **Onda:** E3-12 · **Classe:** B
+- **Roteiro detalhado:** [testes/08-maestro-qa02](testes/08-maestro-qa02.md): pré-requisitos, seletores tirados do código, `testID` que faltam (com nomes propostos), fluxos M-LOGIN, M-AGE, M-PAC, M-PLN e M-PRF com asserções e o esqueleto YAML.
 - **Dep.:** QA-06. A ferramenta Maestro é instalada **fora do projeto** (CLI), com autorização
   do usuário; nada entra no `package.json`.
 - **Escopo:** fluxos em `.maestro/`, rodando no Expo Go do emulador:
@@ -828,6 +831,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 #### QA-03 — Acessibilidade
 
 - **Onda:** E3-12 · **Classe:** B
+- **Roteiro detalhado:** [testes/07-acessibilidade-qa03](testes/07-acessibilidade-qa03.md): rótulos e papéis existentes, alvos de toque, contraste dos tokens e o checklist das 16 telas; suspeitas por leitura do código nos itens 25 e 26 de [testes/00-divergencias](testes/00-divergencias.md).
 - **Dep.:** QA-06.
 - **Escopo:** nas telas novas e alteradas da Entrega 3: leitor de tela (TalkBack), fonte
   grande, contraste e alvos de toque de 44 pontos (G-17).
@@ -837,6 +841,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 #### QA-04 — Homologação em aparelhos
 
 - **Onda:** E3-12 · **Classe:** B
+- **Roteiro detalhado:** [testes/09-aparelhos-qa04](testes/09-aparelhos-qa04.md): matriz tela × plataforma × recurso nativo e 12 casos; riscos de iOS nos itens 27 e 28 de [testes/00-divergencias](testes/00-divergencias.md).
 - **Dep.:** QA-06. **Exige** Android físico e Mac ou iPhone, com autorização do usuário.
 - **Escopo:** Android físico (inclusive câmera e áudio da ATV-08) e iOS (Expo Go ou build),
   com o backend real.
@@ -871,3 +876,5 @@ blocos A–C → QA-06 → QA-02, QA-03, QA-04
 - 2026-10-29: AGE-02 volta ao escopo como botão do WhatsApp com mensagem pronta (`wa.me`), por
   decisão do usuário (G-53).
 - 2026-10-29: tarefas de código concluídas (23 de 27); resumo em [ENTREGA-3](ENTREGA-3.md).
+- 2026-10-29: fichas de teste (FEC-01, QA-02, QA-03, QA-04 e QA-06) ligadas aos casos detalhados em
+  [testes/](testes/01-agenda.md) e às divergências encontradas.

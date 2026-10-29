@@ -1,8 +1,8 @@
 # Testes manuais — Fluxos entre telas e conferências do backend
 
-Detalhamento dos fluxos **F1 a F5** (PLANO-TESTES [§3](../PLANO-TESTES.md#3-fluxos-entre-telas-p1)) e
+Detalhamento dos fluxos **F1 a F5** (PLANO-TESTES [§3](../PLANO-TESTES.md#3-fluxos-entre-telas-e-conferências-do-backend)) e
 das conferências do backend **BE-01 a BE-08** (PLANO-TESTES
-[§4](../PLANO-TESTES.md#4-conferências-do-backend-casos-dedicados)). Os IDs e os casos do plano
+[§4](../PLANO-TESTES.md#3-fluxos-entre-telas-e-conferências-do-backend)). Os IDs e os casos do plano
 original foram preservados; cada fluxo foi aberto em passos (`F1.1`, `F1.2`…) com o **ponto de
 verificação entre telas**, a **consulta que precisa ser invalidada** e o **arquivo** onde isso acontece.
 

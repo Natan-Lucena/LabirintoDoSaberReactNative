@@ -1,6 +1,6 @@
 # Testes detalhados — Pacientes (PAC-07, PAC-06, PAC-08, PAC-04)
 
-Detalhamento dos casos de [PLANO-TESTES §2.2](../PLANO-TESTES.md#22-pacientes-pac-07-pac-06-pac-08-pac-04) para a
+Detalhamento dos casos de [PLANO-TESTES](../PLANO-TESTES.md#2-casos-por-área-índice) para a
 rodada manual da QA-06: o que fazer, o que esperar na tela e na rede, e, se falhar, onde olhar no código. Os IDs e
 os casos do plano foram preservados; os casos com sufixo `+` são novos. Nada foi executado: a copy foi conferida
 no código em 2026-10-29.
@@ -569,7 +569,7 @@ errors: [{ path: "answers.N…" }] }`; o app põe a mensagem na pergunta do índ
 - **Prioridade / AC:** P1 · Backend (§4.2) · AC-PAC-06-05
 - **Objetivo:** o app nunca chama `GET /anamnese/responses/:responseId`; um `401` ali não pode deslogar.
 - **Pré-condição:** —
-- **Passos:** executar o BE-02 (em `docs/entrega-3/PLANO-TESTES.md` §4; versão detalhada na tarefa de backend).
+- **Passos:** executar o BE-02 (detalhado em [06-fluxos-e-backend](06-fluxos-e-backend.md)).
 - **Resultado esperado:**
   - **Tela:** o fluxo normal da anamnese **não** produz essa chamada; nenhuma tela "Sem acesso a esta anamnese".
   - **Rede (backend real):** o tráfego mostra só `GET .../responses/student/:studentId`, `POST/PUT` de respostas e o

@@ -1,6 +1,6 @@
 # Testes detalhados — Conta, Sessão, Conteúdo e Base (REC-02, SES-05, ATV-02, FEC-03/04, NAV-03, FEC-02)
 
-Detalhamento dos casos de [PLANO-TESTES §2.3 a §2.5 e §2.7](../PLANO-TESTES.md#23-conta-rec-02) para a rodada manual
+Detalhamento dos casos de [PLANO-TESTES](../PLANO-TESTES.md#2-casos-por-área-índice) para a rodada manual
 da QA-06: o que fazer, o que esperar na tela e na rede, e, se falhar, onde olhar no código. Os IDs e os casos do plano
 foram preservados; os casos com sufixo `+` são novos. Nada foi executado: a copy foi conferida no código em
 2026-10-29.
