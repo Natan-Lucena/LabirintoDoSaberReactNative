@@ -10,11 +10,10 @@
 > Telas sem desenho no Make usam o design system de `src/components/ds` (G-18, G-38).
 
 > **Atualização 2026-10-29:** o backend entregou o domínio de planos e os pequenos pedidos
-> ([BACKEND-ENTREGUE](BACKEND-ENTREGUE.md), com a conferência do Swagger). As fichas abaixo ainda
-> descrevem a API anterior em "Sem API"; **para AGE-03, AGE-04, PAC-06, PAC-07, REC-02, FEC-03 e
-> o bloco de planos, vale o BACKEND-ENTREGUE** e a spec de cada dispatch, que traz os ajustes.
-> Tarefas novas: API-03 (tipos e mocks do contrato novo), SES-05 (sessão ligada ao caderno, G-06)
-> e FEC-04 (grupo de caderno pelo `GET /task-group/:id`).
+> ([BACKEND-ENTREGUE](BACKEND-ENTREGUE.md), com a conferência do Swagger). As fichas de AGE-03,
+> AGE-04, PAC-06, PAC-07, REC-02 e do bloco de planos foram reescritas com o contrato real, e
+> entraram API-03, SES-05 e FEC-04. O registro rota a rota no `PROJECT.md` ficou para depois, a
+> pedido do usuário; até lá, o BACKEND-ENTREGUE é a referência do contrato novo.
 
 ## 1. Convenções
 
@@ -78,15 +77,17 @@ acrescenta uma:
 Arquivos que mais de uma tarefa precisa alterar. Cada onda tem um único dono por arquivo; as
 tarefas seguintes partem da `main` já atualizada.
 
-| Arquivo                                                | Tarefas, na ordem                  | O que cada uma muda                                                                    |
-| ------------------------------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------- |
-| `src/features/home/HomeScreen.tsx`                     | NAV-03 → AGE-04 → PLN-01 → PLN-05  | rotas `/patients`; `studentId` no "Iniciar sessão"; "Criar plano"; cartão de sugestões |
-| `src/features/patients/detail/PatientDetailScreen.tsx` | PAC-07 → AGE-04 → PAC-06 → PAC-04  | "Editar"; `studentId` no "Iniciar sessão"; link da anamnese; abas                      |
-| `src/features/resources/ResourcesScreen.tsx`           | REC-02 → PAC-08 → PLN-01           | banner do perfil; "Modelos de anamnese"; "Planos com IA"                               |
-| `src/features/patients/list/PatientsListScreen.tsx`    | NAV-03                             | rotas `/patients`                                                                      |
-| `src/mocks/install.ts`                                 | todas as tarefas com endpoint novo | só acrescentar a linha do handler                                                      |
-| `src/mocks/README.md`                                  | todas as tarefas com endpoint novo | só acrescentar a seção da tarefa                                                       |
-| `src/api/types.ts`                                     | PLN-00 (planos), PAC-06, PAC-08    | só acrescentar tipos que faltam, sem alterar os existentes                             |
+| Arquivo                                                      | Tarefas, na ordem                          | O que cada uma muda                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `src/api/types.ts`                                           | API-03 → PLN-01                            | contrato de 2026-10-29; tipos do domínio de planos                                      |
+| `src/features/home/HomeScreen.tsx`                           | NAV-03 → AGE-04 → PLN-01 → PLN-05          | rotas `/patients`; "Iniciar sessão" com atendimento; "Criar plano"; cartão de sugestões |
+| `src/features/patients/detail/PatientDetailScreen.tsx`       | PAC-07 → AGE-04 → PAC-06 → PAC-04          | "Editar" e responsável; "Iniciar sessão"; linha da anamnese; abas e PDI vigente         |
+| `src/features/resources/ResourcesScreen.tsx`                 | PAC-08 → REC-02 → PLN-01                   | "Modelos de anamnese"; banner do perfil; "Planos com IA"                                |
+| `src/features/agenda/**`                                     | AGE-01 → AGE-03 → AGE-04                   | tela; formulário e detalhe; "Iniciar sessão"                                            |
+| `src/features/sessions/**` e `src/stores/session-flow.ts`    | SES-05 → AGE-04                            | caderno no `start` e na retomada; `appointmentId`                                       |
+| `src/api/endpoints/plans.ts` e `src/mocks/handlers/plans.ts` | PLN-01 → PLN-02 → PLN-03 → PLN-04 → PLN-05 | leitura; geração; criação; escritas; sugestões                                          |
+| `src/mocks/install.ts`                                       | todas as tarefas com handler novo          | só acrescentar a linha do handler                                                       |
+| `src/mocks/README.md`                                        | todas as tarefas com endpoint novo         | só acrescentar a seção da tarefa                                                        |
 
 ## 4. Tarefas
 
@@ -254,110 +255,181 @@ tarefas seguintes partem da `main` já atualizada.
     `/agenda/new?date=AAAA-MM-DD`. `CT`
   - AC-AGE-01-05 os estados vazio, erro e carregando aparecem. `CT`
 
-#### AGE-03 — Novo, detalhe, editar, remarcar e excluir atendimento
+#### API-03 — Tipos e mocks do contrato de 2026-10-29
 
-- **Onda:** E3-2 · **Classe:** B · **US:** US2-02
-- **Dep.:** AGE-01.
-- **Figma:** `SimpleFormScreen` (atendimento): eyebrow "Agendamento", título "Novo
-  atendimento", campos Paciente (seleção), Data e Horário (`.field-grid`), botão "Agendar
-  atendimento".
-- **Endpoints:**
-  - `POST /appointment/` — `studentId`, `scheduledAt`, `observation?`
-  - `GET /appointment/:id` — detalhe
-  - `PUT /appointment/:id` — `scheduledAt?`, `observation?` (`null` limpa)
-  - `DELETE /appointment/:id` — excluir
-  - `GET /student/` — seleção de paciente
-- **Sem API (não fazer):** tipo e duração; "Confirmar por WhatsApp"; **cancelar mantendo o
-  registro** (o `PUT` não aceita `status`); validação de conflito de horário.
-- **Reaproveita:** as mutações de `src/features/appointments/mutations.ts` (criar, editar,
-  remarcar, excluir) e o padrão de formulário de `PatientFormScreen` (React Hook Form + Zod,
-  `withOfflineGuard`); `SelectField`, `DateField`, `TimeField` e `Field` do design system.
+- **Onda:** E3-2 · **Classe:** B
+- **Dep.:** nenhuma.
+- **Base de:** as tarefas que usam o contrato novo (atendimento, sessão, paciente, perfil e grupo).
+- **Contrato:** [BACKEND-ENTREGUE](BACKEND-ENTREGUE.md) §6 e §9.
 - **Escopo:**
-  1. **Novo** (`/agenda/new`): paciente obrigatório (aceita `?studentId=` e `?date=` para
-     pré-preencher), data e horário obrigatórios, observação opcional. `scheduledAt` é montado
-     no fuso de SP e enviado em ISO. Ao salvar: toast de sucesso, invalidação da consulta de
-     atendimentos e volta para a Agenda.
-  2. **Detalhe** (`/agenda/{id}`): paciente (toque abre `/patients/{id}`), data, horário,
-     status e observação; ações "Remarcar", "Editar observação" e "Excluir".
-  3. **Remarcar e editar observação** usam o mesmo formulário em modo edição e enviam **só os
-     campos alterados**; o paciente não muda (a API não aceita).
-  4. **Excluir** pede confirmação com o texto "Excluir atendimento? Ele sai da agenda e não
-     pode ser recuperado." e só então chama o `DELETE`.
-  5. Atendimento `COMPLETED` ou `CANCELLED` mostra o status e não oferece "Remarcar".
-  6. Erros: `400 NOT_FOUND` mostra "Atendimento não encontrado" com "Voltar"; validação com
-     mensagens por campo; sem reenvio automático.
-- **Fora do escopo:** "Iniciar sessão" no detalhe (AGE-04); recorrência; lembretes.
-- **Arquivos novos:** `app/agenda/new.tsx`, `app/agenda/[id].tsx`,
-  `app/agenda/[id]/edit.tsx`, `src/features/agenda/form/**`,
-  `src/features/agenda/detail/**` e testes.
-- **Arquivos alterados:** `src/api/endpoints/appointment.ts` só se faltar `getAppointment`
-  (`GET /appointment/:id`), com handler de mock e teste de integração.
+  1. `src/api/types.ts`: `Appointment` com `type`, `durationMinutes`, `observation` e
+     `notifiedAt` anuláveis; `Student` com `guardianName`, `guardianPhone` e
+     `guardianRelationship`; `Educator` com `profession`; `TaskNotebookSession` com
+     `taskNotebookId` e `appointmentId`.
+  2. Entradas dos endpoints existentes: atendimento (`type`, `durationMinutes`, `status`),
+     `start` da sessão (`taskNotebookId`, `appointmentId`) e cadastro de aluno (`guardian*`, só
+     quando preenchidos). `scheduledAt` sempre em ISO UTC.
+  3. **Privacidade (D1):** `listStudents` e `createStudent` removem `educators` (traz senha de
+     educador) antes de devolver, para não ir ao cache persistido.
+  4. Mocks fiéis com os campos novos; `POST /appointment/` e `PUT /appointment/:id` devolvem o
+     formato do `GET`.
+- **Fora do escopo:** telas; transições de status e conflito no mock (AGE-03).
+- **Arquivos alterados:** `src/api/types.ts`, `src/api/endpoints/appointment.ts`,
+  `src/api/endpoints/session.ts`, `src/api/endpoints/student.ts`,
+  `src/api/endpoints/student-create.ts`, `src/mocks/fixtures.ts`,
+  `src/mocks/handlers/appointment.ts`, `src/mocks/handlers/student.ts`,
+  `src/mocks/handlers/student-create.ts`, `src/mocks/handlers/educator.ts`,
+  `src/mocks/handlers/session-analysis.ts`, `src/mocks/README.md` e testes.
 - **AC:**
-  - AC-AGE-03-01 criar envia `studentId`, `scheduledAt` (ISO, SP) e `observation` só quando
-    preenchida; o item aparece na Agenda e na Início. `CT`
-  - AC-AGE-03-02 remarcar envia só `scheduledAt`; editar observação envia só `observation`
-    (vazia vira `null`). `CT`
-  - AC-AGE-03-03 excluir só chama a API depois da confirmação. `CT`
-  - AC-AGE-03-04 `COMPLETED` e `CANCELLED` não mostram "Remarcar". `CT`
-  - AC-AGE-03-05 `?studentId` e `?date` pré-preenchem o formulário. `CT`
+  - AC-API-03-01 typecheck, lint e suíte completa com código 0. `CMD`
+  - AC-API-03-02 `listStudents` e `createStudent` não devolvem `educators`. `UT`
+  - AC-API-03-03 mocks de atendimento devolvem `durationMinutes` e aceitam `type` e
+    `durationMinutes`; respostas sem campos `_`. `UT`
+  - AC-API-03-04 o cadastro só envia `guardian*` quando preenchidos. `UT`
+
+#### AGE-03 — Novo, detalhe, editar, remarcar, cancelar e excluir atendimento
+
+- **Onda:** E3-3 · **Classe:** B · **US:** US2-02
+- **Dep.:** AGE-01 (concluída) e API-03.
+- **Figma:** `SimpleFormScreen` (atendimento): eyebrow "Agendamento", título "Novo
+  atendimento", campos Paciente (seleção), Data e Horário (`.field-grid`), Tipo de atendimento,
+  botão "Agendar atendimento".
+- **Endpoints** ([BACKEND-ENTREGUE](BACKEND-ENTREGUE.md) §6 "Atendimento"):
+  - `POST /appointment/` — `studentId`, `scheduledAt` (ISO UTC), `observation?`, `type?` (1–50),
+    `durationMinutes?` (15–240, padrão 50)
+  - `GET /appointment/:id` — detalhe (inexistente: `400 NOT_FOUND`)
+  - `PUT /appointment/:id` — `scheduledAt?`, `observation?` (`null` limpa), `type?`,
+    `durationMinutes?`, `status?`
+  - `DELETE /appointment/:id` — excluir (responde o texto `OK`)
+  - `GET /student/` — seleção de paciente
+- **Regras do backend que a tela segue:**
+  - status: `PENDING → COMPLETED | CANCELLED` e `CANCELLED → PENDING`; `COMPLETED` é final
+    (`409 INVALID_STATUS_TRANSITION`);
+  - `CANCELLED` e `COMPLETED` não aceitam mudar horário, tipo ou duração
+    (`409 APPOINTMENT_NOT_EDITABLE`); a observação pode mudar;
+  - reativar e remarcar podem ir juntos: `{ status: "PENDING", scheduledAt }`;
+  - conflito com outro `PENDING`: `409 { message: "APPOINTMENT_CONFLICT",
+conflictingAppointmentId }`; horários encostados não conflitam.
+- **Sem API (não fazer):** "Confirmar por WhatsApp" por atendimento.
+- **Escopo:**
+  1. **Novo** (`/agenda/new`): paciente, data e horário obrigatórios; tipo (texto livre, com
+     sugestões "Psicopedagogia" e "Avaliação") e duração (padrão 50 min) opcionais; observação
+     opcional. Aceita `?studentId=` e `?date=` para pré-preencher.
+  2. **Detalhe** (`/agenda/{id}`): paciente (toque abre `/patients/{id}`), data, horário, tipo,
+     duração, status e observação; ações conforme o status:
+     - `PENDING`: "Remarcar", "Editar", "Marcar como concluído", "Cancelar atendimento" e
+       "Excluir";
+     - `CANCELLED`: "Reativar" (com remarcação opcional), "Editar observação" e "Excluir";
+     - `COMPLETED`: "Editar observação".
+  3. **Editar e remarcar** (`/agenda/{id}/edit`) usam o formulário do item 1 e enviam **só os
+     campos alterados**; o paciente não muda.
+  4. **Cancelar** pede confirmação ("O atendimento fica na agenda como cancelado.") e envia
+     `status: "CANCELLED"`. **Excluir** pede confirmação ("Excluir atendimento? Ele sai da agenda
+     e não pode ser recuperado.").
+  5. **Conflito:** a mensagem "Já existe um atendimento nesse horário" aparece no campo de
+     horário, com o link "Ver atendimento" para `/agenda/{conflictingAppointmentId}`.
+  6. A Agenda (AGE-01) passa a mostrar o tipo e a duração de cada item ("14:00 · 50 min").
+  7. Erros: `400 NOT_FOUND` mostra "Atendimento não encontrado" com "Voltar"; os `409` mostram
+     a mensagem correspondente; sem reenvio automático.
+  8. Mocks: transições de status, `APPOINTMENT_NOT_EDITABLE` e `APPOINTMENT_CONFLICT` acionáveis.
+- **Fora do escopo:** "Iniciar sessão" no detalhe (AGE-04); recorrência; lembretes.
+- **Arquivos novos:** `app/agenda/new.tsx`, `app/agenda/[id].tsx`, `app/agenda/[id]/edit.tsx`,
+  `src/features/agenda/form/**`, `src/features/agenda/detail/**` e testes.
+- **Arquivos alterados:** `src/features/agenda/AgendaScreen.tsx` (tipo e duração no item),
+  `src/api/endpoints/appointment.ts` (`getAppointment`, se faltar),
+  `src/features/appointments/mutations.ts`, `src/mocks/handlers/appointment.ts`,
+  `src/mocks/README.md` e testes.
+- **AC:**
+  - AC-AGE-03-01 criar envia `studentId`, `scheduledAt` em ISO UTC e os opcionais só quando
+    preenchidos; o item aparece na Agenda e na Início. `CT`
+  - AC-AGE-03-02 editar e remarcar enviam só os campos alterados. `CT`
+  - AC-AGE-03-03 cancelar e excluir só chamam a API depois da confirmação; cancelar envia
+    `status: "CANCELLED"`. `CT`
+  - AC-AGE-03-04 as ações do detalhe seguem o status (`PENDING`, `CANCELLED`, `COMPLETED`). `CT`
+  - AC-AGE-03-05 `APPOINTMENT_CONFLICT` aparece no campo de horário com o link para o
+    conflitante. `CT`
+  - AC-AGE-03-06 `?studentId` e `?date` pré-preenchem o formulário. `CT`
 
 #### AGE-04 — Iniciar sessão a partir do atendimento
 
-- **Onda:** E3-3 · **Classe:** B · **US:** US2-06
-- **Dep.:** AGE-03.
-- **Hoje:** "Iniciar sessão" na Início e na ficha abre `/session/student` **sem** paciente;
-  o `StudentStep` já aceita `?studentId=` e pré-seleciona o paciente.
-- **Endpoints:** nenhum novo (o fluxo de sessão da V1 já usa `POST /task-notebook-session/start`).
-- **Sem API (não fazer):** vincular a sessão ao atendimento (`start` não recebe
-  `appointmentId`) e marcar o atendimento como concluído (`PUT` não aceita `status`).
+- **Onda:** E3-4 · **Classe:** B · **US:** US2-06
+- **Dep.:** AGE-03 e SES-05 (dona da store e do `start`).
+- **Endpoints:** `POST /task-notebook-session/start` com `appointmentId?`
+  ([BACKEND-ENTREGUE](BACKEND-ENTREGUE.md) §6 "Sessão ligada ao caderno"). O `finish` de uma
+  sessão iniciada com `appointmentId` marca o atendimento como `COMPLETED`.
 - **Escopo:**
-  1. Início (hero do próximo atendimento): "Iniciar sessão" abre
-     `/session/student?studentId={id do paciente}`.
-  2. Ficha do paciente: "Iniciar sessão" faz o mesmo com o paciente da ficha.
-  3. Detalhe do atendimento (AGE-03): botão "Iniciar sessão" para atendimento `PENDING`, com
-     o mesmo destino.
-  4. Nada mais muda no fluxo de sessão.
-- **Fora do escopo:** alterar `src/features/sessions/**` ou a store `session-flow`.
-- **Arquivos alterados:** `HomeScreen.tsx`, `PatientDetailScreen.tsx` e
-  `src/features/agenda/detail/**` (só o botão e a navegação) e testes.
+  1. Início (hero do próximo atendimento) e detalhe do atendimento `PENDING`: "Iniciar sessão"
+     abre `/session/student?studentId={paciente}&appointmentId={atendimento}`.
+  2. Ficha do paciente: "Iniciar sessão" abre `/session/student?studentId={paciente}` (sem
+     atendimento).
+  3. O fluxo de sessão guarda o `appointmentId` e o envia no `start` (pela interface criada na
+     SES-05).
+  4. Depois do encerramento, as consultas de atendimentos são invalidadas, para a Agenda e a
+     Início mostrarem "Concluído".
+- **Fora do escopo:** marcar o atendimento como concluído pelo app (o backend faz no `finish`).
+- **Arquivos alterados:** `src/features/home/HomeScreen.tsx`,
+  `src/features/patients/detail/PatientDetailScreen.tsx`, `src/features/agenda/detail/**`,
+  `src/features/sessions/**` e `src/stores/session-flow.ts` (só o `appointmentId`) e testes.
 - **AC:**
-  - AC-AGE-04-01 os três pontos navegam com o `studentId` correto. `CT`
-  - AC-AGE-04-02 o passo "Paciente" abre com o paciente selecionado. `CT` (teste existente do
-    `StudentStep` cobre; registrar)
-  - AC-AGE-04-03 atendimento que não está `PENDING` não mostra "Iniciar sessão". `CT`
+  - AC-AGE-04-01 os três pontos navegam com os parâmetros certos. `CT`
+  - AC-AGE-04-02 o `start` envia o `appointmentId` quando a sessão veio de um atendimento. `UT`
+  - AC-AGE-04-03 depois do `finish`, a Agenda mostra o atendimento como concluído (consulta
+    invalidada). `CT`
+  - AC-AGE-04-04 atendimento que não está `PENDING` não mostra "Iniciar sessão". `CT`
 
-#### PAC-07 — Editar paciente
+#### SES-05 — Sessão ligada ao caderno (G-06)
 
-- **Onda:** E3-1 · **Classe:** B · **US:** US2-04
-- **Dep.:** nenhuma.
-- **Hoje:** "Editar" (em "Dificuldades mapeadas") leva a "Em breve"; o contato pelo WhatsApp
-  já funciona na ficha.
-- **Endpoints:** `PUT /student/update/:id` (multipart, todos os campos opcionais;
-  `learningTopics`, se enviado, com pelo menos 1, como string JSON; `photo` opcional) e
-  `GET /student/`.
-- **Sem API (não fazer):** dados do responsável separados do paciente; status do paciente.
+- **Onda:** E3-3 · **Classe:** B · **US:** US2-06
+- **Dep.:** API-03.
+- **Endpoints:** `POST /task-notebook-session/start` com `taskNotebookId?`; sessões e listagens
+  devolvem `taskNotebookId` e `appointmentId`; `answer` recusa tarefa fora do caderno
+  (`400 TASK_NOT_IN_NOTEBOOK`). Sessão sem caderno continua válida.
+- **Hoje:** o player usa o caderno guardado só no aparelho (`resolveSessionTasks`, provisória
+  da G-06).
 - **Escopo:**
-  1. Nova função `updateStudent(id, input)` em `src/api/endpoints/student-update.ts`, com o
-     mesmo envio multipart de `createStudent`, handler de mock fiel (inclusive
-     `404 STUDENT_NOT_FOUND` e `400 STUDENT_NOT_ASSIGNED_TO_CURRENT_EDUCATOR`) e teste de
-     integração.
-  2. `PatientFormScreen` ganha o modo edição: recebe o paciente, preenche os campos, troca o
-     título para "Editar paciente" e o botão para "Salvar alterações", e envia **só os campos
-     alterados** (nada alterado = botão desabilitado).
-  3. Rota `app/patients/[id]/edit.tsx`; "Editar" da ficha passa a abrir essa rota.
-  4. Ao salvar: invalida a consulta de pacientes, mostra o toast e volta para a ficha.
-  5. Erros da API aparecem como mensagem, sem reenvio automático.
-- **Fora do escopo:** documentos do paciente; trocar o educador; contato (já existe).
+  1. Ao iniciar com um **caderno**, enviar `taskNotebookId` no `start`. Grupo ou atividade
+     avulsa continuam sem caderno (o backend não tem esse vínculo).
+  2. Na **retomada** (SES-03), quando a sessão do servidor tem `taskNotebookId`, o player usa
+     esse caderno, mesmo em outro aparelho; sem ele, mantém o comportamento atual.
+  3. Remover a marcação "provisória G-06" de `resolveSessionTasks` onde o contrato agora cobre.
+  4. Preparar a store para guardar `appointmentId` (usado pela AGE-04).
+- **Arquivos alterados:** `src/features/sessions/**`, `src/stores/session-flow.ts`,
+  `src/mocks/handlers/session-analysis.ts` e testes.
+- **AC:**
+  - AC-SES-05-01 iniciar com caderno envia `taskNotebookId`; com grupo ou atividade, não. `UT`
+  - AC-SES-05-02 a retomada usa o `taskNotebookId` da sessão do servidor. `CT`
+  - AC-SES-05-03 `TASK_NOT_IN_NOTEBOOK` mostra mensagem neutra, sem travar o player. `CT`
+
+#### PAC-07 — Editar paciente e responsável
+
+- **Onda:** E3-3 · **Classe:** B · **US:** US2-04
+- **Dep.:** API-03.
+- **Endpoints:** `PUT /student/update/:id` (multipart, campos opcionais), agora com
+  `guardianName` (até 100), `guardianPhone` (7–15, **só dígitos**) e `guardianRelationship`
+  (até 50); vazio é tratado como não enviado. Os três voltam nas respostas (`null` quando vazios).
+- **Escopo:**
+  1. `updateStudent(id, input)` em `src/api/endpoints/student-update.ts`, com handler de mock
+     fiel (inclusive `404 STUDENT_NOT_FOUND` e `400 STUDENT_NOT_ASSIGNED_TO_CURRENT_EDUCATOR`) e
+     teste de integração; remove `educators` da resposta (D1).
+  2. `PatientFormScreen` ganha a seção "Responsável" (nome, telefone e parentesco, opcionais) no
+     cadastro e na edição; o telefone é digitado com máscara e **enviado só com dígitos**.
+  3. Modo edição: preenche os campos, título "Editar paciente", botão "Salvar alterações", envia
+     **só os campos alterados**; nada alterado deixa o botão desabilitado.
+  4. Rota `app/patients/[id]/edit.tsx`; "Editar" da ficha abre essa rota.
+  5. Ficha: "Responsável: {nome} ({parentesco})" no resumo quando houver; o botão de contato usa
+     `guardianPhone` quando existir, senão `phonenumber`.
 - **Arquivos novos:** `src/api/endpoints/student-update.ts`,
   `src/mocks/handlers/student-update.ts`, `app/patients/[id]/edit.tsx` e testes.
 - **Arquivos alterados:** `src/features/patients/form/PatientFormScreen.tsx`,
-  `PatientDetailScreen.tsx` (só o destino de "Editar"), `src/mocks/install.ts` (uma linha),
-  `src/mocks/README.md` (seção).
+  `src/api/endpoints/student-create.ts` (só repassar `guardian*`),
+  `src/features/patients/detail/PatientDetailScreen.tsx` (Editar, responsável e contato),
+  `src/mocks/install.ts`, `src/mocks/README.md` e testes.
 - **AC:**
   - AC-PAC-07-01 a edição envia só os campos alterados; `learningTopics` como string JSON. `UT`
-  - AC-PAC-07-02 depois de salvar, a ficha e a lista mostram o dado novo. `CT`
-  - AC-PAC-07-03 o modo criação continua igual (testes existentes verdes). `CMD`
-  - AC-PAC-07-04 erro da API mostra a mensagem e mantém o formulário preenchido. `CT`
+  - AC-PAC-07-02 o telefone do responsável sai só com dígitos. `UT`
+  - AC-PAC-07-03 depois de salvar, a ficha e a lista mostram o dado novo. `CT`
+  - AC-PAC-07-04 o contato usa o telefone do responsável quando houver. `CT`
+  - AC-PAC-07-05 erro da API mostra a mensagem e mantém o formulário preenchido. `CT`
 
 #### PAC-08 — Modelos de anamnese
 
@@ -398,224 +470,302 @@ tarefas seguintes partem da `main` já atualizada.
 
 #### PAC-06 — Anamnese do paciente
 
-- **Onda:** E3-4 · **Classe:** B · **US:** US2-05
-- **Dep.:** AGE-04 (dono anterior de `PatientDetailScreen`) e PAC-08.
+- **Onda:** E3-5 · **Classe:** B · **US:** US2-05
+- **Dep.:** AGE-04 e PAC-07 (donos anteriores de `PatientDetailScreen`) e PAC-08.
 - **Figma:** só o destino "Ver síntese"; tela montada com o design system (G-18).
 - **Endpoints:**
   - `GET /anamnese/templates/` e `GET /anamnese/templates/:templateId`
   - `POST /anamnese/templates/:templateId/responses` — `studentId` e `answers`
+  - `PUT /anamnese/responses/:responseId` — mesma lista `answers` da criação; grava `updatedAt`
+    e mantém `answeredAt` (novo em 2026-10-29)
   - `POST /anamnese/responses/upload-file` — arquivo de pergunta `FileUpload` (até 10 MB)
   - `GET /anamnese/responses/student/:studentId` e `GET /anamnese/responses/:responseId`
-- **Sem API (não fazer):** editar uma resposta enviada; síntese dedicada da anamnese.
+- **Peculiaridade (D4):** `GET /anamnese/responses/:responseId` de outro educador devolve
+  **401** `Unauthorized`; nessa rota o 401 **não** desloga o usuário, mostra "Sem acesso a esta
+  anamnese". O `PUT` devolve 403.
+- **Sem API (não fazer):** síntese dedicada da anamnese.
 - **Escopo:**
-  1. Tela `/patients/{id}/anamnese`: lista das respostas do paciente (modelo e data
-     "Respondida em …"), com toque para ver as respostas daquele envio (somente leitura).
-  2. "Nova anamnese": escolher o modelo e preencher. Cada tipo usa o campo certo:
-     `Descriptive` → texto; `MultipleChoice` → uma opção; `Checkbox` → várias;
-     `FileUpload` → seletor de documento, com upload antes do envio.
-  3. Obrigatórias validadas no cliente; os erros `MISSING_*` e `INVALID_*` da API aparecem
-     na pergunta correspondente quando possível, senão no topo.
-  4. Sem modelo: estado vazio com "Criar modelo" (abre PAC-08).
-  5. Na ficha do paciente, uma linha "Anamnese" com a data da última resposta abre a tela.
-  6. Nenhum texto de resposta em log.
-- **Fora do escopo:** editar resposta; gerar análise por IA da anamnese (já existe nos
-  relatórios do aluno).
+  1. Tela `/patients/{id}/anamnese`: respostas do paciente (modelo e "Respondida em …",
+     "Editada em …" quando houver), com toque para ver as respostas.
+  2. "Nova anamnese": escolher o modelo e preencher; cada tipo usa o campo certo
+     (`Descriptive` → texto; `MultipleChoice` → uma opção; `Checkbox` → várias;
+     `FileUpload` → seletor de documento com upload antes do envio).
+  3. "Editar" numa resposta reabre o formulário preenchido e envia o `PUT` com a lista completa.
+  4. Obrigatórias validadas no cliente; os erros `MISSING_*` e `INVALID_*` aparecem na pergunta
+     quando possível.
+  5. Sem modelo: estado vazio com "Criar modelo" (abre PAC-08).
+  6. Na ficha do paciente, a linha "Anamnese" com a data da última resposta abre a tela.
+  7. Nenhum texto de resposta em log.
 - **Arquivos novos:** `app/patients/[id]/anamnese.tsx`, `src/features/anamnese/responses/**`,
-  `src/api/endpoints/anamnese-responses.ts`, `src/mocks/handlers/anamnese-responses.ts` e
-  testes.
-- **Arquivos alterados:** `PatientDetailScreen.tsx` (a linha "Anamnese"),
-  `src/mocks/install.ts`, `src/mocks/README.md`.
+  `src/api/endpoints/anamnese-responses.ts`, `src/mocks/handlers/anamnese-responses.ts` e testes.
+- **Arquivos alterados:** `src/features/patients/detail/PatientDetailScreen.tsx` (a linha
+  "Anamnese"), `src/mocks/install.ts`, `src/mocks/README.md`.
 - **AC:**
-  - AC-PAC-06-01 cada tipo de pergunta envia só o campo do seu tipo (`textValue`,
-    `selectedOptionId`, `selectedOptionIds` ou `fileUrl`). `UT`
+  - AC-PAC-06-01 cada tipo de pergunta envia só o campo do seu tipo. `UT`
   - AC-PAC-06-02 pergunta `FileUpload` faz o upload e envia a URL devolvida. `CT`
   - AC-PAC-06-03 obrigatória vazia bloqueia o envio com a mensagem no campo. `CT`
-  - AC-PAC-06-04 depois de enviar, a lista e a ficha mostram a nova data. `CT`
+  - AC-PAC-06-04 editar envia o `PUT` com a lista completa e mostra "Editada em". `CT`
+  - AC-PAC-06-05 o 401 do detalhe de resposta não desloga. `CT`
 
 #### REC-02 — Perfil e conta
 
-- **Onda:** E3-1 · **Classe:** B · **US:** US2-15
-- **Dep.:** nenhuma.
+- **Onda:** E3-3 · **Classe:** B · **US:** US2-15
+- **Dep.:** API-03.
 - **Hoje:** o banner de Recursos leva a "Em breve" e **não existe botão "Sair" no app**.
-- **Figma:** `.profile-banner` (nome); tela sem desenho, montada com o design system (G-18).
-- **Endpoints:** `GET /educator/me`, `PUT /educator/update-educator` (`newName?` e
-  `newContact?`, de 3 a 100 caracteres) e `PUT /educator/update-profile-picture` (multipart
-  `photo`, até 5 MB).
-- **Sem API (não fazer):** papel/profissão ("Psicopedagoga · Administradora").
+- **Endpoints:** `GET /educator/me` (agora com `profession`), `PUT /educator/update-educator`
+  (`newName?`, `newContact?`, `newProfession?`, de 3 a 100) e `PUT
+/educator/update-profile-picture` (multipart `photo`, até 5 MB).
+- **Peculiaridade (D3):** a resposta do `update-educator` vem com campos prefixados (`_name`…)
+  e inclui `_password`. O app **não lê** essa resposta: depois de salvar, recarrega `GET
+/educator/me`, e nada da resposta vai para log ou cache.
+- **Sem API (não fazer):** troca de senha (G-49; o backend não entregou nesta etapa).
 - **Escopo:**
-  1. Tela `/profile`: foto (com `ImagePickerField`), nome, e-mail (somente leitura) e
-     contato.
+  1. Tela `/profile`: foto (com `ImagePickerField`), nome, e-mail (somente leitura), contato e
+     profissão.
   2. "Salvar" envia só o que mudou; a foto é enviada na hora em que é escolhida.
-  3. "Sair" pede confirmação, chama `logout` da store de autenticação (limpa token, cache e
-     fluxo de sessão, G-04) e volta para o login.
-  4. O banner de Recursos abre `/profile` e mostra a foto quando houver.
-  5. Erros da API aparecem como mensagem, sem reenvio automático.
-- **Fora do escopo:** trocar senha (G-49); excluir conta.
-- **Arquivos novos:** `app/profile.tsx`, `src/features/profile/**`, as funções
-  `updateEducator` e `updateProfilePicture` em `src/api/endpoints/educator-update.ts`,
-  `src/mocks/handlers/educator-update.ts` e testes.
-- **Arquivos alterados:** `ResourcesScreen.tsx` (banner), `src/mocks/install.ts`,
-  `src/mocks/README.md`.
+  3. "Sair" pede confirmação, chama `logout` da store de autenticação (limpa token, cache e fluxo
+     de sessão, G-04) e volta para o login.
+  4. O banner de Recursos abre `/profile` e mostra a foto e a profissão quando houver.
+- **Arquivos novos:** `app/profile.tsx`, `src/features/profile/**`,
+  `src/api/endpoints/educator-update.ts`, `src/mocks/handlers/educator-update.ts` e testes.
+- **Arquivos alterados:** `src/features/resources/ResourcesScreen.tsx` (banner),
+  `src/mocks/install.ts`, `src/mocks/README.md`.
 - **AC:**
-  - AC-REC-02-01 salvar envia só `newName` e/ou `newContact` alterados; validação de 3 a 100. `CT`
-  - AC-REC-02-02 a foto escolhida é enviada como `photo` e aparece no perfil e no banner. `CT`
-  - AC-REC-02-03 "Sair" só desloga depois da confirmação e leva ao login. `CT`
-  - AC-REC-02-04 depois de sair, o cache de consultas está vazio. `UT`
+  - AC-REC-02-01 salvar envia só os campos alterados; validação de 3 a 100. `CT`
+  - AC-REC-02-02 depois de salvar, os dados vêm de um novo `GET /educator/me`. `CT`
+  - AC-REC-02-03 a foto escolhida é enviada como `photo` e aparece no perfil e no banner. `CT`
+  - AC-REC-02-04 "Sair" só desloga depois da confirmação e leva ao login. `CT`
+  - AC-REC-02-05 depois de sair, o cache de consultas está vazio. `UT`
+
+#### FEC-04 — Grupo de caderno pelo `GET /task-group/:id`
+
+- **Onda:** E3-3 · **Classe:** B
+- **Dep.:** API-03; FEC-03 (concluída).
+- **Endpoint:** `GET /task-group/:id` — devolve o grupo quando ele é do educador **ou** está num
+  caderno do educador; fora disso `403 UNAUTHORIZED`; inexistente `404 TASK_GROUP_NOT_FOUND`.
+- **Escopo:**
+  1. `getTaskGroupById(id)` em `src/api/endpoints/content.ts`, com handler de mock fiel e teste
+     de integração.
+  2. O detalhe do grupo usa essa rota: um grupo de outro educador num caderno do usuário abre
+     normalmente (somente leitura: sem "Editar" e "Excluir").
+  3. "Grupo indisponível" (FEC-03) fica só para `403` e `404`.
+  4. No caderno, o item volta a navegar para todos os grupos; o selo "Indisponível" sai.
+- **Arquivos alterados:** `src/api/endpoints/content.ts`, `src/features/content-detail/group/**`,
+  `src/features/content-detail/notebook/NotebookDetailScreen.tsx`, `src/mocks/handlers/content.ts`
+  e testes.
+- **AC:**
+  - AC-FEC-04-01 grupo de outro educador num caderno abre o detalhe, sem editar e excluir. `CT`
+  - AC-FEC-04-02 `403` e `404` mostram "Grupo indisponível". `CT`
 
 ### 4.3 Bloco C — Planos com IA
 
-As fichas abaixo descrevem a tela e o comportamento. **Os endpoints, campos e erros vêm do
-contrato que a PLN-00 registra**; até lá, nenhuma tarefa de planos começa. A lista do que foi
-pedido ao backend está em [PEDIDOS-BACKEND §1](PEDIDOS-BACKEND.md#1-domínio-planos-com-ia-pdi-e-pe).
+O backend entregou o domínio em 2026-10-29. O contrato (entidades, regras, rotas e erros) está
+em [BACKEND-ENTREGUE](BACKEND-ENTREGUE.md) §2 a §5, conferido com o Swagger (§9). Regras que
+valem para todas as fichas:
+
+- só o educador dono do paciente acessa os planos (`403 UNAUTHORIZED`); inexistente é `404`;
+- um PDI ativo por paciente (`409 ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`);
+- só plano `ACTIVE` aceita edição, metas, revisão e sugestão (`409 PLAN_NOT_EDITABLE`);
+  encerrar é definitivo e **não há exclusão**;
+- o progresso vem pronto do servidor (`progress.percent`); o app não calcula;
+- datas sem hora em `AAAA-MM-DD`; campos opcionais do plano vêm **ausentes**, não `null`;
+- rotas de IA com `AI_TIMEOUT_MS` (90 s, G-46), carregamento, erro e sem reenvio automático.
 
 #### PLN-00 — Contrato do domínio de planos
 
-- **Onda:** E3-0 · **Classe:** A · **Responsável:** usuário + backend; o orquestrador registra.
-- **Dep.:** G-48 (resolvido).
-- **Escopo:**
-  1. Enviar ao backend o pedido de [PEDIDOS-BACKEND §1](PEDIDOS-BACKEND.md#1-domínio-planos-com-ia-pdi-e-pe).
-  2. Quando o backend responder, registrar o contrato em `docs/PROJECT.md` (Parte II, seção
-     nova de planos), no mesmo formato das outras seções: rota, autenticação, corpo,
-     resposta e erros.
-  3. Criar o contrato de implementação `docs/contracts/planos.md` (AGENTS §4): tipos, estados
-     do plano, regras de edição, mapeamento de cada tela para as rotas e plano de testes.
-  4. Ajustar as fichas PLN-01 a PLN-05 e PAC-04 ao contrato real e registrar as diferenças.
+- **Onda:** E3-0 · **Classe:** A
+- **Estado:** concluída em 2026-10-29: o backend publicou o domínio e o contrato está em
+  [BACKEND-ENTREGUE](BACKEND-ENTREGUE.md). O registro rota a rota no `PROJECT.md` e o
+  `docs/contracts/planos.md` ficaram para depois, a pedido do usuário.
 - **AC:**
-  - AC-PLN-00-01 cada rota usada pelas fichas de planos está em `PROJECT.md`, com resposta
-    e erros. `REV`
-  - AC-PLN-00-02 `docs/contracts/planos.md` aprovado pelo orquestrador antes do primeiro
-    dispatch de planos. `REV`
+  - AC-PLN-00-01 cada rota usada pelas fichas de planos está documentada, com resposta e erros
+    (BACKEND-ENTREGUE §3 a §5). `REV`
+  - AC-PLN-00-02 as fichas PLN-01 a PLN-05 e PAC-04 ajustadas ao contrato real. `REV`
 
 #### PLN-01 — Lista de planos
 
-- **Onda:** E3-4 · **Classe:** B · **US:** US2-07
-- **Dep.:** PLN-00.
+- **Onda:** E3-5 · **Classe:** B · **US:** US2-07
+- **Dep.:** API-03; AGE-04 (dona anterior de `HomeScreen`) e REC-02 (de `ResourcesScreen`).
 - **Figma:** `PlansScreen` (`mode=hub`): "Planos com IA" com eyebrow "PDI e planejamento
   educacional"; `AIHero` "Planejamento conectado à evolução real" com "Criar novo plano";
-  "Em andamento" com um `InfoCard` por plano (paciente, tipo, % e data de revisão).
+  "Em andamento" com um `InfoCard` por plano.
+- **Endpoints:** `GET /plan/` com `studentId?`, `status?` e `type?` → `PlanSummary[]` (todos os
+  campos do plano menos `goals`, mais `studentName`), `ACTIVE` primeiro.
 - **Escopo:**
-  1. Tela `/plans` com os planos do educador, conforme o contrato. As funções de leitura de
-     `src/api/endpoints/plans.ts` (listar, inclusive por paciente se o contrato tiver, e
-     detalhar) nascem aqui, para a PAC-04 usar sem alterar esse arquivo.
-  2. Cada item abre `/plans/{id}` (PLN-04); "Criar novo plano" abre `/plans/new` (PLN-02).
-  3. Atalhos: "Criar plano" da Início e "Planos com IA" de Recursos passam a abrir `/plans`.
-  4. Estados: carregando, erro, vazio ("Nenhum plano ainda") e offline.
-- **Fora do escopo:** "Próximas sessões planejadas" (sem pedido ao backend nesta entrega).
+  1. Tipos do domínio (`Plan`, `PlanSummary`, `PlanGoal`, `PlanProgress`, `PlanReview`,
+     `PlanDraft`, `PlanSuggestion` e as uniões) em `src/api/types.ts`, e as funções de leitura em
+     `src/api/endpoints/plans.ts` (`listPlans(filtros)` e `getPlan(id)`), com handlers de mock
+     fiéis e testes de integração.
+  2. Tela `/plans`: seções "Em andamento" (`ACTIVE`) e "Encerrados"; cada item mostra paciente,
+     tipo (PDI ou PE), título, `progress.percent` e a próxima revisão; filtro por tipo.
+  3. Cada item abre `/plans/{id}`; "Criar novo plano" abre `/plans/new`.
+  4. Atalhos: "Criar plano" da Início abre `/plans/new` e "Planos com IA" de Recursos abre
+     `/plans`.
+  5. Estados: carregando, erro, vazio ("Nenhum plano ainda") e offline.
 - **Arquivos novos:** `app/plans/index.tsx`, `src/features/plans/hub/**`,
   `src/api/endpoints/plans.ts`, `src/mocks/handlers/plans.ts` e testes.
-- **Arquivos alterados:** `HomeScreen.tsx` e `ResourcesScreen.tsx` (só os destinos),
-  `src/api/types.ts`, `src/mocks/install.ts`, `src/mocks/README.md`.
+- **Arquivos alterados:** `src/api/types.ts`, `src/features/home/HomeScreen.tsx` e
+  `src/features/resources/ResourcesScreen.tsx` (só os destinos), `src/mocks/install.ts`,
+  `src/mocks/README.md`.
 - **AC:**
-  - AC-PLN-01-01 a lista mostra os planos do contrato com % e revisão. `CT`
+  - AC-PLN-01-01 a lista mostra os planos com `progress.percent` e revisão, ativos primeiro. `CT`
   - AC-PLN-01-02 os destinos de item, "Criar novo plano", Início e Recursos estão certos. `CT`
   - AC-PLN-01-03 vazio, erro e carregando aparecem. `CT`
 
 #### PLN-02 — Gerar plano com IA
 
-- **Onda:** E3-5 · **Classe:** B · **US:** US2-07
+- **Onda:** E3-6 · **Classe:** B · **US:** US2-07
 - **Dep.:** PLN-01.
 - **Figma:** `PlansScreen` (`mode=generate`): "Novo planejamento" com o paciente no eyebrow;
-  `SegmentedControl` PDI / PE da sessão; "Foco do planejamento" (texto); `AIContext`
-  "Contexto conectado"; "Dificuldades consideradas" (`CheckList`); "Duração de referência"
-  (3 ou 6 meses); "Gerar planejamento com IA" (`sparkles`).
+  `SegmentedControl` PDI / PE da sessão; "Foco do planejamento"; `AIContext` "Contexto
+  conectado"; "Dificuldades consideradas" (`CheckList`); "Duração de referência" (3 ou 6 meses);
+  "Gerar planejamento com IA" (`sparkles`).
+- **Endpoint:** `POST /plan/generate` — `studentId`, `type`, `focus` (1–1000),
+  `consideredDifficulties` (1–20 itens de 1–100), `durationMonths` (3 ou 6, obrigatório no PDI),
+  `sessionDate` (obrigatório no PE), `parentPlanId?` (PE), `includeAnamnesisTemplateId?` →
+  `200 PlanDraft` (não salva). Erros: `400`, `403`, `404 STUDENT_NOT_FOUND` /
+  `PLAN_NOT_FOUND` / `TEMPLATE_NOT_FOUND`, `500 AI_GENERATION_FAILED` / `AI_INVALID_OUTPUT`.
 - **Escopo:**
   1. Tela `/plans/new`, com `?studentId=` opcional; sem ele, o primeiro passo é escolher o
      paciente.
-  2. "Dificuldades consideradas" vêm de `Student.learningTopics`, já marcadas.
-  3. Enviar a geração conforme o contrato, com o timeout de IA do app (`AI_TIMEOUT_MS`,
-     G-46), estado de carregamento ("Gerando o planejamento…"), erro com "Tentar de novo" e
-     **sem reenvio automático**.
-  4. O resultado abre o rascunho (PLN-03) **sem salvar**.
-  5. Se o contrato exigir dados de PE que o app não tem (por exemplo, o atendimento), a opção
-     PE fica desabilitada com a explicação, e isso é registrado.
+  2. "Dificuldades consideradas" vêm de `Student.learningTopics`, já marcadas; pelo menos uma.
+  3. PDI: duração 3 ou 6 meses. PE: data da sessão (hoje por padrão) e, se o paciente tiver PDI
+     ativo, ele entra como `parentPlanId` (busca com `GET /plan/?studentId=…&type=PDI&status=ACTIVE`).
+  4. "Incluir anamnese" (opcional): escolhe um modelo com resposta do paciente e envia
+     `includeAnamnesisTemplateId`.
+  5. A geração usa `AI_TIMEOUT_MS`, mostra "Gerando o planejamento…", erro com "Tentar de novo"
+     e não reenvia sozinha. O resultado abre o rascunho (PLN-03) **sem salvar**.
 - **Arquivos novos:** `app/plans/new.tsx`, `src/features/plans/generate/**` e testes.
-- **Arquivos alterados:** `src/api/endpoints/plans.ts`, `src/mocks/handlers/plans.ts`.
+- **Arquivos alterados:** `src/api/endpoints/plans.ts` (`generatePlanDraft`),
+  `src/mocks/handlers/plans.ts`.
 - **AC:**
   - AC-PLN-02-01 sem paciente na rota, pede para escolher um. `CT`
-  - AC-PLN-02-02 as dificuldades do paciente vêm marcadas e podem ser desmarcadas. `CT`
-  - AC-PLN-02-03 carregamento, erro e timeout aparecem, sem reenvio automático. `CT`
-  - AC-PLN-02-04 o resultado não é salvo antes da confirmação na PLN-03. `CT`
+  - AC-PLN-02-02 as dificuldades vêm marcadas; desmarcar todas bloqueia a geração. `CT`
+  - AC-PLN-02-03 PDI envia `durationMonths`; PE envia `sessionDate` e o PDI ativo como
+    `parentPlanId`. `UT`
+  - AC-PLN-02-04 carregamento, erro e timeout aparecem, sem reenvio automático. `CT`
 
 #### PLN-03 — Rascunho editável e salvar
 
-- **Onda:** E3-6 · **Classe:** B · **US:** US2-07
+- **Onda:** E3-7 · **Classe:** B · **US:** US2-07
 - **Dep.:** PLN-02.
 - **Figma:** `.generated-sheet`: "Rascunho gerado" com `Badge` "Editável"; "Plano de
   Desenvolvimento Individual"; "Objetivo geral", "Metas prioritárias" e "Ajustes do
-  profissional"; botões "Compartilhar" e "Salvar PDI".
+  profissional"; "Compartilhar" e "Salvar PDI".
+- **Endpoint:** `POST /plan/` com `source: "AI"`; PDI com `startDate`, `endDate` e
+  `nextReviewDate?` (as datas sugeridas do rascunho); PE com `sessionDate`; `goals` de 1 a 10.
+  Erros: `400 PLAN_WITHOUT_GOALS`, `TOO_MANY_GOALS`, `INVALID_DATES`, `SESSION_DATE_REQUIRED`,
+  `INVALID_FIELDS_FOR_PDI`, `INVALID_PARENT_PLAN`, `INVALID_APPOINTMENT`; `409
+ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 - **Escopo:**
-  1. O rascunho aparece na mesma rota da geração, com objetivo e metas editáveis (adicionar,
-     remover e editar metas).
-  2. "Salvar PDI" (ou "Salvar PE") persiste conforme o contrato e abre `/plans/{id}`.
-  3. "Compartilhar" usa o `Share` nativo com uma síntese em texto (sem dados além dos do
-     plano).
-  4. Sair com rascunho não salvo pede confirmação.
+  1. O rascunho aparece na mesma rota da geração: título, objetivo geral, metas (com critério de
+     sucesso) e "Ajustes do profissional" (`professionalNotes`) editáveis; adicionar, remover e
+     reordenar metas (1 a 10).
+  2. O `rationale` da IA aparece como "Por que essas metas", somente leitura.
+  3. "Salvar PDI" / "Salvar PE" envia o `POST /plan/` e abre `/plans/{id}`.
+  4. `ACTIVE_PDI_ALREADY_EXISTS`: mensagem "Este paciente já tem um PDI ativo" com "Ver PDI
+     ativo" (`/plans/{activePlanId}`); o rascunho não se perde.
+  5. "Compartilhar" usa o `Share` nativo com uma síntese em texto.
+  6. Sair com rascunho não salvo pede confirmação.
 - **Arquivos novos:** `src/features/plans/draft/**` e testes.
 - **Arquivos alterados:** `src/features/plans/generate/**` (só a troca para o rascunho),
-  `src/api/endpoints/plans.ts`, `src/mocks/handlers/plans.ts`.
+  `src/api/endpoints/plans.ts` (`createPlan`), `src/mocks/handlers/plans.ts`.
 - **AC:**
-  - AC-PLN-03-01 objetivo e metas são editáveis antes de salvar. `CT`
-  - AC-PLN-03-02 salvar envia o rascunho editado e abre o detalhe. `CT`
-  - AC-PLN-03-03 "Compartilhar" chama o `Share` com a síntese. `CT`
-  - AC-PLN-03-04 sair sem salvar pede confirmação. `CT`
+  - AC-PLN-03-01 título, objetivo e metas são editáveis antes de salvar; 1 a 10 metas. `CT`
+  - AC-PLN-03-02 salvar envia `source: "AI"` e as datas do rascunho, e abre o detalhe. `CT`
+  - AC-PLN-03-03 `ACTIVE_PDI_ALREADY_EXISTS` leva ao PDI ativo sem perder o rascunho. `CT`
+  - AC-PLN-03-04 "Compartilhar" chama o `Share` com a síntese. `CT`
+  - AC-PLN-03-05 sair sem salvar pede confirmação. `CT`
 
 #### PLN-04 — Detalhe do plano
 
-- **Onda:** E3-7 · **Classe:** B · **US:** US2-08
+- **Onda:** E3-8 · **Classe:** B · **US:** US2-08
 - **Dep.:** PLN-03.
 - **Figma:** destino "Ver plano completo"; tela montada com o design system (G-18).
+- **Endpoints:** `GET /plan/:id`; `PUT /plan/:id` (título, objetivo, notas, `endDate`,
+  `nextReviewDate` e a lista completa de `goals`); `PUT /plan/:id/goals/:goalId` (`status`);
+  `POST /plan/:id/reviews` (`note`, `nextReviewDate?`); `GET /plan/:id/reviews`;
+  `PUT /plan/:id/status` (`COMPLETED` ou `CANCELLED`).
+- **Limitação do backend:** o `PUT /plan/:id` não apaga `nextReviewDate` nem
+  `professionalNotes` (vazio mantém o valor); a tela não oferece "limpar" esses campos.
 - **Escopo:**
-  1. Tela `/plans/{id}`: paciente, tipo, vigência, data de revisão, objetivo geral e metas
-     com progresso (`ProgressBar`).
-  2. Atualizar o status de cada meta e registrar a revisão, **se o contrato tiver essas
-     operações**; senão, a tela é só de leitura e isso é registrado.
-  3. "Editar plano" reabre o rascunho, se o contrato permitir edição.
+  1. Tela `/plans/{id}`: paciente, tipo, status, vigência, próxima revisão, objetivo geral e
+     metas com status e `ProgressBar` de `progress.percent`.
+  2. Mudar o status de cada meta (Não iniciada, Em andamento, Atingida, Descontinuada).
+  3. "Editar plano": reabre o formulário do rascunho com os dados do plano e envia o `PUT` com a
+     lista completa de metas (com `id` atualiza, sem `id` cria, ausente remove); meta atingida
+     não pode ser removida (`409 GOAL_ACHIEVED_CANNOT_BE_REMOVED`).
+  4. "Registrar revisão" (nota e próxima revisão) e a lista "Revisões".
+  5. "Encerrar plano": escolher Concluído ou Cancelado, com confirmação ("Não é possível
+     reabrir").
+  6. Plano encerrado é somente leitura (sem os botões de alteração).
+  7. "Plano não encontrado" (`404`) e "Sem acesso" (`403`) com "Voltar".
 - **Arquivos novos:** `app/plans/[id].tsx`, `src/features/plans/detail/**` e testes.
+- **Arquivos alterados:** `src/api/endpoints/plans.ts` (escritas), `src/mocks/handlers/plans.ts`,
+  `src/features/plans/draft/**` (reuso no modo edição).
 - **AC:**
-  - AC-PLN-04-01 mostra objetivos, metas, progresso, vigência e revisão do contrato. `CT`
-  - AC-PLN-04-02 as atualizações permitidas pelo contrato persistem e refletem na lista. `CT`
-  - AC-PLN-04-03 plano inexistente mostra "Plano não encontrado" com "Voltar". `CT`
+  - AC-PLN-04-01 mostra metas, progresso, vigência e revisão do contrato. `CT`
+  - AC-PLN-04-02 mudar o status de uma meta atualiza o progresso com a resposta do servidor. `CT`
+  - AC-PLN-04-03 editar envia a lista completa de metas com os `id`. `UT`
+  - AC-PLN-04-04 registrar revisão aparece na lista de revisões. `CT`
+  - AC-PLN-04-05 encerrar pede confirmação e deixa o plano somente leitura. `CT`
 
-#### PLN-05 — Sugestões da IA
+#### PLN-05 — Sugestões da IA (sob demanda)
 
-- **Onda:** E3-8 · **Classe:** B · **US:** US2-08
-- **Dep.:** PLN-04 e a **segunda leva** do backend (sugestões). Sem ela, a tarefa fica
-  bloqueada e não entra na contagem de telas.
-- **Figma:** `InsightCard` da Início ("N sugestões da IA para revisar").
+- **Onda:** E3-9 · **Classe:** B · **US:** US2-08
+- **Dep.:** PLN-04.
+- **Mudança do backend (G-52):** as sugestões são geradas **sob demanda**, não ao encerrar a
+  sessão.
+- **Endpoints:** `POST /plan/:id/suggestions/generate` (`201` com as novas, `200 []` quando o
+  plano já tem 3 pendentes ou nada válido veio); `GET /plan/suggestions?status=PENDING`;
+  `POST /plan/suggestions/:id/accept` (`200 Plan`; `409 SUGGESTION_NOT_APPLICABLE` descarta a
+  sugestão); `POST /plan/suggestions/:id/dismiss`.
 - **Escopo:**
-  1. Tela `/plans/suggestions`: lista com aceitar e descartar, conforme o contrato.
-  2. Cartão da Início com a contagem real; com zero, o cartão some.
+  1. No detalhe do plano ativo, "Pedir sugestões da IA" (com `AI_TIMEOUT_MS`); `[]` mostra
+     "Sem sugestões novas para este plano".
+  2. Tela `/plans/suggestions`: pendentes de todos os planos (paciente, plano, texto e a mudança
+     proposta), com "Aceitar" e "Descartar".
+  3. `SUGGESTION_NOT_APPLICABLE`: "Esta sugestão não se aplica mais" e ela sai da lista.
+  4. Cartão da Início "N sugestões da IA para revisar" com a contagem de pendentes; com zero, o
+     cartão some.
 - **Arquivos novos:** `app/plans/suggestions.tsx`, `src/features/plans/suggestions/**` e testes.
-- **Arquivos alterados:** `HomeScreen.tsx` (o cartão).
+- **Arquivos alterados:** `src/features/plans/detail/**` (botão), `src/features/home/HomeScreen.tsx`
+  (cartão), `src/api/endpoints/plans.ts`, `src/mocks/handlers/plans.ts`.
 - **AC:**
-  - AC-PLN-05-01 aceitar aplica a sugestão no plano; descartar tira da lista. `CT`
-  - AC-PLN-05-02 a contagem da Início acompanha a lista. `CT`
+  - AC-PLN-05-01 "Pedir sugestões" mostra as novas ou a mensagem de nenhuma. `CT`
+  - AC-PLN-05-02 aceitar aplica no plano; descartar tira da lista. `CT`
+  - AC-PLN-05-03 `SUGGESTION_NOT_APPLICABLE` remove a sugestão com a mensagem. `CT`
+  - AC-PLN-05-04 a contagem da Início acompanha as pendentes. `CT`
 
 #### PAC-04 — Aba Planos na ficha do paciente
 
-- **Onda:** E3-5 · **Classe:** B · **US:** US2-05
-- **Dep.:** PLN-01; AGE-04 e PAC-06 (donos anteriores de `PatientDetailScreen`).
+- **Onda:** E3-7 · **Classe:** B · **US:** US2-05
+- **Dep.:** PLN-01; PAC-06 (dona anterior de `PatientDetailScreen`).
 - **Figma:** `PatientDetail`, `.tabs` Visão geral / Planos; na aba Planos, um `InfoCard` por
   plano e o botão "Criar novo plano".
+- **Endpoint:** `GET /plan/?studentId={id}` (usa `listPlans` da PLN-01).
 - **Escopo:**
   1. A ficha ganha as abas "Visão geral" (conteúdo atual) e "Planos".
-  2. "Planos" lista os planos do paciente; cada um abre `/plans/{id}`; "Criar novo plano"
-     abre `/plans/new?studentId={id}`.
-  3. A aba "Avaliações" do Make **não** entra (sem API).
-- **Arquivos novos:** `src/features/patients/detail/plans/**` (componente da aba) e testes.
-- **Arquivos alterados:** `PatientDetailScreen.tsx` e testes.
-- **Restrição:** não altera a camada de API de planos (dona: PLN-02, na mesma onda); usa as
-  funções de leitura criadas na PLN-01.
+  2. "Planos" lista os planos do paciente (ativos primeiro); cada um abre `/plans/{id}`;
+     "Criar novo plano" abre `/plans/new?studentId={id}`.
+  3. Na visão geral, o bloco "PDI vigente" mostra o PDI ativo (título, vigência e
+     `progress.percent`) com "Ver plano completo"; sem PDI ativo, "Nenhum PDI ativo" com
+     "Criar PDI".
+  4. A aba "Avaliações" do Make **não** entra (sem API).
+- **Arquivos novos:** `src/features/patients/detail/plans/**` e testes.
+- **Arquivos alterados:** `src/features/patients/detail/PatientDetailScreen.tsx` e testes.
+- **Restrição:** não altera a camada de API de planos; usa as funções da PLN-01.
 - **AC:**
   - AC-PAC-04-01 a aba lista os planos do paciente com status. `CT`
   - AC-PAC-04-02 "Criar novo plano" leva o paciente para a geração. `CT`
-  - AC-PAC-04-03 os testes da visão geral continuam verdes. `CMD`
+  - AC-PAC-04-03 o bloco "PDI vigente" mostra o PDI ativo ou o estado vazio. `CT`
+  - AC-PAC-04-04 os testes da visão geral continuam verdes. `CMD`
 
 ### 4.4 Bloco D — Qualidade
 
 #### QA-06 — Plano de testes da Entrega 3
 
-- **Onda:** E3-8 · **Classe:** B
+- **Onda:** E3-10 · **Classe:** B
 - **Dep.:** blocos A, B e C concluídos (ou o que estiver pronto, registrado).
 - **Escopo:** roteiro manual no formato do [plano da Entrega 1](../entrega-1/PLANO-TESTES.md):
   um caso por AC `MAN` e um por fluxo entre telas (Agenda → atendimento → sessão; ficha →
@@ -626,7 +776,7 @@ pedido ao backend está em [PEDIDOS-BACKEND §1](PEDIDOS-BACKEND.md#1-domínio-p
 
 #### QA-02 — E2E com Maestro
 
-- **Onda:** E3-9 · **Classe:** B
+- **Onda:** E3-11 · **Classe:** B
 - **Dep.:** QA-06. A ferramenta Maestro é instalada **fora do projeto** (CLI), com autorização
   do usuário; nada entra no `package.json`.
 - **Escopo:** fluxos em `.maestro/`, rodando no Expo Go do emulador:
@@ -639,7 +789,7 @@ pedido ao backend está em [PEDIDOS-BACKEND §1](PEDIDOS-BACKEND.md#1-domínio-p
 
 #### QA-03 — Acessibilidade
 
-- **Onda:** E3-9 · **Classe:** B
+- **Onda:** E3-11 · **Classe:** B
 - **Dep.:** QA-06.
 - **Escopo:** nas telas novas e alteradas da Entrega 3: leitor de tela (TalkBack), fonte
   grande, contraste e alvos de toque de 44 pontos (G-17).
@@ -648,7 +798,7 @@ pedido ao backend está em [PEDIDOS-BACKEND §1](PEDIDOS-BACKEND.md#1-domínio-p
 
 #### QA-04 — Homologação em aparelhos
 
-- **Onda:** E3-9 · **Classe:** B
+- **Onda:** E3-11 · **Classe:** B
 - **Dep.:** QA-06. **Exige** Android físico e Mac ou iPhone, com autorização do usuário.
 - **Escopo:** Android físico (inclusive câmera e áudio da ATV-08) e iOS (Expo Go ou build),
   com o backend real.
@@ -659,13 +809,15 @@ pedido ao backend está em [PEDIDOS-BACKEND §1](PEDIDOS-BACKEND.md#1-domínio-p
 ## 5. Grafo de dependências
 
 ```
-G-47 → NAV-03 ─┐
-G-51 → FEC-02 ─┴→ FEC-01 (emulador)
-FEC-03, ATV-02, PAC-07, REC-02, AGE-01     (independentes)
-AGE-01 → AGE-03 → AGE-04
-PAC-07 → AGE-04 → PAC-06 → PAC-04          (dono de PatientDetailScreen)
-G-50 (aprovada) → PAC-08 → PAC-06
-G-48 → PLN-00 (backend) → PLN-01 → PLN-02 → PLN-03 → PLN-04 → PLN-05 (2ª leva)
+G-47 → NAV-03 ✓ · G-51 → FEC-02 ✓ → FEC-01 (emulador)
+FEC-03 ✓, ATV-02 ✓, AGE-01 ✓
+API-03 → AGE-03 → AGE-04 (← SES-05)
+API-03 → SES-05 → AGE-04
+API-03 → PAC-07 → AGE-04 → PAC-06 (← PAC-08) → PAC-04
+API-03 → REC-02 → PLN-01
+API-03 → FEC-04
+G-50 → PAC-08 → PAC-06
+PLN-00 ✓ → PLN-01 → PLN-02 → PLN-03 → PLN-04 → PLN-05 (G-52, sob demanda)
 PLN-01 → PAC-04
 blocos A–C → QA-06 → QA-02, QA-03, QA-04
 ```
@@ -676,3 +828,5 @@ blocos A–C → QA-06 → QA-02, QA-03, QA-04
   domínio de planos (G-48) e as propostas G-47, G-49, G-50 e G-51.
 - 2026-10-28: G-47, G-49, G-50 e G-51 aprovados pelo usuário; especificação para o backend em
   [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md).
+- 2026-10-29: fichas reescritas com o contrato do backend (AGE-03, AGE-04, PAC-06, PAC-07,
+  REC-02 e bloco de planos); novas API-03, SES-05 e FEC-04; PLN-00 concluída; G-52.

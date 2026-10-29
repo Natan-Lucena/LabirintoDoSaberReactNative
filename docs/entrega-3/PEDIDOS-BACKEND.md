@@ -70,6 +70,20 @@ elemento.
 
 ## 4. Registro das respostas
 
-| Data | Item | Resposta | Onde foi registrada |
-| ---- | ---- | -------- | ------------------- |
-| —    | —    | —        | —                   |
+| Data       | Item                                   | Resposta                                                | Onde foi registrada                             |
+| ---------- | -------------------------------------- | ------------------------------------------------------- | ----------------------------------------------- |
+| 2026-10-29 | 1 a 8 (planos)                         | Entregues; decisões do §5 da especificação aceitas      | [BACKEND-ENTREGUE](BACKEND-ENTREGUE.md) §3 e §4 |
+| 2026-10-29 | 9 (sugestões)                          | Entregue **sob demanda** (G-52)                         | BACKEND-ENTREGUE §5 e §7                        |
+| 2026-10-29 | 10 (G-06)                              | Entregue: `taskNotebookId` e `appointmentId` no `start` | BACKEND-ENTREGUE §6; GATES G-06                 |
+| 2026-10-29 | 11, 12 (atendimento)                   | Entregues: status, tipo, duração e conflito             | BACKEND-ENTREGUE §6                             |
+| 2026-10-29 | 13, 14 (responsável, profissão)        | Entregues                                               | BACKEND-ENTREGUE §6                             |
+| 2026-10-29 | 15 (senha autenticada)                 | **Não entregue**; fica para a próxima entrega           | BACKEND-ENTREGUE §8                             |
+| 2026-10-29 | 16, 17 (grupo por id, editar anamnese) | Entregues                                               | BACKEND-ENTREGUE §6                             |
+
+## 5. Pedidos novos (2026-10-29, depois da conferência com o Swagger)
+
+| #   | Pedido                                                                                                                                                                              | Por quê                                                                                                        | Prioridade  |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------- |
+| 18  | **Tirar senhas das respostas:** `educators[].password` em `GET /student` e nas respostas de aluno; `_password` (e os campos com `_`) na resposta de `PUT /educator/update-educator` | Exposição de credencial de outros educadores para qualquer cliente que lista alunos (BACKEND-ENTREGUE D1 e D3) | **Urgente** |
+| 19  | Confirmar a unidade de `timeToAnswer`: o Swagger diz segundos; a evidência de 2026-10-09 (G-07) mostrou ms e o app envia ms                                                         | Relatórios 1000× errados se um dos lados mudar (D2)                                                            | Alta        |
+| 20  | `GET /anamnese/responses/:responseId` de outro educador devolver 403, como o `PUT`                                                                                                  | Hoje devolve 401, que o cliente costuma tratar como sessão expirada (D4)                                       | Média       |
