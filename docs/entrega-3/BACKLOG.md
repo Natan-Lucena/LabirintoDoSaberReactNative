@@ -301,9 +301,10 @@ tarefas seguintes partem da `main` já atualizada.
 - **Mensagens** (data e hora no fuso de São Paulo; sem o nome do responsável, começa com "Olá!"):
   - lembrete de atendimento: "Olá, {responsável}! Passando para lembrar do atendimento de
     {paciente} na {dia da semana}, {dd/mm}, às {hh:mm}. Qualquer imprevisto, é só avisar por
-    aqui.";
+    aqui." ("no sábado" e "no domingo"; "na" nos demais dias);
   - contato pela ficha: "Olá, {responsável}! Tudo bem? Aqui é {educador}, do acompanhamento de
-    {paciente}." (sem o nome do educador, a frase "Aqui é…" sai).
+    {paciente}." (sem o nome do educador: "Olá, {responsável}! Tudo bem? Falo sobre o
+    acompanhamento de {paciente}.").
 - **Escopo:**
   1. Uma função pura que monta o link (telefone e texto codificado) e as duas mensagens, com
      testes unitários (acentos, nomes ausentes, telefone com e sem `55`, máscara).
