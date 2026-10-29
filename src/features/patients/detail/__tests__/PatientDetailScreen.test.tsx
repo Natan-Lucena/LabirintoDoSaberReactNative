@@ -57,7 +57,6 @@ const patient: Student = {
   educatorId: "educator-1",
   photoUrl: null,
   documents: [],
-  educators: ["educator-1"],
 };
 
 const sessions: TaskNotebookSession[] = [
@@ -122,6 +121,7 @@ describe("PatientDetailScreen (PAC-03)", () => {
             studentId: patient.id,
             scheduledAt: "2026-10-10T10:00:00-03:00",
             status: "CANCELLED",
+            durationMinutes: 50,
             createdAt: "2026-01-01T00:00:00.000Z",
           },
           {
@@ -130,6 +130,7 @@ describe("PatientDetailScreen (PAC-03)", () => {
             studentId: patient.id,
             scheduledAt: "2026-10-08T11:00:00-03:00",
             status: "PENDING",
+            durationMinutes: 50,
             createdAt: "2026-01-01T00:00:00.000Z",
           },
         ],

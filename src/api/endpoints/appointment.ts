@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import type { Appointment } from "@/api/types";
+import type { Appointment, AppointmentStatus } from "@/api/types";
 
 /** GET /appointment/ */
 export async function listAppointments(): Promise<Appointment[]> {
@@ -13,34 +13,44 @@ export interface CreateAppointmentInput {
   studentId: string;
   scheduledAt: string;
   observation?: string;
+  type?: string;
+  durationMinutes?: number;
 }
 
 export async function createAppointment(
   input: CreateAppointmentInput,
 ): Promise<Appointment> {
-  const response = await apiClient.post<Appointment>("/appointment/", input);
+  const response = await apiClient.post<Appointment>("/appointment/", {
+    ...input,
+    scheduledAt: new Date(input.scheduledAt).toISOString(),
+  });
 
   return response.data;
 }
 
 /**
  * PUT /appointment/:id
- * Somente `scheduledAt` e `observation` são aceitos; aluno e status não
- * mudam. `observation: null` limpa a observação existente.
+ * Aceita horário, observação, status, tipo e duração. O aluno não muda.
+ * `observation: null` limpa a observação existente.
  */
 export interface UpdateAppointmentInput {
   scheduledAt?: string;
   observation?: string | null;
+  status?: AppointmentStatus;
+  type?: string;
+  durationMinutes?: number;
 }
 
 export async function updateAppointment(
   id: string,
   input: UpdateAppointmentInput,
 ): Promise<Appointment> {
-  const response = await apiClient.put<Appointment>(
-    `/appointment/${id}`,
-    input,
-  );
+  const response = await apiClient.put<Appointment>(`/appointment/${id}`, {
+    ...input,
+    ...(input.scheduledAt === undefined
+      ? {}
+      : { scheduledAt: new Date(input.scheduledAt).toISOString() }),
+  });
 
   return response.data;
 }

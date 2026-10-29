@@ -44,7 +44,7 @@ function makeStudent(overrides: Partial<Student>): Student {
     educatorId: "educator-1",
     photoUrl: null,
     documents: [],
-    educators: [],
+
     ...overrides,
   };
 }
@@ -103,6 +103,7 @@ describe("PatientsListScreen", () => {
           studentId: "1",
           scheduledAt: new Date().toISOString(),
           status: "PENDING",
+          durationMinutes: 50,
           createdAt: "2026-01-01T12:00:00.000Z",
         },
       ],

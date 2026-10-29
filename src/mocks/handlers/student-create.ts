@@ -52,6 +52,9 @@ registerMockHandler({ method: "post", path: "/student/create" }, ({ body }) => {
   const housenumber = readField(body, "housenumber");
   const phonenumber = readField(body, "phonenumber");
   const learningTopics = parseLearningTopics(readField(body, "learningTopics"));
+  const guardianName = readField(body, "guardianName");
+  const guardianPhone = readField(body, "guardianPhone");
+  const guardianRelationship = readField(body, "guardianRelationship");
 
   const age = Number(ageRaw);
 
@@ -69,7 +72,18 @@ registerMockHandler({ method: "post", path: "/student/create" }, ({ body }) => {
     learningTopics !== undefined &&
     learningTopics.length >= 1;
 
-  if (!isValid) {
+  const guardiansValid =
+    (guardianName == null ||
+      guardianName === "" ||
+      isValidLength(guardianName, 1, 100)) &&
+    (guardianPhone == null ||
+      guardianPhone === "" ||
+      (isValidLength(guardianPhone, 7, 15) && /^\d+$/.test(guardianPhone))) &&
+    (guardianRelationship == null ||
+      guardianRelationship === "" ||
+      isValidLength(guardianRelationship, 1, 50));
+
+  if (!isValid || !guardiansValid) {
     throw new MockApiError(400, "INVALID_STUDENT_FORMAT");
   }
 
@@ -87,7 +101,14 @@ registerMockHandler({ method: "post", path: "/student/create" }, ({ body }) => {
     educatorId: MOCK_EDUCATOR.id,
     photoUrl: null,
     documents: [],
-    educators: [MOCK_EDUCATOR.id],
+    guardianName:
+      typeof guardianName === "string" && guardianName ? guardianName : null,
+    guardianPhone:
+      typeof guardianPhone === "string" && guardianPhone ? guardianPhone : null,
+    guardianRelationship:
+      typeof guardianRelationship === "string" && guardianRelationship
+        ? guardianRelationship
+        : null,
   };
   MOCK_STUDENTS.push(student);
 

@@ -25,7 +25,6 @@ const STUDENT: Student = {
   educatorId: "e1",
   photoUrl: null,
   documents: [],
-  educators: ["e1"],
 };
 
 function wrapper({ children }: { children: React.ReactNode }) {

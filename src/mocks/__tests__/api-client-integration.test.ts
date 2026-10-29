@@ -55,7 +55,7 @@ describe("apiClient com mockAdapter", () => {
 
     expect(appointment).toMatchObject({
       studentId: "student-1",
-      scheduledAt: "2026-04-02T10:00:00-03:00",
+      scheduledAt: "2026-04-02T13:00:00.000Z",
       observation: "Mock de integração",
     });
   });

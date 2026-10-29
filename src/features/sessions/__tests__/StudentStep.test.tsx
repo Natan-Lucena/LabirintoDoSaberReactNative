@@ -48,7 +48,6 @@ const ANA: Student = {
   educatorId: "e1",
   photoUrl: null,
   documents: [],
-  educators: ["e1"],
 };
 
 const JOAO: Student = { ...ANA, id: "s2", name: "João Pedro", gender: "male" };

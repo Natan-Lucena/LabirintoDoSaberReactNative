@@ -27,6 +27,7 @@ const homeData: HomeData = {
         studentId: "student-2",
         scheduledAt: "2026-04-02T11:00:00.000Z",
         status: "COMPLETED",
+        durationMinutes: 50,
         createdAt: "2026-04-01T12:00:00.000Z",
       },
       student: {
@@ -43,7 +44,6 @@ const homeData: HomeData = {
         educatorId: "educator-1",
         photoUrl: null,
         documents: [],
-        educators: ["educator-1"],
       },
     },
     {
@@ -53,6 +53,7 @@ const homeData: HomeData = {
         studentId: "student-1",
         scheduledAt: "2026-04-02T14:00:00.000Z",
         status: "PENDING",
+        durationMinutes: 50,
         createdAt: "2026-04-01T12:00:00.000Z",
       },
       student: {
@@ -69,7 +70,6 @@ const homeData: HomeData = {
         educatorId: "educator-1",
         photoUrl: null,
         documents: [],
-        educators: ["educator-1"],
       },
     },
     {
@@ -79,6 +79,7 @@ const homeData: HomeData = {
         studentId: "student-3",
         scheduledAt: "2026-04-02T15:00:00.000Z",
         status: "CANCELLED",
+        durationMinutes: 50,
         createdAt: "2026-04-01T12:00:00.000Z",
       },
       student: {
@@ -95,7 +96,6 @@ const homeData: HomeData = {
         educatorId: "educator-1",
         photoUrl: null,
         documents: [],
-        educators: ["educator-1"],
       },
     },
   ],

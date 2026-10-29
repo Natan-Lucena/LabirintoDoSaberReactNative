@@ -18,7 +18,6 @@ const STUDENT: Student = {
   educatorId: "e1",
   photoUrl: null,
   documents: [],
-  educators: ["e1"],
 };
 
 // AC-702-06: nunca exibe nível, só idade e gênero em pt-BR.
