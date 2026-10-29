@@ -18,8 +18,9 @@ export interface Educator {
   id: string;
   name: string;
   email: string;
-  photoUrl?: string;
-  contact?: string;
+  photoUrl?: string | null;
+  contact?: string | null;
+  profession?: string | null;
 }
 
 export interface StudentDocument {
@@ -43,7 +44,10 @@ export interface Student {
   educatorId: string;
   photoUrl: string | null;
   documents: StudentDocument[];
-  educators: string[];
+  guardianName?: string | null;
+  guardianPhone?: string | null;
+  guardianRelationship?: string | null;
+  educators?: never;
 }
 
 export interface TaskAlternative {
@@ -114,9 +118,11 @@ export interface TaskNotebookSession {
   name: string;
   startedAt: string;
   // ausente = sessão ativa; preenchido = sessão finalizada
-  finishedAt?: string;
+  finishedAt?: string | null;
+  taskNotebookId?: string | null;
+  appointmentId?: string | null;
   answers: TaskNotebookSessionAnswer[];
-  observation?: string;
+  observation?: string | null;
 }
 
 export interface Appointment {
@@ -124,9 +130,11 @@ export interface Appointment {
   educatorId: string;
   studentId: string;
   scheduledAt: string;
-  observation?: string;
+  observation?: string | null;
+  type?: string | null;
+  durationMinutes: number;
   status: AppointmentStatus;
-  notifiedAt?: string;
+  notifiedAt?: string | null;
   createdAt: string;
 }
 

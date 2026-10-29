@@ -40,6 +40,7 @@ describe("mutacoes da Agenda (AC-901-02 a AC-901-04)", () => {
       studentId: "student-1",
       scheduledAt: "2026-04-03T13:00:00.000Z",
       status: "PENDING" as const,
+      durationMinutes: 50,
       createdAt: "2026-04-01T12:00:00.000Z",
     };
     createAppointmentMock.mockResolvedValue(created);

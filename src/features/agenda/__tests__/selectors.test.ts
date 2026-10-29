@@ -12,6 +12,7 @@ const at = (
   studentId: "student-1",
   scheduledAt,
   status,
+  durationMinutes: 50,
   createdAt: "2026-04-01T12:00:00Z",
 });
 

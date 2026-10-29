@@ -60,7 +60,6 @@ const STUDENT: Student = {
   educatorId: EDUCATOR_A,
   photoUrl: null,
   documents: [],
-  educators: [EDUCATOR_A],
 };
 
 const CONTENT = {

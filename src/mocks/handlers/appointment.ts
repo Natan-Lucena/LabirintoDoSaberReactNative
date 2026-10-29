@@ -22,12 +22,17 @@ registerMockHandler({ method: "post", path: "/appointment/" }, ({ body }) => {
     studentId: string;
     scheduledAt: string;
     observation?: string;
+    type?: string;
+    durationMinutes?: number;
   };
   const appointment: Appointment = {
     id: `mock-appointment-${nextAppointmentId++}`,
     educatorId: MOCK_EDUCATOR.id,
     studentId: input.studentId,
     scheduledAt: input.scheduledAt,
+    type: input.type ?? null,
+    durationMinutes: input.durationMinutes ?? 50,
+    notifiedAt: null,
     ...(input.observation === undefined
       ? {}
       : { observation: input.observation }),
@@ -46,17 +51,28 @@ registerMockHandler(
     if (index === -1) {
       throw new MockApiError(400, "NOT_FOUND");
     }
-    const input = body as { scheduledAt?: string; observation?: string | null };
+    const input = body as {
+      scheduledAt?: string;
+      observation?: string | null;
+      status?: Appointment["status"];
+      type?: string;
+      durationMinutes?: number;
+    };
     const current = appointments[index];
     const updated: Appointment = {
       ...current,
       ...(input.scheduledAt === undefined
         ? {}
         : { scheduledAt: input.scheduledAt }),
+      ...(input.status === undefined ? {} : { status: input.status }),
+      ...(input.type === undefined ? {} : { type: input.type }),
+      ...(input.durationMinutes === undefined
+        ? {}
+        : { durationMinutes: input.durationMinutes }),
       ...(input.observation === undefined
         ? {}
         : input.observation === null
-          ? { observation: undefined }
+          ? { observation: null }
           : { observation: input.observation }),
     };
     appointments[index] = updated;

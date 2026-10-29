@@ -5,6 +5,8 @@ import type { TaskNotebookSession } from "@/api/types";
 export interface StartSessionInput {
   studentId: string;
   name: string;
+  taskNotebookId?: string;
+  appointmentId?: string;
 }
 
 export async function startSession(
