@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Task, TaskGroup } from "@/api/types";
 import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 import type { UseGroupDetailDataResult } from "@/features/content-detail/group/useGroupDetailData";
+import { useAuthStore } from "@/stores/auth";
 
 const routerPush = vi.fn();
 const routerBack = vi.fn();
@@ -64,10 +65,25 @@ function setGroupDetail(
 
 describe("GroupDetailScreen (AC-01..AC-04, D-03, D-05, D-06, D-08)", () => {
   beforeEach(() => {
+    useAuthStore.setState({ educatorId: "educator-1" });
     routerPush.mockClear();
     routerBack.mockClear();
     deleteTaskGroup.mockReset();
     setGroupDetail();
+  });
+
+  it("abre grupo de outro educador apenas para leitura (AC-FEC-04-01)", async () => {
+    setGroupDetail({ group: { ...group, educatorId: "educator-2" } });
+    await render(<GroupDetailScreen groupId="group-1" />);
+    expect(screen.getByText("Alfabeto e sons")).toBeTruthy();
+    expect(screen.getByText("Grupo de outro educador")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Editar Grupo" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Excluir Grupo" })).toBeNull();
+  });
+
+  it("preserva item quando a atividade não veio da API", async () => {
+    await render(<GroupDetailScreen groupId="group-1" />);
+    expect(screen.getAllByText("Atividade indisponível")).toHaveLength(1);
   });
 
   it("mostra nome, categoria e atividades do grupo", async () => {
@@ -80,7 +96,7 @@ describe("GroupDetailScreen (AC-01..AC-04, D-03, D-05, D-06, D-08)", () => {
   });
 
   it("mostra estado vazio sem atividades", async () => {
-    setGroupDetail({ tasks: [] });
+    setGroupDetail({ group: { ...group, tasksIds: [] }, tasks: [] });
     await render(<GroupDetailScreen groupId="group-1" />);
 
     expect(screen.getByText("Sem atividades")).toBeTruthy();

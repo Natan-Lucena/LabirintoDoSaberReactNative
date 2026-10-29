@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listTaskGroupsByEducator, listTasks } from "@/api/endpoints/content";
+import { getTaskGroupById, listTasks } from "@/api/endpoints/content";
+import { ApiError } from "@/api/errors";
 import type { Task, TaskGroup } from "@/api/types";
 
 export interface UseGroupDetailDataResult {
@@ -13,19 +14,22 @@ export interface UseGroupDetailDataResult {
 }
 
 export function useGroupDetailData(groupId: string): UseGroupDetailDataResult {
-  const groupsQuery = useQuery({
-    queryKey: ["task-group"],
-    queryFn: listTaskGroupsByEducator,
+  const groupQuery = useQuery({
+    queryKey: ["task-group", groupId],
+    queryFn: () => getTaskGroupById(groupId),
   });
   const tasksQuery = useQuery({
     queryKey: ["task"],
     queryFn: () => listTasks(),
   });
 
-  const group = groupsQuery.data?.find((candidate) => candidate.id === groupId);
-  const isPending = groupsQuery.isPending || (!!group && tasksQuery.isPending);
-  const isError = groupsQuery.isError || (!!group && tasksQuery.isError);
-  const isNotFound = groupsQuery.isSuccess && !group;
+  const group = groupQuery.data;
+  const isPending = groupQuery.isPending || (!!group && tasksQuery.isPending);
+  const isNotFound =
+    groupQuery.error instanceof ApiError &&
+    [403, 404].includes(groupQuery.error.status ?? 0);
+  const isError =
+    (groupQuery.isError && !isNotFound) || (!!group && tasksQuery.isError);
 
   const tasks = group
     ? group.tasksIds
@@ -39,6 +43,6 @@ export function useGroupDetailData(groupId: string): UseGroupDetailDataResult {
     isPending,
     isError,
     isNotFound,
-    refetch: () => Promise.all([groupsQuery.refetch(), tasksQuery.refetch()]),
+    refetch: () => Promise.all([groupQuery.refetch(), tasksQuery.refetch()]),
   };
 }

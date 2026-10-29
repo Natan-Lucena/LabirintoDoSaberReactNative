@@ -4,10 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import {
-  listTaskGroupsByEducator,
-  listTaskNotebooks,
-} from "@/api/endpoints/content";
+import { listTaskNotebooks } from "@/api/endpoints/content";
 import { deleteTaskNotebook } from "@/api/endpoints/task-notebook-delete";
 import { withOfflineGuard } from "@/api/query-client";
 import {
@@ -39,10 +36,6 @@ export function NotebookDetailScreen({
   const queryClient = useQueryClient();
   const [confirmVisible, setConfirmVisible] = useState(false);
   const notebooks = useQuery({ queryKey, queryFn: () => listTaskNotebooks() });
-  const groups = useQuery({
-    queryKey: ["task-group"],
-    queryFn: listTaskGroupsByEducator,
-  });
   const deletion = useMutation({
     mutationFn: withOfflineGuard(deleteTaskNotebook),
     onSuccess: async () => {
@@ -59,9 +52,8 @@ export function NotebookDetailScreen({
   const entry = notebooks.data?.find(
     ({ notebook }) => notebook.id === notebookId,
   );
-  const accessibleGroupIds = new Set(groups.data?.map((group) => group.id));
   let body: ReactElement;
-  if ((notebooks.isPending && !notebooks.data) || (entry && groups.isPending))
+  if (notebooks.isPending && !notebooks.data)
     body = (
       <Text accessibilityLabel="Carregando caderno" style={styles.status}>
         Carregando caderno
@@ -77,19 +69,6 @@ export function NotebookDetailScreen({
           label="Tentar novamente"
           variant="secondary"
           onPress={() => notebooks.refetch()}
-        />
-      </View>
-    );
-  else if (entry && groups.isError)
-    body = (
-      <View style={styles.status}>
-        <Text accessibilityRole="alert">
-          Não foi possível carregar os grupos do caderno.
-        </Text>
-        <DsButton
-          label="Tentar de novo"
-          variant="secondary"
-          onPress={() => groups.refetch()}
         />
       </View>
     );
@@ -114,31 +93,22 @@ export function NotebookDetailScreen({
         <View style={styles.section}>
           <SectionTitle title="Grupos do caderno" />
           {taskGroups.length ? (
-            taskGroups.map((group) => {
-              const accessible = accessibleGroupIds.has(group.id);
-              return (
-                <View key={group.id} style={styles.groupItem}>
-                  <InfoCard
-                    icon="file"
-                    title={group.name}
-                    description={pluralize(
-                      group.tasksIds.length,
-                      "atividade",
-                      "atividades",
-                    )}
-                    onPress={
-                      accessible
-                        ? () =>
-                            router.push(`/content/group/${group.id}` as never)
-                        : undefined
-                    }
-                  />
-                  {!accessible ? (
-                    <Badge label="Indisponível" variant="warning" />
-                  ) : null}
-                </View>
-              );
-            })
+            taskGroups.map((group) => (
+              <View key={group.id}>
+                <InfoCard
+                  icon="file"
+                  title={group.name}
+                  description={pluralize(
+                    group.tasksIds.length,
+                    "atividade",
+                    "atividades",
+                  )}
+                  onPress={() =>
+                    router.push(`/content/group/${group.id}` as never)
+                  }
+                />
+              </View>
+            ))
           ) : (
             <InfoCard
               icon="file"
@@ -216,7 +186,6 @@ const styles = StyleSheet.create({
     color: color.ink[950],
   },
   section: { gap: 10 },
-  groupItem: { gap: 6 },
   actions: { flexDirection: "row", gap: 12 },
   error: { color: color.danger, fontSize: 13 },
   backdrop: {

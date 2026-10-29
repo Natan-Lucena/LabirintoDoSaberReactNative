@@ -18,7 +18,12 @@ describe("handlers mockados de conteúdo T-703 (G-29, mock provisório de G-06)"
   it("GET /task-group/list-by-educator retorna grupos ficticios", async () => {
     await expect(
       mockAdapter(config("/task-group/list-by-educator")),
-    ).resolves.toMatchObject({ status: 200, data: MOCK_TASK_GROUPS });
+    ).resolves.toMatchObject({
+      status: 200,
+      data: MOCK_TASK_GROUPS.filter(
+        (group) => group.educatorId === "mock-educator-1",
+      ),
+    });
   });
 
   it("GET /task/ retorna atividades ficticias", async () => {
