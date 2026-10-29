@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import {
   Linking,
   Pressable,
@@ -19,6 +19,7 @@ import {
   IconButton,
   ProgressBar,
   SectionTitle,
+  Tabs,
   Toast,
   useToast,
 } from "@/components/ds";
@@ -40,6 +41,7 @@ import {
 } from "@/utils/whatsapp";
 
 import { useStudentAnalysis, useStudentSessions } from "./usePatientDetailData";
+import { ActivePdi, PatientPlans } from "./plans/PatientPlans";
 
 export interface PatientDetailScreenProps {
   patientId: string;
@@ -105,6 +107,7 @@ export function PatientDetailScreen({
 }: PatientDetailScreenProps): ReactElement {
   const router = useRouter();
   const toast = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
   const { educator } = useHomeData();
   const studentsQuery = useStudents();
   const appointmentsQuery = useAppointments();
@@ -224,151 +227,171 @@ export function PatientDetailScreen({
           ) : null}
         </View>
 
-        <View style={styles.section}>
-          <SectionTitle title="Próxima sessão" />
-          {nextAppointment ? (
-            <View style={styles.nextSessionCard}>
-              <View style={styles.dateBadge}>
-                {(() => {
-                  const date = formatDateParts(nextAppointment.scheduledAt);
-                  return (
-                    <>
-                      <Text style={styles.dateDay}>{date.day}</Text>
-                      <Text style={styles.dateMonth}>{date.month}</Text>
-                    </>
-                  );
-                })()}
-              </View>
-              <View style={styles.nextSessionCopy}>
-                <Text style={styles.cardTitle}>Atendimento agendado</Text>
-                <Text style={styles.cardMeta}>
-                  {formatTime(new Date(nextAppointment.scheduledAt))}
-                </Text>
-              </View>
-            </View>
-          ) : (
-            <Text style={styles.emptyText}>Nenhuma sessão agendada</Text>
-          )}
-        </View>
+        <Tabs
+          options={[
+            { key: "overview", label: "Visão geral" },
+            { key: "plans", label: "Planos" },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+          accessibilityLabel="Abas da ficha do paciente"
+        />
 
-        <View style={styles.section}>
-          <SectionTitle
-            title="Dificuldades mapeadas"
-            actionLabel="Editar"
-            onActionPress={() =>
-              router.push({
-                pathname: "/patients/[id]/edit",
-                params: { id: patient.id },
-              })
-            }
-          />
-          {patient.learningTopics.length ? (
-            <View style={styles.tags}>
-              {patient.learningTopics.map((topic) => (
-                <View key={topic} style={styles.tag}>
-                  <Text style={styles.tagText}>{topic}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.emptyText}>Nenhuma dificuldade mapeada</Text>
-          )}
-        </View>
+        {activeTab === "plans" ? (
+          <PatientPlans patientId={patient.id} />
+        ) : (
+          <>
+            <ActivePdi patientId={patient.id} />
 
-        <View style={styles.section}>
-          <SectionTitle title="Evolução recente" />
-          {analysisQuery.isError ? (
-            <StatePanel
-              title="Não foi possível carregar a evolução"
-              retry={() => void analysisQuery.refetch()}
-            />
-          ) : analysis && analysis.total.total > 0 ? (
-            <View style={styles.evolutionCard}>
-              <Text style={styles.accuracy}>
-                {Math.round(accuracyToPercent(analysis.total.accuracy))}% de
-                acerto geral
-              </Text>
-              {categoryEntries.map((category) =>
-                category ? (
-                  <View key={category.category} style={styles.category}>
-                    <Text style={styles.categoryLabel}>
-                      {getCategoryLabel(category.category)}
-                    </Text>
-                    <ProgressBar
-                      value={accuracyToPercent(category.accuracy)}
-                      accessibilityLabel={`${getCategoryLabel(category.category)}: ${Math.round(accuracyToPercent(category.accuracy))}%`}
-                    />
+            <View style={styles.section}>
+              <SectionTitle title="Próxima sessão" />
+              {nextAppointment ? (
+                <View style={styles.nextSessionCard}>
+                  <View style={styles.dateBadge}>
+                    {(() => {
+                      const date = formatDateParts(nextAppointment.scheduledAt);
+                      return (
+                        <>
+                          <Text style={styles.dateDay}>{date.day}</Text>
+                          <Text style={styles.dateMonth}>{date.month}</Text>
+                        </>
+                      );
+                    })()}
                   </View>
-                ) : null,
+                  <View style={styles.nextSessionCopy}>
+                    <Text style={styles.cardTitle}>Atendimento agendado</Text>
+                    <Text style={styles.cardMeta}>
+                      {formatTime(new Date(nextAppointment.scheduledAt))}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <Text style={styles.emptyText}>Nenhuma sessão agendada</Text>
               )}
             </View>
-          ) : (
-            <Text style={styles.emptyText}>Sem evolução registrada</Text>
-          )}
-        </View>
 
-        <View style={styles.section}>
-          <SectionTitle title="Sessões do paciente" />
-          {sessionsQuery.isError ? (
-            <StatePanel
-              title="Não foi possível carregar as sessões"
-              retry={() => void sessionsQuery.refetch()}
-            />
-          ) : sessionsQuery.data?.length ? (
-            sessionsQuery.data.map((session) => (
-              <Pressable
-                key={session.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Ver relatório da sessão ${session.name}`}
-                onPress={() =>
+            <View style={styles.section}>
+              <SectionTitle
+                title="Dificuldades mapeadas"
+                actionLabel="Editar"
+                onActionPress={() =>
                   router.push({
-                    pathname: "/reports/session/[id]",
-                    params: { id: session.id },
+                    pathname: "/patients/[id]/edit",
+                    params: { id: patient.id },
                   })
                 }
-                style={styles.sessionRow}
-              >
-                <FigmaIcon name="clipboard" color={color.brand[700]} />
-                <View style={styles.sessionCopy}>
-                  <Text style={styles.cardTitle}>{session.name}</Text>
-                  <Text style={styles.cardMeta}>
-                    {new Intl.DateTimeFormat("pt-BR", {
-                      timeZone: "America/Sao_Paulo",
-                      dateStyle: "short",
-                    }).format(new Date(session.startedAt))}
-                  </Text>
+              />
+              {patient.learningTopics.length ? (
+                <View style={styles.tags}>
+                  {patient.learningTopics.map((topic) => (
+                    <View key={topic} style={styles.tag}>
+                      <Text style={styles.tagText}>{topic}</Text>
+                    </View>
+                  ))}
                 </View>
-                <FigmaIcon name="chevron" color={color.ink[500]} />
-              </Pressable>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>Nenhuma sessão registrada</Text>
-          )}
-        </View>
+              ) : (
+                <Text style={styles.emptyText}>
+                  Nenhuma dificuldade mapeada
+                </Text>
+              )}
+            </View>
 
-        <FeatureRow
-          icon="clipboard"
-          title="Anamnese"
-          subtitle={anamneseSubtitle}
-          onPress={() =>
-            router.push({
-              pathname: "/patients/[id]/anamnese",
-              params: { id: patient.id },
-            })
-          }
-        />
+            <View style={styles.section}>
+              <SectionTitle title="Evolução recente" />
+              {analysisQuery.isError ? (
+                <StatePanel
+                  title="Não foi possível carregar a evolução"
+                  retry={() => void analysisQuery.refetch()}
+                />
+              ) : analysis && analysis.total.total > 0 ? (
+                <View style={styles.evolutionCard}>
+                  <Text style={styles.accuracy}>
+                    {Math.round(accuracyToPercent(analysis.total.accuracy))}% de
+                    acerto geral
+                  </Text>
+                  {categoryEntries.map((category) =>
+                    category ? (
+                      <View key={category.category} style={styles.category}>
+                        <Text style={styles.categoryLabel}>
+                          {getCategoryLabel(category.category)}
+                        </Text>
+                        <ProgressBar
+                          value={accuracyToPercent(category.accuracy)}
+                          accessibilityLabel={`${getCategoryLabel(category.category)}: ${Math.round(accuracyToPercent(category.accuracy))}%`}
+                        />
+                      </View>
+                    ) : null,
+                  )}
+                </View>
+              ) : (
+                <Text style={styles.emptyText}>Sem evolução registrada</Text>
+              )}
+            </View>
 
-        <DsButton
-          label="Iniciar sessão"
-          icon="play"
-          fullWidth
-          onPress={() =>
-            router.push({
-              pathname: "/session/student",
-              params: { studentId: patient.id },
-            })
-          }
-        />
+            <View style={styles.section}>
+              <SectionTitle title="Sessões do paciente" />
+              {sessionsQuery.isError ? (
+                <StatePanel
+                  title="Não foi possível carregar as sessões"
+                  retry={() => void sessionsQuery.refetch()}
+                />
+              ) : sessionsQuery.data?.length ? (
+                sessionsQuery.data.map((session) => (
+                  <Pressable
+                    key={session.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ver relatório da sessão ${session.name}`}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/reports/session/[id]",
+                        params: { id: session.id },
+                      })
+                    }
+                    style={styles.sessionRow}
+                  >
+                    <FigmaIcon name="clipboard" color={color.brand[700]} />
+                    <View style={styles.sessionCopy}>
+                      <Text style={styles.cardTitle}>{session.name}</Text>
+                      <Text style={styles.cardMeta}>
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          timeZone: "America/Sao_Paulo",
+                          dateStyle: "short",
+                        }).format(new Date(session.startedAt))}
+                      </Text>
+                    </View>
+                    <FigmaIcon name="chevron" color={color.ink[500]} />
+                  </Pressable>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>Nenhuma sessão registrada</Text>
+              )}
+            </View>
+
+            <FeatureRow
+              icon="clipboard"
+              title="Anamnese"
+              subtitle={anamneseSubtitle}
+              onPress={() =>
+                router.push({
+                  pathname: "/patients/[id]/anamnese",
+                  params: { id: patient.id },
+                })
+              }
+            />
+
+            <DsButton
+              label="Iniciar sessão"
+              icon="play"
+              fullWidth
+              onPress={() =>
+                router.push({
+                  pathname: "/session/student",
+                  params: { studentId: patient.id },
+                })
+              }
+            />
+          </>
+        )}
       </ScrollView>
       <Toast message={toast.message} onHide={toast.hide} />
     </View>

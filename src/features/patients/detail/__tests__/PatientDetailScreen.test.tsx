@@ -32,6 +32,10 @@ vi.mock("@/features/anamnese/responses/useAnamneseResponses", () => ({
 vi.mock("@/features/home/useHomeData", () => ({
   useHomeData: () => ({ educator: { name: "Aline Souza" } }),
 }));
+vi.mock("@/features/patients/detail/plans/usePatientPlans", () => ({
+  usePatientPlans: () => ({ data: [], isError: false, refetch: vi.fn() }),
+  useActivePdi: () => ({ data: [], isError: false, refetch: vi.fn() }),
+}));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: routerPush, back: routerBack }),
 }));
@@ -184,6 +188,17 @@ describe("PatientDetailScreen (PAC-03)", () => {
       pathname: "/session/student",
       params: { studentId: expect.any(String) },
     });
+  });
+
+  it("alterna entre Visão geral e Planos preservando o conteúdo anterior (AC-PAC-04-04)", async () => {
+    await render(<PatientDetailScreen patientId={patient.id} />);
+    expect(screen.getByText("Próxima sessão")).toBeTruthy();
+    expect(screen.getByText("PDI vigente")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("tab", { name: "Planos" }));
+    expect(screen.getByText("Nenhum plano para este paciente")).toBeTruthy();
+    expect(screen.queryByText("Próxima sessão")).toBeNull();
+    await fireEvent.press(screen.getByRole("tab", { name: "Visão geral" }));
+    expect(screen.getByText("Próxima sessão")).toBeTruthy();
   });
 
   it("mostra o responsável e usa seu telefone para contato", async () => {
