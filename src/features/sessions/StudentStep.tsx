@@ -39,9 +39,13 @@ function openSession(
 
 export function StudentStep(): ReactElement {
   const router = useRouter();
-  const params = useLocalSearchParams<{ studentId?: string }>();
+  const params = useLocalSearchParams<{
+    studentId?: string;
+    appointmentId?: string;
+  }>();
   const {
     selectStudent,
+    setAppointmentId,
     cancel,
     finish,
     seedFromServerSession,
@@ -145,6 +149,13 @@ export function StudentStep(): ReactElement {
   async function handleNext() {
     if (!selected || existing) return;
     await selectStudent(selected);
+    // O vínculo só vale para o paciente do atendimento; a escolha manual de
+    // outro paciente (ou a sessão avulsa) limpa o que sobrou de antes.
+    await setAppointmentId(
+      params.appointmentId && params.studentId === selected.id
+        ? params.appointmentId
+        : null,
+    );
     router.push("/session/content");
   }
 

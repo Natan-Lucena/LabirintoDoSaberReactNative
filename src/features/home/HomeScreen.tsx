@@ -261,7 +261,15 @@ export function HomeScreen(): ReactElement {
                   <DsButton
                     label="Iniciar sessão"
                     icon="play"
-                    onPress={() => router.push("/session/student")}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/session/student",
+                        params: {
+                          studentId: nextAppointment.studentId,
+                          appointmentId: nextAppointment.id,
+                        },
+                      })
+                    }
                   />
                 </View>
               </View>

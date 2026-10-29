@@ -175,6 +175,21 @@ export function AppointmentDetailScreen({
           {appointment.status === "PENDING" ? (
             <>
               <DsButton
+                label="Iniciar sessão"
+                icon="play"
+                fullWidth
+                disabled={busy}
+                onPress={() =>
+                  router.push({
+                    pathname: "/session/student",
+                    params: {
+                      studentId: appointment.studentId,
+                      appointmentId: appointment.id,
+                    },
+                  })
+                }
+              />
+              <DsButton
                 label="Marcar como concluído"
                 fullWidth
                 disabled={busy}

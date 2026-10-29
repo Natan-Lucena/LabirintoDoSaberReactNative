@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { act } from "@testing-library/react-native";
 
@@ -10,6 +10,7 @@ import {
   listTasks,
 } from "@/api/endpoints/content";
 import { startSession } from "@/api/endpoints/session";
+import { ApiError } from "@/api/errors";
 import type { TaskGroup, TaskNotebookWithGroups } from "@/api/types";
 import { ContentStep, normalizeForSearch } from "../ContentStep";
 
@@ -37,6 +38,8 @@ const markStartUncertain = vi.fn().mockResolvedValue(undefined);
 const failStart = vi.fn().mockResolvedValue(undefined);
 const discard = vi.fn().mockResolvedValue(undefined);
 const selectStudent = vi.fn().mockResolvedValue(undefined);
+const setAppointmentId = vi.fn().mockResolvedValue(undefined);
+let mockAppointmentId: string | null = null;
 const mockStudent = { id: "student-1", name: "Ana Souza" };
 let mockSessionName: string | null = null;
 let mockContent: {
@@ -53,6 +56,8 @@ vi.mock("@/stores/session-flow", () => ({
     failStart,
     discard,
     selectStudent,
+    setAppointmentId,
+    appointmentId: mockAppointmentId,
     student: mockStudent,
     sessionName: mockSessionName,
     content: mockContent,
@@ -106,6 +111,9 @@ describe("normalizeForSearch", () => {
 });
 
 describe("ContentStep", () => {
+  beforeEach(() => {
+    mockAppointmentId = null;
+  });
   it("AC-703-01: nome vazio mostra erro acessível e desabilita início após tentativa", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([]);
 
@@ -137,6 +145,132 @@ describe("ContentStep", () => {
     expect(
       screen.getByRole("checkbox", { name: "Cores e formas" }),
     ).toBeTruthy();
+  });
+
+  it("AC-AGE-04-02: envia o appointmentId no start quando a sessão veio de um atendimento", async () => {
+    mockAppointmentId = "appt-1";
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession).mockResolvedValue({
+      id: "session-2",
+      studentId: "student-1",
+      educatorId: "e1",
+      name: "Com atendimento",
+      startedAt: "2026-10-07T10:00:00.000Z",
+      answers: [],
+    });
+    vi.mocked(startSession).mockClear();
+
+    await renderContentStep();
+    await waitFor(() =>
+      expect(screen.getByText("Cores e formas")).toBeTruthy(),
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+    });
+    await act(async () => {
+      fireEvent.changeText(
+        screen.getByLabelText("Nome da sessão"),
+        "Com atendimento",
+      );
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+
+    await waitFor(() =>
+      expect(startSession).toHaveBeenCalledWith({
+        studentId: "student-1",
+        name: "Com atendimento",
+        taskNotebookId: "notebook-1",
+        appointmentId: "appt-1",
+      }),
+    );
+    mockAppointmentId = null;
+  });
+
+  it("404 APPOINTMENT_NOT_FOUND oferece iniciar sem vínculo, sem reenvio automático", async () => {
+    mockAppointmentId = "appt-x";
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession).mockClear();
+    vi.mocked(startSession).mockRejectedValueOnce(
+      new ApiError({
+        message: "APPOINTMENT_NOT_FOUND",
+        status: 404,
+        code: "APPOINTMENT_NOT_FOUND",
+      }),
+    );
+    vi.mocked(startSession).mockResolvedValueOnce({
+      id: "session-3",
+      studentId: "student-1",
+      educatorId: "e1",
+      name: "Sem vínculo",
+      startedAt: "2026-10-07T10:00:00.000Z",
+      answers: [],
+    });
+
+    await renderContentStep();
+    await waitFor(() =>
+      expect(screen.getByText("Cores e formas")).toBeTruthy(),
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+    });
+    await act(async () => {
+      fireEvent.changeText(
+        screen.getByLabelText("Nome da sessão"),
+        "Sem vínculo",
+      );
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+
+    expect(
+      await screen.findByText(
+        "Atendimento não encontrado. Inicie a sessão sem vínculo?",
+      ),
+    ).toBeTruthy();
+    expect(startSession).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      fireEvent.press(
+        screen.getByRole("button", { name: "Iniciar sem vínculo" }),
+      );
+    });
+
+    await waitFor(() => expect(startSession).toHaveBeenCalledTimes(2));
+    expect(setAppointmentId).toHaveBeenCalledWith(null);
+    expect(vi.mocked(startSession).mock.calls[1]![0]).not.toHaveProperty(
+      "appointmentId",
+    );
+    mockAppointmentId = null;
+  });
+
+  it("preserva o vínculo do atendimento ao preparar nova tentativa após erro", async () => {
+    mockAppointmentId = "appt-1";
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession).mockRejectedValueOnce(new Error("falha"));
+
+    await renderContentStep();
+    await screen.findByText("Cores e formas");
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText("Nome da sessão"), "Sessão");
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+    await screen.findByRole("button", { name: "Tentar novamente" });
+    setAppointmentId.mockClear();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Tentar novamente" }));
+    });
+
+    expect(setAppointmentId).toHaveBeenCalledWith("appt-1");
+    mockAppointmentId = null;
   });
 
   it("AC-SES-01-01: inicia sessão, confirma no store e abre o player", async () => {

@@ -101,6 +101,29 @@ describe("AppointmentDetailScreen (AGE-03)", () => {
     expect(routerPush).toHaveBeenCalledWith("/patients/student-1");
   });
 
+  it("AC-AGE-04-01 PENDING: Iniciar sessão abre o fluxo com paciente e atendimento", async () => {
+    getAppointment.mockResolvedValue(appointment());
+    await render(<AppointmentDetailScreen appointmentId="appt-1" />);
+
+    await screen.findByText("Lia Monteiro");
+    await fireEvent.press(button("Iniciar sessão")!);
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/session/student",
+      params: { studentId: "student-1", appointmentId: "appt-1" },
+    });
+  });
+
+  it.each(["COMPLETED", "CANCELLED"] as const)(
+    "AC-AGE-04-04 %s não mostra Iniciar sessão",
+    async (status) => {
+      getAppointment.mockResolvedValue(appointment({ status }));
+      await render(<AppointmentDetailScreen appointmentId="appt-1" />);
+
+      await screen.findByText("Lia Monteiro");
+      expect(button("Iniciar sessão")).toBeNull();
+    },
+  );
+
   it("AC-AGE-03-04 PENDING oferece remarcar, editar, concluir, cancelar e excluir", async () => {
     getAppointment.mockResolvedValue(appointment());
     await render(<AppointmentDetailScreen appointmentId="appt-1" />);
@@ -117,7 +140,7 @@ describe("AppointmentDetailScreen (AGE-03)", () => {
     }
     expect(button("Reativar")).toBeNull();
     expect(button("Editar observação")).toBeNull();
-    expect(button("Iniciar sessão")).toBeNull();
+    expect(button("Iniciar sessão")).toBeTruthy();
 
     await fireEvent.press(button("Remarcar")!);
     expect(routerPush).toHaveBeenLastCalledWith({

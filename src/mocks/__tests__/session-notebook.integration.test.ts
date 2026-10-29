@@ -40,17 +40,17 @@ describe("sessão ligada ao caderno nos mocks (SES-05)", () => {
       studentId: "student-2",
       name: "Sessão com caderno",
       taskNotebookId: NOTEBOOK.notebook.id,
-      appointmentId: "appointment-1",
+      appointmentId: "appointment-2",
     });
 
     expect(session.taskNotebookId).toBe(NOTEBOOK.notebook.id);
-    expect(session.appointmentId).toBe("appointment-1");
+    expect(session.appointmentId).toBe("appointment-2");
 
     const listed = (await listSessionsByStudent("student-2")).find(
       (item) => item.id === session.id,
     );
     expect(listed?.taskNotebookId).toBe(NOTEBOOK.notebook.id);
-    expect(listed?.appointmentId).toBe("appointment-1");
+    expect(listed?.appointmentId).toBe("appointment-2");
   });
 
   it("sessão sem caderno continua válida e aceita qualquer tarefa", async () => {

@@ -169,7 +169,10 @@ describe("PatientDetailScreen (PAC-03)", () => {
       pathname: "/reports/session/[id]",
       params: { id: "session-1" },
     });
-    expect(routerPush).toHaveBeenCalledWith("/session/student");
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/session/student",
+      params: { studentId: expect.any(String) },
+    });
   });
 
   it("desabilita contato sem telefone e apresenta estados vazios próprios", async () => {

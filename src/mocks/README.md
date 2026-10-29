@@ -132,6 +132,14 @@ os devolve. Quando a sessão tem caderno, `POST /task-notebook-session/answer`
 responde `400 TASK_NOT_IN_NOTEBOOK` para uma tarefa que não está no caderno nem
 nos grupos dele (`MOCK_TASK_NOTEBOOKS`); sessão sem caderno aceita qualquer tarefa.
 
+### Sessão ligada ao atendimento (AGE-04)
+
+`POST /task-notebook-session/start` com `appointmentId` de um atendimento que não
+existe, ou que é de outro paciente, responde `404 APPOINTMENT_NOT_FOUND`.
+`POST /task-notebook-session/finish` de uma sessão iniciada com `appointmentId` muda
+o atendimento de `PENDING` para `COMPLETED` no mock de `/appointment/` (os demais
+status ficam como estão), como o backend faz.
+
 ## Relatório da sessão
 
 - `GET /task-notebook-session/report/:sessionId` responde aos relatórios fictícios
