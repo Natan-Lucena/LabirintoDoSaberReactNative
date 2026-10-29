@@ -62,11 +62,25 @@ describe("TaskDetailScreen (UX5-A)", () => {
       await screen.findByRole("header", { name: "Atividade" }),
     ).toBeTruthy();
     expect(screen.getByText("Atividade de Leitura")).toBeTruthy();
+    expect(screen.getByText("Múltipla escolha")).toBeTruthy();
     expect(screen.getByText("Qual palavra começa com a letra A?")).toBeTruthy();
     expect(screen.getByText("Abelha")).toBeTruthy();
     expect(screen.getAllByText("Correta")).toHaveLength(1);
     expect(screen.getByText("Bola")).toBeTruthy();
     expect(screen.getByText("Sem material de apoio")).toBeTruthy();
+  });
+
+  it("ATV-02: usa o cabeçalho novo com voltar e sem abrir menu", async () => {
+    await render(<TaskDetailScreen taskId="task-1" />, {
+      queryClient: noRetryClient(),
+    });
+
+    expect(
+      await screen.findByRole("header", { name: "Atividade" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Abrir menu" })).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+    expect(routerBack).toHaveBeenCalledTimes(1);
   });
 
   it("mostra os nomes dos arquivos de material de apoio quando existem", async () => {
@@ -98,7 +112,7 @@ describe("TaskDetailScreen (UX5-A)", () => {
     });
 
     expect(await screen.findByText("Não encontrado")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+    await fireEvent.press(screen.getAllByRole("button", { name: "Voltar" })[1]);
     expect(routerBack).toHaveBeenCalledTimes(1);
   });
 

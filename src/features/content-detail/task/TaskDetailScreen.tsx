@@ -1,30 +1,29 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { getTaskById } from "@/api/endpoints/content";
 import { deleteTask } from "@/api/endpoints/task-delete";
 import { ApiError } from "@/api/errors";
 import { withOfflineGuard } from "@/api/query-client";
-import type { Task, TaskCategory } from "@/api/types";
-import { AppHeader } from "@/components/AppHeader";
-import { Button } from "@/components/Button";
-import { ErrorState } from "@/components/ErrorState";
-import { LoadingState } from "@/components/LoadingState";
-import { Screen } from "@/components/Screen";
+import type { Task } from "@/api/types";
+import { FigmaIcon } from "@/components/FigmaIcon";
+import {
+  AppHeader,
+  Badge,
+  DsButton,
+  InfoCard,
+  SectionTitle,
+} from "@/components/ds";
 import { AudioPlayer } from "@/components/media/AudioPlayer";
 import { isActivityTypePlayable } from "@/features/activities/engine/registry";
+import {
+  getCategoryLabel,
+  getTypeLabel,
+} from "@/features/reports/session/sessionReport";
 import { color, shape, typography } from "@/theme";
-
-const CATEGORY_LABEL: Record<TaskCategory, string> = {
-  reading: "Leitura",
-  writing: "Escrita",
-  vocabulary: "Vocabulário",
-  comprehension: "Compreensão",
-};
 
 export const taskQueryKeys = {
   detail: (id: string) => ["task", id] as const,
@@ -46,12 +45,10 @@ export function TaskDetailScreen({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
-
   const query = useQuery({
     queryKey: taskQueryKeys.detail(taskId),
     queryFn: () => getTaskById(taskId),
   });
-
   const deleteMutation = useMutation({
     mutationFn: withOfflineGuard(() => deleteTask(taskId)),
     onSuccess: async () => {
@@ -65,7 +62,6 @@ export function TaskDetailScreen({
   function goToPlay() {
     router.push({ pathname: "/activities/[id]", params: { id: taskId } });
   }
-
   function goToEdit() {
     router.push({
       pathname: "/content/task/[id]/edit",
@@ -78,110 +74,102 @@ export function TaskDetailScreen({
     query.error instanceof ApiError &&
     query.error.code === "TASK_NOT_FOUND";
 
-  const content = (() => {
-    if (query.isPending) {
-      return (
-        <View style={styles.state}>
-          <LoadingState label="Carregando atividade" />
-        </View>
-      );
-    }
-
-    if (isNotFound) {
-      return (
-        <View style={styles.state}>
-          <Text style={styles.notFoundMessage} accessibilityRole="alert">
-            Não encontrado
-          </Text>
-          <Button label="Voltar" onPress={router.back} variant="secondary" />
-        </View>
-      );
-    }
-
-    if (query.isError || !query.data) {
-      return (
-        <View style={styles.state}>
-          <ErrorState
-            message="Não foi possível carregar a atividade."
-            onRetry={query.refetch}
-          />
-        </View>
-      );
-    }
-
-    const task: Task = query.data;
-
-    return (
-      <View style={styles.content}>
-        <Text style={styles.title}>
-          Atividade de {CATEGORY_LABEL[task.category]}
+  let content: ReactElement;
+  if (query.isPending && !query.data) {
+    content = (
+      <Text style={styles.statusText} accessibilityLabel="Carregando atividade">
+        Carregando atividade
+      </Text>
+    );
+  } else if (isNotFound || (!query.data && !query.isError)) {
+    content = (
+      <View style={styles.state}>
+        <Text style={styles.statusText} accessible accessibilityRole="alert">
+          Não encontrado
         </Text>
-
-        <View style={styles.promptCard}>
-          <View style={styles.promptCardHeader}>
-            <Text style={styles.promptLabel}>Enunciado</Text>
-            <Ionicons name="pencil-outline" size={18} color={color.accent} />
+        <DsButton label="Voltar" onPress={router.back} variant="secondary" />
+      </View>
+    );
+  } else if (query.isError && !query.data) {
+    content = (
+      <View style={styles.state}>
+        <Text style={styles.statusText} accessible accessibilityRole="alert">
+          Não foi possível carregar a atividade.
+        </Text>
+        <DsButton
+          label="Tentar novamente"
+          onPress={() => void query.refetch()}
+          variant="secondary"
+        />
+      </View>
+    );
+  } else {
+    const task: Task = query.data!;
+    content = (
+      <View style={styles.content}>
+        <View style={styles.intro}>
+          <Text style={styles.title}>
+            Atividade de {getCategoryLabel(task.category)}
+          </Text>
+          <View style={styles.badges}>
+            <Badge label={getCategoryLabel(task.category)} />
+            <Badge label={getTypeLabel(task.type)} />
           </View>
-          <Text style={styles.promptText}>{task.prompt}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Alternativas</Text>
+          <SectionTitle title="Enunciado" />
+          <InfoCard icon="file" title="Enunciado" description={task.prompt} />
+        </View>
+
+        <View style={styles.section}>
+          <SectionTitle title="Alternativas" />
           {task.alternatives.map((alternative) => (
-            <View key={alternative.id} style={styles.itemCard}>
-              <View style={styles.itemIcon}>
-                <Ionicons
-                  name={alternative.isCorrect ? "checkmark" : "ellipse-outline"}
-                  size={18}
-                  color={color.accent}
+            <View key={alternative.id} style={styles.alternative}>
+              <View style={styles.alternativeIcon}>
+                <FigmaIcon
+                  name={alternative.isCorrect ? "check" : "chevron"}
+                  size={17}
+                  color={color.brand[700]}
                 />
               </View>
-              <Text style={styles.itemText}>{alternative.text}</Text>
-              {alternative.isCorrect ? (
-                <Text style={styles.correctLabel}>Correta</Text>
-              ) : null}
+              <Text style={styles.alternativeText}>{alternative.text}</Text>
+              {alternative.isCorrect ? <Badge label="Correta" /> : null}
             </View>
           ))}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Material de Apoio</Text>
+          <SectionTitle title="Material de apoio" />
           {task.audioFile || task.imageFile ? (
             <>
               {task.audioFile ? (
-                <View style={styles.itemCard}>
-                  <View style={styles.itemIcon}>
-                    <Ionicons
-                      name="headset-outline"
-                      size={18}
-                      color={color.accent}
-                    />
-                  </View>
-                  <View style={styles.itemTextGroup}>
-                    <Text style={styles.itemText}>Áudio da Atividade</Text>
-                    <Text style={styles.itemFileName}>
-                      {fileName(task.audioFile)}
-                    </Text>
-                    <AudioPlayer url={task.audioFile} />
-                  </View>
+                <View style={styles.mediaCard}>
+                  <InfoCard
+                    icon="play"
+                    title="Áudio da atividade"
+                    description={fileName(task.audioFile)}
+                  />
+                  <AudioPlayer url={task.audioFile} />
                 </View>
               ) : null}
               {task.imageFile ? (
-                <View style={styles.mediaPreview}>
-                  <Text style={styles.itemText}>Imagem da Atividade</Text>
+                <View style={styles.mediaCard}>
+                  <InfoCard
+                    icon="file"
+                    title="Imagem da atividade"
+                    description={fileName(task.imageFile)}
+                  />
                   <Image
                     source={{ uri: task.imageFile }}
                     accessibilityLabel="Imagem da atividade"
                     style={styles.imagePreview}
                   />
-                  <Text style={styles.itemFileName}>
-                    {fileName(task.imageFile)}
-                  </Text>
                 </View>
               ) : null}
             </>
           ) : (
-            <Text style={styles.emptyMaterial}>Sem material de apoio</Text>
+            <Text style={styles.mutedText}>Sem material de apoio</Text>
           )}
         </View>
 
@@ -195,38 +183,33 @@ export function TaskDetailScreen({
             Não foi possível excluir a atividade.
           </Text>
         ) : null}
-
-        {isActivityTypePlayable(task.type) ? (
-          <Button label="Jogar" onPress={goToPlay} />
-        ) : null}
-
-        <View style={styles.footer}>
-          <Pressable
+        <View style={styles.actions}>
+          {isActivityTypePlayable(task.type) ? (
+            <DsButton label="Jogar" icon="play" onPress={goToPlay} fullWidth />
+          ) : null}
+          <DsButton
+            label="Editar Atividade"
+            onPress={goToEdit}
+            variant="secondary"
+            fullWidth
+          />
+          <DsButton
+            label="Excluir Atividade"
             onPress={() => setConfirmOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Excluir Atividade"
-            style={styles.deleteButton}
-          >
-            <Ionicons name="trash-outline" size={18} color={color.pink} />
-            <Text style={styles.deleteButtonLabel}>Excluir Atividade</Text>
-          </Pressable>
-          <View style={styles.editButtonWrapper}>
-            <Button label="Editar Atividade" onPress={goToEdit} />
-          </View>
+            variant="secondary"
+            fullWidth
+          />
         </View>
       </View>
     );
-  })();
+  }
 
   return (
-    <Screen scroll>
-      <AppHeader
-        title="Atividade"
-        onMenuPress={router.back}
-        onAvatarPress={() => undefined}
-      />
-      {content}
-
+    <View style={styles.screen}>
+      <AppHeader title="Atividade" onBack={router.back} />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {content}
+      </ScrollView>
       <Modal
         visible={confirmOpen}
         transparent
@@ -238,14 +221,14 @@ export function TaskDetailScreen({
             <Text style={styles.modalTitle}>Excluir Atividade?</Text>
             <View style={styles.modalActions}>
               <View style={styles.modalActionButton}>
-                <Button
+                <DsButton
                   label="Cancelar"
                   variant="secondary"
                   onPress={() => setConfirmOpen(false)}
                 />
               </View>
               <View style={styles.modalActionButton}>
-                <Button
+                <DsButton
                   label="Excluir"
                   onPress={() => deleteMutation.mutate()}
                   loading={deleteMutation.isPending}
@@ -255,142 +238,52 @@ export function TaskDetailScreen({
           </View>
         </View>
       </Modal>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, gap: 20 },
+  screen: { flex: 1, backgroundColor: color.surfaceSoft },
+  scrollContent: { flexGrow: 1 },
+  content: { padding: 20, paddingBottom: 40, gap: 24 },
+  intro: { gap: 10 },
+  title: { ...typography.section, color: color.text },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  section: { gap: 10 },
+  alternative: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: shape.radius.md,
+  },
+  alternativeIcon: { width: 28, alignItems: "center" },
+  alternativeText: { ...typography.body, color: color.text, flex: 1 },
+  mediaCard: { gap: 10 },
+  imagePreview: {
+    width: "100%",
+    height: 180,
+    borderRadius: shape.radius.md,
+    backgroundColor: color.brand[50],
+  },
+  mutedText: { ...typography.body, color: color.textSecondary },
+  statusText: {
+    ...typography.body,
+    color: color.text,
+    textAlign: "center",
+    margin: 24,
+  },
   state: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
     padding: 24,
   },
-  notFoundMessage: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-    textAlign: "center",
-  },
-  title: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  promptCard: {
-    backgroundColor: color.selection,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.primary,
-    borderRadius: shape.cardRadius,
-    padding: 16,
-    gap: 8,
-  },
-  promptCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  promptLabel: {
-    fontSize: typography.tag.fontSize,
-    lineHeight: typography.tag.lineHeight,
-    fontFamily: typography.tag.fontFamily,
-    color: color.accent,
-  },
-  promptText: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-  },
-  section: { gap: 10 },
-  sectionLabel: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-  },
-  itemCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: color.surface,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.border,
-    borderRadius: shape.cardRadius,
-    padding: 14,
-  },
-  itemIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: color.selection,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  itemText: {
-    flex: 1,
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.text,
-  },
-  itemTextGroup: { flex: 1, gap: 2 },
-  mediaPreview: { gap: 8 },
-  imagePreview: {
-    width: "100%",
-    height: 180,
-    borderRadius: shape.cardRadius,
-    backgroundColor: color.selection,
-  },
-  itemFileName: {
-    fontSize: typography.tag.fontSize,
-    lineHeight: typography.tag.lineHeight,
-    fontFamily: typography.tag.fontFamily,
-    color: color.textSecondary,
-  },
-  correctLabel: {
-    fontSize: typography.tag.fontSize,
-    lineHeight: typography.tag.lineHeight,
-    fontFamily: typography.tag.fontFamily,
-    color: color.accent,
-  },
-  emptyMaterial: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.textSecondary,
-  },
-  deleteError: {
-    fontSize: typography.body.fontSize,
-    lineHeight: typography.body.lineHeight,
-    fontFamily: typography.body.fontFamily,
-    color: color.pink,
-  },
-  footer: { flexDirection: "row", gap: 8, marginTop: 4 },
-  deleteButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    minHeight: shape.minTouchTarget,
-    borderRadius: shape.buttonRadius,
-    borderWidth: shape.hairlineWidth,
-    borderColor: color.pink,
-    backgroundColor: color.surface,
-    paddingHorizontal: 14,
-  },
-  deleteButtonLabel: {
-    fontSize: typography.button.fontSize,
-    lineHeight: typography.button.lineHeight,
-    fontFamily: typography.button.fontFamily,
-    color: color.pink,
-  },
-  editButtonWrapper: { flex: 1.4 },
+  deleteError: { ...typography.body, color: color.pink },
+  actions: { gap: 10 },
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -405,13 +298,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 16,
   },
-  modalTitle: {
-    fontSize: typography.sectionTitle.fontSize,
-    lineHeight: typography.sectionTitle.lineHeight,
-    fontFamily: typography.sectionTitle.fontFamily,
-    color: color.text,
-    textAlign: "center",
-  },
+  modalTitle: { ...typography.section, color: color.text, textAlign: "center" },
   modalActions: { flexDirection: "row", gap: 8 },
   modalActionButton: { flex: 1 },
 });
