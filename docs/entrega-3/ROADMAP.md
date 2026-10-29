@@ -42,20 +42,20 @@ Decisões do usuário (2026-10-28):
 
 ### 3.1 Dentro
 
-| Bloco                    | Tarefas                                                                        | Resultado                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| A — Fechamento da V1     | FEC-01, FEC-02, FEC-03, FEC-04, ATV-02                                         | V1 ponta a ponta contra o backend real, sem pendência de código                |
-| B — Telas com API pronta | NAV-03, API-03, AGE-01, AGE-03, AGE-04, SES-05, PAC-07, PAC-06, PAC-08, REC-02 | Quatro abas sem "Em breve" que dependa só do app, com o contrato de 2026-10-29 |
-| C — Planos com IA        | PLN-00, PLN-01, PLN-02, PLN-03, PLN-04, PLN-05, PAC-04                         | Gerar, revisar, salvar e acompanhar PDI/PE, contra a API do backend            |
-| D — Qualidade            | QA-06, QA-02, QA-03, QA-04                                                     | Roteiro, E2E Maestro, acessibilidade e homologação Android e iOS               |
+| Bloco                    | Tarefas                                                                                | Resultado                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| A — Fechamento da V1     | FEC-01, FEC-02, FEC-03, FEC-04, ATV-02                                                 | V1 ponta a ponta contra o backend real, sem pendência de código                |
+| B — Telas com API pronta | NAV-03, API-03, AGE-01, AGE-02, AGE-03, AGE-04, SES-05, PAC-07, PAC-06, PAC-08, REC-02 | Quatro abas sem "Em breve" que dependa só do app, com o contrato de 2026-10-29 |
+| C — Planos com IA        | PLN-00, PLN-01, PLN-02, PLN-03, PLN-04, PLN-05, PAC-04                                 | Gerar, revisar, salvar e acompanhar PDI/PE, contra a API do backend            |
+| D — Qualidade            | QA-06, QA-02, QA-03, QA-04                                                             | Roteiro, E2E Maestro, acessibilidade e homologação Android e iOS               |
 
-**26 tarefas** (23 do planejamento + API-03, SES-05 e FEC-04, que surgiram com a entrega do backend em 2026-10-29). O detalhe de cada uma está no [BACKLOG §4](BACKLOG.md#4-tarefas).
+**27 tarefas** (23 do planejamento + API-03, SES-05 e FEC-04, que surgiram com a entrega do backend em 2026-10-29, + AGE-02 como botão do WhatsApp, G-53). O detalhe de cada uma está no [BACKLOG §4](BACKLOG.md#4-tarefas).
 
 ### 3.2 Fora (não objetivos)
 
 - **Domínios sem API:** Evolução da sessão (EVO), Avaliações e escalas (AVA), Relatórios
   configuráveis e histórico de PDF (REL-01 a REL-03), Equipe (EQP), Central de ajuda (AJD),
-  Notificações (NOT), WhatsApp automático (AGE-02), tipos de atividade jogáveis (ATV-04) e
+  Notificações (NOT), envio automático de WhatsApp (o lembrete manual pelo `wa.me` entrou como AGE-02, G-53), tipos de atividade jogáveis (ATV-04) e
   imprimíveis (ATV-05).
 - **Campos que a API não tem:** até 2026-10-28, tipo, duração e status do atendimento,
   responsável do paciente e profissão do educador. **Em 2026-10-29 o backend entregou todos**
@@ -88,6 +88,7 @@ Decisões do usuário (2026-10-28):
 | G-50 | Modelos de anamnese (CRUD de templates) entram na Entrega 3                                | **Resolvido (usuário, 2026-10-28)** |
 | G-51 | Mocks desligados por padrão em desenvolvimento                                             | **Resolvido (usuário, 2026-10-28)** |
 
+| G-53 | WhatsApp sem API: botão `wa.me` com mensagem pronta (atendimento, Início e ficha) | **Resolvido (usuário, 2026-10-29)** |
 | G-52 | Sugestões da IA geradas sob demanda ("Pedir sugestões"), não ao encerrar a sessão | **Resolvido (backend, 2026-10-29)** |
 
 O texto completo, as alternativas e as recomendações estão em
@@ -97,22 +98,24 @@ em 2026-10-29 (`taskNotebookId` no `start`; implementação no app pela SES-05).
 
 ## 6. Ondas
 
-| Onda  | Tarefas                                | Observação                                                                             |
-| ----- | -------------------------------------- | -------------------------------------------------------------------------------------- |
-| E3-0  | NAV-03 ✓, FEC-02 ✓, PLN-00 ✓           | Concluídas                                                                             |
-| E3-1  | AGE-01 ✓, ATV-02 ✓, FEC-03 ✓           | Concluídas                                                                             |
-| E3-2  | API-03, PAC-08                         | API-03 é a base do contrato novo                                                       |
-| E3-3  | AGE-03, SES-05, PAC-07, REC-02, FEC-04 | Arquivos disjuntos (BACKLOG §3)                                                        |
-| E3-4  | AGE-04, FEC-01                         | AGE-04 depende de AGE-03 e SES-05; FEC-01 exige o emulador, com autorização do usuário |
-| E3-5  | PAC-06, PLN-01                         | PAC-06 depois de AGE-04 (mesmo arquivo da ficha)                                       |
-| E3-6  | PLN-02                                 |                                                                                        |
-| E3-7  | PLN-03, PAC-04                         |                                                                                        |
-| E3-8  | PLN-04                                 |                                                                                        |
-| E3-9  | PLN-05                                 | Sugestões sob demanda (G-52)                                                           |
-| E3-10 | QA-06                                  |                                                                                        |
-| E3-11 | QA-02, QA-03, QA-04                    | QA-04 exige aparelho físico e Mac/iPhone                                               |
+| Onda  | Tarefas                                    | Observação                                                            |
+| ----- | ------------------------------------------ | --------------------------------------------------------------------- |
+| E3-0  | NAV-03 ✓, FEC-02 ✓, PLN-00 ✓               | Concluídas                                                            |
+| E3-1  | AGE-01 ✓, ATV-02 ✓, FEC-03 ✓               | Concluídas                                                            |
+| E3-2  | API-03 ✓, PAC-08 ✓                         | Concluídas                                                            |
+| E3-3  | AGE-03 ✓, SES-05 ✓, PAC-07, REC-02, FEC-04 | Arquivos disjuntos (BACKLOG §3)                                       |
+| E3-4  | AGE-04 ✓, FEC-01                           | FEC-01 exige o emulador, com autorização do usuário                   |
+| E3-5  | AGE-02                                     | Botão do WhatsApp (G-53); depois de PAC-07 e AGE-04 (mesmos arquivos) |
+| E3-6  | PAC-06, PLN-01                             |                                                                       |
+| E3-7  | PLN-02                                     |                                                                       |
+| E3-8  | PLN-03, PAC-04                             |                                                                       |
+| E3-9  | PLN-04                                     |                                                                       |
+| E3-10 | PLN-05                                     | Sugestões sob demanda (G-52)                                          |
+| E3-11 | QA-06                                      |                                                                       |
+| E3-12 | QA-02, QA-03, QA-04                        | QA-04 exige aparelho físico e Mac/iPhone                              |
 
-No máximo 2 workers ao mesmo tempo (pedido do usuário); a ordem dentro de cada onda segue a
+O trabalho segue **faseado** (pedido do usuário, 2026-10-29): o orquestrador avisa ao fim de cada
+fase antes de seguir. No máximo 2 workers ao mesmo tempo (pedido do usuário); a ordem dentro de cada onda segue a
 disponibilidade.
 
 Caminho crítico:
