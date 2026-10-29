@@ -1,7 +1,8 @@
 # Camada de mocks (G-29)
 
-Telas desta entrega usam dados mockados no lugar do backend real. Este
-módulo instala um adaptador Axios customizado em `apiClient`
+Os mocks ficam desligados por padrão (G-51); ative-os explicitamente com
+`EXPO_PUBLIC_USE_MOCKS=true` em desenvolvimento. Este módulo instala um
+adaptador Axios customizado em `apiClient`
 (`src/api/client.ts`, sem editá-lo) que responde aos endpoints registrados
 com dados fictícios tipados por `src/api/types.ts`.
 
@@ -10,8 +11,8 @@ com dados fictícios tipados por `src/api/types.ts`.
 Controlado por `EXPO_PUBLIC_USE_MOCKS` (lido em `src/config/env.ts`,
 `getRuntimeUseMocks`):
 
-- Ausente: `true` em `development`, `false` em `homologation`/`production`.
-- `"true"`/`"false"` (case-insensitive): força o valor.
+- Ausente ou vazia: `false` em todos os ambientes.
+- `"true"`/`"false"` (case-insensitive): força o valor; `true` é proibido em `production`.
 
 `src/mocks/install.ts#installApiMocks()` é chamado uma vez no boot do app
 (`src/app-shell/AppProviders.tsx`). Se a flag for `false`, não faz nada —
