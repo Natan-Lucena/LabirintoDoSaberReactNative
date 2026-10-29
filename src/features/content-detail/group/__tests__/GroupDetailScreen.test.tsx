@@ -115,16 +115,20 @@ describe("GroupDetailScreen (AC-01..AC-04, D-03, D-05, D-06, D-08)", () => {
 
     await screen.findByText("Não foi possível carregar o grupo.");
     await fireEvent.press(
-      screen.getByRole("button", { name: "Tentar novamente" }),
+      screen.getByRole("button", { name: "Tentar de novo" }),
     );
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
-  it("mostra 'Não encontrado' para id inexistente e volta (D-08)", async () => {
+  it("mostra grupo indisponível para id fora da lista e volta (AC-FEC-03-01)", async () => {
     setGroupDetail({ isNotFound: true, group: undefined, tasks: [] });
     await render(<GroupDetailScreen groupId="grupo-inexistente" />);
 
-    expect(screen.getByText("Não encontrado")).toBeTruthy();
+    expect(screen.getByText("Grupo indisponível")).toBeTruthy();
+    expect(
+      screen.getByText("Este grupo não pertence à sua conta ou foi excluído."),
+    ).toBeTruthy();
+    expect(screen.queryByText("Não encontrado")).toBeNull();
     await fireEvent.press(screen.getAllByRole("button", { name: "Voltar" })[1]);
     expect(routerBack).toHaveBeenCalledTimes(1);
   });

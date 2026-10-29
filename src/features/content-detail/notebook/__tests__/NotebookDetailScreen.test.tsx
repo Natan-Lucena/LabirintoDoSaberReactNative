@@ -13,6 +13,7 @@ function createNoRetryQueryClient(): QueryClient {
 const routerBack = vi.fn();
 const routerPush = vi.fn();
 const listTaskNotebooks = vi.fn();
+const listTaskGroupsByEducator = vi.fn();
 const deleteTaskNotebook = vi.fn();
 
 vi.mock("expo-router", () => ({
@@ -21,6 +22,8 @@ vi.mock("expo-router", () => ({
 
 vi.mock("@/api/endpoints/content", () => ({
   listTaskNotebooks: (...args: unknown[]) => listTaskNotebooks(...args),
+  listTaskGroupsByEducator: (...args: unknown[]) =>
+    listTaskGroupsByEducator(...args),
 }));
 
 vi.mock("@/api/endpoints/task-notebook-delete", () => ({
@@ -55,6 +58,8 @@ describe("NotebookDetailScreen (D-04, D-05, D-06, D-08)", () => {
     routerBack.mockClear();
     routerPush.mockClear();
     listTaskNotebooks.mockReset();
+    listTaskGroupsByEducator.mockReset();
+    listTaskGroupsByEducator.mockResolvedValue(notebooksData[0].taskGroups);
     deleteTaskNotebook.mockReset();
   });
 
@@ -77,6 +82,40 @@ describe("NotebookDetailScreen (D-04, D-05, D-06, D-08)", () => {
     await fireEvent.press(screen.getByLabelText("Alfabeto e sons"));
 
     expect(routerPush).toHaveBeenCalledWith("/content/group/group-1");
+  });
+
+  it("mostra grupo inacessível sem navegação (AC-FEC-03-03)", async () => {
+    listTaskNotebooks.mockResolvedValue(notebooksData);
+    listTaskGroupsByEducator.mockResolvedValue([]);
+    await render(<NotebookDetailScreen notebookId="notebook-1" />);
+
+    expect(await screen.findByText("Indisponível")).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Alfabeto e sons" }),
+    ).toBeNull();
+    await fireEvent.press(screen.getByText("Alfabeto e sons"));
+    expect(routerPush).not.toHaveBeenCalled();
+  });
+
+  it("erro na lista de grupos permite nova tentativa (AC-FEC-03-02)", async () => {
+    listTaskNotebooks.mockResolvedValue(notebooksData);
+    listTaskGroupsByEducator.mockRejectedValue(new Error("rede"));
+    await render(<NotebookDetailScreen notebookId="notebook-1" />, {
+      queryClient: createNoRetryQueryClient(),
+    });
+
+    expect(
+      await screen.findByText(
+        "Não foi possível carregar os grupos do caderno.",
+      ),
+    ).toBeTruthy();
+    listTaskGroupsByEducator.mockResolvedValue(notebooksData[0].taskGroups);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Tentar de novo" }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Alfabeto e sons" }),
+    ).toBeTruthy();
   });
 
   it("sem grupos mostra estado vazio (D-04)", async () => {

@@ -22,12 +22,10 @@ export function useGroupDetailData(groupId: string): UseGroupDetailDataResult {
     queryFn: () => listTasks(),
   });
 
-  const isPending = groupsQuery.isPending || tasksQuery.isPending;
-  const isError = groupsQuery.isError || tasksQuery.isError;
-  const hasData =
-    groupsQuery.data !== undefined && tasksQuery.data !== undefined;
   const group = groupsQuery.data?.find((candidate) => candidate.id === groupId);
-  const isNotFound = hasData && !group;
+  const isPending = groupsQuery.isPending || (!!group && tasksQuery.isPending);
+  const isError = groupsQuery.isError || (!!group && tasksQuery.isError);
+  const isNotFound = groupsQuery.isSuccess && !group;
 
   const tasks = group
     ? group.tasksIds
