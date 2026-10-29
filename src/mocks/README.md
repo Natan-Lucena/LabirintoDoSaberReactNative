@@ -124,6 +124,14 @@ volte para `"success"` ao terminar. Os cenários mantêm o contrato do endpoint:
 corpo com `sessionId`, `taskId`, `selectedAlternativeId` e `timeToAnswer`, e
 sucesso com `200 TaskNotebookSession`.
 
+### Sessão ligada ao caderno (SES-05)
+
+`POST /task-notebook-session/start` guarda `taskNotebookId` e `appointmentId`
+(opcionais; `null` quando ausentes) e `GET /task-notebook-session/student/:studentId`
+os devolve. Quando a sessão tem caderno, `POST /task-notebook-session/answer`
+responde `400 TASK_NOT_IN_NOTEBOOK` para uma tarefa que não está no caderno nem
+nos grupos dele (`MOCK_TASK_NOTEBOOKS`); sessão sem caderno aceita qualquer tarefa.
+
 ## Relatório da sessão
 
 - `GET /task-notebook-session/report/:sessionId` responde aos relatórios fictícios

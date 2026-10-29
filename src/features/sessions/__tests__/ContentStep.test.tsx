@@ -191,10 +191,42 @@ describe("ContentStep", () => {
     expect(startSession).toHaveBeenCalledWith({
       studentId: "student-1",
       name: "Sessão de teste",
+      taskNotebookId: "notebook-1",
     });
     expect(confirmStart).toHaveBeenCalledWith("session-1");
     expect(push).toHaveBeenCalledWith("/session/player");
     void view;
+  });
+
+  it("AC-SES-05-01: grupo ou atividade avulsa iniciam sem taskNotebookId", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession).mockResolvedValue({
+      id: "session-2",
+      studentId: "student-1",
+      educatorId: "e1",
+      name: "Sessão de grupo",
+      startedAt: "2026-10-07T10:00:00.000Z",
+      answers: [],
+    });
+
+    mockContent = { kind: "group", id: "group-1", name: "Alfabeto e sons" };
+
+    await renderContentStep();
+    await act(async () => {
+      fireEvent.changeText(
+        screen.getByLabelText("Nome da sessão"),
+        "Sessão de grupo",
+      );
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+
+    await waitFor(() => expect(startSession).toHaveBeenCalledTimes(1));
+    expect(startSession).toHaveBeenCalledWith({
+      studentId: "student-1",
+      name: "Sessão de grupo",
+    });
   });
 
   it("AC-703-04/07: Voltar não cancela o fluxo, só sai preservando o aluno", async () => {
