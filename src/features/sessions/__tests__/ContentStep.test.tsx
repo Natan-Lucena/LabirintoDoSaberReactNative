@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { act } from "@testing-library/react-native";
 
@@ -111,6 +111,9 @@ describe("normalizeForSearch", () => {
 });
 
 describe("ContentStep", () => {
+  beforeEach(() => {
+    mockAppointmentId = null;
+  });
   it("AC-703-01: nome vazio mostra erro acessível e desabilita início após tentativa", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([]);
 
@@ -240,6 +243,33 @@ describe("ContentStep", () => {
     expect(vi.mocked(startSession).mock.calls[1]![0]).not.toHaveProperty(
       "appointmentId",
     );
+    mockAppointmentId = null;
+  });
+
+  it("preserva o vínculo do atendimento ao preparar nova tentativa após erro", async () => {
+    mockAppointmentId = "appt-1";
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession).mockRejectedValueOnce(new Error("falha"));
+
+    await renderContentStep();
+    await screen.findByText("Cores e formas");
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText("Nome da sessão"), "Sessão");
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+    await screen.findByRole("button", { name: "Tentar novamente" });
+    setAppointmentId.mockClear();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Tentar novamente" }));
+    });
+
+    expect(setAppointmentId).toHaveBeenCalledWith("appt-1");
     mockAppointmentId = null;
   });
 

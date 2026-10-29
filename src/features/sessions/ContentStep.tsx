@@ -140,6 +140,7 @@ export function ContentStep(): ReactElement {
     if (!student || !selected || !isNameValid(nameInput)) return;
     await discard({ confirmed: true });
     await selectStudent(student);
+    await setAppointmentId(appointmentId);
     await configure({
       name: nameInput.trim(),
       content: { kind: selected.kind, id: selected.id, name: selected.name },
