@@ -6,6 +6,7 @@ vi.mock("expo-constants", () => ({
       extra: {
         appEnvironment: "development",
         apiBaseUrl: "http://10.0.2.2:3000",
+        useMocks: "true",
       },
     },
   },
@@ -16,7 +17,7 @@ describe("installApiMocks (G-29)", () => {
     vi.resetModules();
   });
 
-  it("installs the mock adapter when EXPO_PUBLIC_USE_MOCKS defaults to true in development", async () => {
+  it("installs the mock adapter when EXPO_PUBLIC_USE_MOCKS is explicitly true", async () => {
     const { apiClient } = await import("@/api/client");
     const { installApiMocks } = await import("@/mocks/install");
     const { mockAdapter } = await import("@/mocks/adapter");

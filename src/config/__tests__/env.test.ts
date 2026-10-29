@@ -47,14 +47,12 @@ describe("getApiBaseUrl", () => {
 });
 
 describe("getUseMocks", () => {
-  it("defaults to true in development when unset", () => {
-    expect(getUseMocks({ environment: "development" })).toBe(true);
-  });
-
-  it.each(["homologation", "production"] as const)(
-    "defaults to false in %s when unset",
+  it.each(["development", "homologation", "production"] as const)(
+    "defaults to false in %s when unset or empty",
     (environment) => {
       expect(getUseMocks({ environment })).toBe(false);
+      expect(getUseMocks({ environment, useMocksRaw: "" })).toBe(false);
+      expect(getUseMocks({ environment, useMocksRaw: "  " })).toBe(false);
     },
   );
 

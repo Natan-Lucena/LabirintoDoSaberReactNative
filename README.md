@@ -30,9 +30,10 @@ dependências auditadas contra o Expo Go está em
 
 ## Backend e mocks
 
-Por padrão, em desenvolvimento, o app usa dados **mockados** (`EXPO_PUBLIC_USE_MOCKS`
-ausente = `true`; veja `src/mocks/README.md`; login fictício `educadora.mock@labirinto.test` /
-`senha123`). Para usar o backend real, crie um `.env` (não versionado):
+Por padrão, os mocks ficam **desligados** em todos os ambientes
+(`EXPO_PUBLIC_USE_MOCKS` ausente ou vazia = `false`; veja `src/mocks/README.md`).
+Para usar o backend real, crie um `.env` (não versionado) com a URL acessível
+ao seu dispositivo:
 
 ```bash
 EXPO_PUBLIC_APP_ENV=development
@@ -40,7 +41,10 @@ EXPO_PUBLIC_API_BASE_URL=https://labirinto-do-saber.vercel.app
 EXPO_PUBLIC_USE_MOCKS=false
 ```
 
-e reinicie com `pnpm start --clear`. O Expo só lê o `.env` ao subir.
+Para usar dados fictícios em desenvolvimento, defina
+`EXPO_PUBLIC_USE_MOCKS=true` no `.env`. O login fictício é
+`educadora.mock@labirinto.test` / `senha123`. Reinicie com
+`pnpm start --clear` após mudar o `.env`; o Expo só o lê ao subir.
 
 ## Documentação
 

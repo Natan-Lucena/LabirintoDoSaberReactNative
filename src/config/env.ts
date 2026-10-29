@@ -75,13 +75,13 @@ export interface UseMocksInput {
   useMocksRaw?: string;
 }
 
-/** G-29: telas mockadas. Padrão true em desenvolvimento, false fora dele. */
+/** G-29/G-51: telas mockadas somente quando a flag é explicitamente true. */
 export function getUseMocks({
   environment,
   useMocksRaw,
 }: UseMocksInput): boolean {
   if (useMocksRaw === undefined || useMocksRaw.trim() === "") {
-    return environment === "development";
+    return false;
   }
 
   const normalized = useMocksRaw.trim().toLowerCase();
