@@ -35,6 +35,12 @@ export async function listTaskGroupsByEducator(): Promise<TaskGroup[]> {
   return response.data;
 }
 
+/** GET /task-group/:id */
+export async function getTaskGroupById(id: string): Promise<TaskGroup> {
+  const response = await apiClient.get<TaskGroup>(`/task-group/${id}`);
+  return response.data;
+}
+
 /** GET /task/ */
 export interface ListTasksParams {
   id?: string;

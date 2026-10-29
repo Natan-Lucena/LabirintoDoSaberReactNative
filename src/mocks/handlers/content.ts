@@ -1,9 +1,36 @@
 import type { Task, TaskGroup } from "@/api/types";
 import { MOCK_EDUCATOR, MOCK_TASK_NOTEBOOKS } from "@/mocks/fixtures";
 import { registerMockHandler } from "./registry";
+import { MockApiError } from "./types";
+
+const sharedGroup: TaskGroup = {
+  id: "group-shared",
+  name: "Leitura compartilhada",
+  tasksIds: ["task-foreign"],
+  educatorId: "mock-educator-2",
+  category: "reading",
+};
+const privateGroup: TaskGroup = {
+  ...sharedGroup,
+  id: "group-private",
+  name: "Grupo particular",
+};
 
 registerMockHandler({ method: "get", path: "/task-notebook/" }, () => {
-  return { status: 200, data: MOCK_TASK_NOTEBOOKS };
+  return {
+    status: 200,
+    data: MOCK_TASK_NOTEBOOKS.map((entry, index) =>
+      index === 0
+        ? {
+            notebook: {
+              ...entry.notebook,
+              taskGroupsIds: [...entry.notebook.taskGroupsIds, sharedGroup.id],
+            },
+            taskGroups: [...entry.taskGroups, sharedGroup],
+          }
+        : entry,
+    ),
+  };
 });
 
 // G-06 ainda não documenta o vínculo conteúdo ↔ sessão (G-29: mock
@@ -30,6 +57,8 @@ export const MOCK_TASK_GROUPS: TaskGroup[] = [
     educatorId: MOCK_EDUCATOR.id,
     category: "writing",
   },
+  sharedGroup,
+  privateGroup,
 ];
 
 export const MOCK_TASKS: Task[] = [
@@ -71,7 +100,32 @@ export const MOCK_TASKS: Task[] = [
 registerMockHandler(
   { method: "get", path: "/task-group/list-by-educator" },
   () => {
-    return { status: 200, data: MOCK_TASK_GROUPS };
+    return {
+      status: 200,
+      data: MOCK_TASK_GROUPS.filter(
+        (group) => group.educatorId === MOCK_EDUCATOR.id,
+      ),
+    };
+  },
+);
+
+registerMockHandler(
+  { method: "get", path: "/task-group/:id" },
+  ({ params }) => {
+    const group = MOCK_TASK_GROUPS.find((item) => item.id === params.id);
+    if (!group) throw new MockApiError(404, "TASK_GROUP_NOT_FOUND");
+    if (
+      group.educatorId !== MOCK_EDUCATOR.id &&
+      !MOCK_TASK_NOTEBOOKS.some(
+        (entry) =>
+          entry.notebook.educator === MOCK_EDUCATOR.id &&
+          (entry.notebook.taskGroupsIds.includes(group.id) ||
+            (entry === MOCK_TASK_NOTEBOOKS[0] && group.id === sharedGroup.id)),
+      )
+    ) {
+      throw new MockApiError(403, "UNAUTHORIZED");
+    }
+    return { status: 200, data: group };
   },
 );
 

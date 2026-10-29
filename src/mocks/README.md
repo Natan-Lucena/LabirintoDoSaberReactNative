@@ -32,6 +32,11 @@ Dados da Home (T-601):
 - `GET /educator/get-last-sessions`
 - `GET /task-notebook/`
 
+Grupo por id (FEC-04): `GET /task-group/:id` devolve grupo próprio ou de outro
+educador quando está em caderno do usuário (ex.: `group-shared` no `notebook-1`).
+`group-private` simula `403 UNAUTHORIZED`; id inexistente retorna
+`404 TASK_GROUP_NOT_FOUND`. A lista por educador omite os grupos alheios.
+
 Agendamentos (T-901, AGE-03):
 
 - `GET /appointment/:id`
