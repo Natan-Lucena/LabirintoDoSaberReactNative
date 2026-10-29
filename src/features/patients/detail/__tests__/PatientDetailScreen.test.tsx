@@ -162,8 +162,8 @@ describe("PatientDetailScreen (PAC-03)", () => {
 
     expect(openURL).toHaveBeenCalledWith("https://wa.me/5511999990000");
     expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Editar paciente" },
+      pathname: "/patients/[id]/edit",
+      params: { id: patient.id },
     });
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/reports/session/[id]",
@@ -173,6 +173,23 @@ describe("PatientDetailScreen (PAC-03)", () => {
       pathname: "/session/student",
       params: { studentId: expect.any(String) },
     });
+  });
+
+  it("mostra o responsável e usa seu telefone para contato", async () => {
+    studentsQuery = query([
+      {
+        ...patient,
+        guardianName: "Ana Monteiro",
+        guardianRelationship: "Mãe",
+        guardianPhone: "11977776666",
+      },
+    ]);
+    await render(<PatientDetailScreen patientId={patient.id} />);
+    expect(screen.getByText("Responsável: Ana Monteiro (Mãe)")).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Contatar responsável" }),
+    );
+    expect(openURL).toHaveBeenCalledWith("https://wa.me/5511977776666");
   });
 
   it("desabilita contato sem telefone e apresenta estados vazios próprios", async () => {

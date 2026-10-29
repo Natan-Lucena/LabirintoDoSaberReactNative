@@ -15,8 +15,12 @@ import {
 import { z } from "zod";
 
 import { createStudent } from "@/api/endpoints/student-create";
+import {
+  updateStudent,
+  type UpdateStudentInput,
+} from "@/api/endpoints/student-update";
 import { withOfflineGuard } from "@/api/query-client";
-import type { Gender } from "@/api/types";
+import type { Gender, Student } from "@/api/types";
 import {
   AppHeader,
   CheckList,
@@ -83,6 +87,18 @@ const schema = z.object({
   learningTopics: z
     .array(z.string().trim().min(1))
     .min(1, "Selecione uma dificuldade"),
+  guardianName: z
+    .string()
+    .trim()
+    .max(100, "O nome deve ter até 100 caracteres"),
+  guardianPhone: z.string().refine((value) => {
+    const digits = value.replace(/\D/g, "");
+    return !digits || (digits.length >= 7 && digits.length <= 15);
+  }, "Informe um telefone válido"),
+  guardianRelationship: z
+    .string()
+    .trim()
+    .max(50, "O parentesco deve ter até 50 caracteres"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -98,7 +114,9 @@ function maskPhone(value: string): string {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
-export function PatientFormScreen(): ReactElement {
+export function PatientFormScreen({
+  patient,
+}: { patient?: Student } = {}): ReactElement {
   const router = useRouter();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -109,24 +127,60 @@ export function PatientFormScreen(): ReactElement {
     getValues,
     handleSubmit,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty, dirtyFields },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: {
-      name: "",
-      age: "",
-      gender: undefined,
-      phonenumber: "",
-      zipcode: "",
-      road: "",
-      housenumber: "",
-      learningTopics: [],
+      name: patient?.name ?? "",
+      age: patient ? String(patient.age) : "",
+      gender: patient?.gender,
+      phonenumber: patient ? maskPhone(patient.phonenumber) : "",
+      zipcode: patient?.zipcode ?? "",
+      road: patient?.road ?? "",
+      housenumber: patient?.housenumber ?? "",
+      learningTopics: patient?.learningTopics ?? [],
+      guardianName: patient?.guardianName ?? "",
+      guardianPhone: patient?.guardianPhone
+        ? maskPhone(patient.guardianPhone)
+        : "",
+      guardianRelationship: patient?.guardianRelationship ?? "",
     },
   });
 
   const mutation = useMutation({
-    mutationFn: withOfflineGuard(createStudent),
+    mutationFn: withOfflineGuard(
+      (input: { values: FormValues; patch?: UpdateStudentInput }) =>
+        patient
+          ? updateStudent(patient.id, input.patch ?? {})
+          : createStudent({
+              name: input.values.name.trim(),
+              age: Number(input.values.age),
+              gender: input.values.gender as Gender,
+              zipcode: input.values.zipcode.trim(),
+              road: input.values.road.trim(),
+              housenumber: input.values.housenumber.trim(),
+              phonenumber: input.values.phonenumber.replace(/\D/g, ""),
+              learningTopics: input.values.learningTopics,
+              ...(input.values.guardianName.trim()
+                ? { guardianName: input.values.guardianName.trim() }
+                : {}),
+              ...(input.values.guardianPhone.replace(/\D/g, "")
+                ? {
+                    guardianPhone: input.values.guardianPhone.replace(
+                      /\D/g,
+                      "",
+                    ),
+                  }
+                : {}),
+              ...(input.values.guardianRelationship.trim()
+                ? {
+                    guardianRelationship:
+                      input.values.guardianRelationship.trim(),
+                  }
+                : {}),
+            }),
+    ),
     retry: false,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["student"] });
@@ -151,28 +205,40 @@ export function PatientFormScreen(): ReactElement {
     setCustomDifficulties((current) => [...current, difficulty]);
     setValue("learningTopics", [...topics, difficulty], {
       shouldValidate: true,
+      shouldDirty: true,
     });
     setCustomDifficulty("");
   }
 
   function submit(values: FormValues) {
-    mutation.mutate({
-      name: values.name.trim(),
-      age: Number(values.age),
-      gender: values.gender as Gender,
-      zipcode: values.zipcode.trim(),
-      road: values.road.trim(),
-      housenumber: values.housenumber.trim(),
-      phonenumber: values.phonenumber.replace(/\D/g, ""),
-      learningTopics: values.learningTopics,
-    });
+    const patch: UpdateStudentInput = {};
+    if (dirtyFields.name) patch.name = values.name.trim();
+    if (dirtyFields.age) patch.age = Number(values.age);
+    if (dirtyFields.gender) patch.gender = values.gender as Gender;
+    if (dirtyFields.zipcode) patch.zipcode = values.zipcode.trim();
+    if (dirtyFields.road) patch.road = values.road.trim();
+    if (dirtyFields.housenumber) patch.housenumber = values.housenumber.trim();
+    if (dirtyFields.phonenumber)
+      patch.phonenumber = values.phonenumber.replace(/\D/g, "");
+    if (dirtyFields.learningTopics)
+      patch.learningTopics = values.learningTopics;
+    if (dirtyFields.guardianName)
+      patch.guardianName = values.guardianName.trim();
+    if (dirtyFields.guardianPhone)
+      patch.guardianPhone = values.guardianPhone.replace(/\D/g, "");
+    if (dirtyFields.guardianRelationship)
+      patch.guardianRelationship = values.guardianRelationship.trim();
+    mutation.mutate({ values, patch });
   }
 
   const options = [
     ...difficultyOptions,
+    ...(patient?.learningTopics ?? [])
+      .filter((key) => !difficultyOptions.some((option) => option.key === key))
+      .map((key) => ({ key, label: key })),
     ...customDifficulties.map((key) => ({ key, label: key })),
   ];
-  const canSubmit = isValid && !mutation.isPending;
+  const canSubmit = isValid && !mutation.isPending && (!patient || isDirty);
 
   return (
     <KeyboardAvoidingView
@@ -180,7 +246,7 @@ export function PatientFormScreen(): ReactElement {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <AppHeader
-        title="Novo paciente"
+        title={patient ? "Editar paciente" : "Novo paciente"}
         subtitle="Informações iniciais"
         onBack={router.back}
       />
@@ -247,14 +313,61 @@ export function PatientFormScreen(): ReactElement {
           name="phonenumber"
           render={({ field: { value, onBlur, onChange } }) => (
             <Field
-              label="Telefone do responsável"
+              label="Telefone de contato"
               value={value}
               onChangeText={(text) => onChange(maskPhone(text))}
               onBlur={onBlur}
               error={errors.phonenumber?.message}
+              accessibilityLabel="Telefone de contato"
+              placeholder="(00) 00000-0000"
+              keyboardType="phone-pad"
+            />
+          )}
+        />
+
+        <Text style={styles.sectionTitle}>Responsável (opcional)</Text>
+        <Controller
+          control={control}
+          name="guardianName"
+          render={({ field: { value, onBlur, onChange } }) => (
+            <Field
+              label="Nome do responsável"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.guardianName?.message}
+              accessibilityLabel="Nome do responsável"
+              autoCapitalize="words"
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="guardianPhone"
+          render={({ field: { value, onBlur, onChange } }) => (
+            <Field
+              label="Telefone do responsável"
+              value={value}
+              onChangeText={(text) => onChange(maskPhone(text))}
+              onBlur={onBlur}
+              error={errors.guardianPhone?.message}
               accessibilityLabel="Telefone do responsável"
               placeholder="(00) 00000-0000"
               keyboardType="phone-pad"
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="guardianRelationship"
+          render={({ field: { value, onBlur, onChange } }) => (
+            <Field
+              label="Parentesco"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.guardianRelationship?.message}
+              accessibilityLabel="Parentesco"
             />
           )}
         />
@@ -352,7 +465,7 @@ export function PatientFormScreen(): ReactElement {
           </Text>
         ) : null}
         <DsButton
-          label="Salvar paciente"
+          label={patient ? "Salvar alterações" : "Salvar paciente"}
           icon="arrow"
           fullWidth
           onPress={handleSubmit(submit)}

@@ -188,6 +188,15 @@ Conferido contra `https://labirinto-do-saber.vercel.app`; os mocks seguem estas 
 
 ## Contrato de 2026-10-29 (API-03)
 
+### Edição de paciente (PAC-07)
+
+`PUT /student/update/:id` recebe multipart com campos opcionais. Altera o aluno
+fictício em memória e o resultado aparece em `GET /student/`. Campos vazios do
+responsável são ignorados; o telefone exige 7 a 15 dígitos. Use
+`student-not-assigned` como ID para simular `400
+STUDENT_NOT_ASSIGNED_TO_CURRENT_EDUCATOR`; um ID inexistente retorna `404
+STUDENT_NOT_FOUND`.
+
 - Atendimentos devolvem `durationMinutes` (50 por padrão), `type`, `observation` e
   `notifiedAt`; criação e edição aceitam `type` e `durationMinutes` e respondem sem
   campos prefixados por `_`. Transições de status e conflitos ficam para AGE-03.
