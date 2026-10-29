@@ -13,13 +13,13 @@ Estado em 2026-10-28:
   checagem de sanidade do §3. **Nenhuma tarefa começou.**
 - A `main` está em `a687576` (PR #75, V1 integrada), sem PR aberto.
 
-| #   | Ação                                                                                                          | Responsável                     | Condição de conclusão                     |
-| --- | ------------------------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------- |
-| 1   | Decidir G-47 (limpeza), G-49 (senha), G-50 (modelos de anamnese) e G-51 (mocks)                               | Usuário                         | Decisão registrada em GATES               |
-| 2   | Enviar ao backend o pedido de planos ([PEDIDOS-BACKEND §3](PEDIDOS-BACKEND.md#3-mensagem-pronta-para-enviar)) | Usuário                         | Resposta registrada em PEDIDOS-BACKEND §4 |
-| 3   | Onda E3-0: NAV-03 (com G-47) e FEC-02 (com G-51)                                                              | Orquestrador → workers          | PRs mergeados com CI verde                |
-| 4   | Onda E3-1: AGE-01, PAC-07, REC-02, ATV-02 e FEC-03                                                            | Orquestrador → workers          | PRs mergeados com CI verde                |
-| 5   | PLN-00: registrar o contrato de planos em PROJECT.md e `docs/contracts/planos.md`                             | Orquestrador, depois do backend | AC-PLN-00-01 e AC-PLN-00-02               |
+| #   | Ação                                                                                                                                                                | Responsável                     | Condição de conclusão                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------- |
+| 1   | ~~Decidir G-47, G-49, G-50 e G-51~~ **aprovadas pelo usuário em 2026-10-28**                                                                                        | Usuário                         | Feito                                     |
+| 2   | Enviar ao backend a [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md) (resumo e mensagem em [PEDIDOS-BACKEND §3](PEDIDOS-BACKEND.md#3-mensagem-pronta-para-enviar)) | Usuário                         | Resposta registrada em PEDIDOS-BACKEND §4 |
+| 3   | Onda E3-0: NAV-03 e FEC-02 (prontas)                                                                                                                                | Orquestrador → workers          | PRs mergeados com CI verde                |
+| 4   | Onda E3-1: AGE-01, PAC-07, REC-02, ATV-02 e FEC-03                                                                                                                  | Orquestrador → workers          | PRs mergeados com CI verde                |
+| 5   | PLN-00: registrar o contrato de planos em PROJECT.md e `docs/contracts/planos.md`                                                                                   | Orquestrador, depois do backend | AC-PLN-00-01 e AC-PLN-00-02               |
 
 ## 1. Estados
 
@@ -30,18 +30,18 @@ Estado em 2026-10-28:
 
 | Tarefa                                     | Bloco | Onda | Estado    | Bloqueio / próximo passo                       | PR / evidência |
 | ------------------------------------------ | ----- | ---- | --------- | ---------------------------------------------- | -------------- |
-| NAV-03 Limpeza da Entrega 1                | B     | E3-0 | bloqueada | G-47 (usuário)                                 | —              |
-| FEC-02 Mocks desligados por padrão         | A     | E3-0 | bloqueada | G-51 (usuário)                                 | —              |
+| NAV-03 Limpeza da Entrega 1                | B     | E3-0 | pronta    | G-47 aprovada                                  | —              |
+| FEC-02 Mocks desligados por padrão         | A     | E3-0 | pronta    | G-51 aprovada                                  | —              |
 | PLN-00 Contrato de planos                  | C     | E3-0 | bloqueada | Resposta do backend                            | —              |
 | AGE-01 Tela Agenda                         | B     | E3-1 | pronta    | —                                              | —              |
 | PAC-07 Editar paciente                     | B     | E3-1 | pronta    | —                                              | —              |
-| REC-02 Perfil e conta                      | B     | E3-1 | pronta    | Sem troca de senha até G-49                    | —              |
+| REC-02 Perfil e conta                      | B     | E3-1 | pronta    | Sem troca de senha (G-49)                      | —              |
 | ATV-02 Detalhe da atividade no visual novo | A     | E3-1 | pronta    | —                                              | —              |
 | FEC-03 Grupo inacessível no caderno        | A     | E3-1 | pronta    | —                                              | —              |
 | AGE-03 Atendimento: novo, detalhe, editar  | B     | E3-2 | bloqueada | AGE-01                                         | —              |
-| PAC-08 Modelos de anamnese                 | B     | E3-2 | bloqueada | G-50 (usuário)                                 | —              |
+| PAC-08 Modelos de anamnese                 | B     | E3-2 | pronta    | G-50 aprovada; onda E3-2                       | —              |
 | AGE-04 Iniciar sessão pelo atendimento     | B     | E3-3 | bloqueada | AGE-03                                         | —              |
-| PAC-06 Anamnese do paciente                | B     | E3-4 | bloqueada | AGE-04; PAC-08 se G-50                         | —              |
+| PAC-06 Anamnese do paciente                | B     | E3-4 | bloqueada | AGE-04 e PAC-08                                | —              |
 | PLN-01 Lista de planos                     | C     | E3-4 | bloqueada | PLN-00                                         | —              |
 | FEC-01 Rotas da V1 contra o backend real   | A     | E3-4 | bloqueada | FEC-02; autorização do usuário para o emulador | —              |
 | PLN-02 Gerar plano com IA                  | C     | E3-5 | bloqueada | PLN-01                                         | —              |
@@ -102,6 +102,7 @@ a checagem deve ser refeita quando a PLN-00 mudar as fichas de planos.
 
 ## 4. Histórico
 
-| Data       | Itens        | Registro                                                                                                                                                                         |
-| ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-28 | Planejamento | Roadmap, backlog (23 tarefas), pedidos ao backend e tracking da Entrega 3; G-47 a G-51 registrados (G-48 resolvido pelo usuário); checagem de sanidade S1 a S8 com código 0 (§3) |
+| Data       | Itens              | Registro                                                                                                                                                                                      |
+| ---------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-28 | Planejamento       | Roadmap, backlog (23 tarefas), pedidos ao backend e tracking da Entrega 3; G-47 a G-51 registrados (G-48 resolvido pelo usuário); checagem de sanidade S1 a S8 com código 0 (§3)              |
+| 2026-10-28 | Decisões e backend | Usuário aprovou G-47, G-49, G-50 e G-51 (NAV-03, FEC-02 e PAC-08 ficam prontas); PR #76 mergeado; especificação detalhada para o backend em [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md) |

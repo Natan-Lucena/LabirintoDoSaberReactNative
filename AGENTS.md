@@ -92,8 +92,9 @@ Antes de iniciar qualquer implementação, leia nesta ordem:
    compartilhados no §3.
 5. [Tracking da Entrega 3](docs/entrega-3/TRACKING.md): estado de cada tarefa, bloqueios e
    próximo passo. **É o registro canônico do progresso.**
-6. [Pedidos ao backend](docs/entrega-3/PEDIDOS-BACKEND.md): o domínio de planos (PLN-00) e os
-   pequenos pedidos.
+6. [Especificação para o backend](docs/entrega-3/ESPECIFICACAO-BACKEND.md): o domínio de
+   planos (PLN-00) e os pequenos pedidos, com regras de negócio; resumo em
+   [PEDIDOS-BACKEND](docs/entrega-3/PEDIDOS-BACKEND.md).
 7. [Gates e decisões](docs/entrega-1/GATES.md): decisões G-01 a G-51, compartilhadas pelas
    entregas.
 

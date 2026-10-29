@@ -3,6 +3,8 @@
 > Necessidades do app para negociar com o backend. **Não são contrato**: as rotas, os nomes e
 > os formatos são decididos pelo backend e registrados em [PROJECT.md](../PROJECT.md) pela
 > PLN-00 ([BACKLOG](BACKLOG.md#pln-00--contrato-do-domínio-de-planos)). Escrito em 2026-10-28.
+> **A versão detalhada, com entidades, regras de negócio, rotas sugeridas, erros e critérios de
+> aceite, está em [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md).** Este arquivo é o resumo.
 > As perguntas abertas da Entrega 1 continuam em
 > [PERGUNTAS-BACKEND](../entrega-1/PERGUNTAS-BACKEND.md).
 

@@ -72,20 +72,20 @@ Decisões do usuário (2026-10-28):
 | Novas (planos) | Lista de planos, Gerar plano com IA (com o rascunho editável), Detalhe do plano, Sugestões da IA                                                                 | 4    |
 | Novas (G-50)   | Modelos de anamnese (lista) e Modelo de anamnese (criar e editar)                                                                                                | 2    |
 | Alteradas      | Detalhe da atividade (visual novo), Ficha do paciente (aba Planos, Editar, Anamnese), Início (ações e cartão de sugestões), Recursos (Perfil, Planos e Anamnese) | 4    |
-| Removidas      | Aba Alunos e Agenda da Entrega 1, ficha e cadastro de aluno da Entrega 1 (`/students/…`) — se G-47 for aprovada                                                  | ~4   |
+| Removidas      | Aba Alunos e Agenda da Entrega 1, ficha e cadastro de aluno da Entrega 1 (`/students/…`) (G-47)                                                                  | ~4   |
 
-**Total de telas novas: 10, ou 12 com os modelos de anamnese (G-50).** As Sugestões da IA
-(PLN-05) dependem da segunda leva do backend; sem ela, são 9 ou 11.
+**Total de telas novas: 12** (com os modelos de anamnese, G-50 aprovada). As Sugestões da IA
+(PLN-05) dependem da segunda leva do backend; sem ela, são 11.
 
 ## 5. Decisões
 
 | Gate | Decisão                                                                                    | Estado                              |
 | ---- | ------------------------------------------------------------------------------------------ | ----------------------------------- |
-| G-47 | Limpeza da Entrega 1 (substitui a proposta G-33, que mandava remover telas que viraram V1) | **Proposta — aguarda o usuário**    |
+| G-47 | Limpeza da Entrega 1 (substitui a proposta G-33, que mandava remover telas que viraram V1) | **Resolvido (usuário, 2026-10-28)** |
 | G-48 | Domínio novo do backend na Entrega 3: Planos com IA                                        | **Resolvido (usuário, 2026-10-28)** |
-| G-49 | Troca de senha fica fora do perfil enquanto `update-password` não autenticar o pedido      | **Proposta — aguarda o usuário**    |
-| G-50 | Modelos de anamnese (CRUD de templates) entram na Entrega 3                                | **Proposta — aguarda o usuário**    |
-| G-51 | Mocks desligados por padrão em desenvolvimento                                             | **Proposta — aguarda o usuário**    |
+| G-49 | Troca de senha fica fora do perfil enquanto `update-password` não autenticar o pedido      | **Resolvido (usuário, 2026-10-28)** |
+| G-50 | Modelos de anamnese (CRUD de templates) entram na Entrega 3                                | **Resolvido (usuário, 2026-10-28)** |
+| G-51 | Mocks desligados por padrão em desenvolvimento                                             | **Resolvido (usuário, 2026-10-28)** |
 
 O texto completo, as alternativas e as recomendações estão em
 [GATES](../entrega-1/GATES.md). G-06 (vínculo sessão ↔ caderno) e G-05 (recuperação de
@@ -97,7 +97,7 @@ senha) continuam abertos com o backend.
 | ---- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | E3-0 | NAV-03, FEC-02, PLN-00                 | NAV-03 primeiro porque mexe em `HomeScreen` e `PatientsListScreen`; PLN-00 é conversa com o backend e corre em paralelo a tudo    |
 | E3-1 | AGE-01, PAC-07, REC-02, ATV-02, FEC-03 | Arquivos disjuntos                                                                                                                |
-| E3-2 | AGE-03, PAC-08                         | PAC-08 só com G-50                                                                                                                |
+| E3-2 | AGE-03, PAC-08                         | PAC-08 aprovada (G-50)                                                                                                            |
 | E3-3 | AGE-04                                 | Depende do detalhe do atendimento (AGE-03)                                                                                        |
 | E3-4 | PAC-06, PLN-01, FEC-01                 | PAC-06 depois de AGE-04 (mesmo arquivo da ficha); PLN-01 só depois de PLN-00; FEC-01 exige o emulador, com autorização do usuário |
 | E3-5 | PLN-02, PAC-04                         |                                                                                                                                   |

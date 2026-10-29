@@ -112,7 +112,7 @@ tarefas seguintes partem da `main` já atualizada.
 #### FEC-02 — Mocks desligados por padrão em desenvolvimento
 
 - **Onda:** E3-0 · **Classe:** C
-- **Dep.:** G-51.
+- **Dep.:** G-51 (aprovada em 2026-10-28).
 - **Hoje:** `getUseMocks` em `src/config/env.ts` devolve `true` quando
   `EXPO_PUBLIC_USE_MOCKS` está ausente e o ambiente é `development`.
 - **Escopo:**
@@ -182,7 +182,7 @@ tarefas seguintes partem da `main` já atualizada.
 #### NAV-03 — Limpeza da Entrega 1
 
 - **Onda:** E3-0 · **Classe:** B · **US:** US2-15
-- **Dep.:** **G-47** (proposta; não começar sem aprovação).
+- **Dep.:** **G-47** (aprovada em 2026-10-28).
 - **Escopo:**
   1. Trocar as navegações para as rotas da Entrega 1 pelas novas:
      `/students/new` → `/patients/new` e `/students/{id}` → `/patients/{id}`, em `HomeScreen`
@@ -355,7 +355,7 @@ tarefas seguintes partem da `main` já atualizada.
 #### PAC-08 — Modelos de anamnese
 
 - **Onda:** E3-2 · **Classe:** B · **US:** US3-01
-- **Dep.:** **G-50** (proposta; não começar sem aprovação).
+- **Dep.:** **G-50** (aprovada em 2026-10-28).
 - **Por quê:** os modelos são por educador. Sem esta tarefa, um educador novo não tem modelo
   para preencher na PAC-06.
 - **Endpoints:** `GET /anamnese/templates/`, `GET /anamnese/templates/:templateId`,
@@ -392,7 +392,7 @@ tarefas seguintes partem da `main` já atualizada.
 #### PAC-06 — Anamnese do paciente
 
 - **Onda:** E3-4 · **Classe:** B · **US:** US2-05
-- **Dep.:** AGE-04 (dono anterior de `PatientDetailScreen`); PAC-08 se G-50 for aprovada.
+- **Dep.:** AGE-04 (dono anterior de `PatientDetailScreen`) e PAC-08.
 - **Figma:** só o destino "Ver síntese"; tela montada com o design system (G-18).
 - **Endpoints:**
   - `GET /anamnese/templates/` e `GET /anamnese/templates/:templateId`
@@ -408,8 +408,7 @@ tarefas seguintes partem da `main` já atualizada.
      `FileUpload` → seletor de documento, com upload antes do envio.
   3. Obrigatórias validadas no cliente; os erros `MISSING_*` e `INVALID_*` da API aparecem
      na pergunta correspondente quando possível, senão no topo.
-  4. Sem modelo: estado vazio com "Criar modelo" (abre PAC-08) ou, sem G-50, o texto "Nenhum
-     modelo de anamnese disponível".
+  4. Sem modelo: estado vazio com "Criar modelo" (abre PAC-08).
   5. Na ficha do paciente, uma linha "Anamnese" com a data da última resposta abre a tela.
   6. Nenhum texto de resposta em log.
 - **Fora do escopo:** editar resposta; gerar análise por IA da anamnese (já existe nos
@@ -658,7 +657,7 @@ G-51 → FEC-02 ─┴→ FEC-01 (emulador)
 FEC-03, ATV-02, PAC-07, REC-02, AGE-01     (independentes)
 AGE-01 → AGE-03 → AGE-04
 PAC-07 → AGE-04 → PAC-06 → PAC-04          (dono de PatientDetailScreen)
-G-50 → PAC-08 → PAC-06
+G-50 (aprovada) → PAC-08 → PAC-06
 G-48 → PLN-00 (backend) → PLN-01 → PLN-02 → PLN-03 → PLN-04 → PLN-05 (2ª leva)
 PLN-01 → PAC-04
 blocos A–C → QA-06 → QA-02, QA-03, QA-04
@@ -668,3 +667,5 @@ blocos A–C → QA-06 → QA-02, QA-03, QA-04
 
 - 2026-10-28: criação pelo orquestrador, com o estado da `main` depois do PR #75, a escolha do
   domínio de planos (G-48) e as propostas G-47, G-49, G-50 e G-51.
+- 2026-10-28: G-47, G-49, G-50 e G-51 aprovados pelo usuário; especificação para o backend em
+  [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md).
