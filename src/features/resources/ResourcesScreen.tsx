@@ -11,7 +11,7 @@ type ResourceItem = {
   title: string;
   subtitle: string;
   icon: "sparkles" | "chart" | "clipboard" | "book" | "file" | "users" | "play";
-  destination?: "/activities" | "/reports";
+  destination?: "/activities" | "/reports" | "/anamnese/templates";
 };
 
 const featureGroups: readonly {
@@ -36,6 +36,12 @@ const featureGroups: readonly {
   {
     title: "Avaliação e conteúdo",
     items: [
+      {
+        title: "Modelos de anamnese",
+        subtitle: "Monte os questionários de anamnese",
+        icon: "clipboard",
+        destination: "/anamnese/templates",
+      },
       {
         title: "Avaliações e escalas",
         subtitle: "Aplique instrumentos e acompanhe os resultados",
