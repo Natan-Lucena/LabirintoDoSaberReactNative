@@ -287,6 +287,43 @@ tarefas seguintes partem da `main` já atualizada.
     `durationMinutes`; respostas sem campos `_`. `UT`
   - AC-API-03-04 o cadastro só envia `guardian*` quando preenchidos. `UT`
 
+#### AGE-02 — Lembrete pelo WhatsApp com mensagem pronta
+
+- **Onda:** E3-5 · **Classe:** B · **US:** US2-03
+- **Dep.:** PAC-07 (telefone do responsável) e AGE-04 (dona anterior de `HomeScreen` e do detalhe
+  do atendimento).
+- **Decisão do usuário (2026-10-29, G-53):** sem API de envio. O botão abre o WhatsApp do
+  aparelho pelo link `https://wa.me/<telefone>?text=<mensagem>`, com a mensagem já escrita; quem
+  envia é o profissional. Nada é registrado no backend.
+- **Telefone:** `guardianPhone` do paciente quando existir, senão `phonenumber`; só dígitos, com o
+  código do país `55` na frente quando não vier. Sem telefone, o botão fica desabilitado com a dica
+  "Paciente sem telefone cadastrado".
+- **Mensagens** (data e hora no fuso de São Paulo; sem o nome do responsável, começa com "Olá!"):
+  - lembrete de atendimento: "Olá, {responsável}! Passando para lembrar do atendimento de
+    {paciente} na {dia da semana}, {dd/mm}, às {hh:mm}. Qualquer imprevisto, é só avisar por
+    aqui.";
+  - contato pela ficha: "Olá, {responsável}! Tudo bem? Aqui é {educador}, do acompanhamento de
+    {paciente}." (sem o nome do educador, a frase "Aqui é…" sai).
+- **Escopo:**
+  1. Uma função pura que monta o link (telefone e texto codificado) e as duas mensagens, com
+     testes unitários (acentos, nomes ausentes, telefone com e sem `55`, máscara).
+  2. **Detalhe do atendimento** `PENDING`: botão "Enviar lembrete pelo WhatsApp".
+  3. **Agenda de hoje na Início:** o ícone "Notificar responsável" (`IconButton` `message`) em
+     cada item pendente da linha do tempo, com a mesma mensagem.
+  4. **Ficha do paciente:** o botão de contato passa a abrir o WhatsApp com a mensagem de contato.
+  5. Sem WhatsApp instalado, o link abre no navegador (comportamento do `wa.me`); se o
+     `Linking` falhar, mostrar "Não foi possível abrir o WhatsApp".
+- **Fora do escopo:** envio automático, registro do envio, modelos de mensagem editáveis.
+- **Arquivos novos:** `src/utils/whatsapp.ts` e testes.
+- **Arquivos alterados:** `src/features/agenda/detail/AppointmentDetailScreen.tsx`,
+  `src/features/home/HomeScreen.tsx` (só a linha do tempo),
+  `src/features/patients/detail/PatientDetailScreen.tsx` (só o contato) e testes.
+- **AC:**
+  - AC-AGE-02-01 o link usa o telefone do responsável, depois o do paciente, só com dígitos e `55`. `UT`
+  - AC-AGE-02-02 as mensagens saem com nome, dia, data e hora corretos, e "Olá!" sem nome. `UT`
+  - AC-AGE-02-03 os três pontos abrem o link certo pelo `Linking`. `CT`
+  - AC-AGE-02-04 sem telefone, o botão fica desabilitado com a dica. `CT`
+
 #### AGE-03 — Novo, detalhe, editar, remarcar, cancelar e excluir atendimento
 
 - **Onda:** E3-3 · **Classe:** B · **US:** US2-02
@@ -470,7 +507,7 @@ conflictingAppointmentId }`; horários encostados não conflitam.
 
 #### PAC-06 — Anamnese do paciente
 
-- **Onda:** E3-5 · **Classe:** B · **US:** US2-05
+- **Onda:** E3-6 · **Classe:** B · **US:** US2-05
 - **Dep.:** AGE-04 e PAC-07 (donos anteriores de `PatientDetailScreen`) e PAC-08.
 - **Figma:** só o destino "Ver síntese"; tela montada com o design system (G-18).
 - **Endpoints:**
@@ -584,7 +621,7 @@ valem para todas as fichas:
 
 #### PLN-01 — Lista de planos
 
-- **Onda:** E3-5 · **Classe:** B · **US:** US2-07
+- **Onda:** E3-6 · **Classe:** B · **US:** US2-07
 - **Dep.:** API-03; AGE-04 (dona anterior de `HomeScreen`) e REC-02 (de `ResourcesScreen`).
 - **Figma:** `PlansScreen` (`mode=hub`): "Planos com IA" com eyebrow "PDI e planejamento
   educacional"; `AIHero` "Planejamento conectado à evolução real" com "Criar novo plano";
@@ -614,7 +651,7 @@ valem para todas as fichas:
 
 #### PLN-02 — Gerar plano com IA
 
-- **Onda:** E3-6 · **Classe:** B · **US:** US2-07
+- **Onda:** E3-7 · **Classe:** B · **US:** US2-07
 - **Dep.:** PLN-01.
 - **Figma:** `PlansScreen` (`mode=generate`): "Novo planejamento" com o paciente no eyebrow;
   `SegmentedControl` PDI / PE da sessão; "Foco do planejamento"; `AIContext` "Contexto
@@ -647,7 +684,7 @@ valem para todas as fichas:
 
 #### PLN-03 — Rascunho editável e salvar
 
-- **Onda:** E3-7 · **Classe:** B · **US:** US2-07
+- **Onda:** E3-8 · **Classe:** B · **US:** US2-07
 - **Dep.:** PLN-02.
 - **Figma:** `.generated-sheet`: "Rascunho gerado" com `Badge` "Editável"; "Plano de
   Desenvolvimento Individual"; "Objetivo geral", "Metas prioritárias" e "Ajustes do
@@ -679,7 +716,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 
 #### PLN-04 — Detalhe do plano
 
-- **Onda:** E3-8 · **Classe:** B · **US:** US2-08
+- **Onda:** E3-9 · **Classe:** B · **US:** US2-08
 - **Dep.:** PLN-03.
 - **Figma:** destino "Ver plano completo"; tela montada com o design system (G-18).
 - **Endpoints:** `GET /plan/:id`; `PUT /plan/:id` (título, objetivo, notas, `endDate`,
@@ -712,7 +749,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 
 #### PLN-05 — Sugestões da IA (sob demanda)
 
-- **Onda:** E3-9 · **Classe:** B · **US:** US2-08
+- **Onda:** E3-10 · **Classe:** B · **US:** US2-08
 - **Dep.:** PLN-04.
 - **Mudança do backend (G-52):** as sugestões são geradas **sob demanda**, não ao encerrar a
   sessão.
@@ -739,7 +776,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 
 #### PAC-04 — Aba Planos na ficha do paciente
 
-- **Onda:** E3-7 · **Classe:** B · **US:** US2-05
+- **Onda:** E3-8 · **Classe:** B · **US:** US2-05
 - **Dep.:** PLN-01; PAC-06 (dona anterior de `PatientDetailScreen`).
 - **Figma:** `PatientDetail`, `.tabs` Visão geral / Planos; na aba Planos, um `InfoCard` por
   plano e o botão "Criar novo plano".
@@ -765,7 +802,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 
 #### QA-06 — Plano de testes da Entrega 3
 
-- **Onda:** E3-10 · **Classe:** B
+- **Onda:** E3-11 · **Classe:** B
 - **Dep.:** blocos A, B e C concluídos (ou o que estiver pronto, registrado).
 - **Escopo:** roteiro manual no formato do [plano da Entrega 1](../entrega-1/PLANO-TESTES.md):
   um caso por AC `MAN` e um por fluxo entre telas (Agenda → atendimento → sessão; ficha →
@@ -776,7 +813,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 
 #### QA-02 — E2E com Maestro
 
-- **Onda:** E3-11 · **Classe:** B
+- **Onda:** E3-12 · **Classe:** B
 - **Dep.:** QA-06. A ferramenta Maestro é instalada **fora do projeto** (CLI), com autorização
   do usuário; nada entra no `package.json`.
 - **Escopo:** fluxos em `.maestro/`, rodando no Expo Go do emulador:
@@ -789,7 +826,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 
 #### QA-03 — Acessibilidade
 
-- **Onda:** E3-11 · **Classe:** B
+- **Onda:** E3-12 · **Classe:** B
 - **Dep.:** QA-06.
 - **Escopo:** nas telas novas e alteradas da Entrega 3: leitor de tela (TalkBack), fonte
   grande, contraste e alvos de toque de 44 pontos (G-17).
@@ -798,7 +835,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 
 #### QA-04 — Homologação em aparelhos
 
-- **Onda:** E3-11 · **Classe:** B
+- **Onda:** E3-12 · **Classe:** B
 - **Dep.:** QA-06. **Exige** Android físico e Mac ou iPhone, com autorização do usuário.
 - **Escopo:** Android físico (inclusive câmera e áudio da ATV-08) e iOS (Expo Go ou build),
   com o backend real.
@@ -811,7 +848,7 @@ ACTIVE_PDI_ALREADY_EXISTS` com `activePlanId`.
 ```
 G-47 → NAV-03 ✓ · G-51 → FEC-02 ✓ → FEC-01 (emulador)
 FEC-03 ✓, ATV-02 ✓, AGE-01 ✓
-API-03 → AGE-03 → AGE-04 (← SES-05)
+API-03 → AGE-03 → AGE-04 (← SES-05) → AGE-02 (← PAC-07, G-53)
 API-03 → SES-05 → AGE-04
 API-03 → PAC-07 → AGE-04 → PAC-06 (← PAC-08) → PAC-04
 API-03 → REC-02 → PLN-01
@@ -830,3 +867,5 @@ blocos A–C → QA-06 → QA-02, QA-03, QA-04
   [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md).
 - 2026-10-29: fichas reescritas com o contrato do backend (AGE-03, AGE-04, PAC-06, PAC-07,
   REC-02 e bloco de planos); novas API-03, SES-05 e FEC-04; PLN-00 concluída; G-52.
+- 2026-10-29: AGE-02 volta ao escopo como botão do WhatsApp com mensagem pronta (`wa.me`), por
+  decisão do usuário (G-53).
