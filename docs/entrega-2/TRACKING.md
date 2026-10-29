@@ -24,14 +24,18 @@ Estado em 2026-10-09:
 - G-07 e G-43 foram **resolvidos pela evidência do backend**; G-06 segue aberto (o player usa o
   caderno escolhido no app). G-44 a G-46 registram decisões técnicas desta etapa.
 
-| #   | Ação                                                                                                                                                                                                                                | Responsável                                               | Condição de conclusão                            |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------ |
-| 1   | V1 integrada em uma única branch e validada no emulador Android: mergeada pelo PR de integração (SES-02 a REL-06)                                                                                                                   | Orquestrador → workers                                    | PRs revisados, CI verde e merge                  |
-| 2   | Validação no iOS e no aparelho físico (câmera e áudio no ATV-08)                                                                                                                                                                    | Orquestrador → workers                                    | Na `main`, com testes                            |
-| 3   | Rever o visual de ATV-02 (detalhe da atividade) contra o Figma Make e a edição/exclusão de cadernos e grupos (CNT-01)                                                                                                               | Orquestrador → workers                                    | Na `main`, com testes                            |
-| 4   | Validações manuais no Expo Go: EXPO-01 (abrir e navegar), ATV-08 (galeria, câmera, áudio), casca nova (NAV/DS-06), telas da V1-3 e V1-4                                                                                             | Usuário (ou orquestrador, **só quando o usuário mandar**) | Registradas na coluna de evidência               |
-| 5   | Responder com o backend a **G-06** (vínculo sessão ↔ caderno), **G-07** (unidade do `timeToAnswer` e dos tempos do relatório) e **G-43** (escala do `accuracy` da análise) — [PERGUNTAS-BACKEND](../entrega-1/PERGUNTAS-BACKEND.md) | Usuário + backend                                         | Resposta registrada em GATES e PERGUNTAS-BACKEND |
-| 6   | Fechar INT-01 e QA-05: rotas ainda não exercitadas, G-06 com o dono do backend e desligar os mocks por padrão                                                                                                                       | Orquestrador                                              | V1 ponta a ponta contra o backend real           |
+> **2026-10-28:** a V1 está fechada nesta entrega; o que falta dela (rotas não exercitadas,
+> visual da ATV-02, mocks por padrão, iOS e aparelho físico) passou para o bloco A da
+> [Entrega 3](../entrega-3/TRACKING.md). A tabela abaixo é o registro de 2026-10-09.
+
+| #   | Ação                                                                              | Responsável                                               | Estado em 2026-10-28                                                        |
+| --- | --------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1   | Integrar a V1 numa única branch e validar no emulador Android (SES-02 a REL-06)   | Orquestrador → workers                                    | **Concluída** — PR #75 mergeado em 2026-10-09                               |
+| 2   | Validação no iOS e no aparelho físico (câmera e áudio na ATV-08)                  | Usuário (máquina e aparelhos) + workers                   | Movida para a QA-04 da Entrega 3                                            |
+| 3   | Visual da ATV-02 contra o Figma Make; editar e excluir cadernos e grupos (CNT-01) | Orquestrador → workers                                    | Movida para ATV-02 e FEC-01 da Entrega 3                                    |
+| 4   | Validações manuais no Expo Go das telas da V1                                     | Usuário (ou orquestrador, **só quando o usuário mandar**) | Feitas em 2026-10-09 ([QA-05-RELATORIO](QA-05-RELATORIO.md)), exceto câmera |
+| 5   | G-06 com o backend ([PERGUNTAS-BACKEND](../entrega-1/PERGUNTAS-BACKEND.md))       | Usuário + backend                                         | **G-06 aberto**; G-07 e G-43 resolvidos em 2026-10-09                       |
+| 6   | Fechar INT-01 e QA-05: rotas não exercitadas e mocks desligados por padrão        | Orquestrador                                              | Movida para FEC-01 e FEC-02 da Entrega 3                                    |
 
 ## 1. Estados
 

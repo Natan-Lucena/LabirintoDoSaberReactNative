@@ -13,15 +13,16 @@ O projeto é identificado no README como `LabirintoDoSaberReactNative`. Sua arqu
 mobile está definida em [Documentação do projeto](docs/PROJECT.md), que reúne a
 arquitetura React Native + TypeScript e a referência global da API fornecida pelo
 usuário. **Leia esse documento antes de planejar ou implementar funcionalidades.**
-O app Expo SDK 57 roda no Expo Go e tem 763 testes. Desde 2026-10-03 o trabalho segue a
-**Entrega 2** (novo design do Figma Make), começando pelo marco **V1**; em 2026-10-09 as
-30 tarefas da V1 estão implementadas: 21 já na `main` e as outras 8 (sessão, atividades 02/03
-e relatórios) mais as correções em PRs abertos, **integradas na branch
-`integracao/v1-entrega-2`** e validadas no emulador Android contra o backend real. Ver
-[ENTREGA-V1](docs/entrega-2/ENTREGA-V1.md). Decisões documentadas não equivalem a recursos implementados. O estado
-atual está no [TRACKING da Entrega 2](docs/entrega-2/TRACKING.md) e o contexto para
-retomar o trabalho em [CONTEXTO-SESSAO](docs/CONTEXTO-SESSAO.md). O histórico da
-Entrega 1 fica no [TRACKING da Entrega 1](docs/entrega-1/TRACKING.md).
+O app Expo SDK 57 roda no Expo Go e tem 763 testes. A **Entrega 2** (novo design do Figma
+Make) entregou o marco **V1**: as 30 tarefas entraram na `main` pelo PR #75 (2026-10-09) e
+foram validadas no emulador Android contra o backend real (ver
+[ENTREGA-V1](docs/entrega-2/ENTREGA-V1.md)). Desde 2026-10-28 o trabalho segue a **Entrega 3**:
+fechar a V1, completar as telas que já têm API (Agenda, editar paciente, anamnese, perfil) e
+o domínio **Planos com IA**, entregue pelo backend (G-48). Decisões documentadas não equivalem
+a recursos implementados. O estado atual está no
+[TRACKING da Entrega 3](docs/entrega-3/TRACKING.md) e o contexto para retomar o trabalho em
+[CONTEXTO-SESSAO](docs/CONTEXTO-SESSAO.md). O histórico fica nos TRACKING da
+[Entrega 2](docs/entrega-2/TRACKING.md) e da [Entrega 1](docs/entrega-1/TRACKING.md).
 
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
@@ -78,22 +79,26 @@ a primeira execução de testes, mas não a definição dos critérios de aceite
 
 ## 2. Hierarquia: orquestrador → líderes técnicos → executores
 
-### Planejamento obrigatório da entrega vigente (Entrega 2 — marco V1)
+### Planejamento obrigatório da entrega vigente (Entrega 3)
 
 Antes de iniciar qualquer implementação, leia nesta ordem:
 
 1. [Contexto da sessão](docs/CONTEXTO-SESSAO.md): estado atual, regras combinadas com o
    usuário e armadilhas da orquestração.
 2. [Documentação do projeto](docs/PROJECT.md): arquitetura e contrato da API (Parte II).
-3. [Roadmap da Entrega 2](docs/entrega-2/ROADMAP.md): mapa de telas do Figma Make, marcos
-   e decisões; o marco V1 está no §4.1.
-4. [Backlog da Entrega 2](docs/entrega-2/BACKLOG.md): histórias, fichas refinadas com
-   referência ao Figma Make, endpoints existentes, o que falta na API e critérios de aceite.
-   As fichas da V1 estão no §4.0.
-5. [Tracking da Entrega 2](docs/entrega-2/TRACKING.md): estado de cada tarefa, bloqueios e
+3. [Roadmap da Entrega 3](docs/entrega-3/ROADMAP.md): escopo, telas, decisões e ondas.
+4. [Backlog da Entrega 3](docs/entrega-3/BACKLOG.md): fichas com endpoints, arquivos
+   permitidos, escopo, fora do escopo e critérios de aceite; propriedade dos arquivos
+   compartilhados no §3.
+5. [Tracking da Entrega 3](docs/entrega-3/TRACKING.md): estado de cada tarefa, bloqueios e
    próximo passo. **É o registro canônico do progresso.**
-6. [Gates e decisões](docs/entrega-1/GATES.md): decisões G-01 a G-41, compartilhadas pelas
-   duas entregas.
+6. [Pedidos ao backend](docs/entrega-3/PEDIDOS-BACKEND.md): o domínio de planos (PLN-00) e os
+   pequenos pedidos.
+7. [Gates e decisões](docs/entrega-1/GATES.md): decisões G-01 a G-51, compartilhadas pelas
+   entregas.
+
+As fichas da Entrega 2 ([BACKLOG](docs/entrega-2/BACKLOG.md)) continuam sendo a referência do
+design para os módulos que ainda não entraram (Evolução, Escalas, Equipe…).
 
 O design vigente é o Figma Make `L7sCNfMhrzOzhtlNpS3cHr`. Para ler o código dele, use o
 conector Figma (`get_design_context`, com `fileKey=L7sCNfMhrzOzhtlNpS3cHr` e `nodeId=0:1`).

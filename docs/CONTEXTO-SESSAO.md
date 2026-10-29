@@ -1,22 +1,22 @@
-# Contexto da sessão de orquestração — handoff (atualizado em 2026-10-09)
+# Contexto da sessão de orquestração — handoff (atualizado em 2026-10-28)
 
 > Este arquivo resume o que não está óbvio nos outros documentos, para retomar sem refazer o
 > discovery, seja no Claude Code, seja no OpenCode. A fonte canônica do progresso é o
-> [TRACKING da Entrega 2](entrega-2/TRACKING.md). A metodologia está no [AGENTS.md](../AGENTS.md).
+> [TRACKING da Entrega 3](entrega-3/TRACKING.md). A metodologia está no [AGENTS.md](../AGENTS.md).
 
 ## 1. Onde estamos
 
-| Item                  | Estado                                                                                                                                                                                                                                               |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                               |
-| Entrega vigente       | **Entrega 2**, novo design do Figma Make (`L7sCNfMhrzOzhtlNpS3cHr`). Marco atual: **V1**, ver [ROADMAP §4.1](entrega-2/ROADMAP.md#41-marco-v1--primeira-versão-funcionando-prioridade) e [BACKLOG §4.0](entrega-2/BACKLOG.md#40-marco-v1-prioridade) |
-| Escopo da V1          | Criar atividade (manual com imagem e áudio, e com IA), cadernos e grupos, pacientes, sessão (player + registro) e relatórios (sessão, aluno, análise por IA em Markdown), ponta a ponta com o backend real                                           |
-| O que já está na main | 21 tarefas da V1 (EXPO-01, DS-01 a DS-06, NAV, HOME, REC, PAC-01 a PAC-03, ATV-01, ATV-06, ATV-07, ATV-08, CNT-01 e SES-01)                                                                                                                          |
-| Em andamento          | Nada em worker. A V1 inteira (inclusive SES-02, SES-03, SES-04, ATV-02, ATV-03, REL-04, REL-05 e REL-06) entrou na `main` pelo PR #75 (integração com as correções do teste no backend real)                                                         |
-| Próximas              | Validar no iOS e no aparelho físico; fechar INT-01 e QA-05; decidir G-06 com o dono do backend; aprovar G-44 a G-46                                                                                                                                  |
-| Backend               | **Acessível desde 2026-10-09**: `https://labirinto-do-saber.vercel.app` (Express na Vercel; Swagger em `/api-docs/`, incompleto). Testado com mocks desligados. G-07 e G-43 resolvidos pela evidência; G-06 e G-05 abertos                           |
-| Qualidade             | 763 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links                                                                                                                                            |
-| Validação manual      | Feita em 2026-10-09 no emulador Android (Expo Go) contra o backend real; relatório em `docs/entrega-2/QA-05-RELATORIO.md`. Pendente: iOS, aparelho físico (câmera) e as rotas listadas no relatório                                                  |
+| Item                  | Estado                                                                                                                                                                                                                                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                                                                               |
+| Entrega vigente       | **Entrega 3** (planejada em 2026-10-28): fechar a V1, telas com API pronta (Agenda, editar paciente, anamnese, perfil) e **Planos com IA** (único domínio novo pedido ao backend, G-48). Ver [ROADMAP da Entrega 3](entrega-3/ROADMAP.md). O design continua o Figma Make (`L7sCNfMhrzOzhtlNpS3cHr`) |
+| Escopo da V1          | Criar atividade (manual com imagem e áudio, e com IA), cadernos e grupos, pacientes, sessão (player + registro) e relatórios (sessão, aluno, análise por IA em Markdown), ponta a ponta com o backend real                                                                                           |
+| O que já está na main | 21 tarefas da V1 (EXPO-01, DS-01 a DS-06, NAV, HOME, REC, PAC-01 a PAC-03, ATV-01, ATV-06, ATV-07, ATV-08, CNT-01 e SES-01)                                                                                                                                                                          |
+| Em andamento          | Nada em worker. A V1 da Entrega 2 está toda na `main` (PR #75). O planejamento da Entrega 3 entrou por PR; nenhuma tarefa dela começou                                                                                                                                                               |
+| Próximas              | Usuário decide G-47, G-49, G-50 e G-51 e envia o pedido de planos ao backend ([PEDIDOS-BACKEND](entrega-3/PEDIDOS-BACKEND.md)); depois, ondas E3-0 e E3-1 do [TRACKING](entrega-3/TRACKING.md)                                                                                                       |
+| Backend               | **Acessível desde 2026-10-09**: `https://labirinto-do-saber.vercel.app` (Express na Vercel; Swagger em `/api-docs/`, incompleto). Testado com mocks desligados. G-07 e G-43 resolvidos pela evidência; G-06 e G-05 abertos                                                                           |
+| Qualidade             | 763 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links                                                                                                                                                                                            |
+| Validação manual      | Feita em 2026-10-09 no emulador Android (Expo Go) contra o backend real; relatório em `docs/entrega-2/QA-05-RELATORIO.md`. Pendente: iOS, aparelho físico (câmera) e as rotas listadas no relatório                                                                                                  |
 
 ## 2. Regras combinadas com o usuário
 
