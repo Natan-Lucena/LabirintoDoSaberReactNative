@@ -62,7 +62,7 @@ export function GroupDetailScreen({
           Não foi possível carregar o grupo.
         </Text>
         <DsButton
-          label="Tentar novamente"
+          label="Tentar de novo"
           variant="secondary"
           onPress={refetch}
         />
@@ -71,7 +71,8 @@ export function GroupDetailScreen({
   else if (isNotFound || !group)
     body = (
       <View style={styles.status}>
-        <Text accessibilityRole="alert">Não encontrado</Text>
+        <Text accessibilityRole="alert">Grupo indisponível</Text>
+        <Text>Este grupo não pertence à sua conta ou foi excluído.</Text>
         <DsButton label="Voltar" variant="secondary" onPress={router.back} />
       </View>
     );
