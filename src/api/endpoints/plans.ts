@@ -5,6 +5,8 @@ import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
 import type {
   Plan,
   PlanDraft,
+  GoalStatus,
+  PlanReview,
   PlanStatus,
   PlanSummary,
   PlanType,
@@ -119,5 +121,82 @@ export async function listPlans(
 export async function getPlan(id: string): Promise<Plan> {
   const response = await apiClient.get<Plan>(`/plan/${id}`);
 
+  return response.data;
+}
+
+export interface UpdatePlanInput {
+  title?: string;
+  generalObjective?: string;
+  professionalNotes?: string;
+  endDate?: string;
+  nextReviewDate?: string;
+  goals?: { id?: string; description: string; successCriterion?: string }[];
+}
+
+/** PUT /plan/:id — goals, quando presente, substitui a lista completa. */
+export async function updatePlan(
+  id: string,
+  input: UpdatePlanInput,
+): Promise<Plan> {
+  const response = await apiClient.put<Plan>(`/plan/${id}`, input, {
+    validateStatus: (status) =>
+      (status >= 200 && status < 300) || status === 409,
+  });
+  throwOnConflict(response);
+  return response.data;
+}
+
+/** PUT /plan/:id/goals/:goalId */
+export async function updateGoalStatus(
+  planId: string,
+  goalId: string,
+  status: GoalStatus,
+): Promise<Plan> {
+  const response = await apiClient.put<Plan>(
+    `/plan/${planId}/goals/${goalId}`,
+    { status },
+    {
+      validateStatus: (code) => (code >= 200 && code < 300) || code === 409,
+    },
+  );
+  throwOnConflict(response);
+  return response.data;
+}
+
+/** PUT /plan/:id/status — encerramento definitivo. */
+export async function updatePlanStatus(
+  id: string,
+  status: "COMPLETED" | "CANCELLED",
+): Promise<Plan> {
+  const response = await apiClient.put<Plan>(
+    `/plan/${id}/status`,
+    { status },
+    {
+      validateStatus: (code) => (code >= 200 && code < 300) || code === 409,
+    },
+  );
+  throwOnConflict(response);
+  return response.data;
+}
+
+/** POST /plan/:id/reviews */
+export async function createPlanReview(
+  id: string,
+  input: { note: string; nextReviewDate?: string },
+): Promise<PlanReview> {
+  const response = await apiClient.post<PlanReview>(
+    `/plan/${id}/reviews`,
+    input,
+    {
+      validateStatus: (code) => (code >= 200 && code < 300) || code === 409,
+    },
+  );
+  throwOnConflict(response);
+  return response.data;
+}
+
+/** GET /plan/:id/reviews — mais recente primeiro. */
+export async function listPlanReviews(id: string): Promise<PlanReview[]> {
+  const response = await apiClient.get<PlanReview[]>(`/plan/${id}/reviews`);
   return response.data;
 }

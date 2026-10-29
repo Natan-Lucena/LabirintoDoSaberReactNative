@@ -255,3 +255,18 @@ PDI ativo para `student-1` devolve `409 ACTIVE_PDI_ALREADY_EXISTS` com
 `activePlanId: "mock-plan-1"`. O handler valida limites das metas, datas e os
 campos exclusivos do PE. A rota usa o import de `plans.ts` já presente em
 `src/mocks/install.ts`.
+
+## Detalhe do plano (PLN-04)
+
+`PUT /plan/:id` edita título, objetivo, notas, vigência e a lista completa de metas: `id`
+existente atualiza, ausência de `id` cria e meta omitida é removida. Meta atingida não pode
+ser removida (`409 GOAL_ACHIEVED_CANNOT_BE_REMOVED`). O mock valida `DUPLICATE_GOAL_ID`,
+`GOAL_NOT_FOUND`, `PLAN_WITHOUT_GOALS`, `TOO_MANY_GOALS` e `INVALID_DATES`. Notas e próxima
+revisão vazias mantêm o valor anterior, como no backend.
+
+`PUT /plan/:id/goals/:goalId` troca o status da meta, grava ou limpa `achievedAt` e
+recalcula `progress`. `POST /plan/:id/reviews` guarda nota, próxima revisão opcional e
+retrato dos status das metas; `GET /plan/:id/reviews` devolve as revisões mais recentes
+primeiro. `PUT /plan/:id/status` encerra o plano com `closedAt`. Todas as escritas de um
+plano encerrado respondem `409 PLAN_NOT_EDITABLE`. As rotas usam o import de `plans.ts`
+já presente em `src/mocks/install.ts`.
