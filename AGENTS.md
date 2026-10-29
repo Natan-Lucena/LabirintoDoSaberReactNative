@@ -13,7 +13,7 @@ O projeto é identificado no README como `LabirintoDoSaberReactNative`. Sua arqu
 mobile está definida em [Documentação do projeto](docs/PROJECT.md), que reúne a
 arquitetura React Native + TypeScript e a referência global da API fornecida pelo
 usuário. **Leia esse documento antes de planejar ou implementar funcionalidades.**
-O app Expo SDK 57 roda no Expo Go e tem 826 testes (2026-10-29). A **Entrega 2** (novo design do Figma
+O app Expo SDK 57 roda no Expo Go e tem mais de 830 testes (2026-10-29). A **Entrega 2** (novo design do Figma
 Make) entregou o marco **V1**: as 30 tarefas entraram na `main` pelo PR #75 (2026-10-09) e
 foram validadas no emulador Android contra o backend real (ver
 [ENTREGA-V1](docs/entrega-2/ENTREGA-V1.md)). Desde 2026-10-28 o trabalho segue a **Entrega 3**:
