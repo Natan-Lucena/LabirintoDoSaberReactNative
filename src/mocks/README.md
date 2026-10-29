@@ -246,3 +246,12 @@ como plano pai simula `400 INVALID_PARENT_PLAN`, e marcadores no foco
 `[AI_GENERATION_FAILED]` e `[AI_INVALID_OUTPUT]` simulam as falhas 500. A rota já
 é registrada pelo import existente de `src/mocks/handlers/plans.ts` em
 `src/mocks/install.ts`.
+
+## Salvar plano (PLN-03)
+
+`POST /plan/` acrescenta um plano `ACTIVE` a `mockPlans`, com metas ordenadas,
+progresso inicial calculado e, no PE, vigência igual à data da sessão. Um segundo
+PDI ativo para `student-1` devolve `409 ACTIVE_PDI_ALREADY_EXISTS` com
+`activePlanId: "mock-plan-1"`. O handler valida limites das metas, datas e os
+campos exclusivos do PE. A rota usa o import de `plans.ts` já presente em
+`src/mocks/install.ts`.

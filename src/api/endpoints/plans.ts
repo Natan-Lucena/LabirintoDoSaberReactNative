@@ -1,4 +1,6 @@
 import { apiClient } from "@/api/client";
+import { ApiError } from "@/api/errors";
+import type { AxiosResponse } from "axios";
 import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
 import type {
   Plan,
@@ -17,6 +19,64 @@ export interface GeneratePlanDraftInput {
   sessionDate?: string;
   parentPlanId?: string;
   includeAnamnesisTemplateId?: string;
+}
+
+export interface CreatePlanInput {
+  studentId: string;
+  type: PlanType;
+  source: "AI" | "MANUAL";
+  title: string;
+  generalObjective: string;
+  professionalNotes?: string;
+  focus?: string;
+  consideredDifficulties?: string[];
+  startDate?: string;
+  endDate?: string;
+  nextReviewDate?: string;
+  parentPlanId?: string;
+  sessionDate?: string;
+  appointmentId?: string;
+  goals: { description: string; successCriterion?: string }[];
+}
+
+export class PlanApiError extends ApiError {
+  readonly activePlanId?: string;
+
+  constructor(
+    input: ConstructorParameters<typeof ApiError>[0] & {
+      activePlanId?: string;
+    },
+  ) {
+    super(input);
+    this.name = "PlanApiError";
+    this.activePlanId = input.activePlanId;
+  }
+}
+
+function throwOnConflict(response: AxiosResponse<unknown>): void {
+  if (response.status !== 409) return;
+  const body = (response.data ?? {}) as {
+    message?: unknown;
+    activePlanId?: unknown;
+  };
+  const code = typeof body.message === "string" ? body.message : undefined;
+  throw new PlanApiError({
+    message: code ?? "Conflict",
+    status: 409,
+    code,
+    activePlanId:
+      typeof body.activePlanId === "string" ? body.activePlanId : undefined,
+  });
+}
+
+/** POST /plan/ — persiste o plano editado. */
+export async function createPlan(input: CreatePlanInput): Promise<Plan> {
+  const response = await apiClient.post<Plan>("/plan/", input, {
+    validateStatus: (status) =>
+      (status >= 200 && status < 300) || status === 409,
+  });
+  throwOnConflict(response);
+  return response.data;
 }
 
 /** POST /plan/generate — devolve rascunho sem persistir. */

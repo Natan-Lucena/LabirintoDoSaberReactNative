@@ -8,7 +8,10 @@ import type {
   PlanGoal,
   PlanSummary,
 } from "@/api/types";
-import type { GeneratePlanDraftInput } from "@/api/endpoints/plans";
+import type {
+  CreatePlanInput,
+  GeneratePlanDraftInput,
+} from "@/api/endpoints/plans";
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
 import { getTodayKey } from "@/utils/date";
 import { MOCK_ANAMNESE_TEMPLATES } from "./anamnese";
@@ -166,6 +169,137 @@ export const mockPlans: Plan[] = [
     updatedAt: "2026-10-01T12:00:00.000Z",
   }),
 ];
+
+function validDay(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
+    return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return (
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  );
+}
+
+registerMockHandler({ method: "post", path: "/plan/" }, ({ body }) => {
+  const input = body as Partial<CreatePlanInput>;
+  if (input.studentId === MOCK_FOREIGN_STUDENT_ID)
+    throw new MockApiError(403, "UNAUTHORIZED");
+  const student = MOCK_STUDENTS.find((item) => item.id === input.studentId);
+  if (!student) throw new MockApiError(404, "STUDENT_NOT_FOUND");
+  if (student.educatorId !== MOCK_EDUCATOR.id)
+    throw new MockApiError(403, "UNAUTHORIZED");
+  if (!Array.isArray(input.goals) || input.goals.length === 0)
+    throw new MockApiError(400, "PLAN_WITHOUT_GOALS");
+  if (input.goals.length > 10) throw new MockApiError(400, "TOO_MANY_GOALS");
+  if (input.type === "PDI") {
+    if (input.sessionDate || input.parentPlanId || input.appointmentId)
+      throw new MockApiError(400, "INVALID_FIELDS_FOR_PDI");
+    if (
+      !validDay(input.startDate) ||
+      !validDay(input.endDate) ||
+      input.endDate <= input.startDate ||
+      (input.nextReviewDate !== undefined &&
+        (!validDay(input.nextReviewDate) ||
+          input.nextReviewDate < input.startDate ||
+          input.nextReviewDate > input.endDate))
+    )
+      throw new MockApiError(400, "INVALID_DATES");
+    const active = mockPlans.find(
+      (plan) =>
+        plan.studentId === input.studentId &&
+        plan.type === "PDI" &&
+        plan.status === "ACTIVE",
+    );
+    if (active)
+      return {
+        status: 409,
+        data: { message: "ACTIVE_PDI_ALREADY_EXISTS", activePlanId: active.id },
+      };
+  } else if (input.type === "PE") {
+    if (!input.sessionDate)
+      throw new MockApiError(400, "SESSION_DATE_REQUIRED");
+    if (!validDay(input.sessionDate))
+      throw new MockApiError(400, "INVALID_DATES");
+    if (input.parentPlanId) {
+      const parent = mockPlans.find((plan) => plan.id === input.parentPlanId);
+      if (
+        !parent ||
+        parent.type !== "PDI" ||
+        parent.studentId !== input.studentId ||
+        parent.educatorId !== MOCK_EDUCATOR.id
+      )
+        throw new MockApiError(400, "INVALID_PARENT_PLAN");
+    }
+    if (input.appointmentId) throw new MockApiError(400, "INVALID_APPOINTMENT");
+  }
+  if (
+    !(["PDI", "PE"] as unknown[]).includes(input.type) ||
+    !(["AI", "MANUAL"] as unknown[]).includes(input.source) ||
+    typeof input.title !== "string" ||
+    !input.title.trim() ||
+    input.title.length > 120 ||
+    typeof input.generalObjective !== "string" ||
+    !input.generalObjective.trim() ||
+    input.generalObjective.length > 2000 ||
+    (input.professionalNotes !== undefined &&
+      input.professionalNotes.length > 2000) ||
+    (input.focus !== undefined && input.focus.length > 1000) ||
+    (input.consideredDifficulties !== undefined &&
+      (!Array.isArray(input.consideredDifficulties) ||
+        input.consideredDifficulties.length > 20 ||
+        input.consideredDifficulties.some(
+          (item) =>
+            typeof item !== "string" || !item.trim() || item.length > 100,
+        ))) ||
+    input.goals.some(
+      (goal) =>
+        typeof goal.description !== "string" ||
+        !goal.description.trim() ||
+        goal.description.length > 500 ||
+        (goal.successCriterion !== undefined &&
+          goal.successCriterion.length > 500),
+    )
+  )
+    throw new MockApiError(400, "Bad Request");
+  const now = new Date().toISOString();
+  const id = `mock-plan-${Date.now()}-${mockPlans.length}`;
+  const goals: PlanGoal[] = input.goals.map((goal, order) => ({
+    id: `${id}-goal-${order + 1}`,
+    order,
+    description: goal.description,
+    ...(goal.successCriterion
+      ? { successCriterion: goal.successCriterion }
+      : {}),
+    status: "NOT_STARTED",
+    updatedAt: now,
+  }));
+  const day = input.type === "PE" ? input.sessionDate! : input.startDate!;
+  const plan = buildPlan({
+    id,
+    educatorId: MOCK_EDUCATOR.id,
+    studentId: input.studentId!,
+    type: input.type!,
+    status: "ACTIVE",
+    source: input.source!,
+    title: input.title!,
+    generalObjective: input.generalObjective!,
+    ...(input.professionalNotes
+      ? { professionalNotes: input.professionalNotes }
+      : {}),
+    ...(input.focus ? { focus: input.focus } : {}),
+    consideredDifficulties: input.consideredDifficulties ?? [],
+    startDate: day,
+    endDate: input.type === "PE" ? day : input.endDate!,
+    ...(input.type === "PDI" && input.nextReviewDate
+      ? { nextReviewDate: input.nextReviewDate }
+      : {}),
+    ...(input.type === "PE" ? { sessionDate: day } : {}),
+    ...(input.parentPlanId ? { parentPlanId: input.parentPlanId } : {}),
+    goals,
+    updatedAt: now,
+  });
+  mockPlans.push(plan);
+  return { status: 201, data: plan };
+});
 
 /** Resumo da listagem: tudo menos `goals`, mais `studentName`. */
 export function toMockPlanSummary(plan: Plan): PlanSummary {

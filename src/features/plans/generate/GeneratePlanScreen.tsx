@@ -1,7 +1,7 @@
-import { useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { listAnamneseResponsesByStudent } from "@/api/endpoints/anamnese-responses";
 import { listAnamneseTemplates } from "@/api/endpoints/anamnese";
@@ -38,6 +38,9 @@ const durationOptions = [
 
 export function GeneratePlanScreen(): ReactElement {
   const router = useRouter();
+  const navigation = useNavigation();
+  const saved = useRef(false);
+  const discarded = useRef(false);
   const params = useLocalSearchParams<{ studentId?: string }>();
   const routeStudentId =
     typeof params.studentId === "string" ? params.studentId : undefined;
@@ -52,6 +55,27 @@ export function GeneratePlanScreen(): ReactElement {
   const [sessionDate, setSessionDate] = useState(new Date());
   const [templateId, setTemplateId] = useState("");
   const [draft, setDraft] = useState<PlanDraft | null>(null);
+  useEffect(() => {
+    return navigation.addListener("beforeRemove", (event) => {
+      if (!draft || saved.current || discarded.current) return;
+      event.preventDefault();
+      Alert.alert(
+        "Descartar o rascunho?",
+        "As alterações não salvas serão perdidas.",
+        [
+          { text: "Continuar editando", style: "cancel" },
+          {
+            text: "Descartar",
+            style: "destructive",
+            onPress: () => {
+              discarded.current = true;
+              navigation.dispatch(event.data.action);
+            },
+          },
+        ],
+      );
+    });
+  }, [draft, navigation]);
   const [lastInput, setLastInput] = useState<GeneratePlanDraftInput | null>(
     null,
   );
@@ -284,7 +308,16 @@ export function GeneratePlanScreen(): ReactElement {
               disabled={!canGenerate}
               loading={generation.isPending}
             />
-            {draft ? <DraftPreview draft={draft} /> : null}
+            {draft && lastInput ? (
+              <DraftPreview
+                key={draft.title + draft.suggestedStartDate}
+                draft={draft}
+                input={lastInput}
+                onSaved={() => {
+                  saved.current = true;
+                }}
+              />
+            ) : null}
           </>
         )}
       </ScrollView>

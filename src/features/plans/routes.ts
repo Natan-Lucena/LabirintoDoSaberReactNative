@@ -3,6 +3,9 @@
 // `planDetailRoute` por `/plans/{id}`, cada uma em uma linha.
 export const PLANS_ROUTE = "/plans" as const;
 
+/** PLN-04 troca este destino para o detalhe quando a rota estiver pronta. */
+export const afterSavePlanRoute = (_planId: string) => PLANS_ROUTE;
+
 export const NEW_PLAN_ROUTE = "/plans/new" as const;
 
 export const planDetailRoute = (_planId: string) =>
