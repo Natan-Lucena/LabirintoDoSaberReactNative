@@ -3,10 +3,7 @@
 // `planDetailRoute` por `/plans/{id}`, cada uma em uma linha.
 export const PLANS_ROUTE = "/plans" as const;
 
-export const NEW_PLAN_ROUTE = {
-  pathname: "/shell/coming-soon",
-  params: { title: "Novo plano" },
-} as const;
+export const NEW_PLAN_ROUTE = "/plans/new" as const;
 
 export const planDetailRoute = (_planId: string) =>
   ({

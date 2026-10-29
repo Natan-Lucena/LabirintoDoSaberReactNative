@@ -233,3 +233,16 @@ um PDI concluído; `progress` é calculado das metas com a regra do servidor. Us
 `mock-student-foreign` no filtro para simular `403 UNAUTHORIZED`; o plano `mock-plan-foreign`
 responde `403` no detalhe, e um ID inexistente responde `404 PLAN_NOT_FOUND`. Os dados ficam em
 `mockPlans` (src/mocks/handlers/plans.ts) para as próximas tarefas de planos estenderem.
+
+## Gerar plano com IA (PLN-02)
+
+`POST /plan/generate` devolve um `PlanDraft` fictício em português com três metas e datas
+sugeridas; não acrescenta nada a `mockPlans`. Para PDI, use `durationMonths: 3` ou `6`;
+para PE, use `sessionDate` e opcionalmente `parentPlanId: "mock-plan-1"`. O mock usa a
+data de hoje em `America/Sao_Paulo` para o PDI. `studentId: "unknown"` simula
+`404 STUDENT_NOT_FOUND` e `mock-student-foreign` simula `403 UNAUTHORIZED`.
+Modelo inexistente simula `404 TEMPLATE_NOT_FOUND`, um PE
+como plano pai simula `400 INVALID_PARENT_PLAN`, e marcadores no foco
+`[AI_GENERATION_FAILED]` e `[AI_INVALID_OUTPUT]` simulam as falhas 500. A rota já
+é registrada pelo import existente de `src/mocks/handlers/plans.ts` em
+`src/mocks/install.ts`.

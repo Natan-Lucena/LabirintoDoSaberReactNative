@@ -129,7 +129,7 @@ describe("PlansHubScreen (PLN-01)", () => {
     expect(screen.getByText("Caio Mendes")).toBeTruthy();
   });
 
-  it("abre o plano e o novo plano pelos destinos provisórios (AC-PLN-01-02)", async () => {
+  it("abre o detalhe provisório e a tela de novo plano (AC-PLN-01-02)", async () => {
     await render(<PlansHubScreen />);
 
     await fireEvent.press(
@@ -141,10 +141,7 @@ describe("PlansHubScreen (PLN-01)", () => {
 
     expect(push).toHaveBeenCalledWith(planDetailRoute("p1"));
     expect(push).toHaveBeenCalledWith(NEW_PLAN_ROUTE);
-    expect(NEW_PLAN_ROUTE).toEqual({
-      pathname: "/shell/coming-soon",
-      params: { title: "Novo plano" },
-    });
+    expect(NEW_PLAN_ROUTE).toBe("/plans/new");
     expect(planDetailRoute("p1")).toEqual({
       pathname: "/shell/coming-soon",
       params: { title: "Detalhe do plano" },

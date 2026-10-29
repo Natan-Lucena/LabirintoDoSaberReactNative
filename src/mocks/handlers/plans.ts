@@ -1,8 +1,17 @@
 // Planos com IA (PLN-01): leitura. As escritas, a geração e as sugestões entram
 // com PLN-02 a PLN-05 e estendem `mockPlans`. Dados fictícios; contrato em
 // docs/entrega-3/BACKEND-ENTREGUE.md §3.
-import type { GoalStatus, Plan, PlanGoal, PlanSummary } from "@/api/types";
+import type {
+  GoalStatus,
+  Plan,
+  PlanDraft,
+  PlanGoal,
+  PlanSummary,
+} from "@/api/types";
+import type { GeneratePlanDraftInput } from "@/api/endpoints/plans";
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
+import { getTodayKey } from "@/utils/date";
+import { MOCK_ANAMNESE_TEMPLATES } from "./anamnese";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
@@ -201,6 +210,101 @@ registerMockHandler({ method: "get", path: "/plan/:id" }, ({ params }) => {
   }
 
   return { status: 200, data: plan };
+});
+
+function addMonths(day: string, months: number): string {
+  const [year, month, date] = day.split("-").map(Number);
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  target.setUTCDate(Math.min(date, lastDay));
+  return target.toISOString().slice(0, 10);
+}
+
+registerMockHandler({ method: "post", path: "/plan/generate" }, ({ body }) => {
+  const input = body as Partial<GeneratePlanDraftInput>;
+  const focus = typeof input.focus === "string" ? input.focus : "";
+  if (input.studentId === MOCK_FOREIGN_STUDENT_ID) {
+    throw new MockApiError(403, "UNAUTHORIZED");
+  }
+  const student = MOCK_STUDENTS.find((item) => item.id === input.studentId);
+  if (!student) throw new MockApiError(404, "STUDENT_NOT_FOUND");
+  if (student.educatorId !== MOCK_EDUCATOR.id)
+    throw new MockApiError(403, "UNAUTHORIZED");
+  if (
+    input.includeAnamnesisTemplateId &&
+    !MOCK_ANAMNESE_TEMPLATES.some(
+      (item) => item.id === input.includeAnamnesisTemplateId,
+    )
+  ) {
+    throw new MockApiError(404, "TEMPLATE_NOT_FOUND");
+  }
+  if (input.parentPlanId) {
+    const parent = mockPlans.find((item) => item.id === input.parentPlanId);
+    if (!parent) throw new MockApiError(404, "PLAN_NOT_FOUND");
+    if (parent.educatorId !== MOCK_EDUCATOR.id) {
+      throw new MockApiError(403, "UNAUTHORIZED");
+    }
+    if (
+      parent.type !== "PDI" ||
+      parent.studentId !== student.id ||
+      input.type !== "PE"
+    ) {
+      throw new MockApiError(400, "INVALID_PARENT_PLAN");
+    }
+  }
+  if (focus.includes("[AI_GENERATION_FAILED]"))
+    throw new MockApiError(500, "AI_GENERATION_FAILED");
+  if (focus.includes("[AI_INVALID_OUTPUT]"))
+    throw new MockApiError(500, "AI_INVALID_OUTPUT");
+  const difficulties = input.consideredDifficulties;
+  if (
+    !["PDI", "PE"].includes(input.type ?? "") ||
+    !focus.trim() ||
+    focus.length > 1000 ||
+    !Array.isArray(difficulties) ||
+    difficulties.length < 1 ||
+    difficulties.length > 20 ||
+    difficulties.some(
+      (item) => typeof item !== "string" || !item.trim() || item.length > 100,
+    ) ||
+    (input.type === "PDI" && ![3, 6].includes(input.durationMonths ?? 0)) ||
+    (input.type === "PE" &&
+      (!input.sessionDate || !/^\d{4}-\d{2}-\d{2}$/.test(input.sessionDate)))
+  )
+    throw new MockApiError(400, "Bad Request");
+  const start = input.type === "PE" ? input.sessionDate! : getTodayKey();
+  const topic = difficulties[0]!;
+  const draft: PlanDraft = {
+    type: input.type!,
+    title:
+      input.type === "PDI" ? `PDI de ${topic}` : `Plano da sessão de ${topic}`,
+    generalObjective: `Desenvolver ${topic} com atividades graduais e acompanhamento individual.`,
+    goals: [
+      {
+        description: `Identificar habilidades relacionadas a ${topic}`,
+        successCriterion: "Registra 3 exemplos com apoio",
+      },
+      {
+        description: `Praticar ${topic} em atividades orientadas`,
+        successCriterion: "Conclui 4 de 5 atividades propostas",
+      },
+      {
+        description: `Aplicar ${topic} com maior autonomia`,
+        successCriterion: "Conclui 3 atividades com apoio reduzido",
+      },
+    ],
+    suggestedStartDate: start,
+    suggestedEndDate:
+      input.type === "PE" ? start : addMonths(start, input.durationMonths!),
+    ...(input.type === "PDI"
+      ? { suggestedNextReviewDate: addMonths(start, 1) }
+      : {}),
+    rationale:
+      "Metas propostas a partir do foco e das dificuldades informadas, sem histórico de sessões.",
+  };
+  return { status: 200, data: draft };
 });
 
 export const planMockHandlersRegistered = true;

@@ -157,10 +157,7 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
       params: { studentId: "student-1", appointmentId: expect.any(String) },
     });
     expect(routerPush).toHaveBeenCalledWith("/patients/new");
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Novo plano" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/plans/new");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
       params: { title: "Aplicar escala" },
