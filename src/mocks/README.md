@@ -223,3 +223,13 @@ STUDENT_NOT_FOUND`.
 
 - `PUT /educator/update-educator` aceita somente `newName`, `newContact` e `newProfession` opcionais de 3 a 100 caracteres. A resposta imita o formato real com campos `_name`, `_contact`, `_profession`, `_photoUrl` e `_password`; o app a descarta e refaz `GET /educator/me`.
 - `PUT /educator/update-profile-picture` exige multipart `photo` e atualiza a URL fictícia da foto. O cliente recusa arquivos acima de 5 MB.
+
+## Planos com IA (PLN-01)
+
+`GET /plan/` devolve os planos do educador fictício como `PlanSummary` (tudo menos `goals`,
+mais `studentName`), `ACTIVE` primeiro e depois `updatedAt` decrescente, e aceita `studentId`,
+`status` e `type`. `GET /plan/:id` devolve o plano com as metas. Há um PDI ativo, um PE ativo e
+um PDI concluído; `progress` é calculado das metas com a regra do servidor. Use
+`mock-student-foreign` no filtro para simular `403 UNAUTHORIZED`; o plano `mock-plan-foreign`
+responde `403` no detalhe, e um ID inexistente responde `404 PLAN_NOT_FOUND`. Os dados ficam em
+`mockPlans` (src/mocks/handlers/plans.ts) para as próximas tarefas de planos estenderem.
