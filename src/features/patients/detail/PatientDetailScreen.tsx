@@ -15,12 +15,15 @@ import {
   AppHeader,
   Avatar,
   DsButton,
+  FeatureRow,
   IconButton,
   ProgressBar,
   SectionTitle,
   Toast,
   useToast,
 } from "@/components/ds";
+import { formatResponseDate } from "@/features/anamnese/responses/answers";
+import { useAnamneseResponses } from "@/features/anamnese/responses/useAnamneseResponses";
 import { useAppointments } from "@/features/appointments/useAppointments";
 import { useHomeData } from "@/features/home/useHomeData";
 import {
@@ -107,6 +110,7 @@ export function PatientDetailScreen({
   const appointmentsQuery = useAppointments();
   const analysisQuery = useStudentAnalysis(patientId);
   const sessionsQuery = useStudentSessions(patientId);
+  const anamneseQuery = useAnamneseResponses(patientId);
   const patient = studentsQuery.data?.find(
     (student) => student.id === patientId,
   );
@@ -163,6 +167,17 @@ export function PatientDetailScreen({
       studentName: patient.name,
     }),
   );
+
+  const lastAnamnese = [...(anamneseQuery.data ?? [])].sort((a, b) =>
+    b.answeredAt.localeCompare(a.answeredAt),
+  )[0];
+  const anamneseSubtitle = anamneseQuery.isError
+    ? "Não foi possível carregar"
+    : anamneseQuery.isPending
+      ? "Carregando"
+      : lastAnamnese
+        ? `Última em ${formatResponseDate(lastAnamnese.answeredAt)}`
+        : "Nenhuma anamnese";
 
   function openContact(): void {
     if (contactUrl)
@@ -330,6 +345,18 @@ export function PatientDetailScreen({
             <Text style={styles.emptyText}>Nenhuma sessão registrada</Text>
           )}
         </View>
+
+        <FeatureRow
+          icon="clipboard"
+          title="Anamnese"
+          subtitle={anamneseSubtitle}
+          onPress={() =>
+            router.push({
+              pathname: "/patients/[id]/anamnese",
+              params: { id: patient.id },
+            })
+          }
+        />
 
         <DsButton
           label="Iniciar sessão"

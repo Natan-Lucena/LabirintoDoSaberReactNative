@@ -176,6 +176,14 @@ status ficam como estão), como o backend faz.
 - `POST /anamnese/templates/` cria e `PUT /anamnese/templates/:templateId` edita com título, descrição e perguntas; `DELETE /anamnese/templates/:templateId` remove e devolve `200 null`.
 - Um ID inexistente devolve `404 TEMPLATE_NOT_FOUND`. Use `has-responses` como ID em PUT ou DELETE para receber `400 TEMPLATE_HAS_RESPONSES`.
 
+## Respostas de anamnese (PAC-06)
+
+- `GET /anamnese/responses/student/:studentId` lista as respostas completas do paciente (`student-1` tem `response-1`, do modelo `template-1`).
+- `POST /anamnese/templates/:templateId/responses` cria; `PUT /anamnese/responses/:responseId` edita com o mesmo `answers`, grava `updatedAt` e mantém `answeredAt`.
+- Validações: `MISSING_REQUIRED_ANSWER`, `MISSING_TEXT_VALUE`, `MISSING_SELECTED_OPTION(S)`, `MISSING_FILE_URL`, `INVALID_QUESTION_ID`, `INVALID_OPTION_ID`; `404 TEMPLATE_NOT_FOUND`, `STUDENT_NOT_FOUND`, `RESPONSE_NOT_FOUND`.
+- `response-other` é de outro educador: `PUT` devolve `403 UNAUTHORIZED` e `GET /anamnese/responses/:responseId` devolve `401 Unauthorized` (D4). O app não chama essa rota.
+- `POST /anamnese/responses/upload-file` (multipart `file`) devolve `{ url }`; sem arquivo, `400 FILE_REQUIRED`.
+
 ## Fidelidade ao backend real (2026-10-09)
 
 Conferido contra `https://labirinto-do-saber.vercel.app`; os mocks seguem estas escalas:

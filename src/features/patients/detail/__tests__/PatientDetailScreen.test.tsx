@@ -11,6 +11,7 @@ let studentsQuery: QueryState<Student[]>;
 let appointmentsQuery: QueryState<Appointment[]>;
 let analysisQuery: QueryState<unknown>;
 let sessionsQuery: QueryState<TaskNotebookSession[]>;
+let anamneseQuery: QueryState<{ id: string; answeredAt: string }[]>;
 
 interface QueryState<T> {
   data: T | undefined;
@@ -24,6 +25,9 @@ vi.mock("@/features/students/useStudents", () => ({
 }));
 vi.mock("@/features/appointments/useAppointments", () => ({
   useAppointments: () => appointmentsQuery,
+}));
+vi.mock("@/features/anamnese/responses/useAnamneseResponses", () => ({
+  useAnamneseResponses: () => anamneseQuery,
 }));
 vi.mock("@/features/home/useHomeData", () => ({
   useHomeData: () => ({ educator: { name: "Aline Souza" } }),
@@ -104,6 +108,7 @@ function setQueries(): void {
     sessions,
   });
   sessionsQuery = query(sessions);
+  anamneseQuery = query([]);
 }
 
 describe("PatientDetailScreen (PAC-03)", () => {
@@ -198,6 +203,25 @@ describe("PatientDetailScreen (PAC-03)", () => {
     expect(openURL).toHaveBeenCalledWith(
       `https://wa.me/5511977776666?text=${encodeURIComponent("Olá, Ana Monteiro! Tudo bem? Aqui é Aline Souza, do acompanhamento de Lia Monteiro.")}`,
     );
+  });
+
+  it("mostra Nenhuma anamnese e abre a tela ao tocar", async () => {
+    await render(<PatientDetailScreen patientId={patient.id} />);
+    expect(screen.getByText("Nenhuma anamnese")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Anamnese" }));
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/patients/[id]/anamnese",
+      params: { id: patient.id },
+    });
+  });
+
+  it("mostra a data da última resposta", async () => {
+    anamneseQuery = query([
+      { id: "a", answeredAt: "2026-10-10T12:00:00.000Z" },
+      { id: "b", answeredAt: "2026-10-20T12:00:00.000Z" },
+    ]);
+    await render(<PatientDetailScreen patientId={patient.id} />);
+    expect(screen.getByText("Última em 20/10/2026")).toBeTruthy();
   });
 
   it("desabilita contato sem telefone e apresenta estados vazios próprios", async () => {
