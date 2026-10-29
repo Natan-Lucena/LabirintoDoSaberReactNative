@@ -131,8 +131,8 @@ describe("PatientsListScreen", () => {
     await fireEvent.press(screen.getByLabelText("Abrir ficha de Ágata Souza"));
     await fireEvent.press(screen.getByLabelText("Cadastrar paciente"));
 
-    expect(routerPush).toHaveBeenCalledWith("/students/2");
-    expect(routerPush).toHaveBeenCalledWith("/students/new");
+    expect(routerPush).toHaveBeenCalledWith("/patients/2");
+    expect(routerPush).toHaveBeenCalledWith("/patients/new");
   });
 
   it("mostra carregamento e erro recuperável", async () => {

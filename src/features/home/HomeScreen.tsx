@@ -253,7 +253,7 @@ export function HomeScreen(): ReactElement {
                     icon="clipboard"
                     onPress={() => {
                       if (nextPatient)
-                        router.push(`/students/${nextPatient.id}`);
+                        router.push(`/patients/${nextPatient.id}`);
                     }}
                   />
                 </View>
@@ -284,7 +284,7 @@ export function HomeScreen(): ReactElement {
             <QuickAccess
               label="Novo paciente"
               icon="plus"
-              onPress={() => router.push("/students/new")}
+              onPress={() => router.push("/patients/new")}
             />
             <QuickAccess
               label="Criar plano"

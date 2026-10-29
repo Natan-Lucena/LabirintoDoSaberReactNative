@@ -69,11 +69,11 @@ describe("useTabItems (AC-NAV-01-01/02)", () => {
     expect(routerPush).toHaveBeenCalledWith("/");
   });
 
-  // AC-NAV-01-02: /patients/[id] e /students/* mantêm a aba Pacientes ativa.
+  // AC-NAV-01-02: as rotas de pacientes mantêm a aba Pacientes ativa.
   it.each([
-    ["students", "new"],
-    ["students", "[id]"],
+    ["patients", "new"],
     ["patients", "[id]"],
+    ["(tabs)", "patients"],
   ])("maps /%s/%s to the patients tab", async (first, second) => {
     segments = [first, second];
     const { result } = await renderHook(() => useTabItems());

@@ -199,7 +199,7 @@ export function PatientsListScreen(): ReactElement {
             <PatientCard
               patient={item}
               appointment={appointmentsByPatient.get(item.id)}
-              onPress={() => navigate(router, `/students/${item.id}`)}
+              onPress={() => navigate(router, `/patients/${item.id}`)}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -208,7 +208,7 @@ export function PatientsListScreen(): ReactElement {
       <View style={styles.fabContainer}>
         <Fab
           accessibilityLabel="Cadastrar paciente"
-          onPress={() => navigate(router, "/students/new")}
+          onPress={() => navigate(router, "/patients/new")}
         />
       </View>
     </View>
