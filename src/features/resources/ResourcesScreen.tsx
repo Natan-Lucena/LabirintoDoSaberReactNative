@@ -12,7 +12,7 @@ type ResourceItem = {
   title: string;
   subtitle: string;
   icon: "sparkles" | "chart" | "clipboard" | "book" | "file" | "users" | "play";
-  destination?: "/activities" | "/reports" | "/anamnese/templates";
+  destination?: "/activities" | "/reports" | "/anamnese/templates" | "/plans";
 };
 
 const featureGroups: readonly {
@@ -26,6 +26,7 @@ const featureGroups: readonly {
         title: "Planos com IA",
         subtitle: "Crie planos personalizados com inteligência artificial",
         icon: "sparkles",
+        destination: "/plans",
       },
       {
         title: "Evolução da sessão",

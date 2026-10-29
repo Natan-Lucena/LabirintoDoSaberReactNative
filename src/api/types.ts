@@ -168,3 +168,108 @@ export interface AnamneseTemplate {
   }[];
   createdAt: string;
 }
+
+// Planos com IA (PLN-01). Contrato: docs/entrega-3/BACKEND-ENTREGUE.md §2 a §5.
+// Campos opcionais vêm AUSENTES do JSON, nunca `null`. Datas sem hora são
+// `AAAA-MM-DD` (calendário, sem fuso).
+export type PlanType = "PDI" | "PE";
+export type PlanStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
+export type GoalStatus =
+  "NOT_STARTED" | "IN_PROGRESS" | "ACHIEVED" | "DISCONTINUED";
+export type PlanSource = "AI" | "MANUAL";
+
+export interface PlanProgress {
+  /** Metas sem as `DISCONTINUED`. */
+  totalGoals: number;
+  achievedGoals: number;
+  inProgressGoals: number;
+  /** `round(100 × achieved / total)`; 0 quando não há metas. Calculado pelo servidor. */
+  percent: number;
+}
+
+export interface PlanGoal {
+  id: string;
+  order: number;
+  description: string;
+  successCriterion?: string;
+  status: GoalStatus;
+  achievedAt?: string;
+  updatedAt: string;
+}
+
+export interface Plan {
+  id: string;
+  educatorId: string;
+  studentId: string;
+  type: PlanType;
+  status: PlanStatus;
+  source: PlanSource;
+  title: string;
+  generalObjective: string;
+  professionalNotes?: string;
+  focus?: string;
+  consideredDifficulties: string[];
+  startDate: string;
+  endDate: string;
+  nextReviewDate?: string;
+  /** Só PE. */
+  parentPlanId?: string;
+  /** Só PE (obrigatório nele). */
+  sessionDate?: string;
+  /** Só PE. */
+  appointmentId?: string;
+  goals: PlanGoal[];
+  progress: PlanProgress;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string;
+}
+
+/** `GET /plan/`: todos os campos do plano, menos `goals`, mais `studentName`. */
+export type PlanSummary = Omit<Plan, "goals"> & { studentName: string };
+
+export interface PlanReview {
+  id: string;
+  planId: string;
+  reviewedAt: string;
+  note: string;
+  nextReviewDate?: string;
+  /** Retrato das metas no momento da revisão. */
+  goalStatuses: { goalId: string; status: GoalStatus }[];
+}
+
+/** `POST /plan/generate`: rascunho, não salva nada. */
+export interface PlanDraft {
+  type: PlanType;
+  title: string;
+  generalObjective: string;
+  goals: { description: string; successCriterion?: string }[];
+  suggestedStartDate: string;
+  suggestedEndDate: string;
+  suggestedNextReviewDate?: string;
+  rationale?: string;
+}
+
+export type SuggestionKind =
+  "UPDATE_GOAL_STATUS" | "ADD_GOAL" | "REWRITE_GOAL" | "SCHEDULE_REVIEW";
+export type SuggestionStatus = "PENDING" | "ACCEPTED" | "DISMISSED";
+
+export interface PlanSuggestion {
+  id: string;
+  planId: string;
+  studentId: string;
+  studentName: string;
+  /** `UPDATE_GOAL_STATUS` e `REWRITE_GOAL`. */
+  goalId?: string;
+  kind: SuggestionKind;
+  text: string;
+  proposedChange: {
+    status?: GoalStatus;
+    description?: string;
+    successCriterion?: string;
+    nextReviewDate?: string;
+  };
+  status: SuggestionStatus;
+  createdAt: string;
+  resolvedAt?: string;
+}

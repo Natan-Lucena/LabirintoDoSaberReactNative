@@ -159,7 +159,7 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
     expect(routerPush).toHaveBeenCalledWith("/patients/new");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
-      params: { title: "Criar plano" },
+      params: { title: "Novo plano" },
     });
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",

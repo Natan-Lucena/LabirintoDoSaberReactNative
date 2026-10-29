@@ -87,10 +87,7 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     expect(routerPush).toHaveBeenCalledWith("/reports");
     expect(routerPush).toHaveBeenCalledWith("/anamnese/templates");
     expect(routerPush).toHaveBeenCalledWith("/profile");
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Planos com IA" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/plans");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
       params: { title: "Evolução da sessão" },

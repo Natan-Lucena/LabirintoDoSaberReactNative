@@ -22,6 +22,7 @@ import {
   useToast,
   type TimelineItemData,
 } from "@/components/ds";
+import { NEW_PLAN_ROUTE } from "@/features/plans/routes";
 import { selectNextAppointment } from "@/features/home/selectors";
 import { useHomeQuery } from "@/features/home/useHomeData";
 import { useOnline } from "@/hooks/useOnline";
@@ -327,7 +328,7 @@ export function HomeScreen(): ReactElement {
             <QuickAccess
               label="Criar plano"
               icon="clipboard"
-              onPress={() => openComingSoon("Criar plano")}
+              onPress={() => router.push(NEW_PLAN_ROUTE)}
             />
             <QuickAccess
               label="Aplicar escala"
