@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Modal,
   ScrollView,
   StyleSheet,
@@ -24,6 +25,11 @@ import {
 import { useStudents } from "@/features/students/useStudents";
 import { color, fontFamilies, semanticColor, typography } from "@/theme";
 import { formatLongDate, formatTime } from "@/utils/date";
+import {
+  appointmentReminderMessage,
+  buildWhatsAppUrl,
+  pickContactPhone,
+} from "@/utils/whatsapp";
 
 export interface AppointmentDetailScreenProps {
   appointmentId: string;
@@ -106,9 +112,20 @@ export function AppointmentDetailScreen({
 
   const appointment: Appointment = query.data;
   const scheduledAt = new Date(appointment.scheduledAt);
-  const studentName =
-    studentsQuery.data?.find(({ id }) => id === appointment.studentId)?.name ??
-    "Paciente não encontrado";
+  const student = studentsQuery.data?.find(
+    ({ id }) => id === appointment.studentId,
+  );
+  const studentName = student?.name ?? "Paciente não encontrado";
+  const reminderUrl = student
+    ? buildWhatsAppUrl(
+        pickContactPhone(student),
+        appointmentReminderMessage({
+          guardianName: student.guardianName,
+          studentName: student.name,
+          scheduledAt: appointment.scheduledAt,
+        }),
+      )
+    : null;
   const busy = update.isPending || deletion.isPending;
   const actionError = update.error ?? deletion.error;
 
@@ -189,6 +206,24 @@ export function AppointmentDetailScreen({
                   })
                 }
               />
+              <DsButton
+                label="Enviar lembrete pelo WhatsApp"
+                icon="message"
+                variant="secondary"
+                fullWidth
+                disabled={!reminderUrl}
+                onPress={() => {
+                  if (reminderUrl)
+                    void Linking.openURL(reminderUrl).catch(() =>
+                      toast.show("Não foi possível abrir o WhatsApp"),
+                    );
+                }}
+              />
+              {!reminderUrl ? (
+                <Text style={styles.stateText}>
+                  Paciente sem telefone cadastrado
+                </Text>
+              ) : null}
               <DsButton
                 label="Marcar como concluído"
                 fullWidth
