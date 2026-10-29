@@ -6,11 +6,13 @@ import type {
   Plan,
   PlanDraft,
   PlanGoal,
+  PlanReview,
   PlanSummary,
 } from "@/api/types";
 import type {
   CreatePlanInput,
   GeneratePlanDraftInput,
+  UpdatePlanInput,
 } from "@/api/endpoints/plans";
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
 import { getTodayKey } from "@/utils/date";
@@ -345,6 +347,242 @@ registerMockHandler({ method: "get", path: "/plan/:id" }, ({ params }) => {
 
   return { status: 200, data: plan };
 });
+
+export const mockPlanReviews: PlanReview[] = [];
+
+function accessiblePlan(id: string): Plan {
+  const plan = mockPlans.find((item) => item.id === id);
+  if (!plan) throw new MockApiError(404, "PLAN_NOT_FOUND");
+  if (plan.educatorId !== MOCK_EDUCATOR.id)
+    throw new MockApiError(403, "UNAUTHORIZED");
+  return plan;
+}
+
+function editablePlan(id: string): Plan {
+  const plan = accessiblePlan(id);
+  if (plan.status !== "ACTIVE")
+    throw new MockApiError(409, "PLAN_NOT_EDITABLE");
+  return plan;
+}
+
+function saveMockPlan(plan: Plan): Plan {
+  mockPlans.splice(
+    mockPlans.findIndex((item) => item.id === plan.id),
+    1,
+    plan,
+  );
+  return plan;
+}
+
+function validReviewDate(plan: Plan, value: unknown): boolean {
+  return validDay(value) && value >= plan.startDate && value <= plan.endDate;
+}
+
+registerMockHandler(
+  { method: "put", path: "/plan/:id" },
+  ({ params, body }) => {
+    const plan = editablePlan(params.id);
+    const input = body as UpdatePlanInput;
+    if (
+      (input.title !== undefined &&
+        (!input.title.trim() || input.title.length > 120)) ||
+      (input.generalObjective !== undefined &&
+        (!input.generalObjective.trim() ||
+          input.generalObjective.length > 2000)) ||
+      (input.professionalNotes !== undefined &&
+        input.professionalNotes.length > 2000)
+    )
+      throw new MockApiError(400, "Bad Request");
+    const endDate = input.endDate ?? plan.endDate;
+    const reviewDate = input.nextReviewDate ?? plan.nextReviewDate;
+    if (
+      (input.endDate !== undefined && plan.type === "PE") ||
+      !validDay(endDate) ||
+      (plan.type === "PDI" && endDate <= plan.startDate) ||
+      (reviewDate !== undefined &&
+        !validReviewDate({ ...plan, endDate }, reviewDate))
+    )
+      throw new MockApiError(400, "INVALID_DATES");
+    let goals = plan.goals;
+    const now = new Date().toISOString();
+    if (input.goals !== undefined) {
+      if (!Array.isArray(input.goals) || input.goals.length === 0)
+        throw new MockApiError(400, "PLAN_WITHOUT_GOALS");
+      if (input.goals.length > 10)
+        throw new MockApiError(400, "TOO_MANY_GOALS");
+      const ids = input.goals.flatMap((goal) => (goal.id ? [goal.id] : []));
+      if (new Set(ids).size !== ids.length)
+        throw new MockApiError(400, "DUPLICATE_GOAL_ID");
+      if (ids.some((id) => !plan.goals.some((goal) => goal.id === id)))
+        throw new MockApiError(400, "GOAL_NOT_FOUND");
+      if (
+        plan.goals.some(
+          (goal) => goal.status === "ACHIEVED" && !ids.includes(goal.id),
+        )
+      ) {
+        throw new MockApiError(409, "GOAL_ACHIEVED_CANNOT_BE_REMOVED");
+      }
+      if (
+        input.goals.some(
+          (goal) =>
+            !goal.description?.trim() ||
+            goal.description.length > 500 ||
+            (goal.successCriterion !== undefined &&
+              goal.successCriterion.length > 500),
+        )
+      ) {
+        throw new MockApiError(400, "Bad Request");
+      }
+      goals = input.goals.map((goal, order) => {
+        const existing = plan.goals.find((item) => item.id === goal.id);
+        const {
+          successCriterion: _previousCriterion,
+          ...existingWithoutCriterion
+        } = existing ?? {
+          id: `${plan.id}-goal-${Date.now()}-${order}`,
+          status: "NOT_STARTED" as const,
+        };
+        return {
+          ...existingWithoutCriterion,
+          order,
+          description: goal.description,
+          ...(goal.successCriterion?.trim()
+            ? { successCriterion: goal.successCriterion }
+            : {}),
+          updatedAt: now,
+        };
+      });
+    }
+    const updated: Plan = {
+      ...plan,
+      ...(input.title?.trim() ? { title: input.title.trim() } : {}),
+      ...(input.generalObjective?.trim()
+        ? { generalObjective: input.generalObjective.trim() }
+        : {}),
+      ...(input.professionalNotes?.trim()
+        ? { professionalNotes: input.professionalNotes.trim() }
+        : {}),
+      endDate,
+      ...(input.nextReviewDate?.trim()
+        ? { nextReviewDate: input.nextReviewDate }
+        : {}),
+      goals,
+      progress: computeMockProgress(goals),
+      updatedAt: now,
+    };
+    return { status: 200, data: saveMockPlan(updated) };
+  },
+);
+
+registerMockHandler(
+  { method: "put", path: "/plan/:id/goals/:goalId" },
+  ({ params, body }) => {
+    const plan = editablePlan(params.id);
+    const goal = plan.goals.find((item) => item.id === params.goalId);
+    if (!goal) throw new MockApiError(404, "GOAL_NOT_FOUND");
+    const status = (body as { status?: GoalStatus }).status;
+    if (
+      !(
+        ["NOT_STARTED", "IN_PROGRESS", "ACHIEVED", "DISCONTINUED"] as unknown[]
+      ).includes(status)
+    )
+      throw new MockApiError(400, "Bad Request");
+    const now = new Date().toISOString();
+    const goals = plan.goals
+      .map((item) =>
+        item.id === goal.id
+          ? {
+              ...item,
+              status: status!,
+              ...(status === "ACHIEVED"
+                ? { achievedAt: now }
+                : { achievedAt: undefined }),
+              updatedAt: now,
+            }
+          : item,
+      )
+      .map((item) => {
+        if (item.achievedAt === undefined) {
+          const { achievedAt: _achievedAt, ...withoutAchievedAt } = item;
+          return withoutAchievedAt;
+        }
+        return item;
+      });
+    const updated = {
+      ...plan,
+      goals,
+      progress: computeMockProgress(goals),
+      updatedAt: now,
+    };
+    return { status: 200, data: saveMockPlan(updated) };
+  },
+);
+
+registerMockHandler(
+  { method: "put", path: "/plan/:id/status" },
+  ({ params, body }) => {
+    const plan = editablePlan(params.id);
+    const status = (body as { status?: string }).status;
+    if (status !== "COMPLETED" && status !== "CANCELLED")
+      throw new MockApiError(400, "Bad Request");
+    const now = new Date().toISOString();
+    return {
+      status: 200,
+      data: saveMockPlan({ ...plan, status, closedAt: now, updatedAt: now }),
+    };
+  },
+);
+
+registerMockHandler(
+  { method: "post", path: "/plan/:id/reviews" },
+  ({ params, body }) => {
+    const plan = editablePlan(params.id);
+    const input = body as { note?: string; nextReviewDate?: string };
+    if (!input.note?.trim() || input.note.length > 2000)
+      throw new MockApiError(400, "Bad Request");
+    if (
+      input.nextReviewDate !== undefined &&
+      !validReviewDate(plan, input.nextReviewDate)
+    )
+      throw new MockApiError(400, "INVALID_DATES");
+    const now = new Date().toISOString();
+    const review: PlanReview = {
+      id: `mock-review-${Date.now()}-${mockPlanReviews.length}`,
+      planId: plan.id,
+      reviewedAt: now,
+      note: input.note,
+      ...(input.nextReviewDate ? { nextReviewDate: input.nextReviewDate } : {}),
+      goalStatuses: plan.goals.map(({ id, status }) => ({
+        goalId: id,
+        status,
+      })),
+    };
+    mockPlanReviews.push(review);
+    saveMockPlan({
+      ...plan,
+      ...(input.nextReviewDate ? { nextReviewDate: input.nextReviewDate } : {}),
+      updatedAt: now,
+    });
+    return { status: 201, data: review };
+  },
+);
+
+registerMockHandler(
+  { method: "get", path: "/plan/:id/reviews" },
+  ({ params }) => {
+    accessiblePlan(params.id);
+    return {
+      status: 200,
+      data: mockPlanReviews
+        .filter((item) => item.planId === params.id)
+        .sort(
+          (a, b) =>
+            b.reviewedAt.localeCompare(a.reviewedAt) ||
+            b.id.localeCompare(a.id),
+        ),
+    };
+  },
+);
 
 function addMonths(day: string, months: number): string {
   const [year, month, date] = day.split("-").map(Number);

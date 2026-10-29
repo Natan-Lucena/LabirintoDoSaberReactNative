@@ -143,8 +143,8 @@ describe("PlansHubScreen (PLN-01)", () => {
     expect(push).toHaveBeenCalledWith(NEW_PLAN_ROUTE);
     expect(NEW_PLAN_ROUTE).toBe("/plans/new");
     expect(planDetailRoute("p1")).toEqual({
-      pathname: "/shell/coming-soon",
-      params: { title: "Detalhe do plano" },
+      pathname: "/plans/[id]",
+      params: { id: "p1" },
     });
   });
 
