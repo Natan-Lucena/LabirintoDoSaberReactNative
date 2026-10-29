@@ -870,3 +870,4 @@ blocos A–C → QA-06 → QA-02, QA-03, QA-04
   REC-02 e bloco de planos); novas API-03, SES-05 e FEC-04; PLN-00 concluída; G-52.
 - 2026-10-29: AGE-02 volta ao escopo como botão do WhatsApp com mensagem pronta (`wa.me`), por
   decisão do usuário (G-53).
+- 2026-10-29: tarefas de código concluídas (23 de 27); resumo em [ENTREGA-3](ENTREGA-3.md).

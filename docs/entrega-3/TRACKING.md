@@ -9,7 +9,8 @@
 
 Estado em 2026-10-29 (fim do dia):
 
-- **Todas as tarefas de código da Entrega 3 estão na `main`: 23 de 27** (#78 a #111), com
+- **Todas as tarefas de código da Entrega 3 estão na `main`: 23 de 27** (#78 a #111; resumo em
+  [ENTREGA-3](ENTREGA-3.md)), com
   933 testes, typecheck, lint, bundle Android e CI verdes. Nenhuma tela foi aberta no app.
 - **Faltam 4, todas de validação:** FEC-01 (rotas antigas contra o backend real), QA-02 (Maestro,
   exige instalar a ferramenta), QA-03 (acessibilidade) e QA-04 (Android físico e iOS). O roteiro
@@ -146,3 +147,4 @@ já concluídas).
 | 2026-10-29 | PLN-04                         | O Codex esgotou a cota com o commit local pronto; retomada com Claude Sonnet (validou e abriu o PR). Revisada e mergeada (#108). Fase fechada                                                                                                                                                                                         |
 | 2026-10-29 | Fase PLN-05 + QA-06            | Última fase de código. Disparadas com Claude Sonnet (Codex sem cota até 19:39). O emulador fica fechado até o usuário mandar                                                                                                                                                                                                          |
 | 2026-10-29 | PLN-05, QA-06                  | QA-06 (#110) e PLN-05 (#111) revisadas e mergeadas. A worktree `e1` ficou com ~186 arquivos alterados só por final de linha (CRLF), sem mudança de conteúdo; o commit da PLN-05 não os incluiu. **Fim das tarefas de código da Entrega 3**                                                                                            |
+| 2026-10-29 | Documentação                   | Revisão completa: ENTREGA-3 (resumo), AGENTS, README, CONTEXTO-SESSAO (regras, Codex, worktrees, como rodar, documentos), ROADMAP (ondas marcadas), BACKLOG e módulos do PROJECT (Parte I)                                                                                                                                            |

@@ -48,6 +48,11 @@ Para usar dados fictícios em desenvolvimento, defina
 
 ## Documentação
 
+- [`docs/entrega-3/ENTREGA-3.md`](docs/entrega-3/ENTREGA-3.md): o que foi feito na Entrega 3 e o
+  que falta.
+- [`docs/entrega-3/TRACKING.md`](docs/entrega-3/TRACKING.md): estado de cada tarefa da Entrega 3.
+- [`docs/entrega-3/PLANO-TESTES.md`](docs/entrega-3/PLANO-TESTES.md): roteiro de testes manuais
+  da Entrega 3.
 - [`docs/entrega-2/ENTREGA-V1.md`](docs/entrega-2/ENTREGA-V1.md): o que foi feito na V1, PRs e
   como integrar.
 - [`docs/entrega-2/TRACKING.md`](docs/entrega-2/TRACKING.md): estado de cada tarefa.
