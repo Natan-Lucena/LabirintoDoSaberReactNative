@@ -18,8 +18,11 @@ import {
   IconButton,
   ProgressBar,
   SectionTitle,
+  Toast,
+  useToast,
 } from "@/components/ds";
 import { useAppointments } from "@/features/appointments/useAppointments";
+import { useHomeData } from "@/features/home/useHomeData";
 import {
   accuracyToPercent,
   getCategoryLabel,
@@ -27,6 +30,11 @@ import {
 import { useStudents } from "@/features/students/useStudents";
 import { color, getContentPadding, shape, typography } from "@/theme";
 import { formatTime } from "@/utils/date";
+import {
+  buildWhatsAppUrl,
+  patientContactMessage,
+  pickContactPhone,
+} from "@/utils/whatsapp";
 
 import { useStudentAnalysis, useStudentSessions } from "./usePatientDetailData";
 
@@ -93,6 +101,8 @@ export function PatientDetailScreen({
   patientId,
 }: PatientDetailScreenProps): ReactElement {
   const router = useRouter();
+  const toast = useToast();
+  const { educator } = useHomeData();
   const studentsQuery = useStudents();
   const appointmentsQuery = useAppointments();
   const analysisQuery = useStudentAnalysis(patientId);
@@ -145,15 +155,20 @@ export function PatientDetailScreen({
   );
   const analysis = analysisQuery.data;
   const categoryEntries = Object.values(analysis?.categories ?? {});
-  const phoneDigits = (patient.guardianPhone || patient.phonenumber).replace(
-    /\D/g,
-    "",
+  const contactUrl = buildWhatsAppUrl(
+    pickContactPhone(patient),
+    patientContactMessage({
+      guardianName: patient.guardianName,
+      educatorName: educator?.name,
+      studentName: patient.name,
+    }),
   );
 
   function openContact(): void {
-    if (phoneDigits) {
-      void Linking.openURL(`https://wa.me/55${phoneDigits}`);
-    }
+    if (contactUrl)
+      void Linking.openURL(contactUrl).catch(() =>
+        toast.show("Não foi possível abrir o WhatsApp"),
+      );
   }
 
   return (
@@ -184,9 +199,14 @@ export function PatientDetailScreen({
           <IconButton
             icon="message"
             accessibilityLabel="Contatar responsável"
-            disabled={!phoneDigits}
+            disabled={!contactUrl}
             onPress={openContact}
           />
+          {!contactUrl ? (
+            <Text style={styles.patientMeta}>
+              Paciente sem telefone cadastrado
+            </Text>
+          ) : null}
         </View>
 
         <View style={styles.section}>
@@ -323,6 +343,7 @@ export function PatientDetailScreen({
           }
         />
       </ScrollView>
+      <Toast message={toast.message} onHide={toast.hide} />
     </View>
   );
 }

@@ -9,6 +9,12 @@ const routerPush = vi.fn();
 const getAppointment = vi.fn();
 const updateAppointment = vi.fn();
 const deleteAppointment = vi.fn();
+const openURL = vi.fn();
+
+vi.mock("react-native", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-native")>()),
+  Linking: { openURL },
+}));
 
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
@@ -76,6 +82,7 @@ describe("AppointmentDetailScreen (AGE-03)", () => {
     getAppointment.mockReset();
     updateAppointment.mockReset();
     deleteAppointment.mockReset();
+    openURL.mockReset().mockResolvedValue(undefined);
   });
 
   it("mostra paciente, data, horário, tipo, duração, status e observação", async () => {
@@ -111,6 +118,52 @@ describe("AppointmentDetailScreen (AGE-03)", () => {
       pathname: "/session/student",
       params: { studentId: "student-1", appointmentId: "appt-1" },
     });
+  });
+
+  it("AC-AGE-02-03 abre lembrete do atendimento no WhatsApp", async () => {
+    getAppointment.mockResolvedValue(appointment());
+    await render(<AppointmentDetailScreen appointmentId="appt-1" />);
+    await fireEvent.press(
+      await screen.findByRole("button", {
+        name: "Enviar lembrete pelo WhatsApp",
+      }),
+    );
+    expect(openURL).toHaveBeenCalledWith(
+      `https://wa.me/5511999990000?text=${encodeURIComponent("Olá! Passando para lembrar do atendimento de Lia Monteiro na sexta-feira, 10/04, às 14:00. Qualquer imprevisto, é só avisar por aqui.")}`,
+    );
+  });
+
+  it("AC-AGE-02-04 desabilita lembrete sem telefone", async () => {
+    const original = students[0]!.phonenumber;
+    students[0]!.phonenumber = "";
+    try {
+      getAppointment.mockResolvedValue(appointment());
+      await render(<AppointmentDetailScreen appointmentId="appt-1" />);
+      expect(
+        (
+          await screen.findByRole("button", {
+            name: "Enviar lembrete pelo WhatsApp",
+          })
+        ).props.accessibilityState.disabled,
+      ).toBe(true);
+      expect(screen.getByText("Paciente sem telefone cadastrado")).toBeTruthy();
+    } finally {
+      students[0]!.phonenumber = original;
+    }
+  });
+
+  it("avisa quando o WhatsApp não pode ser aberto", async () => {
+    openURL.mockRejectedValueOnce(new Error("falha"));
+    getAppointment.mockResolvedValue(appointment());
+    await render(<AppointmentDetailScreen appointmentId="appt-1" />);
+    await fireEvent.press(
+      await screen.findByRole("button", {
+        name: "Enviar lembrete pelo WhatsApp",
+      }),
+    );
+    expect(
+      await screen.findByText("Não foi possível abrir o WhatsApp"),
+    ).toBeTruthy();
   });
 
   it.each(["COMPLETED", "CANCELLED"] as const)(
