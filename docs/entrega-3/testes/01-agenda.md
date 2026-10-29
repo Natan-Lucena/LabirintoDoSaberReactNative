@@ -1,6 +1,6 @@
 # Testes detalhados — Agenda (AGE-01 a AGE-04)
 
-Detalhamento dos casos de [PLANO-TESTES §2.1](../PLANO-TESTES.md#21-agenda-age-01-a-age-04) para a rodada
+Detalhamento dos casos de [PLANO-TESTES](../PLANO-TESTES.md#2-casos-por-área-índice) para a rodada
 manual da QA-06: o que fazer, o que esperar na tela e na rede, e, se falhar, onde olhar no código. Os IDs e os
 casos do plano foram preservados; acrescentei só os casos com sufixo `+` (IDs novos). Nada foi executado: o
 texto de tela foi conferido no código em 2026-10-29 (`rg` pelo texto exato).

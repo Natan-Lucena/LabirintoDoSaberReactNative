@@ -6,17 +6,17 @@
 
 ## 1. Onde estamos
 
-| Item                  | Estado                                                                                                                                                                                                                                         |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                         |
-| Entrega vigente       | **Entrega 3**: 23 de 27 tarefas na `main` (todas as de código). Resumo em [ENTREGA-3](entrega-3/ENTREGA-3.md); plano em [ROADMAP](entrega-3/ROADMAP.md). Design: Figma Make `L7sCNfMhrzOzhtlNpS3cHr`                                           |
-| Escopo da Entrega 3   | Fechar a V1; Agenda completa (com WhatsApp por `wa.me`); editar paciente e responsável; anamnese e modelos; perfil e sair; sessão ligada ao caderno; Planos com IA (lista, geração, rascunho, detalhe, revisões e sugestões)                   |
-| O que já está na main | Toda a V1 da Entrega 2 (PR #75) e **todas as tarefas de código da Entrega 3** (23 de 27, #78 a #111), inclusive o roteiro de testes (QA-06)                                                                                                    |
-| Em andamento          | Nada. Aguardando o usuário liberar o emulador                                                                                                                                                                                                  |
-| Próximas              | Rodada no emulador, **só quando o usuário mandar**: FEC-01, validação manual pelo [PLANO-TESTES](entrega-3/PLANO-TESTES.md), QA-02 (Maestro, pedir autorização para instalar) e QA-03; depois a QA-04 nos aparelhos                            |
-| Backend               | `https://labirinto-do-saber.vercel.app` (Swagger em `/api-docs/`, 70 rotas). Contrato da Entrega 3 em [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md)                                                                                        |
-| Qualidade             | 933 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links. Com pouca memória, use `--maxWorkers=1 --testTimeout=30000`                                                                         |
-| Validação manual      | V1: feita em 2026-10-09 no emulador Android ([QA-05-RELATORIO](entrega-2/QA-05-RELATORIO.md)). **Entrega 3: nenhuma tela aberta ainda**; o roteiro é o [PLANO-TESTES](entrega-3/PLANO-TESTES.md) e roda só quando o usuário liberar o emulador |
+| Item                  | Estado                                                                                                                                                                                                                                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Projeto               | App mobile Labirinto do Saber (Expo SDK 57, RN 0.86, TS 6, pnpm 11.8, Node 22). Repositório `Natan-Lucena/LabirintoDoSaberReactNative`, pasta `C:\Users\zerog\OneDrive\Desktop\labirintoDoSaberMobile`                                                                                             |
+| Entrega vigente       | **Entrega 3**: 23 de 27 tarefas na `main` (todas as de código). Resumo em [ENTREGA-3](entrega-3/ENTREGA-3.md); plano em [ROADMAP](entrega-3/ROADMAP.md). Design: Figma Make `L7sCNfMhrzOzhtlNpS3cHr`                                                                                               |
+| Escopo da Entrega 3   | Fechar a V1; Agenda completa (com WhatsApp por `wa.me`); editar paciente e responsável; anamnese e modelos; perfil e sair; sessão ligada ao caderno; Planos com IA (lista, geração, rascunho, detalhe, revisões e sugestões)                                                                       |
+| O que já está na main | Toda a V1 da Entrega 2 (PR #75) e **todas as tarefas de código da Entrega 3** (23 de 27, #78 a #111), inclusive o roteiro de testes (QA-06)                                                                                                                                                        |
+| Em andamento          | Nada. Aguardando o usuário liberar o emulador                                                                                                                                                                                                                                                      |
+| Próximas              | Rodada no emulador, **só quando o usuário mandar**: FEC-01, validação manual pelo [PLANO-TESTES](entrega-3/PLANO-TESTES.md), QA-02 (Maestro, pedir autorização para instalar) e QA-03; depois a QA-04 nos aparelhos                                                                                |
+| Backend               | `https://labirinto-do-saber.vercel.app` (Swagger em `/api-docs/`, 70 rotas). Contrato da Entrega 3 em [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md)                                                                                                                                            |
+| Qualidade             | 933 testes (Vitest + RNTL), typecheck, lint e bundle Android no CI; `scripts/check-docs.py` para os links. Com pouca memória, use `--maxWorkers=1 --testTimeout=30000`                                                                                                                             |
+| Validação manual      | V1: feita em 2026-10-09 no emulador Android ([QA-05-RELATORIO](entrega-2/QA-05-RELATORIO.md)). **Entrega 3: nenhuma tela aberta ainda**; o roteiro é o [PLANO-TESTES](entrega-3/PLANO-TESTES.md) (casos em [testes/](entrega-3/testes/01-agenda.md)) e roda só quando o usuário liberar o emulador |
 
 ## 2. Regras combinadas com o usuário
 
@@ -162,20 +162,21 @@ Modo mock (opcional): `EXPO_PUBLIC_USE_MOCKS=true`, login `educadora.mock@labiri
 
 ## 6. Documentos-chave
 
-| Documento                                                                              | Para quê                                             |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| [AGENTS.md](../AGENTS.md)                                                              | Metodologia, papéis e fluxo obrigatório              |
-| [ENTREGA-3](entrega-3/ENTREGA-3.md)                                                    | O que a Entrega 3 entregou e o que falta             |
-| [ROADMAP da Entrega 3](entrega-3/ROADMAP.md)                                           | Escopo, telas, decisões e ondas                      |
-| [BACKLOG da Entrega 3](entrega-3/BACKLOG.md)                                           | Fichas com endpoints, arquivos e critérios de aceite |
-| [TRACKING da Entrega 3](entrega-3/TRACKING.md)                                         | Estado de cada tarefa, PRs e commits                 |
-| [PLANO-TESTES da Entrega 3](entrega-3/PLANO-TESTES.md)                                 | Roteiro da rodada manual no emulador                 |
-| [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md)                                      | Contrato das rotas novas de 2026-10-29               |
-| [GATES](entrega-1/GATES.md)                                                            | Decisões G-01 a G-53                                 |
-| [PROJECT.md](PROJECT.md)                                                               | Arquitetura e contrato da API                        |
-| [src/mocks/README.md](../src/mocks/README.md)                                          | Cenários de mock acionáveis por endpoint             |
-| [COMPATIBILIDADE](bootstrap/COMPATIBILIDADE.md)                                        | Versões e auditoria do Expo Go                       |
-| [ENTREGA-V1](entrega-2/ENTREGA-V1.md) e [TRACKING da Entrega 2](entrega-2/TRACKING.md) | Histórico da V1                                      |
+| Documento                                                                              | Para quê                                                                                                                 |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [AGENTS.md](../AGENTS.md)                                                              | Metodologia, papéis e fluxo obrigatório                                                                                  |
+| [ENTREGA-3](entrega-3/ENTREGA-3.md)                                                    | O que a Entrega 3 entregou e o que falta                                                                                 |
+| [ROADMAP da Entrega 3](entrega-3/ROADMAP.md)                                           | Escopo, telas, decisões e ondas                                                                                          |
+| [BACKLOG da Entrega 3](entrega-3/BACKLOG.md)                                           | Fichas com endpoints, arquivos e critérios de aceite                                                                     |
+| [TRACKING da Entrega 3](entrega-3/TRACKING.md)                                         | Estado de cada tarefa, PRs e commits                                                                                     |
+| [PLANO-TESTES da Entrega 3](entrega-3/PLANO-TESTES.md)                                 | Índice da rodada manual no emulador                                                                                      |
+| [Testes detalhados](entrega-3/testes/01-agenda.md)                                     | Casos por área com o código relacionado e o que verificar se falhar; [divergências](entrega-3/testes/00-divergencias.md) |
+| [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md)                                      | Contrato das rotas novas de 2026-10-29                                                                                   |
+| [GATES](entrega-1/GATES.md)                                                            | Decisões G-01 a G-53                                                                                                     |
+| [PROJECT.md](PROJECT.md)                                                               | Arquitetura e contrato da API                                                                                            |
+| [src/mocks/README.md](../src/mocks/README.md)                                          | Cenários de mock acionáveis por endpoint                                                                                 |
+| [COMPATIBILIDADE](bootstrap/COMPATIBILIDADE.md)                                        | Versões e auditoria do Expo Go                                                                                           |
+| [ENTREGA-V1](entrega-2/ENTREGA-V1.md) e [TRACKING da Entrega 2](entrega-2/TRACKING.md) | Histórico da V1                                                                                                          |
 
 ## 7. Lições de 2026-10-09 (teste contra o backend real)
 

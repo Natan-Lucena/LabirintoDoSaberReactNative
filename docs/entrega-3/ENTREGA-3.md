@@ -76,6 +76,11 @@ Detalhes em [GATES](../entrega-1/GATES.md).
 | QA-03  | Acessibilidade (TalkBack, fonte grande, contraste e alvos de toque)                                                                                              | Emulador                                       |
 | QA-04  | Homologação em Android físico e iOS                                                                                                                              | Aparelho Android e Mac ou iPhone               |
 
+Cada uma tem roteiro detalhado em [testes/](testes/01-agenda.md) (o [PLANO-TESTES](PLANO-TESTES.md) é o
+índice), com o resultado esperado, o código relacionado e o que verificar se falhar. As 28
+[divergências](testes/00-divergencias.md) encontradas ao escrever os casos serão confirmadas na
+rodada.
+
 **Nenhuma tela da Entrega 3 foi aberta no app ainda:** tudo foi validado por testes automatizados
 e pelo bundle Android no CI.
 

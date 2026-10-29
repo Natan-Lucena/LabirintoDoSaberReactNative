@@ -64,7 +64,7 @@ de fato; não force. Anote o que ocorrer.
 
 ## Tempos da IA
 
-Complementa o PLANO-TESTES §4.1 e o caso BE-07 (ver [06-fluxos-e-backend.md](06-fluxos-e-backend.md)).
+Esta tabela substitui a do PLANO-TESTES (§4.1 da primeira versão) e complementa o caso BE-07 (ver [06-fluxos-e-backend.md](06-fluxos-e-backend.md)).
 O limite do app é `AI_TIMEOUT_MS` = 90 000 ms (`src/api/endpoints/ai-timeout.ts`), usado em
 `generatePlanDraft` e `generatePlanSuggestions`; o timeout padrão das demais rotas é 10 s
 (`API_TIMEOUT_MS` em `src/api/client.ts`). O backend faz até 2 tentativas ao provedor de IA, então
@@ -79,7 +79,7 @@ rodada o mede.
 2. Opcional, mais preciso: ferramenta de rede do Metro/Expo ou `adb logcat` filtrando pelo host do
    backend; use a diferença entre o início e o fim da requisição `POST /plan/generate`.
 3. Registre **uma linha por tentativa**: chamada, tipo/duração, segundos, resultado (OK, erro `AI_*`,
-   timeout). Faça pelo menos uma tentativa por linha da tabela do PLANO-TESTES §4.1; se a primeira
+   timeout). Faça pelo menos uma tentativa por linha da tabela abaixo; se a primeira
    passar de 45 s, repita uma vez para separar partida a frio de lentidão da IA.
 
 | Chamada                               | Tipo / parâmetros                  | Onde dispara                               | Limite do app | Esperado (backend)            | Tentativa | Tempo (s) | Resultado |

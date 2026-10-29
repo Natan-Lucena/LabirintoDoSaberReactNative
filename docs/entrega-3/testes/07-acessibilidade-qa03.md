@@ -13,7 +13,7 @@ corrigir.
 
 ## Escopo, referências e como medir
 
-- **Telas:** as 16 linhas da tabela do PLANO-TESTES §5 (Agenda, Novo/Editar/Remarcar/Reativar atendimento, Detalhe
+- **Telas:** as 16 telas da Entrega 3 (antiga tabela do PLANO-TESTES §5, substituída por este arquivo) (Agenda, Novo/Editar/Remarcar/Reativar atendimento, Detalhe
   do atendimento, Início, Novo/Editar paciente, Ficha com abas, Anamnese, Modelos de anamnese, Perfil, Recursos,
   Detalhe da atividade, Detalhe do grupo e do caderno, Planos: lista, gerar e rascunho, detalhe, sugestões).
 - **Referências:** G-17 (tokens: alvo mínimo `shape.minTouchTarget` = **48**; o PLANO-TESTES adota **44 pt** como
