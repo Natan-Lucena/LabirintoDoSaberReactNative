@@ -145,7 +145,10 @@ export function PatientDetailScreen({
   );
   const analysis = analysisQuery.data;
   const categoryEntries = Object.values(analysis?.categories ?? {});
-  const phoneDigits = patient.phonenumber.replace(/\D/g, "");
+  const phoneDigits = (patient.guardianPhone || patient.phonenumber).replace(
+    /\D/g,
+    "",
+  );
 
   function openContact(): void {
     if (phoneDigits) {
@@ -169,6 +172,14 @@ export function PatientDetailScreen({
               {patient.age} anos ·{" "}
               {patient.gender === "female" ? "Feminino" : "Masculino"}
             </Text>
+            {patient.guardianName ? (
+              <Text style={styles.patientMeta}>
+                Responsável: {patient.guardianName}
+                {patient.guardianRelationship
+                  ? ` (${patient.guardianRelationship})`
+                  : ""}
+              </Text>
+            ) : null}
           </View>
           <IconButton
             icon="message"
@@ -211,8 +222,8 @@ export function PatientDetailScreen({
             actionLabel="Editar"
             onActionPress={() =>
               router.push({
-                pathname: "/shell/coming-soon",
-                params: { title: "Editar paciente" },
+                pathname: "/patients/[id]/edit",
+                params: { id: patient.id },
               })
             }
           />
