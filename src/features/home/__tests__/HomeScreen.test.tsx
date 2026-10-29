@@ -4,6 +4,11 @@ import type { HomeData, HomeQueryResult } from "@/features/home/useHomeData";
 import { fireEvent, render, screen } from "@/test-utils/render";
 
 const routerPush = vi.fn();
+const openURL = vi.fn();
+vi.mock("react-native", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-native")>()),
+  Linking: { openURL },
+}));
 let homeQuery: HomeQueryResult;
 const onlineState = vi.hoisted(() => ({ value: true }));
 
@@ -117,6 +122,7 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
   beforeEach(() => {
     onlineState.value = true;
     routerPush.mockClear();
+    openURL.mockReset().mockResolvedValue(undefined);
   });
 
   it("mostra o próximo atendimento, agenda ordenada e os atalhos", async () => {
@@ -179,6 +185,31 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
       screen.getAllByRole("button", { name: "Ver agenda" })[0]!,
     );
     expect(routerPush).toHaveBeenCalledWith("/(tabs)/agenda");
+  });
+
+  it("AC-AGE-02-03 mostra Lembrete só em item pendente com telefone", async () => {
+    setHomeQuery();
+    await render(<HomeScreen />);
+    expect(screen.getAllByRole("button", { name: "Lembrete" })).toHaveLength(1);
+    await fireEvent.press(screen.getByRole("button", { name: "Lembrete" }));
+    expect(openURL).toHaveBeenCalledWith(
+      `https://wa.me/5511999990000?text=${encodeURIComponent("Olá! Passando para lembrar do atendimento de Lia na quinta-feira, 02/04, às 11:00. Qualquer imprevisto, é só avisar por aqui.")}`,
+    );
+  });
+
+  it("AC-AGE-02-04 omite a ação de lembrete sem telefone", async () => {
+    setHomeQuery({
+      data: {
+        ...homeData,
+        todayAppointments: homeData.todayAppointments.map((item) =>
+          item.appointment.status === "PENDING"
+            ? { ...item, student: { ...item.student!, phonenumber: "" } }
+            : item,
+        ),
+      },
+    });
+    await render(<HomeScreen />);
+    expect(screen.queryByRole("button", { name: "Lembrete" })).toBeNull();
   });
 
   it("mostra carregamento", async () => {

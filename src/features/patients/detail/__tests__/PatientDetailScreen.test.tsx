@@ -25,6 +25,9 @@ vi.mock("@/features/students/useStudents", () => ({
 vi.mock("@/features/appointments/useAppointments", () => ({
   useAppointments: () => appointmentsQuery,
 }));
+vi.mock("@/features/home/useHomeData", () => ({
+  useHomeData: () => ({ educator: { name: "Aline Souza" } }),
+}));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: routerPush, back: routerBack }),
 }));
@@ -108,6 +111,7 @@ describe("PatientDetailScreen (PAC-03)", () => {
     routerPush.mockClear();
     routerBack.mockClear();
     openURL.mockClear();
+    openURL.mockResolvedValue(undefined);
     setQueries();
   });
 
@@ -160,7 +164,9 @@ describe("PatientDetailScreen (PAC-03)", () => {
       screen.getByRole("button", { name: "Iniciar sessão" }),
     );
 
-    expect(openURL).toHaveBeenCalledWith("https://wa.me/5511999990000");
+    expect(openURL).toHaveBeenCalledWith(
+      `https://wa.me/5511999990000?text=${encodeURIComponent("Olá! Tudo bem? Aqui é Aline Souza, do acompanhamento de Lia Monteiro.")}`,
+    );
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/patients/[id]/edit",
       params: { id: patient.id },
@@ -189,7 +195,9 @@ describe("PatientDetailScreen (PAC-03)", () => {
     await fireEvent.press(
       screen.getByRole("button", { name: "Contatar responsável" }),
     );
-    expect(openURL).toHaveBeenCalledWith("https://wa.me/5511977776666");
+    expect(openURL).toHaveBeenCalledWith(
+      `https://wa.me/5511977776666?text=${encodeURIComponent("Olá, Ana Monteiro! Tudo bem? Aqui é Aline Souza, do acompanhamento de Lia Monteiro.")}`,
+    );
   });
 
   it("desabilita contato sem telefone e apresenta estados vazios próprios", async () => {
@@ -209,6 +217,7 @@ describe("PatientDetailScreen (PAC-03)", () => {
       screen.getByLabelText("Contatar responsável").props.accessibilityState
         .disabled,
     ).toBe(true);
+    expect(screen.getByText("Paciente sem telefone cadastrado")).toBeTruthy();
     expect(screen.getByText("Nenhuma dificuldade mapeada")).toBeTruthy();
     expect(screen.getByText("Sem evolução registrada")).toBeTruthy();
     expect(screen.getByText("Nenhuma sessão registrada")).toBeTruthy();

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,6 +18,8 @@ import {
   DsButton,
   SectionTitle,
   Timeline,
+  Toast,
+  useToast,
   type TimelineItemData,
 } from "@/components/ds";
 import { selectNextAppointment } from "@/features/home/selectors";
@@ -24,6 +27,11 @@ import { useHomeQuery } from "@/features/home/useHomeData";
 import { useOnline } from "@/hooks/useOnline";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { formatLongDate, formatTime } from "@/utils/date";
+import {
+  appointmentReminderMessage,
+  buildWhatsAppUrl,
+  pickContactPhone,
+} from "@/utils/whatsapp";
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.background },
@@ -178,6 +186,7 @@ export function HomeScreen(): ReactElement {
   const router = useRouter();
   const isOnline = useOnline();
   const { data, isPending, isError, refetch } = useHomeQuery();
+  const toast = useToast();
 
   if (isPending && !data) return <HomeState />;
   if (isError && !data)
@@ -192,23 +201,44 @@ export function HomeScreen(): ReactElement {
     ({ appointment }) => appointment.id === nextAppointment?.id,
   )?.student;
   const timelineItems: TimelineItemData[] = data.todayAppointments.map(
-    ({ appointment, student }) => ({
-      id: appointment.id,
-      time: formatTime(new Date(appointment.scheduledAt)),
-      title: student?.name ?? "Paciente não encontrado",
-      subtitle:
-        appointment.status === "COMPLETED"
-          ? "Concluído"
-          : appointment.status === "CANCELLED"
-            ? "Cancelado"
-            : "Próximo atendimento",
-      status:
-        appointment.status === "COMPLETED"
-          ? "done"
-          : appointment.id === nextAppointment?.id
-            ? "active"
-            : "default",
-    }),
+    ({ appointment, student }) => {
+      const reminderUrl =
+        appointment.status === "PENDING" && student
+          ? buildWhatsAppUrl(
+              pickContactPhone(student),
+              appointmentReminderMessage({
+                guardianName: student.guardianName,
+                studentName: student.name,
+                scheduledAt: appointment.scheduledAt,
+              }),
+            )
+          : null;
+      return {
+        id: appointment.id,
+        time: formatTime(new Date(appointment.scheduledAt)),
+        title: student?.name ?? "Paciente não encontrado",
+        subtitle:
+          appointment.status === "COMPLETED"
+            ? "Concluído"
+            : appointment.status === "CANCELLED"
+              ? "Cancelado"
+              : "Próximo atendimento",
+        status:
+          appointment.status === "COMPLETED"
+            ? "done"
+            : appointment.id === nextAppointment?.id
+              ? "active"
+              : "default",
+        actionLabel: reminderUrl ? "Lembrete" : undefined,
+        onActionPress: reminderUrl
+          ? () => {
+              void Linking.openURL(reminderUrl).catch(() =>
+                toast.show("Não foi possível abrir o WhatsApp"),
+              );
+            }
+          : undefined,
+      };
+    },
   );
   const openAgenda = () => router.push("/(tabs)/agenda");
   const openComingSoon = (title: string) =>
@@ -320,6 +350,7 @@ export function HomeScreen(): ReactElement {
           <Timeline items={timelineItems} />
         </View>
       </ScrollView>
+      <Toast message={toast.message} onHide={toast.hide} />
     </View>
   );
 }
