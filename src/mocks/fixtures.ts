@@ -13,6 +13,9 @@ export const MOCK_EDUCATOR: Educator = {
   id: "mock-educator-1",
   name: "Aline Ribeiro Souza",
   email: "educadora.mock@labirinto.test",
+  profession: null,
+  contact: null,
+  photoUrl: null,
 };
 
 export const MOCK_TOKEN = "mock-token-aline";
@@ -76,7 +79,9 @@ export const MOCK_STUDENTS: Student[] = mockStudentEntries.map(
     educatorId: MOCK_EDUCATOR.id,
     photoUrl,
     documents: [],
-    educators: [MOCK_EDUCATOR.id],
+    guardianName: null,
+    guardianPhone: null,
+    guardianRelationship: null,
   }),
 );
 
@@ -98,6 +103,10 @@ export const MOCK_APPOINTMENTS: Appointment[] = mockAppointmentEntries.map(
     educatorId: MOCK_EDUCATOR.id,
     studentId,
     scheduledAt: todayAt(hour),
+    type: null,
+    durationMinutes: 50,
+    observation: null,
+    notifiedAt: null,
     status,
     createdAt: "2026-01-01T12:00:00.000Z",
   }),

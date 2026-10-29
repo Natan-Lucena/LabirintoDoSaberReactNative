@@ -33,12 +33,45 @@ describe("handlers mockados de agendamento (G-29)", () => {
 
     await expect(
       mockAdapter(config("put", `/appointment/${id}`, { observation: null })),
-    ).resolves.toMatchObject({ data: { observation: undefined } });
+    ).resolves.toMatchObject({ data: { observation: null } });
     await expect(
       mockAdapter(config("delete", `/appointment/${id}`)),
     ).resolves.toMatchObject({
       status: 200,
     });
+  });
+
+  it("aceita tipo e duração e responde no formato do GET", async () => {
+    const created = await mockAdapter(
+      config("post", "/appointment/", {
+        studentId: "student-1",
+        scheduledAt: "2026-04-03T13:00:00.000Z",
+        type: "Leitura",
+        durationMinutes: 60,
+      }),
+    );
+    expect(created.data).toMatchObject({
+      type: "Leitura",
+      durationMinutes: 60,
+    });
+    expect(
+      Object.keys(created.data as object).every((key) => !key.startsWith("_")),
+    ).toBe(true);
+    const id = (created.data as { id: string }).id;
+    const updated = await mockAdapter(
+      config("put", `/appointment/${id}`, {
+        type: "Escrita",
+        durationMinutes: 45,
+      }),
+    );
+    expect(updated.data).toMatchObject({
+      type: "Escrita",
+      durationMinutes: 45,
+    });
+    expect(
+      Object.keys(updated.data as object).every((key) => !key.startsWith("_")),
+    ).toBe(true);
+    await mockAdapter(config("delete", `/appointment/${id}`));
   });
 
   it("devolve 400 NOT_FOUND para editar ou excluir id inexistente", async () => {

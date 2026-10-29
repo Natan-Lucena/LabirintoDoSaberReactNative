@@ -45,6 +45,7 @@ function appointment(
     studentId: id,
     scheduledAt: `${day}T${String(hour).padStart(2, "0")}:00:00-03:00`,
     status,
+    durationMinutes: 50,
     createdAt: "2026-04-01T12:00:00Z",
   };
 }
@@ -64,7 +65,6 @@ function student(id: string, name: string): Student {
     educatorId: "educator-1",
     photoUrl: null,
     documents: [],
-    educators: ["educator-1"],
   };
 }
 

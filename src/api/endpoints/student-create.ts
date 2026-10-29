@@ -10,6 +10,9 @@ export interface CreateStudentInput {
   housenumber: string;
   phonenumber: string;
   learningTopics: string[];
+  guardianName?: string;
+  guardianPhone?: string;
+  guardianRelationship?: string;
 }
 
 /** POST /student/create (multipart). */
@@ -25,8 +28,18 @@ export async function createStudent(
   formData.append("housenumber", input.housenumber);
   formData.append("phonenumber", input.phonenumber);
   formData.append("learningTopics", JSON.stringify(input.learningTopics));
+  if (input.guardianName?.trim())
+    formData.append("guardianName", input.guardianName.trim());
+  const guardianPhone = input.guardianPhone?.replace(/\D/g, "");
+  if (guardianPhone) formData.append("guardianPhone", guardianPhone);
+  if (input.guardianRelationship?.trim())
+    formData.append("guardianRelationship", input.guardianRelationship.trim());
 
-  const response = await apiClient.post<Student>("/student/create", formData);
+  const response = await apiClient.post<Student & { educators?: unknown }>(
+    "/student/create",
+    formData,
+  );
 
-  return response.data;
+  const { educators: _educators, ...student } = response.data;
+  return student;
 }

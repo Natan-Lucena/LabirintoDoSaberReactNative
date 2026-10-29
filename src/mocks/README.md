@@ -154,3 +154,14 @@ Conferido contra `https://labirinto-do-saber.vercel.app`; os mocks seguem estas 
   backend real; o cliente usa `AI_TIMEOUT_MS` (90 s) nelas.
 - O backend real não devolve tarefas no `start` da sessão (G-06): o player usa o conteúdo
   escolhido no app.
+
+## Contrato de 2026-10-29 (API-03)
+
+- Atendimentos devolvem `durationMinutes` (50 por padrão), `type`, `observation` e
+  `notifiedAt`; criação e edição aceitam `type` e `durationMinutes` e respondem sem
+  campos prefixados por `_`. Transições de status e conflitos ficam para AGE-03.
+- Alunos devolvem `guardianName`, `guardianPhone` e `guardianRelationship` como `null`
+  quando vazios. A criação aceita esses campos opcionais, com telefone só em dígitos.
+  O endpoint do app remove `educators` antes de expor a resposta ao cache.
+- O educador fictício tem `profession: null`. Sessões devolvem `taskNotebookId` e
+  `appointmentId` como `null` quando não vinculadas; o início aceita os dois IDs.

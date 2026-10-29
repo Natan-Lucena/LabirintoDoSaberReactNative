@@ -14,6 +14,9 @@ const analysisSessions: TaskNotebookSession[] = [
     educatorId: MOCK_EDUCATOR.id,
     name: "Leitura inicial",
     startedAt: "2026-10-01T10:00:00-03:00",
+    taskNotebookId: null,
+    appointmentId: null,
+    observation: null,
     finishedAt: "2026-10-01T10:25:00-03:00",
     answers: [
       {
@@ -38,6 +41,9 @@ const analysisSessions: TaskNotebookSession[] = [
     educatorId: MOCK_EDUCATOR.id,
     name: "Palavras do cotidiano",
     startedAt: "2026-10-03T10:00:00-03:00",
+    taskNotebookId: null,
+    appointmentId: null,
+    observation: null,
     finishedAt: "2026-10-03T10:20:00-03:00",
     answers: [
       {
@@ -55,6 +61,10 @@ const analysisSessions: TaskNotebookSession[] = [
     educatorId: MOCK_EDUCATOR.id,
     name: "Sessão em andamento",
     startedAt: "2026-10-07T10:00:00-03:00",
+    taskNotebookId: null,
+    appointmentId: null,
+    finishedAt: null,
+    observation: null,
     answers: [],
   },
 ];
@@ -150,6 +160,10 @@ registerMockHandler(
         educatorId: MOCK_EDUCATOR.id,
         name: "Sessão mock",
         startedAt: "2026-10-07T10:00:00-03:00",
+        taskNotebookId: null,
+        appointmentId: null,
+        finishedAt: null,
+        observation: null,
         answers: [
           {
             taskId: input.taskId,
@@ -168,7 +182,12 @@ registerMockHandler(
 registerMockHandler(
   { method: "post", path: "/task-notebook-session/start" },
   ({ body }) => {
-    const input = body as { studentId?: unknown; name?: unknown };
+    const input = body as {
+      studentId?: unknown;
+      name?: unknown;
+      taskNotebookId?: unknown;
+      appointmentId?: unknown;
+    };
     if (
       typeof input.studentId !== "string" ||
       typeof input.name !== "string" ||
@@ -186,6 +205,12 @@ registerMockHandler(
       educatorId: MOCK_EDUCATOR.id,
       name: input.name,
       startedAt: new Date().toISOString(),
+      taskNotebookId:
+        typeof input.taskNotebookId === "string" ? input.taskNotebookId : null,
+      appointmentId:
+        typeof input.appointmentId === "string" ? input.appointmentId : null,
+      finishedAt: null,
+      observation: null,
       answers: [],
     };
     analysisSessions.push(session);

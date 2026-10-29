@@ -25,6 +25,7 @@ describe("loadHomeData (AC-HOME-01-01)", () => {
         studentId: "missing-student",
         scheduledAt: new Date().toISOString(),
         status: "PENDING",
+        durationMinutes: 50,
         createdAt: new Date().toISOString(),
       },
     ]);

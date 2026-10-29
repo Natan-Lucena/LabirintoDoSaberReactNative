@@ -23,7 +23,7 @@ function makeStudent(overrides: Partial<Student>): Student {
     educatorId: "educator-1",
     photoUrl: null,
     documents: [],
-    educators: [],
+
     ...overrides,
   };
 }
@@ -35,6 +35,7 @@ function makeAppointment(overrides: Partial<Appointment>): Appointment {
     studentId: "patient-1",
     scheduledAt: "2026-10-07T13:00:00.000Z",
     status: "PENDING",
+    durationMinutes: 50,
     createdAt: "2026-01-01T12:00:00.000Z",
     ...overrides,
   };
