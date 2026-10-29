@@ -7,6 +7,7 @@ import type {
   PlanDraft,
   PlanGoal,
   PlanReview,
+  PlanSuggestion,
   PlanSummary,
 } from "@/api/types";
 import type {
@@ -366,6 +367,7 @@ function editablePlan(id: string): Plan {
 }
 
 function saveMockPlan(plan: Plan): Plan {
+  if (plan.status !== "ACTIVE") dismissPendingSuggestions(plan.id);
   mockPlans.splice(
     mockPlans.findIndex((item) => item.id === plan.id),
     1,
@@ -678,5 +680,279 @@ registerMockHandler({ method: "post", path: "/plan/generate" }, ({ body }) => {
   };
   return { status: 200, data: draft };
 });
+
+// Sugestões da IA sob demanda (PLN-05); contrato em BACKEND-ENTREGUE.md §5.
+const MAX_PENDING_SUGGESTIONS = 3;
+const MAX_GOALS = 10;
+
+export const mockPlanSuggestions: PlanSuggestion[] = [
+  {
+    id: "mock-suggestion-1",
+    planId: "mock-plan-1",
+    studentId: "student-1",
+    studentName: studentName("student-1"),
+    goalId: "mock-plan-1-goal-2",
+    kind: "UPDATE_GOAL_STATUS",
+    text: "A escrita de frases com maiúscula apareceu em várias atividades recentes.",
+    proposedChange: { status: "ACHIEVED" },
+    status: "PENDING",
+    createdAt: "2026-10-28T12:00:00.000Z",
+  },
+];
+
+/** Encerrar um plano descarta as sugestões pendentes dele. */
+function dismissPendingSuggestions(planId: string): void {
+  const now = new Date().toISOString();
+  mockPlanSuggestions.forEach((item, index) => {
+    if (item.planId === planId && item.status === "PENDING")
+      mockPlanSuggestions[index] = {
+        ...item,
+        status: "DISMISSED",
+        resolvedAt: now,
+      };
+  });
+}
+
+function pendingOf(planId: string): PlanSuggestion[] {
+  return mockPlanSuggestions.filter(
+    (item) => item.planId === planId && item.status === "PENDING",
+  );
+}
+
+type SuggestionDraft = Pick<
+  PlanSuggestion,
+  "kind" | "goalId" | "text" | "proposedChange"
+>;
+
+/** Candidatas coerentes com o plano; só entram as que mudariam algo. */
+function suggestionCandidates(plan: Plan): SuggestionDraft[] {
+  const drafts: SuggestionDraft[] = [];
+  const open = plan.goals.find(
+    (goal) => goal.status === "NOT_STARTED" || goal.status === "IN_PROGRESS",
+  );
+  if (open)
+    drafts.push({
+      kind: "UPDATE_GOAL_STATUS",
+      goalId: open.id,
+      text: `Os registros recentes indicam avanço na meta "${open.description}".`,
+      proposedChange: {
+        status: open.status === "NOT_STARTED" ? "IN_PROGRESS" : "ACHIEVED",
+      },
+    });
+  if (plan.goals.length < MAX_GOALS)
+    drafts.push({
+      kind: "ADD_GOAL",
+      text: "Uma meta de generalização ajudaria a consolidar o que já foi trabalhado.",
+      proposedChange: {
+        description: `Aplicar o que foi aprendido em ${plan.title.toLowerCase()} em situações do dia a dia`,
+        successCriterion: "Aplica em 3 situações diferentes",
+      },
+    });
+  const today = getTodayKey();
+  const review = addMonths(today > plan.startDate ? today : plan.startDate, 1);
+  const reviewDate = review > plan.endDate ? plan.endDate : review;
+  if (plan.type === "PDI" && reviewDate !== plan.nextReviewDate)
+    drafts.push({
+      kind: "SCHEDULE_REVIEW",
+      text: "Uma revisão nas próximas semanas ajuda a ajustar as metas a tempo.",
+      proposedChange: { nextReviewDate: reviewDate },
+    });
+  if (open)
+    drafts.push({
+      kind: "REWRITE_GOAL",
+      goalId: open.id,
+      text: "A meta fica mais fácil de acompanhar com o apoio descrito de forma explícita.",
+      proposedChange: {
+        description: `${open.description} com apoio visual`,
+        successCriterion: "Conclui 4 de 5 tentativas",
+      },
+    });
+  return drafts;
+}
+
+registerMockHandler(
+  { method: "post", path: "/plan/:id/suggestions/generate" },
+  ({ params }) => {
+    const plan = editablePlan(params.id);
+    if (plan.title.includes("[AI_GENERATION_FAILED]"))
+      throw new MockApiError(500, "AI_GENERATION_FAILED");
+    const pending = pendingOf(plan.id);
+    const created: PlanSuggestion[] = [];
+    for (const draft of suggestionCandidates(plan)) {
+      if (pending.length + created.length >= MAX_PENDING_SUGGESTIONS) break;
+      if (
+        pending.some(
+          (item) => item.kind === draft.kind && item.goalId === draft.goalId,
+        )
+      )
+        continue;
+      created.push({
+        id: `mock-suggestion-${Date.now()}-${mockPlanSuggestions.length + created.length}`,
+        planId: plan.id,
+        studentId: plan.studentId,
+        studentName: studentName(plan.studentId),
+        ...(draft.goalId ? { goalId: draft.goalId } : {}),
+        kind: draft.kind,
+        text: draft.text,
+        proposedChange: draft.proposedChange,
+        status: "PENDING",
+        createdAt: new Date().toISOString(),
+      });
+    }
+    mockPlanSuggestions.push(...created);
+    return { status: created.length ? 201 : 200, data: created };
+  },
+);
+
+registerMockHandler(
+  { method: "get", path: "/plan/suggestions" },
+  ({ params }) => {
+    if (
+      params.status !== undefined &&
+      !["PENDING", "ACCEPTED", "DISMISSED"].includes(params.status)
+    )
+      throw new MockApiError(400, "Bad Request");
+    const ownPlanIds = mockPlans
+      .filter((plan) => plan.educatorId === MOCK_EDUCATOR.id)
+      .map((plan) => plan.id);
+    const visible = mockPlanSuggestions
+      .filter(
+        (item) =>
+          ownPlanIds.includes(item.planId) &&
+          (params.status === undefined || item.status === params.status),
+      )
+      .sort(
+        (a, b) =>
+          b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id),
+      );
+    return { status: 200, data: visible };
+  },
+);
+
+function findSuggestion(id: string): PlanSuggestion {
+  const suggestion = mockPlanSuggestions.find((item) => item.id === id);
+  if (!suggestion) throw new MockApiError(404, "SUGGESTION_NOT_FOUND");
+  accessiblePlan(suggestion.planId);
+  return suggestion;
+}
+
+function resolveSuggestion(
+  suggestion: PlanSuggestion,
+  status: "ACCEPTED" | "DISMISSED",
+): PlanSuggestion {
+  if (suggestion.status !== "PENDING")
+    throw new MockApiError(409, "SUGGESTION_ALREADY_RESOLVED");
+  const resolved = {
+    ...suggestion,
+    status,
+    resolvedAt: new Date().toISOString(),
+  };
+  mockPlanSuggestions.splice(
+    mockPlanSuggestions.indexOf(suggestion),
+    1,
+    resolved,
+  );
+  return resolved;
+}
+
+/** Mesmas regras da edição; `undefined` quando a mudança não pode ser aplicada. */
+function applySuggestion(
+  plan: Plan,
+  suggestion: PlanSuggestion,
+): Plan | undefined {
+  if (plan.status !== "ACTIVE") return undefined;
+  const change = suggestion.proposedChange;
+  const now = new Date().toISOString();
+  let goals = plan.goals;
+  let nextReviewDate = plan.nextReviewDate;
+  if (
+    suggestion.kind === "UPDATE_GOAL_STATUS" ||
+    suggestion.kind === "REWRITE_GOAL"
+  ) {
+    const goal = plan.goals.find((item) => item.id === suggestion.goalId);
+    if (!goal) return undefined;
+    if (suggestion.kind === "UPDATE_GOAL_STATUS") {
+      if (!change.status) return undefined;
+      const { achievedAt: _achievedAt, ...rest } = goal;
+      goals = plan.goals.map((item) =>
+        item.id === goal.id
+          ? {
+              ...rest,
+              status: change.status!,
+              ...(change.status === "ACHIEVED" ? { achievedAt: now } : {}),
+              updatedAt: now,
+            }
+          : item,
+      );
+    } else {
+      if (!change.description?.trim()) return undefined;
+      goals = plan.goals.map((item) =>
+        item.id === goal.id
+          ? {
+              ...item,
+              description: change.description!,
+              ...(change.successCriterion
+                ? { successCriterion: change.successCriterion }
+                : {}),
+              updatedAt: now,
+            }
+          : item,
+      );
+    }
+  } else if (suggestion.kind === "ADD_GOAL") {
+    if (plan.goals.length >= MAX_GOALS || !change.description?.trim())
+      return undefined;
+    goals = [
+      ...plan.goals,
+      {
+        id: `${plan.id}-goal-${Date.now()}-${plan.goals.length}`,
+        order: plan.goals.length,
+        description: change.description,
+        ...(change.successCriterion
+          ? { successCriterion: change.successCriterion }
+          : {}),
+        status: "NOT_STARTED",
+        updatedAt: now,
+      },
+    ];
+  } else {
+    if (!validReviewDate(plan, change.nextReviewDate)) return undefined;
+    nextReviewDate = change.nextReviewDate;
+  }
+  return {
+    ...plan,
+    goals,
+    ...(nextReviewDate ? { nextReviewDate } : {}),
+    progress: computeMockProgress(goals),
+    updatedAt: now,
+  };
+}
+
+registerMockHandler(
+  { method: "post", path: "/plan/suggestions/:id/accept" },
+  ({ params }) => {
+    const suggestion = findSuggestion(params.id);
+    if (suggestion.status !== "PENDING")
+      throw new MockApiError(409, "SUGGESTION_ALREADY_RESOLVED");
+    const updated = applySuggestion(
+      accessiblePlan(suggestion.planId),
+      suggestion,
+    );
+    if (!updated) {
+      resolveSuggestion(suggestion, "DISMISSED");
+      throw new MockApiError(409, "SUGGESTION_NOT_APPLICABLE");
+    }
+    resolveSuggestion(suggestion, "ACCEPTED");
+    return { status: 200, data: saveMockPlan(updated) };
+  },
+);
+
+registerMockHandler(
+  { method: "post", path: "/plan/suggestions/:id/dismiss" },
+  ({ params }) => ({
+    status: 200,
+    data: resolveSuggestion(findSuggestion(params.id), "DISMISSED"),
+  }),
+);
 
 export const planMockHandlersRegistered = true;

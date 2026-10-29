@@ -15,6 +15,7 @@ import {
   updateGoalStatus,
   updatePlan,
   createPlanReview,
+  generatePlanSuggestions,
   updatePlanStatus,
 } from "@/api/endpoints/plans";
 import { ApiError } from "@/api/errors";
@@ -27,6 +28,8 @@ import {
   ProgressBar,
   SectionTitle,
   SelectField,
+  Toast,
+  useToast,
 } from "@/components/ds";
 import {
   PlanForm,
@@ -34,6 +37,12 @@ import {
   type PlanFormValues,
 } from "@/features/plans/draft/PlanForm";
 import { planQueryKeys } from "@/features/plans/hub/usePlans";
+import { PLAN_SUGGESTIONS_ROUTE } from "@/features/plans/routes";
+import { SuggestionCard } from "@/features/plans/suggestions/SuggestionCard";
+import {
+  usePendingSuggestions,
+  useSuggestionActions,
+} from "@/features/plans/suggestions/usePlanSuggestions";
 import { useStudents } from "@/features/students/useStudents";
 import { color, typography } from "@/theme";
 
@@ -76,6 +85,8 @@ function validDate(day: string, start: string, end: string): boolean {
     day <= end
   );
 }
+const GENERATE_FAILURE_MESSAGE =
+  "Não foi possível gerar agora. Tente de novo em instantes.";
 function errorMessage(error: unknown): string {
   const code = (error as { code?: string } | null)?.code;
   return code && conflictMessages[code]
@@ -165,7 +176,46 @@ export function PlanDetailScreen(): ReactElement {
     },
   });
 
+  const toast = useToast();
+  const suggestionsQuery = usePendingSuggestions();
+  const suggestionActions = useSuggestionActions();
+  const [generateNotice, setGenerateNotice] = useState("");
+  const [generateFailed, setGenerateFailed] = useState(false);
+  const [hasNewSuggestions, setHasNewSuggestions] = useState(false);
+  const generateMutation = useMutation({
+    mutationFn: () => generatePlanSuggestions(id),
+    retry: false,
+    onMutate: () => {
+      setGenerateNotice("");
+      setGenerateFailed(false);
+      setHasNewSuggestions(false);
+    },
+    onSuccess: (created) => {
+      void queryClient.invalidateQueries({ queryKey: planQueryKeys.all });
+      if (created.length === 0) {
+        setGenerateNotice("Sem sugestões novas para este plano");
+        return;
+      }
+      setHasNewSuggestions(true);
+      toast.show(
+        created.length === 1
+          ? "1 sugestão nova"
+          : `${created.length} sugestões novas`,
+      );
+    },
+    onError: (generateError) => {
+      setGenerateFailed(true);
+      setGenerateNotice(
+        (generateError as { code?: string }).code === "PLAN_NOT_EDITABLE"
+          ? conflictMessages.PLAN_NOT_EDITABLE
+          : GENERATE_FAILURE_MESSAGE,
+      );
+    },
+  });
+
   const plan = planQuery.data;
+  const planSuggestions =
+    suggestionsQuery.data?.filter((item) => item.planId === id) ?? [];
   const error = planQuery.error as ApiError | null;
   if (!plan)
     return (
@@ -432,6 +482,52 @@ export function PlanDetailScreen(): ReactElement {
             />
           </View>
         ) : null}
+        {active && mode === "view" ? (
+          <View style={styles.card}>
+            <SectionTitle title="Sugestões da IA" />
+            <DsButton
+              label={
+                generateMutation.isPending
+                  ? "Gerando sugestões…"
+                  : "Pedir sugestões da IA"
+              }
+              variant="secondary"
+              icon="sparkles"
+              loading={generateMutation.isPending}
+              disabled={generateMutation.isPending}
+              onPress={() => generateMutation.mutate()}
+            />
+            {generateNotice ? (
+              <Text
+                style={generateFailed ? styles.error : styles.body}
+                accessibilityRole={generateFailed ? "alert" : undefined}
+              >
+                {generateNotice}
+              </Text>
+            ) : null}
+            {hasNewSuggestions ? (
+              <DsButton
+                label="Ver sugestões"
+                variant="ghost"
+                onPress={() => router.push(PLAN_SUGGESTIONS_ROUTE)}
+              />
+            ) : null}
+            {suggestionActions.message ? (
+              <Text style={styles.body} accessibilityRole="alert">
+                {suggestionActions.message}
+              </Text>
+            ) : null}
+            {planSuggestions.map((suggestion) => (
+              <SuggestionCard
+                key={suggestion.id}
+                suggestion={suggestion}
+                busy={suggestionActions.busyId !== null}
+                onAccept={() => void suggestionActions.accept(suggestion.id)}
+                onDismiss={() => void suggestionActions.dismiss(suggestion.id)}
+              />
+            ))}
+          </View>
+        ) : null}
         {localError || mutationError ? (
           <Text style={styles.error} accessibilityRole="alert">
             {localError || errorMessage(mutationError)}
@@ -515,6 +611,7 @@ export function PlanDetailScreen(): ReactElement {
           )}
         </View>
       </ScrollView>
+      <Toast message={toast.message} onHide={toast.hide} />
     </View>
   );
 }

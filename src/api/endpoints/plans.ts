@@ -8,6 +8,8 @@ import type {
   GoalStatus,
   PlanReview,
   PlanStatus,
+  PlanSuggestion,
+  SuggestionStatus,
   PlanSummary,
   PlanType,
 } from "@/api/types";
@@ -198,5 +200,52 @@ export async function createPlanReview(
 /** GET /plan/:id/reviews — mais recente primeiro. */
 export async function listPlanReviews(id: string): Promise<PlanReview[]> {
   const response = await apiClient.get<PlanReview[]>(`/plan/${id}/reviews`);
+  return response.data;
+}
+
+/**
+ * POST /plan/:id/suggestions/generate — `201` com as novas ou `200 []`.
+ * `409 PLAN_NOT_EDITABLE`; falhas da IA respondem `500 AI_*`.
+ */
+export async function generatePlanSuggestions(
+  planId: string,
+): Promise<PlanSuggestion[]> {
+  const response = await apiClient.post<PlanSuggestion[]>(
+    `/plan/${planId}/suggestions/generate`,
+    undefined,
+    { timeout: AI_TIMEOUT_MS },
+  );
+  return response.data;
+}
+
+/** GET /plan/suggestions — mais recentes primeiro; `status` é opcional. */
+export async function listPlanSuggestions(
+  status?: SuggestionStatus,
+): Promise<PlanSuggestion[]> {
+  // Query na própria URL: o adaptador de mocks lê `searchParams`, não `config.params`.
+  const query = status ? `?${new URLSearchParams({ status }).toString()}` : "";
+  const response = await apiClient.get<PlanSuggestion[]>(
+    `/plan/suggestions${query}`,
+  );
+  return response.data;
+}
+
+/**
+ * POST /plan/suggestions/:id/accept — devolve o plano atualizado.
+ * `409 SUGGESTION_NOT_APPLICABLE` (a sugestão vira `DISMISSED`) ou
+ * `409 SUGGESTION_ALREADY_RESOLVED`.
+ */
+export async function acceptPlanSuggestion(id: string): Promise<Plan> {
+  const response = await apiClient.post<Plan>(`/plan/suggestions/${id}/accept`);
+  return response.data;
+}
+
+/** POST /plan/suggestions/:id/dismiss — `409 SUGGESTION_ALREADY_RESOLVED`. */
+export async function dismissPlanSuggestion(
+  id: string,
+): Promise<PlanSuggestion> {
+  const response = await apiClient.post<PlanSuggestion>(
+    `/plan/suggestions/${id}/dismiss`,
+  );
   return response.data;
 }

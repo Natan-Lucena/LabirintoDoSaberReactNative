@@ -4,13 +4,17 @@ import { ApiError } from "@/api/errors";
 import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 import { mockPlans } from "@/mocks/handlers/plans";
 
-const router = { back: vi.fn() };
+const router = { back: vi.fn(), push: vi.fn() };
 const getPlan = vi.fn();
 const listPlanReviews = vi.fn();
 const updateGoalStatus = vi.fn();
 const updatePlan = vi.fn();
 const createPlanReview = vi.fn();
 const updatePlanStatus = vi.fn();
+const generatePlanSuggestions = vi.fn();
+const listPlanSuggestions = vi.fn();
+const acceptPlanSuggestion = vi.fn();
+const dismissPlanSuggestion = vi.fn();
 vi.mock("expo-router", () => ({
   useRouter: () => router,
   useLocalSearchParams: () => ({ id: "mock-plan-1" }),
@@ -22,6 +26,11 @@ vi.mock("@/api/endpoints/plans", () => ({
   updatePlan: (...args: unknown[]) => updatePlan(...args),
   createPlanReview: (...args: unknown[]) => createPlanReview(...args),
   updatePlanStatus: (...args: unknown[]) => updatePlanStatus(...args),
+  generatePlanSuggestions: (...args: unknown[]) =>
+    generatePlanSuggestions(...args),
+  listPlanSuggestions: (...args: unknown[]) => listPlanSuggestions(...args),
+  acceptPlanSuggestion: (...args: unknown[]) => acceptPlanSuggestion(...args),
+  dismissPlanSuggestion: (...args: unknown[]) => dismissPlanSuggestion(...args),
 }));
 vi.mock("@/features/students/useStudents", () => ({
   useStudents: () => ({ data: [{ id: "student-1", name: "Lia" }] }),
@@ -37,6 +46,11 @@ describe("PlanDetailScreen (PLN-04)", () => {
     createPlanReview.mockReset();
     updatePlanStatus.mockReset();
     router.back.mockReset();
+    router.push.mockReset();
+    generatePlanSuggestions.mockReset();
+    listPlanSuggestions.mockReset().mockResolvedValue([]);
+    acceptPlanSuggestion.mockReset();
+    dismissPlanSuggestion.mockReset();
   });
 
   it("mostra metas, progresso, vigência e revisão", async () => {
@@ -187,5 +201,167 @@ describe("PlanDetailScreen (PLN-04)", () => {
       expect(screen.queryByRole("button", { name: "Editar plano" })).toBeNull(),
     );
     alert.mockRestore();
+  });
+});
+
+describe("PlanDetailScreen — sugestões da IA (PLN-05)", () => {
+  const suggestion = (id: string, planId = "mock-plan-1") => ({
+    id,
+    planId,
+    studentId: "student-1",
+    studentName: "Lia",
+    goalId: "mock-plan-1-goal-2",
+    kind: "UPDATE_GOAL_STATUS" as const,
+    text: "Avanço recente.",
+    proposedChange: { status: "ACHIEVED" as const },
+    status: "PENDING" as const,
+    createdAt: "2026-10-28T12:00:00.000Z",
+  });
+  beforeEach(() => {
+    getPlan.mockReset().mockResolvedValue(structuredClone(mockPlans[0]));
+    listPlanReviews.mockReset().mockResolvedValue([]);
+    router.push.mockReset();
+    generatePlanSuggestions.mockReset();
+    listPlanSuggestions.mockReset().mockResolvedValue([]);
+    acceptPlanSuggestion.mockReset();
+    dismissPlanSuggestion.mockReset();
+  });
+
+  it("AC-PLN-05-01 mostra a mensagem quando não há sugestões novas", async () => {
+    generatePlanSuggestions.mockResolvedValue([]);
+    await render(<PlanDetailScreen />);
+    await screen.findByText("PDI de leitura e escrita");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Pedir sugestões da IA" }),
+    );
+    await waitFor(() =>
+      expect(generatePlanSuggestions).toHaveBeenCalledWith("mock-plan-1"),
+    );
+    expect(
+      await screen.findByText("Sem sugestões novas para este plano"),
+    ).toBeTruthy();
+  });
+
+  it("AC-PLN-05-01 anuncia as novas e leva à tela de sugestões", async () => {
+    generatePlanSuggestions.mockResolvedValue([
+      suggestion("s-1"),
+      suggestion("s-2"),
+    ]);
+    await render(<PlanDetailScreen />);
+    await screen.findByText("PDI de leitura e escrita");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Pedir sugestões da IA" }),
+    );
+    expect(
+      (await screen.findAllByText("2 sugestões novas")).length,
+    ).toBeGreaterThan(0);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Ver sugestões" }),
+    );
+    expect(router.push).toHaveBeenCalledWith("/plans/suggestions");
+  });
+
+  it("mostra o texto de espera durante a geração", async () => {
+    let finish: (value: unknown[]) => void = () => undefined;
+    generatePlanSuggestions.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await render(<PlanDetailScreen />);
+    await screen.findByText("PDI de leitura e escrita");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Pedir sugestões da IA" }),
+    );
+    expect(await screen.findByText("Gerando sugestões…")).toBeTruthy();
+    finish([]);
+    expect(
+      await screen.findByText("Sem sugestões novas para este plano"),
+    ).toBeTruthy();
+  });
+
+  it("erro AI_* mostra a mensagem e não reenvia sozinho", async () => {
+    generatePlanSuggestions.mockRejectedValue(
+      new ApiError({
+        message: "AI_GENERATION_FAILED",
+        status: 500,
+        code: "AI_GENERATION_FAILED",
+      }),
+    );
+    await render(<PlanDetailScreen />);
+    await screen.findByText("PDI de leitura e escrita");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Pedir sugestões da IA" }),
+    );
+    expect(
+      await screen.findByText(
+        "Não foi possível gerar agora. Tente de novo em instantes.",
+      ),
+    ).toBeTruthy();
+    expect(generatePlanSuggestions).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC-PLN-05-02 lista só as pendentes do plano e aceitar aplica a mudança", async () => {
+    listPlanSuggestions.mockResolvedValueOnce([
+      suggestion("s-1"),
+      { ...suggestion("s-2", "mock-plan-2"), text: "Outro plano." },
+    ]);
+    listPlanSuggestions.mockResolvedValue([]);
+    const changed = structuredClone(mockPlans[0]);
+    changed.goals[1].status = "ACHIEVED";
+    changed.progress = {
+      totalGoals: 4,
+      achievedGoals: 2,
+      inProgressGoals: 0,
+      percent: 50,
+    };
+    acceptPlanSuggestion.mockResolvedValue(changed);
+    getPlan
+      .mockReset()
+      .mockResolvedValueOnce(structuredClone(mockPlans[0]))
+      .mockResolvedValue(changed);
+    await render(<PlanDetailScreen />);
+    expect(await screen.findByText("Avanço recente.")).toBeTruthy();
+    expect(screen.queryByText("Outro plano.")).toBeNull();
+    expect(screen.getByText("Mudar meta para Atingida")).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: /Aceitar sugestão/ }),
+    );
+    await waitFor(() =>
+      expect(acceptPlanSuggestion).toHaveBeenCalledWith("s-1"),
+    );
+    expect(await screen.findByText("2 de 4 metas atingidas")).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.queryByText("Avanço recente.")).toBeNull(),
+    );
+  });
+
+  it("descartar chama a rota e tira a sugestão da lista", async () => {
+    listPlanSuggestions.mockResolvedValueOnce([suggestion("s-1")]);
+    listPlanSuggestions.mockResolvedValue([]);
+    dismissPlanSuggestion.mockResolvedValue({
+      ...suggestion("s-1"),
+      status: "DISMISSED",
+    });
+    await render(<PlanDetailScreen />);
+    await screen.findByText("Avanço recente.");
+    await fireEvent.press(
+      screen.getByRole("button", { name: /Descartar sugestão/ }),
+    );
+    await waitFor(() =>
+      expect(dismissPlanSuggestion).toHaveBeenCalledWith("s-1"),
+    );
+    await waitFor(() =>
+      expect(screen.queryByText("Avanço recente.")).toBeNull(),
+    );
+  });
+
+  it("não oferece o botão em plano encerrado", async () => {
+    getPlan.mockResolvedValue({ ...mockPlans[0], status: "COMPLETED" });
+    await render(<PlanDetailScreen />);
+    await screen.findByText("PDI de leitura e escrita");
+    expect(
+      screen.queryByRole("button", { name: "Pedir sugestões da IA" }),
+    ).toBeNull();
   });
 });

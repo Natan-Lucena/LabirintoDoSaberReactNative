@@ -270,3 +270,18 @@ retrato dos status das metas; `GET /plan/:id/reviews` devolve as revisões mais 
 primeiro. `PUT /plan/:id/status` encerra o plano com `closedAt`. Todas as escritas de um
 plano encerrado respondem `409 PLAN_NOT_EDITABLE`. As rotas usam o import de `plans.ts`
 já presente em `src/mocks/install.ts`.
+
+## Sugestões da IA (PLN-05)
+
+`POST /plan/:id/suggestions/generate` cria sugestões fictícias em português até o plano ter 3
+pendentes (`UPDATE_GOAL_STATUS`, `ADD_GOAL`, `SCHEDULE_REVIEW` e `REWRITE_GOAL`, coerentes com as
+metas do plano) e responde `201` com as novas, ou `200 []` quando já há 3 ou nada muda. Plano
+encerrado responde `409 PLAN_NOT_EDITABLE`; um título com `[AI_GENERATION_FAILED]` simula
+`500 AI_GENERATION_FAILED`. `GET /plan/suggestions` aceita `?status=` (inválido: `400`) e
+devolve as mais recentes primeiro; `mock-plan-1` já começa com uma pendente
+(`mock-suggestion-1`). `POST /plan/suggestions/:id/accept` aplica a mudança no plano com as
+regras da edição e devolve o `Plan`; meta removida, plano encerrado ou limite de 10 metas
+respondem `409 SUGGESTION_NOT_APPLICABLE` e a sugestão vira `DISMISSED`. Sugestão já resolvida
+responde `409 SUGGESTION_ALREADY_RESOLVED`, ID inexistente `404 SUGGESTION_NOT_FOUND`.
+`POST /plan/suggestions/:id/dismiss` devolve a sugestão `DISMISSED`. Encerrar um plano descarta
+as pendentes dele. As rotas usam o import de `plans.ts` já presente em `src/mocks/install.ts`.
