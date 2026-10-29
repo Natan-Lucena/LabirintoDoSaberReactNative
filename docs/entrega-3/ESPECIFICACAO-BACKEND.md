@@ -3,6 +3,9 @@
 > O que o app precisa que o backend disponibilize na Entrega 3, com regras de negócio,
 > validações, erros e critérios de aceite. Escrito em 2026-10-28 pelo orquestrador do app.
 >
+> **Atualização 2026-10-29:** implementada pelo backend (PR #28 do backend), com as diferenças
+> listadas em [BACKEND-ENTREGUE](BACKEND-ENTREGUE.md) §7 e §9. O app segue o BACKEND-ENTREGUE.
+>
 > **Status:** proposta do app. Os nomes de rotas e campos são **sugestões** que seguem as
 > convenções atuais da API (§1); o backend pode mudá-los. O contrato final é registrado em
 > [PROJECT.md](../PROJECT.md) pela tarefa PLN-00
