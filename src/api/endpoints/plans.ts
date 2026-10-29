@@ -1,5 +1,33 @@
 import { apiClient } from "@/api/client";
-import type { Plan, PlanStatus, PlanSummary, PlanType } from "@/api/types";
+import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
+import type {
+  Plan,
+  PlanDraft,
+  PlanStatus,
+  PlanSummary,
+  PlanType,
+} from "@/api/types";
+
+export interface GeneratePlanDraftInput {
+  studentId: string;
+  type: PlanType;
+  focus: string;
+  consideredDifficulties: string[];
+  durationMonths?: 3 | 6;
+  sessionDate?: string;
+  parentPlanId?: string;
+  includeAnamnesisTemplateId?: string;
+}
+
+/** POST /plan/generate — devolve rascunho sem persistir. */
+export async function generatePlanDraft(
+  input: GeneratePlanDraftInput,
+): Promise<PlanDraft> {
+  const response = await apiClient.post<PlanDraft>("/plan/generate", input, {
+    timeout: AI_TIMEOUT_MS,
+  });
+  return response.data;
+}
 
 export interface ListPlansFilters {
   studentId?: string;
