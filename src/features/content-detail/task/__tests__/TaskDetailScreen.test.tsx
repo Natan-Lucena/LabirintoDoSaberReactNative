@@ -61,7 +61,7 @@ describe("TaskDetailScreen (UX5-A)", () => {
     expect(
       await screen.findByRole("header", { name: "Atividade" }),
     ).toBeTruthy();
-    expect(screen.getByText("Atividade de Leitura")).toBeTruthy();
+    expect(await screen.findByText("Atividade de Leitura")).toBeTruthy();
     expect(screen.getByText("Múltipla escolha")).toBeTruthy();
     expect(screen.getByText("Qual palavra começa com a letra A?")).toBeTruthy();
     expect(screen.getByText("Abelha")).toBeTruthy();
