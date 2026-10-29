@@ -22,10 +22,9 @@ describe("PUT /student/update/:id pelo apiClient", () => {
   it("envia apenas os campos informados como multipart e atualiza a lista", async () => {
     const student = MOCK_STUDENTS[0];
     const original = { ...student };
+    const responseStudent = student as unknown as { educators?: unknown[] };
     try {
-      (student as typeof student & { educators?: unknown }).educators = [
-        { password: "mock-secret" },
-      ];
+      responseStudent.educators = [{ password: "mock-secret" }];
       apiClient.defaults.adapter = (config) => {
         expect(config.data).toBeInstanceOf(FormData);
         const data = config.data as FormData;
@@ -46,7 +45,7 @@ describe("PUT /student/update/:id pelo apiClient", () => {
       expect(updated).not.toHaveProperty("educators");
     } finally {
       Object.assign(student, original);
-      delete (student as typeof student & { educators?: unknown }).educators;
+      delete responseStudent.educators;
     }
   });
 
