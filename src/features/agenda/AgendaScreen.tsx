@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter, type Href } from "expo-router";
+import { useRouter } from "expo-router";
 
 import { PendingBanner } from "@/components/PendingBanner";
 import { FigmaIcon } from "@/components/FigmaIcon";
@@ -272,13 +272,22 @@ export function AgendaScreen(): ReactElement {
                 "Paciente não encontrado";
               const cancelled = appointment.status === "CANCELLED";
               const completed = appointment.status === "COMPLETED";
+              const details = [
+                `${appointment.durationMinutes} min`,
+                appointment.type,
+              ]
+                .filter(Boolean)
+                .join(" · ");
               return (
                 <StaticPressable
                   key={appointment.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`${formatTime(new Date(appointment.scheduledAt))}, ${name}${completed ? ", Concluído" : cancelled ? ", Cancelado" : ""}`}
+                  accessibilityLabel={`${formatTime(new Date(appointment.scheduledAt))}, ${name}, ${details}${completed ? ", Concluído" : cancelled ? ", Cancelado" : ""}`}
                   onPress={() =>
-                    router.push(`/agenda/${appointment.id}` as Href)
+                    router.push({
+                      pathname: "/agenda/[id]",
+                      params: { id: appointment.id },
+                    })
                   }
                   style={[
                     styles.appointment,
@@ -297,6 +306,7 @@ export function AgendaScreen(): ReactElement {
                   />
                   <View style={styles.copy}>
                     <Text style={styles.name}>{name}</Text>
+                    <Text style={styles.status}>{details}</Text>
                     {completed ? (
                       <View style={styles.complete}>
                         <FigmaIcon
@@ -323,7 +333,7 @@ export function AgendaScreen(): ReactElement {
             router.push({
               pathname: "/agenda/new",
               params: { date: selectedDay },
-            } as Href)
+            })
           }
         />
       </ScrollView>
