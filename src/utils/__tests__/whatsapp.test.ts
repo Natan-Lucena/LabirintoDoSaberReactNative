@@ -46,6 +46,14 @@ describe("AGE-02 WhatsApp", () => {
     ).toMatch(/^Olá! Passando/);
   });
 
+  it("AC-AGE-02-02 usa 'no' para sábado e domingo e 'na' para dias úteis", () => {
+    const msg = (scheduledAt: string) =>
+      appointmentReminderMessage({ studentName: "Lia", scheduledAt });
+    expect(msg("2026-04-11T17:00:00Z")).toContain("no sábado, 11/04");
+    expect(msg("2026-04-12T17:00:00Z")).toContain("no domingo, 12/04");
+    expect(msg("2026-04-14T17:00:00Z")).toContain("na terça-feira, 14/04");
+  });
+
   it("AC-AGE-02-02 omite apresentação quando educador não tem nome", () => {
     expect(
       patientContactMessage({
@@ -60,6 +68,6 @@ describe("AGE-02 WhatsApp", () => {
         educatorName: null,
         studentName: "Lia",
       }),
-    ).toBe("Olá! Tudo bem? Do acompanhamento de Lia.");
+    ).toBe("Olá! Tudo bem? Falo sobre o acompanhamento de Lia.");
   });
 });

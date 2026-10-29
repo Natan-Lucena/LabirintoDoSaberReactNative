@@ -47,7 +47,7 @@ export function appointmentReminderMessage({
     day: "2-digit",
     month: "2-digit",
   }).format(date);
-  return `${greeting(guardianName)} Passando para lembrar do atendimento de ${studentName} na ${weekday}, ${shortDate}, às ${formatTime(date)}. Qualquer imprevisto, é só avisar por aqui.`;
+  return `${greeting(guardianName)} Passando para lembrar do atendimento de ${studentName} ${/^(sábado|domingo)/.test(weekday) ? "no" : "na"} ${weekday}, ${shortDate}, às ${formatTime(date)}. Qualquer imprevisto, é só avisar por aqui.`;
 }
 
 export function patientContactMessage({
@@ -59,5 +59,5 @@ export function patientContactMessage({
   educatorName?: string | null;
   studentName: string;
 }): string {
-  return `${greeting(guardianName)} Tudo bem? ${educatorName?.trim() ? `Aqui é ${educatorName.trim()}, do` : "Do"} acompanhamento de ${studentName}.`;
+  return `${greeting(guardianName)} Tudo bem? ${educatorName?.trim() ? `Aqui é ${educatorName.trim()}, do acompanhamento de` : "Falo sobre o acompanhamento de"} ${studentName}.`;
 }
