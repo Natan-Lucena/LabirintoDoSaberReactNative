@@ -21,7 +21,10 @@ import {
   SearchField,
 } from "@/components/ds";
 import { useStudents } from "@/features/students/useStudents";
-import { useSessionFlowStore } from "@/stores/session-flow";
+import {
+  SessionFlowInvalidTransitionError,
+  useSessionFlowStore,
+} from "@/stores/session-flow";
 import { color, fontFamilies, semanticColor } from "@/theme";
 
 export function normalizeForSearch(value: string): string {
@@ -167,14 +170,23 @@ export function StudentStep(): ReactElement {
   }
 
   async function proceed(student: Student, replaceRoute: boolean) {
-    await selectStudent(student);
-    // O vínculo só vale para o paciente do atendimento; a escolha manual de
-    // outro paciente (ou a sessão avulsa) limpa o que sobrou de antes.
-    await setAppointmentId(
-      params.appointmentId && params.studentId === student.id
-        ? params.appointmentId
-        : null,
-    );
+    try {
+      await selectStudent(student);
+      // O vínculo só vale para o paciente do atendimento; a escolha manual de
+      // outro paciente (ou a sessão avulsa) limpa o que sobrou de antes.
+      await setAppointmentId(
+        params.appointmentId && params.studentId === student.id
+          ? params.appointmentId
+          : null,
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof SessionFlowInvalidTransitionError
+          ? "Há uma sessão em andamento neste aparelho. Retome ou encerre antes de iniciar outra."
+          : "Não foi possível preparar a sessão.",
+      );
+      return;
+    }
     if (replaceRoute) router.replace("/session/content");
     else router.push("/session/content");
   }

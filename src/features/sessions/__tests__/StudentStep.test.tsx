@@ -6,6 +6,7 @@ import { listStudents } from "@/api/endpoints/student";
 import { listTaskNotebooks } from "@/api/endpoints/content";
 import { listSessionsByStudent, finishSession } from "@/api/endpoints/session";
 import type { Student } from "@/api/types";
+import { SessionFlowInvalidTransitionError } from "@/stores/session-flow";
 import { StudentStep, normalizeForSearch } from "../StudentStep";
 
 let mockParams: { studentId?: string; appointmentId?: string } = {};
@@ -39,7 +40,8 @@ let flowState: { step: string; sessionId: string | null } = {
   step: "idle",
   sessionId: null,
 };
-vi.mock("@/stores/session-flow", () => ({
+vi.mock("@/stores/session-flow", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/stores/session-flow")>()),
   useSessionFlowStore: () => ({
     selectStudent,
     setAppointmentId,
@@ -133,6 +135,38 @@ describe("StudentStep", () => {
     expect(screen.getByRole("button", { name: "Encerrar agora" })).toBeTruthy();
     expect(replace).not.toHaveBeenCalled();
     expect(selectStudent).not.toHaveBeenCalled();
+  });
+
+  it("modo direto com sessão local de outro paciente mostra aviso, não navega e não rejeita", async () => {
+    mockParams = { studentId: "s1" };
+    flowState = { step: "running", sessionId: "outra-sessao" };
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+    selectStudent.mockRejectedValueOnce(
+      new SessionFlowInvalidTransitionError("selectStudent", "running"),
+    );
+
+    await render(<StudentStep />);
+
+    expect(
+      await screen.findByText(
+        "Há uma sessão em andamento neste aparelho. Retome ou encerre antes de iniciar outra.",
+      ),
+    ).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeTruthy();
+  });
+
+  it("falha desconhecida ao preparar mostra mensagem genérica", async () => {
+    mockParams = { studentId: "s1" };
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+    selectStudent.mockRejectedValueOnce(new Error("x"));
+
+    await render(<StudentStep />);
+
+    expect(
+      await screen.findByText("Não foi possível preparar a sessão."),
+    ).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
   });
 
   it("com studentId inexistente, cai na lista com Continuar", async () => {
