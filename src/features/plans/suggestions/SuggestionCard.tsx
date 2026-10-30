@@ -23,6 +23,8 @@ export interface SuggestionCardProps {
   suggestion: PlanSuggestion;
   /** Título do plano, quando conhecido. */
   planTitle?: string;
+  /** Descrição da meta afetada, quando conhecida (diz qual meta muda). */
+  goalDescription?: string;
   /** Mostra paciente e plano (tela geral); o detalhe do plano já os tem. */
   showContext?: boolean;
   busy?: boolean;
@@ -33,12 +35,13 @@ export interface SuggestionCardProps {
 export function SuggestionCard({
   suggestion,
   planTitle,
+  goalDescription,
   showContext = false,
   busy = false,
   onAccept,
   onDismiss,
 }: SuggestionCardProps): ReactElement {
-  const change = describeSuggestionChange(suggestion);
+  const change = describeSuggestionChange(suggestion, goalDescription);
 
   return (
     <View style={styles.card}>

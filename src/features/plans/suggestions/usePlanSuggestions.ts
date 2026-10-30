@@ -39,16 +39,31 @@ function displayDate(day: string): string {
   return `${date}/${month}/${year}`;
 }
 
-/** A mudança proposta em linguagem simples. */
-export function describeSuggestionChange(suggestion: PlanSuggestion): string {
+/**
+ * A mudança proposta em linguagem simples. Com a descrição da meta afetada
+ * (quando a tela a conhece), o texto diz qual meta muda (PLN-05).
+ */
+export function describeSuggestionChange(
+  suggestion: PlanSuggestion,
+  goalDescription?: string,
+): string {
   const change = suggestion.proposedChange;
+  const goal = goalDescription ? `a meta “${goalDescription}”` : null;
   switch (suggestion.kind) {
-    case "UPDATE_GOAL_STATUS":
-      return `Mudar meta para ${change.status ? goalStatusLabels[change.status] : "novo status"}`;
+    case "UPDATE_GOAL_STATUS": {
+      const status = change.status
+        ? goalStatusLabels[change.status]
+        : "novo status";
+      return goal
+        ? `Mudar ${goal} para ${status}`
+        : `Mudar meta para ${status}`;
+    }
     case "ADD_GOAL":
       return `Nova meta: ${change.description ?? ""}`;
     case "REWRITE_GOAL":
-      return `Reescrever meta: ${change.description ?? ""}`;
+      return goal
+        ? `Reescrever ${goal} como: ${change.description ?? ""}`
+        : `Reescrever meta: ${change.description ?? ""}`;
     case "SCHEDULE_REVIEW":
       return `Agendar revisão para ${change.nextReviewDate ? displayDate(change.nextReviewDate) : "nova data"}`;
   }

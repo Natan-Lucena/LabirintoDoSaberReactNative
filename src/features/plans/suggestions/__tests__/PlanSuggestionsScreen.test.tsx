@@ -8,12 +8,14 @@ const router = { back: vi.fn() };
 const listPlanSuggestions = vi.fn();
 const acceptPlanSuggestion = vi.fn();
 const dismissPlanSuggestion = vi.fn();
+const getPlan = vi.fn();
 
 vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("@/api/endpoints/plans", () => ({
   listPlanSuggestions: (...args: unknown[]) => listPlanSuggestions(...args),
   acceptPlanSuggestion: (...args: unknown[]) => acceptPlanSuggestion(...args),
   dismissPlanSuggestion: (...args: unknown[]) => dismissPlanSuggestion(...args),
+  getPlan: (...args: unknown[]) => getPlan(...args),
 }));
 vi.mock("@/features/plans/hub/usePlans", () => ({
   planQueryKeys: { all: ["plan"] },
@@ -49,6 +51,10 @@ describe("PlanSuggestionsScreen (PLN-05)", () => {
     listPlanSuggestions.mockReset();
     acceptPlanSuggestion.mockReset();
     dismissPlanSuggestion.mockReset();
+    getPlan.mockReset().mockResolvedValue({
+      id: "mock-plan-1",
+      goals: [{ id: "goal-1", description: "Ler frases curtas" }],
+    });
   });
 
   it("mostra paciente, plano, texto e a mudança em linguagem simples", async () => {
@@ -74,9 +80,16 @@ describe("PlanSuggestionsScreen (PLN-05)", () => {
     expect(listPlanSuggestions).toHaveBeenCalledWith("PENDING");
     expect(screen.getAllByText("Lia")).toHaveLength(4);
     expect(screen.getAllByText("PDI de leitura e escrita")).toHaveLength(4);
-    expect(screen.getByText("Mudar meta para Atingida")).toBeTruthy();
+    // PLN-05: a mudança diz qual meta muda.
+    expect(
+      await screen.findByText("Mudar a meta “Ler frases curtas” para Atingida"),
+    ).toBeTruthy();
     expect(screen.getByText("Nova meta: Ler em voz alta")).toBeTruthy();
-    expect(screen.getByText("Reescrever meta: Ler frases longas")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Reescrever a meta “Ler frases curtas” como: Ler frases longas",
+      ),
+    ).toBeTruthy();
     expect(screen.getByText("Agendar revisão para 20/11/2026")).toBeTruthy();
   });
 
