@@ -12,6 +12,7 @@ const ALL_NAMES: FigmaIconName[] = [
   "bell",
   "search",
   "chevron",
+  "chevronLeft",
   "clock",
   "message",
   "sparkles",
