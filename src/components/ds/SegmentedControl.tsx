@@ -2,6 +2,8 @@
 import type { ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { hitSlopToMinTarget } from "./touchTarget";
+
 import { color, fontFamilies, shape } from "../../theme";
 
 export interface SegmentedOption {
@@ -65,6 +67,7 @@ export function SegmentedControl({
             key={option.key}
             onPress={() => !disabled && onChange(option.key)}
             accessibilityRole="radio"
+            hitSlop={hitSlopToMinTarget(Infinity, 39)}
             accessibilityLabel={option.label}
             accessibilityState={{ selected: isActive, disabled }}
             style={[styles.segment, isActive ? styles.segmentActive : null]}
