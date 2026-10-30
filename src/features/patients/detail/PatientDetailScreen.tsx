@@ -200,7 +200,7 @@ export function PatientDetailScreen({
       />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.patientSummary}>
-          <Avatar name={patient.name} size={58} />
+          <Avatar name={patient.name} size={58} photoUrl={patient.photoUrl} />
           <View style={styles.summaryCopy}>
             <Text style={styles.patientName}>{patient.name}</Text>
             <Text style={styles.patientMeta}>

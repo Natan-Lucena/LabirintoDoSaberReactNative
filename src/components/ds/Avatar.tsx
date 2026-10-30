@@ -1,6 +1,6 @@
 // `.avatar` / `.avatar--*` do Figma Make. Ver ficha DS-05.
-import type { ReactElement } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useState, type ReactElement } from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 import { color, fontFamilies, shape } from "../../theme";
 
@@ -10,6 +10,7 @@ export interface AvatarProps {
   name: string;
   tone?: AvatarTone;
   size?: number;
+  photoUrl?: string | null;
 }
 
 const toneStyles: Record<
@@ -53,7 +54,9 @@ const styles = StyleSheet.create({
     borderRadius: shape.radius.avatar,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  photo: { width: "100%", height: "100%" },
   initials: {
     fontSize: 14,
     lineHeight: 18,
@@ -61,9 +64,16 @@ const styles = StyleSheet.create({
   },
 });
 
-export function Avatar({ name, tone, size }: AvatarProps): ReactElement {
+export function Avatar({
+  name,
+  tone,
+  size,
+  photoUrl,
+}: AvatarProps): ReactElement {
   const resolvedTone = toneStyles[tone ?? toneForName(name)];
   const dimension = size ?? 46;
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const showPhoto = !!photoUrl && failedUrl !== photoUrl;
 
   return (
     <View
@@ -77,9 +87,19 @@ export function Avatar({ name, tone, size }: AvatarProps): ReactElement {
           : null,
       ]}
     >
-      <Text style={[styles.initials, { color: resolvedTone.color }]}>
-        {initialsForName(name)}
-      </Text>
+      {showPhoto ? (
+        <Image
+          testID="avatar-photo"
+          source={{ uri: photoUrl as string }}
+          resizeMode="cover"
+          onError={() => setFailedUrl(photoUrl ?? null)}
+          style={styles.photo}
+        />
+      ) : (
+        <Text style={[styles.initials, { color: resolvedTone.color }]}>
+          {initialsForName(name)}
+        </Text>
+      )}
     </View>
   );
 }
