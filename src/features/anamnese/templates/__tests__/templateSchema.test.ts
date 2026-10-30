@@ -1,9 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { templateSchema, toTemplateInput } from "../templateSchema";
 
-const base = { title: "Inicial", description: "", questions: [] };
+const question = {
+  text: "Pergunta",
+  type: "Descriptive" as const,
+  required: false,
+  options: [] as string[],
+};
+const base = { title: "Inicial", description: "", questions: [question] };
 
 describe("PAC-08 validação e corpo", () => {
+  it("exige pelo menos uma pergunta (PAC-08.3)", () => {
+    const result = templateSchema.safeParse({ ...base, questions: [] });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.message)).toContain(
+        "Adicione pelo menos uma pergunta",
+      );
+    }
+    expect(templateSchema.safeParse(base).success).toBe(true);
+  });
   it("limita título e descrição", () => {
     expect(templateSchema.safeParse({ ...base, title: "" }).success).toBe(
       false,
