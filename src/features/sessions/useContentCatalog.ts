@@ -6,6 +6,7 @@ import {
   listTasks,
 } from "@/api/endpoints/content";
 import type { TaskCategory } from "@/api/types";
+import { getActiveEducatorId } from "@/storage/mmkv";
 import type { SessionFlowContentKind } from "@/stores/session-flow";
 
 export interface ContentCatalogItem {
@@ -44,7 +45,12 @@ export function useContentCatalog(
     queryKey: contentCatalogQueryKey(chip),
     queryFn: async (): Promise<ContentCatalogItem[]> => {
       if (chip === "notebook") {
-        const notebooks = await listTaskNotebooks();
+        // A biblioteca é compartilhada, mas o backend só inicia sessão com
+        // caderno do próprio educador (NOTEBOOK_NOT_FOUND): mostra só os meus.
+        const educatorId = getActiveEducatorId();
+        const notebooks = (await listTaskNotebooks()).filter(
+          ({ notebook }) => !educatorId || notebook.educator === educatorId,
+        );
         return notebooks.map(({ notebook }) => ({
           kind: "notebook" as const,
           id: notebook.id,
