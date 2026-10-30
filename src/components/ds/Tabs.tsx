@@ -2,6 +2,8 @@
 import type { ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { hitSlopToMinTarget } from "./touchTarget";
+
 import { color, fontFamilies } from "../../theme";
 
 export interface TabOption {
@@ -61,6 +63,7 @@ export function Tabs({
             key={option.key}
             onPress={() => !disabled && onChange(option.key)}
             accessibilityRole="tab"
+            hitSlop={hitSlopToMinTarget(Infinity, 43)}
             accessibilityLabel={option.label}
             accessibilityState={{ selected: isActive, disabled }}
             style={[styles.tab, isActive ? styles.tabActive : null]}

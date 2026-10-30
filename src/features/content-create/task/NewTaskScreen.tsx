@@ -165,6 +165,12 @@ export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["task"] });
       if (editing && taskId) {
+        // A edição é aberta pelo detalhe: voltar a ele (já recarregado pela
+        // invalidação) evita empilhar um segundo detalhe (ATV-02).
+        if (router.canGoBack()) {
+          router.back();
+          return;
+        }
         router.replace(`/content/task/${taskId}`);
         return;
       }

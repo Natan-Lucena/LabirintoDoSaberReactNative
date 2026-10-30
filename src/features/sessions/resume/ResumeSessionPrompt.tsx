@@ -34,7 +34,10 @@ export function ResumeSessionPrompt(): ReactElement | null {
     hydrate,
     finish,
   } = useSessionFlowStore();
-  const [checked, setChecked] = useState(false);
+  // Decidido uma vez, logo após hidratar: só a sessão salva ao abrir o app é
+  // oferecida. Uma sessão iniciada depois também fica "running" e não pode
+  // abrir este aviso por cima do próprio player (AGE-04.1).
+  const [resumable, setResumable] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
@@ -58,14 +61,16 @@ export function ResumeSessionPrompt(): ReactElement | null {
           useAuthStore.setState({ educatorId });
         }
         await hydrate(educatorId);
-        setChecked(true);
+        setResumable(
+          RESUMABLE_STEPS.includes(useSessionFlowStore.getState().step),
+        );
       } catch {
         // Sem educador ou sem armazenamento legível, não há o que retomar.
       }
     })();
   }, [authEducatorId, hydrate, status]);
 
-  const visible = checked && !dismissed && RESUMABLE_STEPS.includes(step);
+  const visible = resumable && !dismissed;
   const hasUnconfirmed = pendingAnswers.length + conflictedAnswers.length > 0;
 
   async function isFinishedOnServer(): Promise<boolean> {

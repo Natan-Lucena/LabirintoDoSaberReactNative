@@ -45,6 +45,11 @@ import {
 } from "@/features/plans/suggestions/usePlanSuggestions";
 import { useStudents } from "@/features/students/useStudents";
 import { color, typography } from "@/theme";
+import { dayKey } from "@/utils/date";
+
+function sameKey(a: readonly unknown[], b: readonly unknown[]): boolean {
+  return a.length === b.length && a.every((part, index) => part === b[index]);
+}
 
 const goalLabels: Record<GoalStatus, string> = {
   NOT_STARTED: "Não iniciada",
@@ -120,12 +125,22 @@ export function PlanDetailScreen(): ReactElement {
     enabled: !!id && !!planQuery.data,
   });
 
-  function acceptPlan(plan: Plan): void {
-    queryClient.setQueryData(detailKey, plan);
+  /**
+   * Marca os planos como desatualizados e recarrega os que estão na tela (a
+   * ficha do paciente fica montada atrás do detalhe). O detalhe e as revisões
+   * deste plano já foram atualizados com a resposta e não são pedidos de novo.
+   */
+  function refreshOtherPlanQueries(): void {
     void queryClient.invalidateQueries({
       queryKey: planQueryKeys.all,
-      refetchType: "none",
+      predicate: ({ queryKey }) =>
+        !sameKey(queryKey, detailKey) && !sameKey(queryKey, reviewsKey),
     });
+  }
+
+  function acceptPlan(plan: Plan): void {
+    queryClient.setQueryData(detailKey, plan);
+    refreshOtherPlanQueries();
     setLocalError("");
   }
   const goalMutation = useMutation({
@@ -152,10 +167,7 @@ export function PlanDetailScreen(): ReactElement {
         review,
         ...old,
       ]);
-      void queryClient.invalidateQueries({
-        queryKey: planQueryKeys.all,
-        refetchType: "none",
-      });
+      refreshOtherPlanQueries();
       if (review.nextReviewDate)
         queryClient.setQueryData<Plan>(detailKey, (old) =>
           old ? { ...old, nextReviewDate: review.nextReviewDate } : old,
@@ -533,6 +545,10 @@ export function PlanDetailScreen(): ReactElement {
               <SuggestionCard
                 key={suggestion.id}
                 suggestion={suggestion}
+                goalDescription={
+                  plan.goals.find((goal) => goal.id === suggestion.goalId)
+                    ?.description
+                }
                 busy={suggestionActions.busyId !== null}
                 onAccept={() => void suggestionActions.accept(suggestion.id)}
                 onDismiss={() => void suggestionActions.dismiss(suggestion.id)}
@@ -597,7 +613,7 @@ export function PlanDetailScreen(): ReactElement {
             reviewsQuery.data.map((review) => (
               <View key={review.id} style={styles.goal}>
                 <Text style={styles.heading}>
-                  {displayDate(review.reviewedAt.slice(0, 10))}
+                  {displayDate(dayKey(new Date(review.reviewedAt)))}
                 </Text>
                 <Text style={styles.body}>{review.note}</Text>
                 {review.nextReviewDate ? (
