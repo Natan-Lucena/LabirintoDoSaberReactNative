@@ -197,7 +197,7 @@ export function AgendaScreen(): ReactElement {
         <View style={{ gap: 12 }}>
           <View style={styles.weekNavigation}>
             <IconButton
-              icon="chevron"
+              icon="chevronLeft"
               accessibilityLabel="Semana anterior"
               onPress={() => setSelectedDay(shiftKey(selectedDay, -7))}
             />
