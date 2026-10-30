@@ -135,6 +135,39 @@ describe("AppointmentFormScreen — novo atendimento (AGE-03)", () => {
     ).toBe(true);
   });
 
+  it("AGE-03.3 formulário recém-aberto não mostra erros de data e horário", async () => {
+    await render(<AppointmentFormScreen />);
+
+    expect(screen.queryByText("Selecione a data")).toBeNull();
+    expect(screen.queryByText("Selecione o horário")).toBeNull();
+  });
+
+  it("AGE-03.3 depois de escolher o paciente, mostra os erros de data e horário", async () => {
+    await render(<AppointmentFormScreen />);
+    await pickStudent("Caio Mendes");
+
+    await waitFor(() => {
+      expect(screen.getByText("Selecione a data")).toBeTruthy();
+    });
+    expect(screen.getByText("Selecione o horário")).toBeTruthy();
+  });
+
+  it("AGE-03.3 escolher a data remove só o erro da data", async () => {
+    await render(<AppointmentFormScreen />);
+    await pickStudent("Caio Mendes");
+    await waitFor(() => {
+      expect(screen.getByText("Selecione a data")).toBeTruthy();
+    });
+
+    await fireEvent.press(screen.getByLabelText("Data"));
+    await fireEvent.press(screen.getByLabelText("seletor-date"));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Selecione a data")).toBeNull();
+    });
+    expect(screen.getByText("Selecione o horário")).toBeTruthy();
+  });
+
   it("AC-AGE-03-06 pré-preenche paciente e data pelos parâmetros", async () => {
     await render(
       <AppointmentFormScreen studentId="student-2" date="2026-04-10" />,
