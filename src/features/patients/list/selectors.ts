@@ -77,7 +77,8 @@ export function nextAppointmentByStudentId(
     if (
       appointment.status === "CANCELLED" ||
       appointment.status === "COMPLETED" ||
-      scheduledAt < now
+      scheduledAt.getTime() + appointment.durationMinutes * 60 * 1000 <=
+        now.getTime()
     ) {
       continue;
     }
