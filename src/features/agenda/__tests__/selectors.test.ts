@@ -41,4 +41,31 @@ describe("selectCurrentAppointment (AC-AGE-01-03)", () => {
       ),
     ).toBeUndefined();
   });
+
+  describe("só destaca o que ainda não terminou (D14)", () => {
+    const now = new Date("2026-04-02T03:57:00Z"); // 00:57 em São Paulo
+    const ended = {
+      ...at("ended", "2026-04-02T03:00:00Z", "PENDING"),
+      durationMinutes: 15,
+    };
+    const running = {
+      ...at("running", "2026-04-02T03:30:00Z", "PENDING"),
+      durationMinutes: 60,
+    };
+    it("pula o pendente que já terminou e destaca o em andamento", () => {
+      expect(
+        selectCurrentAppointment([ended, running], "2026-04-02", now)?.id,
+      ).toBe("running");
+    });
+    it("não destaca nada quando o único pendente já terminou", () => {
+      expect(
+        selectCurrentAppointment([ended], "2026-04-02", now),
+      ).toBeUndefined();
+    });
+    it("não destaca item de outro dia selecionado", () => {
+      expect(
+        selectCurrentAppointment([ended, running], "2026-04-03", now),
+      ).toBeUndefined();
+    });
+  });
 });

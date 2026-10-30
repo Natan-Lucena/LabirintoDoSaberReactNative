@@ -46,6 +46,7 @@ export function ContentStep(): ReactElement {
     content,
     student,
     appointmentId,
+    step,
   } = useSessionFlowStore();
   const [nameInput, setNameInput] = useState(sessionName ?? "");
   const [nameTouched, setNameTouched] = useState(false);
@@ -80,6 +81,13 @@ export function ContentStep(): ReactElement {
     setAppointmentMissing(false);
     if (!student || !selected || !isNameValid(nameInput)) return;
     const name = nameInput.trim();
+    if (step === "error") {
+      // Falha anterior ainda no store: recomeça mantendo aluno e vínculo.
+      await discard({ confirmed: true });
+      await selectStudent(student);
+      await setAppointmentId(linkedAppointmentId);
+      setMessage(null);
+    }
     await configure({
       name,
       content: { kind: selected.kind, id: selected.id, name: selected.name },

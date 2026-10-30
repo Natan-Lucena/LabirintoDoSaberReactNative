@@ -273,6 +273,16 @@ export function PlanDetailScreen(): ReactElement {
     editMutation.error ??
     reviewMutation.error ??
     closeMutation.error;
+  const shownError =
+    localError || (mutationError ? errorMessage(mutationError) : "");
+  // O erro aparece dentro do formulário aberto (edição ou revisão); fora dele
+  // ficaria abaixo das sugestões, longe do botão e fora da tela.
+  const errorText = shownError ? (
+    <Text style={styles.error} accessibilityRole="alert">
+      {shownError}
+    </Text>
+  ) : null;
+  const formOpen = active && (mode === "edit" || mode === "review");
   const initial: PlanFormValues = {
     title: plan.title,
     generalObjective: plan.generalObjective,
@@ -436,6 +446,7 @@ export function PlanDetailScreen(): ReactElement {
                 maxLength={10}
               />
             </PlanForm>
+            {errorText}
             <DsButton
               label="Cancelar edição"
               variant="ghost"
@@ -459,6 +470,7 @@ export function PlanDetailScreen(): ReactElement {
               onChangeText={setReviewDate}
               maxLength={10}
             />
+            {errorText}
             <DsButton
               label="Salvar revisão"
               loading={reviewMutation.isPending}
@@ -544,11 +556,7 @@ export function PlanDetailScreen(): ReactElement {
             ))}
           </View>
         ) : null}
-        {localError || mutationError ? (
-          <Text style={styles.error} accessibilityRole="alert">
-            {localError || errorMessage(mutationError)}
-          </Text>
-        ) : null}
+        {formOpen ? null : errorText}
         <View style={styles.card}>
           <SectionTitle title="Metas" />
           <Text style={styles.body}>
