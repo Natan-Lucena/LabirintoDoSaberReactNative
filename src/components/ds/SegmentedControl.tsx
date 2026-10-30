@@ -30,7 +30,9 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.5 },
   segment: {
     flex: 1,
-    height: 39,
+    // 40 + padding 4 × 2 da faixa = 48 dp (G-17). O hitSlop (4 dp) cobre o
+    // padding; além da faixa ele não funcionaria no Android.
+    height: 40,
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
@@ -67,7 +69,7 @@ export function SegmentedControl({
             key={option.key}
             onPress={() => !disabled && onChange(option.key)}
             accessibilityRole="radio"
-            hitSlop={hitSlopToMinTarget(Infinity, 39)}
+            hitSlop={hitSlopToMinTarget(Infinity, 40)}
             accessibilityLabel={option.label}
             accessibilityState={{ selected: isActive, disabled }}
             style={[styles.segment, isActive ? styles.segmentActive : null]}

@@ -5,7 +5,6 @@ import { ScrollView, StyleSheet, Text } from "react-native";
 import { color, fontFamilies } from "../../theme";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
 import { StaticPressable } from "./StaticPressable";
-import { hitSlopToMinTarget } from "./touchTarget";
 
 export interface FilterChipProps {
   label: string;
@@ -13,6 +12,10 @@ export interface FilterChipProps {
   onPress: () => void;
   disabled?: boolean;
 }
+
+// Chip: lineHeight 15 + padding 8 × 2 + borda 1 × 2 = 33 dp; 8 dp acima e
+// abaixo levam a área de toque a 49 dp (G-17).
+const CHIP_TOUCH_SLOP = 8;
 
 const styles = StyleSheet.create({
   chip: {
@@ -35,7 +38,10 @@ const styles = StyleSheet.create({
     color: color.ink[600],
   },
   labelActive: { color: color.brand[700] },
-  row: { gap: 8 },
+  row: { gap: 8, paddingVertical: CHIP_TOUCH_SLOP },
+  // O ScrollView corta toques fora dos próprios limites: o padding vertical
+  // abre espaço para o hitSlop do chip e a margem negativa mantém o layout.
+  scroll: { marginVertical: -CHIP_TOUCH_SLOP },
 });
 
 export function FilterChip({
@@ -55,7 +61,7 @@ export function FilterChip({
 
   return (
     <StaticPressable
-      hitSlop={hitSlopToMinTarget(Infinity, 33)}
+      hitSlop={{ top: CHIP_TOUCH_SLOP, bottom: CHIP_TOUCH_SLOP }}
       onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -94,6 +100,7 @@ export function FilterRow({
 }: FilterRowProps): ReactElement {
   return (
     <ScrollView
+      style={styles.scroll}
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}
