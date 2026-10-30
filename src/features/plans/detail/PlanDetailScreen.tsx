@@ -521,6 +521,10 @@ export function PlanDetailScreen(): ReactElement {
               <SuggestionCard
                 key={suggestion.id}
                 suggestion={suggestion}
+                goalDescription={
+                  plan.goals.find((goal) => goal.id === suggestion.goalId)
+                    ?.description
+                }
                 busy={suggestionActions.busyId !== null}
                 onAccept={() => void suggestionActions.accept(suggestion.id)}
                 onDismiss={() => void suggestionActions.dismiss(suggestion.id)}

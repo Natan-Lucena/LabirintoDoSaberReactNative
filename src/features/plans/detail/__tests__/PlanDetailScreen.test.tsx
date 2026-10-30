@@ -323,7 +323,12 @@ describe("PlanDetailScreen — sugestões da IA (PLN-05)", () => {
     await render(<PlanDetailScreen />);
     expect(await screen.findByText("Avanço recente.")).toBeTruthy();
     expect(screen.queryByText("Outro plano.")).toBeNull();
-    expect(screen.getByText("Mudar meta para Atingida")).toBeTruthy();
+    // PLN-05: a mudança diz qual meta muda.
+    expect(
+      screen.getByText(
+        "Mudar a meta “Escrever frases com letra maiúscula” para Atingida",
+      ),
+    ).toBeTruthy();
     await fireEvent.press(
       screen.getByRole("button", { name: /Aceitar sugestão/ }),
     );

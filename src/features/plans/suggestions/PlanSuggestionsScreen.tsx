@@ -7,9 +7,11 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useQueries } from "@tanstack/react-query";
 
+import { getPlan } from "@/api/endpoints/plans";
 import { AppHeader, DsButton } from "@/components/ds";
-import { usePlans } from "@/features/plans/hub/usePlans";
+import { planQueryKeys, usePlans } from "@/features/plans/hub/usePlans";
 import { color, typography } from "@/theme";
 import { SuggestionCard } from "./SuggestionCard";
 import {
@@ -36,6 +38,20 @@ export function PlanSuggestionsScreen(): ReactElement {
   const plans = usePlans();
   const actions = useSuggestionActions();
   const items = suggestions.data ?? [];
+  // A lista de planos não traz as metas: busca o detalhe dos planos com
+  // sugestão (mesma chave do detalhe do plano) para dizer qual meta muda.
+  const planIds = [...new Set(items.map((item) => item.planId))];
+  const planDetails = useQueries({
+    queries: planIds.map((planId) => ({
+      queryKey: [...planQueryKeys.all, "detail", planId],
+      queryFn: () => getPlan(planId),
+    })),
+  });
+  function goalDescription(planId: string, goalId?: string) {
+    if (!goalId) return undefined;
+    const plan = planDetails[planIds.indexOf(planId)]?.data;
+    return plan?.goals.find((goal) => goal.id === goalId)?.description;
+  }
 
   return (
     <View style={styles.screen}>
@@ -74,6 +90,10 @@ export function PlanSuggestionsScreen(): ReactElement {
               key={suggestion.id}
               suggestion={suggestion}
               showContext
+              goalDescription={goalDescription(
+                suggestion.planId,
+                suggestion.goalId,
+              )}
               planTitle={
                 plans.data?.find((plan) => plan.id === suggestion.planId)?.title
               }
