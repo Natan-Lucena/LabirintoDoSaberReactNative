@@ -2,9 +2,7 @@
 import type { ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { hitSlopToMinTarget } from "./touchTarget";
-
-import { color, fontFamilies } from "../../theme";
+import { color, fontFamilies, shape } from "../../theme";
 
 export interface TabOption {
   key: string;
@@ -28,7 +26,8 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.5 },
   tab: {
     flex: 1,
-    height: 43,
+    // 48 dp (G-17): o hitSlop não passaria da linha das abas no Android.
+    height: shape.minTouchTarget,
     alignItems: "center",
     justifyContent: "center",
     borderBottomWidth: 2,
@@ -63,7 +62,6 @@ export function Tabs({
             key={option.key}
             onPress={() => !disabled && onChange(option.key)}
             accessibilityRole="tab"
-            hitSlop={hitSlopToMinTarget(Infinity, 43)}
             accessibilityLabel={option.label}
             accessibilityState={{ selected: isActive, disabled }}
             style={[styles.tab, isActive ? styles.tabActive : null]}

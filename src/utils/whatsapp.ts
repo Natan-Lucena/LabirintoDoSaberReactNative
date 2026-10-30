@@ -15,10 +15,10 @@ export function buildWhatsAppUrl(
 ): string | null {
   const digits = phone?.replace(/\D/g, "") ?? "";
   if (!digits) return null;
+  // 10 ou 11 dígitos = DDD + número (nacional): sempre recebe o código do
+  // país, inclusive com o DDD 55 (RS). Com 12 ou 13 dígitos, já tem o 55.
   const number =
-    !digits.startsWith("55") && (digits.length === 10 || digits.length === 11)
-      ? `55${digits}`
-      : digits;
+    digits.length === 10 || digits.length === 11 ? `55${digits}` : digits;
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 

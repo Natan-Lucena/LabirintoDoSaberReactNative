@@ -40,6 +40,7 @@ const discard = vi.fn().mockResolvedValue(undefined);
 const selectStudent = vi.fn().mockResolvedValue(undefined);
 const setAppointmentId = vi.fn().mockResolvedValue(undefined);
 let mockAppointmentId: string | null = null;
+let mockStep = "configured";
 const mockStudent = { id: "student-1", name: "Ana Souza" };
 let mockSessionName: string | null = null;
 let mockContent: {
@@ -57,6 +58,7 @@ vi.mock("@/stores/session-flow", () => ({
     discard,
     selectStudent,
     setAppointmentId,
+    step: mockStep,
     appointmentId: mockAppointmentId,
     student: mockStudent,
     sessionName: mockSessionName,
@@ -113,6 +115,10 @@ describe("normalizeForSearch", () => {
 describe("ContentStep", () => {
   beforeEach(() => {
     mockAppointmentId = null;
+    mockStep = "configured";
+    failStart.mockImplementation(async () => {
+      mockStep = "error";
+    });
   });
   it("AC-703-01: nome vazio mostra erro acessível e desabilita início após tentativa", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([]);
@@ -271,6 +277,49 @@ describe("ContentStep", () => {
 
     expect(setAppointmentId).toHaveBeenCalledWith("appt-1");
     mockAppointmentId = null;
+  });
+
+  it("Iniciar sessão de novo depois de falhar reinicia o fluxo e abre o player", async () => {
+    mockAppointmentId = "appt-1";
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession)
+      .mockReset()
+      .mockRejectedValueOnce(new Error("Falha do servidor"))
+      .mockResolvedValueOnce({
+        id: "session-9",
+        studentId: "student-1",
+        educatorId: "e1",
+        name: "Sessão",
+        startedAt: "2026-10-07T10:00:00.000Z",
+        answers: [],
+      });
+    push.mockClear();
+    discard.mockClear();
+    selectStudent.mockClear();
+    setAppointmentId.mockClear();
+
+    await renderContentStep();
+    await screen.findByText("Cores e formas");
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+      fireEvent.changeText(screen.getByLabelText("Nome da sessão"), "Sessão");
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+    await screen.findByText("Falha do servidor");
+    expect(discard).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+
+    expect(discard).toHaveBeenCalledWith({ confirmed: true });
+    expect(selectStudent).toHaveBeenCalledWith(mockStudent);
+    expect(setAppointmentId).toHaveBeenCalledWith("appt-1");
+    expect(startSession).toHaveBeenCalledTimes(2);
+    expect(confirmStart).toHaveBeenLastCalledWith("session-9");
+    expect(push).toHaveBeenCalledWith("/session/player");
   });
 
   it("AC-SES-01-01: inicia sessão, confirma no store e abre o player", async () => {

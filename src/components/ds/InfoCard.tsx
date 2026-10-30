@@ -109,6 +109,7 @@ export function InfoCard({
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? title}
+        accessibilityHint={description}
         style={({ pressed }) => [
           styles.card,
           getPressScaleStyle(pressed, reduceMotion),
