@@ -45,6 +45,7 @@ import {
 } from "@/features/plans/suggestions/usePlanSuggestions";
 import { useStudents } from "@/features/students/useStudents";
 import { color, typography } from "@/theme";
+import { dayKey } from "@/utils/date";
 
 const goalLabels: Record<GoalStatus, string> = {
   NOT_STARTED: "Não iniciada",
@@ -589,7 +590,7 @@ export function PlanDetailScreen(): ReactElement {
             reviewsQuery.data.map((review) => (
               <View key={review.id} style={styles.goal}>
                 <Text style={styles.heading}>
-                  {displayDate(review.reviewedAt.slice(0, 10))}
+                  {displayDate(dayKey(new Date(review.reviewedAt)))}
                 </Text>
                 <Text style={styles.body}>{review.note}</Text>
                 {review.nextReviewDate ? (
