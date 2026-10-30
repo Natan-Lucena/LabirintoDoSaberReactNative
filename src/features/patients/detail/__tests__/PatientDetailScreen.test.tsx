@@ -153,6 +153,50 @@ describe("PatientDetailScreen (PAC-03)", () => {
     ).toBe("next");
   });
 
+  it("AGE-03.12: ignora atendimento já concluído ao escolher a próxima sessão", () => {
+    const base = {
+      educatorId: "educator-1",
+      studentId: patient.id,
+      durationMinutes: 50,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    };
+    const now = new Date("2026-10-29T21:00:00-03:00");
+    expect(
+      findNextAppointment(
+        [
+          {
+            ...base,
+            id: "completed",
+            scheduledAt: "2026-10-30T10:00:00-03:00",
+            status: "COMPLETED",
+          },
+        ],
+        patient.id,
+        now,
+      ),
+    ).toBeUndefined();
+    expect(
+      findNextAppointment(
+        [
+          {
+            ...base,
+            id: "completed",
+            scheduledAt: "2026-10-30T10:00:00-03:00",
+            status: "COMPLETED",
+          },
+          {
+            ...base,
+            id: "pending",
+            scheduledAt: "2026-10-31T09:00:00-03:00",
+            status: "PENDING",
+          },
+        ],
+        patient.id,
+        now,
+      )?.id,
+    ).toBe("pending");
+  });
+
   it("mostra resumo, dados da API, evolução e acessos da ficha", async () => {
     await render(<PatientDetailScreen patientId={patient.id} />);
 
