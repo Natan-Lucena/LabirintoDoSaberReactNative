@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -21,7 +21,10 @@ import {
   SearchField,
 } from "@/components/ds";
 import { useStudents } from "@/features/students/useStudents";
-import { useSessionFlowStore } from "@/stores/session-flow";
+import {
+  SessionFlowInvalidTransitionError,
+  useSessionFlowStore,
+} from "@/stores/session-flow";
 import { color, fontFamilies, semanticColor } from "@/theme";
 
 export function normalizeForSearch(value: string): string {
@@ -58,6 +61,8 @@ export function StudentStep(): ReactElement {
   const [existing, setExisting] = useState<TaskNotebookSession | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Evita rodar o fluxo direto duas vezes (efeitos podem repetir).
+  const directStarted = useRef(false);
 
   const students = data ?? [];
   const filtered = normalizeForSearch(query)
@@ -67,20 +72,33 @@ export function StudentStep(): ReactElement {
     : students;
 
   useEffect(() => {
-    if (!params.studentId || selected || !data) return;
+    if (!params.studentId || selected || !data || directStarted.current) {
+      return;
+    }
     const matched = data.find((student) => student.id === params.studentId);
-    if (matched) void chooseStudent(matched);
+    if (!matched) return;
+    directStarted.current = true;
+    void (async () => {
+      const clear = await chooseStudent(matched);
+      // Sessão iniciada pelo atendimento, Home ou paciente: sem escolha manual.
+      if (clear) await proceed(matched, true);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- roda uma vez por paciente (guarda em ref)
   }, [data, params.studentId, selected]);
 
-  async function chooseStudent(student: Student) {
+  // Devolve true quando não há sessão aberta e a verificação não falhou.
+  async function chooseStudent(student: Student): Promise<boolean> {
     setSelected(student);
     setExisting(null);
     setError(null);
     setCheckingExisting(true);
     try {
-      setExisting(openSession(await listSessionsByStudent(student.id)) ?? null);
+      const open = openSession(await listSessionsByStudent(student.id)) ?? null;
+      setExisting(open);
+      return open === null;
     } catch {
       setError("Não foi possível verificar sessões em andamento.");
+      return false;
     } finally {
       setCheckingExisting(false);
     }
@@ -148,15 +166,29 @@ export function StudentStep(): ReactElement {
 
   async function handleNext() {
     if (!selected || existing) return;
-    await selectStudent(selected);
-    // O vínculo só vale para o paciente do atendimento; a escolha manual de
-    // outro paciente (ou a sessão avulsa) limpa o que sobrou de antes.
-    await setAppointmentId(
-      params.appointmentId && params.studentId === selected.id
-        ? params.appointmentId
-        : null,
-    );
-    router.push("/session/content");
+    await proceed(selected, false);
+  }
+
+  async function proceed(student: Student, replaceRoute: boolean) {
+    try {
+      await selectStudent(student);
+      // O vínculo só vale para o paciente do atendimento; a escolha manual de
+      // outro paciente (ou a sessão avulsa) limpa o que sobrou de antes.
+      await setAppointmentId(
+        params.appointmentId && params.studentId === student.id
+          ? params.appointmentId
+          : null,
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof SessionFlowInvalidTransitionError
+          ? "Há uma sessão em andamento neste aparelho. Retome ou encerre antes de iniciar outra."
+          : "Não foi possível preparar a sessão.",
+      );
+      return;
+    }
+    if (replaceRoute) router.replace("/session/content");
+    else router.push("/session/content");
   }
 
   return (

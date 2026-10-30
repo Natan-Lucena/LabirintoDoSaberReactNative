@@ -12,12 +12,16 @@ import {
   Field,
   InfoCard,
   SearchField,
+  SegmentedControl,
 } from "@/components/ds";
 import {
   useContentCatalog,
   type ContentCatalogItem,
 } from "@/features/sessions/useContentCatalog";
-import { useSessionFlowStore } from "@/stores/session-flow";
+import {
+  useSessionFlowStore,
+  type SessionFlowContentKind,
+} from "@/stores/session-flow";
 import { color, fontFamilies } from "@/theme";
 
 export function normalizeForSearch(value: string): string {
@@ -26,6 +30,36 @@ export function normalizeForSearch(value: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
+
+const KIND_OPTIONS = [
+  { key: "notebook", label: "Caderno" },
+  { key: "group", label: "Grupo" },
+  { key: "task", label: "Atividade" },
+];
+
+const KIND_COPY: Record<
+  SessionFlowContentKind,
+  { title: string; search: string; loading: string; empty: string }
+> = {
+  notebook: {
+    title: "Escolha o caderno",
+    search: "Buscar caderno",
+    loading: "Carregando cadernos",
+    empty: "Nenhum caderno encontrado.",
+  },
+  group: {
+    title: "Escolha o grupo",
+    search: "Buscar grupo",
+    loading: "Carregando grupos",
+    empty: "Nenhum grupo encontrado.",
+  },
+  task: {
+    title: "Escolha a atividade",
+    search: "Buscar atividade",
+    loading: "Carregando atividades",
+    empty: "Nenhuma atividade encontrada.",
+  },
+};
 
 const NAME_MAX_LENGTH = 100;
 const isNameValid = (name: string) =>
@@ -46,8 +80,12 @@ export function ContentStep(): ReactElement {
     content,
     student,
     appointmentId,
+    cancel,
     step,
   } = useSessionFlowStore();
+  const [kind, setKind] = useState<SessionFlowContentKind>(
+    content?.kind ?? "notebook",
+  );
   const [nameInput, setNameInput] = useState(sessionName ?? "");
   const [nameTouched, setNameTouched] = useState(false);
   const [query, setQuery] = useState("");
@@ -59,7 +97,8 @@ export function ContentStep(): ReactElement {
     null,
   );
   const [appointmentMissing, setAppointmentMissing] = useState(false);
-  const { items, isLoading, isError, refetch } = useContentCatalog("notebook");
+  const { items, isLoading, isError, refetch } = useContentCatalog(kind);
+  const copy = KIND_COPY[kind];
   const filtered = useMemo(
     () =>
       query
@@ -73,6 +112,21 @@ export function ContentStep(): ReactElement {
     nameTouched && !isNameValid(nameInput)
       ? "Informe um nome com 1 a 100 caracteres."
       : undefined;
+
+  function changeKind(next: string) {
+    setKind(next as SessionFlowContentKind);
+    setSelected(null);
+    setQuery("");
+  }
+
+  async function handleBack() {
+    try {
+      await cancel();
+    } catch {
+      /* etapa em que o cancelamento não se aplica: só sai */
+    }
+    router.back();
+  }
 
   async function handleStart(
     linkedAppointmentId: string | null = appointmentId,
@@ -170,7 +224,7 @@ export function ContentStep(): ReactElement {
       <AppHeader
         title="Nova sessão"
         subtitle="Nova sessão"
-        onBack={() => router.back()}
+        onBack={() => void handleBack()}
       />
       <View style={styles.content}>
         <Field
@@ -183,15 +237,21 @@ export function ContentStep(): ReactElement {
           accessibilityLabel="Nome da sessão"
           placeholder="Ex: Leitura de hoje"
         />
-        <Text style={styles.title}>Escolha o caderno</Text>
+        <SegmentedControl
+          options={KIND_OPTIONS}
+          value={kind}
+          onChange={changeKind}
+          accessibilityLabel="Tipo de conteúdo"
+        />
+        <Text style={styles.title}>{copy.title}</Text>
         <SearchField
           value={query}
           onChangeText={setQuery}
           onClear={() => setQuery("")}
-          placeholder="Buscar caderno"
+          placeholder={copy.search}
         />
         {isLoading ? (
-          <Text accessibilityRole="progressbar">Carregando cadernos</Text>
+          <Text accessibilityRole="progressbar">{copy.loading}</Text>
         ) : null}
         {isError ? (
           <DsButton
@@ -205,7 +265,7 @@ export function ContentStep(): ReactElement {
             data={filtered}
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
-              <Text style={styles.description}>Nenhum caderno encontrado.</Text>
+              <Text style={styles.description}>{copy.empty}</Text>
             }
             renderItem={({ item }) => (
               <CheckList
