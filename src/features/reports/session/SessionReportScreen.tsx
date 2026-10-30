@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { BackHandler, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import type { SessionReport } from "@/api/endpoints/session-report";
@@ -23,6 +24,39 @@ import {
   getTypeLabel,
 } from "./sessionReport";
 import { useSessionReport } from "./useSessionReport";
+
+const HOME_ROUTE = "/";
+
+/**
+ * Voltar do relatório. Ao retomar uma sessão com o app reaberto, o player e o
+ * relatório entram com `router.replace` e não sobra tela anterior: nesse caso
+ * o Voltar (cabeçalho e Android) leva à Início em vez de não fazer nada.
+ */
+function useReportBack(): () => void {
+  const router = useRouter();
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (router.canGoBack()) {
+          return false;
+        }
+        router.replace(HOME_ROUTE);
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [router]);
+
+  return () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace(HOME_ROUTE);
+  };
+}
 
 export interface SessionReportScreenProps {
   sessionId: string;
@@ -92,14 +126,19 @@ function PercentageSection({
   );
 }
 
-function ReportContent({ report }: { report: SessionReport }): ReactElement {
-  const router = useRouter();
+function ReportContent({
+  report,
+  onBack,
+}: {
+  report: SessionReport;
+  onBack: () => void;
+}): ReactElement {
   return (
     <View style={styles.screen}>
       <AppHeader
         title={report.sessionName}
         subtitle="Relatório da sessão"
-        onBack={router.back}
+        onBack={onBack}
       />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.preview}>
@@ -166,7 +205,7 @@ function ReportContent({ report }: { report: SessionReport }): ReactElement {
 export function SessionReportScreen({
   sessionId,
 }: SessionReportScreenProps): ReactElement {
-  const router = useRouter();
+  const goBack = useReportBack();
   const query = useSessionReport(sessionId);
 
   if (query.isPending && !query.data) {
@@ -181,7 +220,7 @@ export function SessionReportScreen({
         <StatePanel
           title="Sessão não encontrada"
           actionLabel="Voltar"
-          onPress={router.back}
+          onPress={goBack}
         />
       );
     }
@@ -198,12 +237,12 @@ export function SessionReportScreen({
       <StatePanel
         title="Sessão não encontrada"
         actionLabel="Voltar"
-        onPress={router.back}
+        onPress={goBack}
       />
     );
   }
 
-  return <ReportContent report={query.data} />;
+  return <ReportContent report={query.data} onBack={goBack} />;
 }
 
 const styles = StyleSheet.create({

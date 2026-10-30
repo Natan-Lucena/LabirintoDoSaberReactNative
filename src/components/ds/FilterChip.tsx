@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, Text } from "react-native";
 import { color, fontFamilies } from "../../theme";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
 import { StaticPressable } from "./StaticPressable";
+import { hitSlopToMinTarget } from "./touchTarget";
 
 export interface FilterChipProps {
   label: string;
@@ -54,6 +55,7 @@ export function FilterChip({
 
   return (
     <StaticPressable
+      hitSlop={hitSlopToMinTarget(Infinity, 33)}
       onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={label}

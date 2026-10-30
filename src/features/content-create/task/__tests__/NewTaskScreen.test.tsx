@@ -6,12 +6,17 @@ import { NewTaskScreen } from "../NewTaskScreen";
 
 const routerBack = vi.fn();
 const routerReplace = vi.fn();
+const routerCanGoBack = vi.fn(() => true);
 const createTask = vi.fn();
 const updateTask = vi.fn();
 const getTaskById = vi.fn();
 
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ back: routerBack, replace: routerReplace }),
+  useRouter: () => ({
+    back: routerBack,
+    replace: routerReplace,
+    canGoBack: routerCanGoBack,
+  }),
 }));
 
 vi.mock("@/config/env", () => ({
@@ -63,6 +68,7 @@ describe("NewTaskScreen", () => {
   beforeEach(() => {
     routerBack.mockClear();
     routerReplace.mockClear();
+    routerCanGoBack.mockReset().mockReturnValue(true);
     createTask.mockReset();
     updateTask.mockReset();
     getTaskById.mockReset();
@@ -180,7 +186,34 @@ describe("NewTaskScreen", () => {
         prompt: "Qual palavra começa com a letra B?",
       }),
     );
-    expect(routerReplace).toHaveBeenCalledWith("/content/task/task-1");
+    // ATV-02: volta ao detalhe que já está aberto (recarregado pela
+    // invalidação), sem empilhar um segundo detalhe.
+    await waitFor(() => expect(routerBack).toHaveBeenCalledTimes(1));
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("ATV-02: sem tela anterior, salvar a edição abre o detalhe da atividade", async () => {
+    routerCanGoBack.mockReturnValue(false);
+    getTaskById.mockResolvedValue(existingTask);
+    updateTask.mockResolvedValue(undefined);
+    await render(<NewTaskScreen taskId="task-1" />);
+    await waitFor(() =>
+      expect(screen.getByLabelText("Enunciado *").props.value).toBe(
+        existingTask.prompt,
+      ),
+    );
+    await fireEvent.changeText(
+      screen.getByLabelText("Enunciado *"),
+      "Qual palavra começa com a letra B?",
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Salvar atividade" }),
+    );
+
+    await waitFor(() =>
+      expect(routerReplace).toHaveBeenCalledWith("/content/task/task-1"),
+    );
+    expect(routerBack).not.toHaveBeenCalled();
   });
 
   it("mostra mensagem de erro legível quando a API rejeita a atividade", async () => {

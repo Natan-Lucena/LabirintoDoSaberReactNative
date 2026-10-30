@@ -56,7 +56,9 @@ export function findNextAppointment(
     .filter(
       (appointment) =>
         appointment.studentId === patientId &&
+        // Só atendimentos ainda por acontecer: cancelado e concluído ficam de fora.
         appointment.status !== "CANCELLED" &&
+        appointment.status !== "COMPLETED" &&
         new Date(appointment.scheduledAt) >= now,
     )
     .sort(

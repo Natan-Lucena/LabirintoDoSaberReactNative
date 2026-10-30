@@ -11,6 +11,7 @@ export type FigmaIconName =
   | "bell"
   | "search"
   | "chevron"
+  | "chevronLeft"
   | "clock"
   | "message"
   | "sparkles"
@@ -86,6 +87,9 @@ function renderIconElements(name: FigmaIconName): ReactElement {
       );
     case "chevron":
       return <Path d="m9 18 6-6-6-6" />;
+    case "chevronLeft":
+      // Espelho do "chevron" para "voltar/anterior" (o Figma Make só tem o da direita).
+      return <Path d="m15 18-6-6 6-6" />;
     case "clock":
       return (
         <>

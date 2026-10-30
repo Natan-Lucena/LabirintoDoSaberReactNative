@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { listTaskNotebooks } from "@/api/endpoints/content";
+import { getMe } from "@/api/endpoints/educator";
 import { deleteTaskNotebook } from "@/api/endpoints/task-notebook-delete";
 import { withOfflineGuard } from "@/api/query-client";
 import {
@@ -14,6 +15,7 @@ import {
   InfoCard,
   SectionTitle,
 } from "@/components/ds";
+import { useAuthStore } from "@/stores/auth";
 import { color, fontFamilies } from "@/theme";
 
 const categoryLabels = {
@@ -52,6 +54,17 @@ export function NotebookDetailScreen({
   const entry = notebooks.data?.find(
     ({ notebook }) => notebook.id === notebookId,
   );
+  // GET /task-notebook/ também traz cadernos de outros educadores: só o dono
+  // pode editar ou excluir (mesma regra do detalhe do grupo, FEC-03).
+  const authEducatorId = useAuthStore((state) => state.educatorId);
+  const me = useQuery({
+    queryKey: ["educator", "me"],
+    queryFn: () => getMe(),
+    enabled: !!entry && !authEducatorId,
+  });
+  const educatorId = authEducatorId ?? me.data?.id;
+  const ownNotebook = !!entry && educatorId === entry.notebook.educator;
+  const otherEducator = !!entry && !!educatorId && !ownNotebook;
   let body: ReactElement;
   if (notebooks.isPending && !notebooks.data)
     body = (
@@ -122,14 +135,17 @@ export function NotebookDetailScreen({
             Não foi possível excluir o caderno.
           </Text>
         ) : null}
-        <View style={styles.actions}>
-          <DsButton
-            label="Excluir Caderno"
-            variant="secondary"
-            onPress={() => setConfirmVisible(true)}
-          />
-          <DsButton label="Editar Caderno" onPress={edit} />
-        </View>
+        {otherEducator ? <Text>Caderno de outro educador</Text> : null}
+        {ownNotebook ? (
+          <View style={styles.actions}>
+            <DsButton
+              label="Excluir Caderno"
+              variant="secondary"
+              onPress={() => setConfirmVisible(true)}
+            />
+            <DsButton label="Editar Caderno" onPress={edit} />
+          </View>
+        ) : null}
         <Modal
           transparent
           visible={confirmVisible}

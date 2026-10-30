@@ -109,6 +109,15 @@ describe("AgendaScreen (AGE-01)", () => {
     expect(screen.getByText("Bia")).toBeTruthy();
   });
 
+  it("AGE-01: a seta de semana anterior aponta para a esquerda e a próxima para a direita", async () => {
+    await render(<AgendaScreen />);
+    const tree = JSON.stringify(screen.toJSON());
+    const left = tree.indexOf("m15 18-6-6 6-6");
+    const right = tree.indexOf("m9 18 6-6-6-6");
+    expect(left).toBeGreaterThan(-1);
+    expect(right).toBeGreaterThan(left);
+  });
+
   it("mostra status e abre detalhe e criação com dia selecionado (AC-AGE-01-04)", async () => {
     await render(<AgendaScreen />);
     expect(screen.getByText("Concluído")).toBeTruthy();
