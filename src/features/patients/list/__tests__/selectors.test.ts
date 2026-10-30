@@ -98,6 +98,24 @@ describe("PAC-01 selectors", () => {
     ).toBe("next");
   });
 
+  it("D14: atendimento futuro já concluído não é o próximo", () => {
+    const appointments = [
+      makeAppointment({
+        id: "done",
+        scheduledAt: "2026-10-08T13:00:00.000Z",
+        status: "COMPLETED",
+      }),
+      makeAppointment({ id: "next", scheduledAt: "2026-10-09T13:00:00.000Z" }),
+    ];
+
+    expect(
+      nextAppointmentByStudentId(
+        appointments,
+        new Date("2026-10-07T15:00:00.000Z"),
+      ).get("patient-1")?.id,
+    ).toBe("next");
+  });
+
   it("AC-PAC-01-03: o tom do avatar é determinístico por paciente", () => {
     expect(patientAvatarTone("patient-1")).toBe(patientAvatarTone("patient-1"));
     expect(["mint", "peach", "lavender"]).toContain(

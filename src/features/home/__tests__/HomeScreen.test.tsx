@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { HomeData, HomeQueryResult } from "@/features/home/useHomeData";
 import { fireEvent, render, screen } from "@/test-utils/render";
@@ -128,10 +128,17 @@ function setHomeQuery(overrides: Partial<HomeQueryResult> = {}): void {
 
 describe("HomeScreen (AC-HOME-01-01..04)", () => {
   beforeEach(() => {
+    // D14: o "próximo" depende da hora atual; fixa 09:00 em São Paulo.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-04-02T12:00:00.000Z"));
     onlineState.value = true;
     suggestionsState.count = 0;
     routerPush.mockClear();
     openURL.mockReset().mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("mostra o próximo atendimento, agenda ordenada e os atalhos", async () => {

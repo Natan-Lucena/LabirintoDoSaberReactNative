@@ -19,10 +19,21 @@ export function countScheduledAppointments(
   return appointments.filter(({ status }) => status !== "CANCELLED").length;
 }
 
+/**
+ * Próximo atendimento = o primeiro, na ordem recebida (lista ordenada por
+ * `scheduledAt`), que não foi concluído/cancelado e ainda não terminou
+ * (`scheduledAt + durationMinutes > now`). Atendimentos em andamento contam.
+ */
 export function selectNextAppointment(
   appointments: Appointment[],
+  now: Date = new Date(),
 ): Appointment | undefined {
-  return appointments.find(
-    ({ status }) => status !== "COMPLETED" && status !== "CANCELLED",
-  );
+  return appointments.find(({ status, scheduledAt, durationMinutes }) => {
+    if (status === "COMPLETED" || status === "CANCELLED") {
+      return false;
+    }
+    const endsAt =
+      new Date(scheduledAt).getTime() + durationMinutes * 60 * 1000;
+    return endsAt > now.getTime();
+  });
 }
