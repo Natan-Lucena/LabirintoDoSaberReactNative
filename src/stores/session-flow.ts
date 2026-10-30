@@ -138,18 +138,26 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       "idle",
       "studentSelected",
       "configured",
+      "startUncertain",
       "error",
     ]);
 
-    // Um "error" que sobrou de uma tentativa anterior recomeça como "idle".
-    const fresh = state.step === "idle" || state.step === "error";
+    // Um "error" ou "startUncertain" que sobrou de uma tentativa anterior
+    // recomeça como "idle": o início incerto é redescoberto no servidor.
+    const fresh =
+      state.step === "idle" ||
+      state.step === "error" ||
+      state.step === "startUncertain";
     const educatorId = fresh ? getActiveEducatorId() : state.educatorId;
     if (!educatorId) {
       throw new SessionFlowInvalidTransitionError("selectStudent", state.step);
     }
 
+    // Outro paciente descarta nome, conteúdo e atendimento do anterior.
+    const changedStudent =
+      !fresh && state.student !== null && state.student.id !== student.id;
     const next: SessionFlowData = {
-      ...(state.step === "error" ? initialSessionFlowData : state),
+      ...(fresh || changedStudent ? initialSessionFlowData : state),
       step: "studentSelected",
       educatorId,
       student,
@@ -357,6 +365,7 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       "idle",
       "studentSelected",
       "configured",
+      "startUncertain",
       "error",
     ]);
 
@@ -400,6 +409,11 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
     }
 
     // Fluxos salvos antes de campos novos (ex.: appointmentId) não os trazem.
-    set({ ...initialSessionFlowData, ...persisted });
+    // Nenhuma requisição de início sobrevive a um reinício do app.
+    set({
+      ...initialSessionFlowData,
+      ...persisted,
+      step: persisted.step === "starting" ? "startUncertain" : persisted.step,
+    });
   },
 }));

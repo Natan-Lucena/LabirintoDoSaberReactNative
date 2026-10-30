@@ -63,6 +63,9 @@ export function StudentStep(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   // Evita rodar o fluxo direto duas vezes (efeitos podem repetir).
   const directStarted = useRef(false);
+  // Só a escolha mais recente pode alterar a tela.
+  const chooseRequestId = useRef(0);
+  const latestChosenId = useRef<string | null>(null);
 
   const students = data ?? [];
   const filtered = normalizeForSearch(query)
@@ -81,31 +84,42 @@ export function StudentStep(): ReactElement {
     void (async () => {
       const clear = await chooseStudent(matched);
       // Sessão iniciada pelo atendimento, Home ou paciente: sem escolha manual.
-      if (clear) await proceed(matched, true);
+      if (clear && latestChosenId.current === matched.id) {
+        await proceed(matched, true);
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- roda uma vez por paciente (guarda em ref)
   }, [data, params.studentId, selected]);
 
   // Devolve true quando não há sessão aberta e a verificação não falhou.
   async function chooseStudent(student: Student): Promise<boolean> {
+    const requestId = ++chooseRequestId.current;
+    latestChosenId.current = student.id;
+    const isLatest = () => requestId === chooseRequestId.current;
     setSelected(student);
     setExisting(null);
     setError(null);
     setCheckingExisting(true);
     try {
       const open = openSession(await listSessionsByStudent(student.id)) ?? null;
+      if (!isLatest()) return false;
       setExisting(open);
       return open === null;
     } catch {
+      if (!isLatest()) return false;
       setError("Não foi possível verificar sessões em andamento.");
       return false;
     } finally {
-      setCheckingExisting(false);
+      if (isLatest()) setCheckingExisting(false);
     }
   }
 
   async function handleBack() {
-    await cancel();
+    try {
+      await cancel();
+    } catch {
+      /* sessão em andamento: nunca é cancelada daqui, só sai */
+    }
     router.back();
   }
 

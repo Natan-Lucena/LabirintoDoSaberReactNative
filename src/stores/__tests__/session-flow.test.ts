@@ -114,8 +114,9 @@ describe("stores/session-flow", () => {
     await useSessionFlowStore.getState().requestStart();
     expect(useSessionFlowStore.getState().step).toBe("starting");
     expect(useSessionFlowStore.getState().startRequestedAt).not.toBeNull();
+    // Nenhuma requisição de início sobrevive a um reinício (REV-SES R1b).
     await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
-    expect(useSessionFlowStore.getState().step).toBe("starting");
+    expect(useSessionFlowStore.getState().step).toBe("startUncertain");
 
     await useSessionFlowStore.getState().confirmStart("session-1");
     expect(useSessionFlowStore.getState().step).toBe("running");
@@ -479,5 +480,72 @@ describe("stores/session-flow", () => {
 
     expect(useSessionFlowStore.getState().step).toBe("studentSelected");
     expect(useSessionFlowStore.getState().appointmentId).toBeNull();
+  });
+
+  describe("REV-SES: fluxo não trava", () => {
+    async function toStep(
+      store: Awaited<ReturnType<typeof loadStore>>["useSessionFlowStore"],
+      target: "starting" | "startUncertain",
+    ) {
+      await store.getState().selectStudent(STUDENT);
+      await store.getState().configure({ name: "S", content: CONTENT });
+      await store.getState().requestStart();
+      if (target === "startUncertain") {
+        await store.getState().markStartUncertain();
+      }
+    }
+
+    it("R1a: selectStudent recomeça a partir de startUncertain", async () => {
+      const { useSessionFlowStore } = await loadStore();
+      await toStep(useSessionFlowStore, "startUncertain");
+
+      await useSessionFlowStore.getState().selectStudent(STUDENT);
+
+      const state = useSessionFlowStore.getState();
+      expect(state.step).toBe("studentSelected");
+      expect(state.sessionName).toBeNull();
+      expect(state.content).toBeNull();
+    });
+
+    it("R1a: cancel limpa o fluxo em startUncertain", async () => {
+      const { useSessionFlowStore } = await loadStore();
+      await toStep(useSessionFlowStore, "startUncertain");
+
+      await useSessionFlowStore.getState().cancel();
+
+      expect(useSessionFlowStore.getState().step).toBe("idle");
+    });
+
+    it("R1b: hydrate transforma starting persistido em startUncertain", async () => {
+      const { useSessionFlowStore } = await loadStore();
+      await toStep(useSessionFlowStore, "starting");
+
+      await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+
+      expect(useSessionFlowStore.getState().step).toBe("startUncertain");
+    });
+
+    it("R6: outro paciente zera nome, conteúdo e atendimento; o mesmo mantém", async () => {
+      const { useSessionFlowStore } = await loadStore();
+      await useSessionFlowStore.getState().selectStudent(STUDENT);
+      await useSessionFlowStore.getState().setAppointmentId("appt-1");
+      await useSessionFlowStore
+        .getState()
+        .configure({ name: "S", content: CONTENT });
+
+      await useSessionFlowStore.getState().selectStudent(STUDENT);
+      expect(useSessionFlowStore.getState().sessionName).toBe("S");
+      expect(useSessionFlowStore.getState().appointmentId).toBe("appt-1");
+
+      const other = { ...STUDENT, id: "student-2", name: "Bia" };
+      await useSessionFlowStore.getState().selectStudent(other);
+      const state = useSessionFlowStore.getState();
+      expect(state.step).toBe("studentSelected");
+      expect(state.student).toEqual(other);
+      expect(state.sessionName).toBeNull();
+      expect(state.content).toBeNull();
+      expect(state.appointmentId).toBeNull();
+      expect(state.educatorId).toBe(EDUCATOR_A);
+    });
   });
 });
