@@ -28,7 +28,10 @@ import {
   PLAN_SUGGESTIONS_ROUTE,
 } from "@/features/plans/routes";
 import { usePendingSuggestions } from "@/features/plans/suggestions/usePlanSuggestions";
-import { selectNextAppointment } from "@/features/home/selectors";
+import {
+  hasAppointmentEnded,
+  selectNextAppointment,
+} from "@/features/home/selectors";
 import { useHomeQuery } from "@/features/home/useHomeData";
 import { useOnline } from "@/hooks/useOnline";
 import { color, fontFamilies, semanticColor } from "@/theme";
@@ -203,7 +206,8 @@ export function HomeScreen(): ReactElement {
   const appointments = data.todayAppointments.map(
     ({ appointment }) => appointment,
   );
-  const nextAppointment = selectNextAppointment(appointments);
+  const now = new Date();
+  const nextAppointment = selectNextAppointment(appointments, now);
   const nextPatient = data.todayAppointments.find(
     ({ appointment }) => appointment.id === nextAppointment?.id,
   )?.student;
@@ -229,7 +233,11 @@ export function HomeScreen(): ReactElement {
             ? "Concluído"
             : appointment.status === "CANCELLED"
               ? "Cancelado"
-              : "Próximo atendimento",
+              : appointment.id === nextAppointment?.id
+                ? "Próximo atendimento"
+                : hasAppointmentEnded(appointment, now)
+                  ? "Pendente"
+                  : "Agendado",
         status:
           appointment.status === "COMPLETED"
             ? "done"
@@ -317,7 +325,11 @@ export function HomeScreen(): ReactElement {
             </>
           ) : (
             <>
-              <Text style={styles.patientName}>Sem atendimentos hoje</Text>
+              <Text style={styles.patientName}>
+                {appointments.length > 0
+                  ? "Sem mais atendimentos hoje"
+                  : "Sem atendimentos hoje"}
+              </Text>
               <DsButton
                 label="Ver agenda"
                 variant="secondary"

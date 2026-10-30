@@ -28,12 +28,22 @@ export function selectNextAppointment(
   appointments: Appointment[],
   now: Date = new Date(),
 ): Appointment | undefined {
-  return appointments.find(({ status, scheduledAt, durationMinutes }) => {
-    if (status === "COMPLETED" || status === "CANCELLED") {
-      return false;
-    }
-    const endsAt =
-      new Date(scheduledAt).getTime() + durationMinutes * 60 * 1000;
-    return endsAt > now.getTime();
-  });
+  return appointments.find(
+    (appointment) =>
+      appointment.status !== "COMPLETED" &&
+      appointment.status !== "CANCELLED" &&
+      !hasAppointmentEnded(appointment, now),
+  );
+}
+
+/** `scheduledAt + durationMinutes` já passou em relação a `now`. */
+export function hasAppointmentEnded(
+  {
+    scheduledAt,
+    durationMinutes,
+  }: Pick<Appointment, "scheduledAt" | "durationMinutes">,
+  now: Date = new Date(),
+): boolean {
+  const endsAt = new Date(scheduledAt).getTime() + durationMinutes * 60 * 1000;
+  return endsAt <= now.getTime();
 }

@@ -193,11 +193,51 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
     });
     await render(<HomeScreen />);
 
-    expect(screen.getByText("Sem atendimentos hoje")).toBeTruthy();
+    expect(screen.getByText("Sem mais atendimentos hoje")).toBeTruthy();
     await fireEvent.press(
       screen.getAllByRole("button", { name: "Ver agenda" })[0]!,
     );
     expect(routerPush).toHaveBeenCalledWith("/(tabs)/agenda");
+  });
+
+  it("E-06 mantém 'Sem atendimentos hoje' quando o dia não tem atendimentos", async () => {
+    setHomeQuery({ data: { ...homeData, todayAppointments: [] } });
+    await render(<HomeScreen />);
+
+    expect(screen.getByText("Sem atendimentos hoje")).toBeTruthy();
+    expect(screen.queryByText("Sem mais atendimentos hoje")).toBeNull();
+  });
+
+  it("E-05 rotula os pendentes: próximo, agendado e pendente já encerrado", async () => {
+    const [done, next] = homeData.todayAppointments as [
+      HomeData["todayAppointments"][number],
+      HomeData["todayAppointments"][number],
+    ];
+    const withAppointment = (
+      id: string,
+      scheduledAt: string,
+    ): HomeData["todayAppointments"][number] => ({
+      ...next,
+      appointment: { ...next.appointment, id, scheduledAt },
+    });
+    setHomeQuery({
+      data: {
+        ...homeData,
+        todayAppointments: [
+          done,
+          withAppointment("ended", "2026-04-02T10:00:00.000Z"),
+          withAppointment("upcoming", "2026-04-02T14:00:00.000Z"),
+          withAppointment("later", "2026-04-02T16:00:00.000Z"),
+        ],
+      },
+    });
+    await render(<HomeScreen />);
+
+    // hero (overline) + 1 item da agenda
+    expect(screen.getAllByText("Próximo atendimento")).toHaveLength(2);
+    expect(screen.getAllByText("Pendente")).toHaveLength(1);
+    expect(screen.getAllByText("Agendado")).toHaveLength(1);
+    expect(screen.getAllByText("Concluído")).toHaveLength(1);
   });
 
   it("AC-AGE-02-03 mostra Lembrete só em item pendente com telefone", async () => {
