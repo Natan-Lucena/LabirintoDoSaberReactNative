@@ -217,7 +217,7 @@ export function ContentStep(): ReactElement {
         ...(linkedAppointmentId ? { appointmentId: linkedAppointmentId } : {}),
       });
       await confirmStart(session.id);
-      if (mountedRef.current) router.push("/session/player");
+      if (mountedRef.current) router.replace("/session/player");
     } catch (error) {
       const apiError = normalizeApiError(error);
       if (apiError.isNetworkError || apiError.isTimeout) {
@@ -260,7 +260,7 @@ export function ContentStep(): ReactElement {
   async function resumeUncertain() {
     if (!uncertainSessionId) return;
     await confirmStart(uncertainSessionId);
-    router.push("/session/player");
+    router.replace("/session/player");
   }
 
   async function retry() {
@@ -292,6 +292,9 @@ export function ContentStep(): ReactElement {
         onBack={() => void handleBack()}
       />
       <View style={styles.content}>
+        {student ? (
+          <Text style={styles.patient}>Paciente: {student.name}</Text>
+        ) : null}
         <Field
           label="Nome da sessão"
           value={nameInput}
@@ -328,6 +331,8 @@ export function ContentStep(): ReactElement {
         {!isLoading && !isError ? (
           <FlatList
             data={filtered}
+            keyboardShouldPersistTaps="handled"
+            testID="content-list"
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
               <Text style={styles.description}>{copy.empty}</Text>
@@ -389,6 +394,11 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.nunito.extraBold,
     fontSize: 20,
     lineHeight: 26,
+  },
+  patient: {
+    color: color.ink[600],
+    fontFamily: fontFamilies.nunito.bold,
+    fontSize: 14,
   },
   description: {
     color: color.ink[600],

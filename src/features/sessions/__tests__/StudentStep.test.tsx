@@ -38,7 +38,11 @@ const setAppointmentId = vi.fn().mockResolvedValue(undefined);
 const cancel = vi.fn().mockResolvedValue(undefined);
 const finish = vi.fn().mockResolvedValue(undefined);
 const seedFromServerSession = vi.fn().mockResolvedValue(undefined);
-let flowState: { step: string; sessionId: string | null } = {
+let flowState: {
+  step: string;
+  sessionId: string | null;
+  student?: { id: string; name: string } | null;
+} = {
   step: "idle",
   sessionId: null,
 };
@@ -156,6 +160,58 @@ describe("StudentStep", () => {
     ).toBeTruthy();
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Continuar" })).toBeTruthy();
+  });
+
+  it("E-04: com sessão local de outro paciente, oferece retomar a sessão dele", async () => {
+    mockParams = { studentId: "s2" };
+    flowState = {
+      step: "running",
+      sessionId: "outra-sessao",
+      student: { id: "s1", name: "Ana Souza" },
+    };
+    vi.mocked(listStudents).mockResolvedValue([JOAO]);
+    selectStudent.mockRejectedValueOnce(
+      new SessionFlowInvalidTransitionError("selectStudent", "running"),
+    );
+
+    await render(<StudentStep />);
+
+    const button = await screen.findByRole("button", {
+      name: "Retomar sessão de Ana Souza",
+    });
+    fireEvent.press(button);
+    expect(replace).toHaveBeenCalledWith("/session/player");
+  });
+
+  it("E-04: com a sessão de outro paciente já encerrando, retomar abre o encerramento", async () => {
+    mockParams = { studentId: "s2" };
+    flowState = {
+      step: "finishing",
+      sessionId: "outra-sessao",
+      student: { id: "s1", name: "Ana Souza" },
+    };
+    vi.mocked(listStudents).mockResolvedValue([JOAO]);
+    selectStudent.mockRejectedValueOnce(
+      new SessionFlowInvalidTransitionError("selectStudent", "finishing"),
+    );
+
+    await render(<StudentStep />);
+
+    fireEvent.press(
+      await screen.findByRole("button", {
+        name: "Retomar sessão de Ana Souza",
+      }),
+    );
+    expect(replace).toHaveBeenCalledWith("/session/finish");
+  });
+
+  it("E-01: a lista de pacientes aceita toque com o teclado aberto", async () => {
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+    await render(<StudentStep />);
+    await waitFor(() => expect(screen.getByText("Ana Souza")).toBeTruthy());
+    expect(
+      screen.getByTestId("student-list").props.keyboardShouldPersistTaps,
+    ).toBe("handled");
   });
 
   it("falha desconhecida ao preparar mostra mensagem genérica", async () => {
@@ -337,7 +393,7 @@ describe("StudentStep", () => {
 
     fireEvent.press(screen.getByRole("button", { name: "Retomar" }));
 
-    expect(push).toHaveBeenCalledWith("/session/player");
+    expect(replace).toHaveBeenCalledWith("/session/player");
     expect(selectStudent).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Encerrar agora" })).toBeTruthy();
   });
@@ -349,7 +405,7 @@ describe("StudentStep", () => {
     fireEvent.press(screen.getByRole("button", { name: "Encerrar agora" }));
 
     await waitFor(() => expect(finish).toHaveBeenCalledTimes(1));
-    expect(push).toHaveBeenCalledWith("/session/finish");
+    expect(replace).toHaveBeenCalledWith("/session/finish");
     expect(finishSession).not.toHaveBeenCalled();
   });
 
@@ -433,7 +489,7 @@ describe("StudentStep", () => {
           },
         }),
       );
-      expect(push).toHaveBeenCalledWith("/session/player");
+      expect(replace).toHaveBeenCalledWith("/session/player");
     });
 
     it("caderno que não existe mais não retoma e avisa", async () => {
@@ -449,7 +505,7 @@ describe("StudentStep", () => {
         ).toBeTruthy(),
       );
       expect(seedFromServerSession).not.toHaveBeenCalled();
-      expect(push).not.toHaveBeenCalledWith("/session/player");
+      expect(replace).not.toHaveBeenCalledWith("/session/player");
     });
   });
 

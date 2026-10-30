@@ -18,8 +18,9 @@ import { ContentStep, normalizeForSearch } from "../ContentStep";
 
 const push = vi.fn();
 const back = vi.fn();
+const replace = vi.fn();
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ push, back }),
+  useRouter: () => ({ push, back, replace }),
 }));
 
 vi.mock("@/api/endpoints/content", () => ({
@@ -126,10 +127,27 @@ describe("ContentStep", () => {
     cancel.mockClear();
     back.mockClear();
     push.mockClear();
+    replace.mockClear();
     failStart.mockImplementation(async () => {
       mockStep = "error";
     });
   });
+  it("E-02: mostra o paciente da sessão acima do nome", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([]);
+    await renderContentStep();
+    expect(screen.getByText("Paciente: Ana Souza")).toBeTruthy();
+  });
+
+  it("E-01: as listas aceitam toque com o teclado aberto", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    await renderContentStep();
+    await waitFor(() =>
+      expect(screen.getByText("Cores e formas")).toBeTruthy(),
+    );
+    const list = screen.getByTestId("content-list");
+    expect(list.props.keyboardShouldPersistTaps).toBe("handled");
+  });
+
   it("AC-703-01: nome vazio mostra erro acessível e desabilita início após tentativa", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([]);
 
@@ -303,7 +321,7 @@ describe("ContentStep", () => {
         startedAt: "2026-10-07T10:00:00.000Z",
         answers: [],
       });
-    push.mockClear();
+    replace.mockClear();
     discard.mockClear();
     selectStudent.mockClear();
     setAppointmentId.mockClear();
@@ -329,7 +347,7 @@ describe("ContentStep", () => {
     expect(setAppointmentId).toHaveBeenCalledWith("appt-1");
     expect(startSession).toHaveBeenCalledTimes(2);
     expect(confirmStart).toHaveBeenLastCalledWith("session-9");
-    expect(push).toHaveBeenCalledWith("/session/player");
+    expect(replace).toHaveBeenCalledWith("/session/player");
   });
 
   it("AC-SES-01-01: inicia sessão, confirma no store e abre o player", async () => {
@@ -387,7 +405,7 @@ describe("ContentStep", () => {
       taskNotebookId: "notebook-1",
     });
     expect(confirmStart).toHaveBeenCalledWith("session-1");
-    expect(push).toHaveBeenCalledWith("/session/player");
+    expect(replace).toHaveBeenCalledWith("/session/player");
     void view;
   });
 
@@ -545,7 +563,7 @@ describe("ContentStep", () => {
       content: { kind: "group", id: "group-1", name: "Alfabeto e sons" },
     });
     expect(confirmStart).toHaveBeenLastCalledWith("session-g");
-    expect(push).toHaveBeenCalledWith("/session/player");
+    expect(replace).toHaveBeenCalledWith("/session/player");
   });
 
   it("AC-SES-01-03: erro de início mostra mensagem e não reenvia automaticamente", async () => {
@@ -754,7 +772,9 @@ describe("ContentStep", () => {
       await act(async () => {
         resolveStart(SESSION);
       });
-      await waitFor(() => expect(push).toHaveBeenCalledWith("/session/player"));
+      await waitFor(() =>
+        expect(replace).toHaveBeenCalledWith("/session/player"),
+      );
       spy.mockRestore();
     });
 
@@ -822,7 +842,7 @@ describe("ContentStep", () => {
         resolveStart(SESSION);
       });
 
-      expect(push).not.toHaveBeenCalled();
+      expect(replace).not.toHaveBeenCalled();
     });
   });
 });
