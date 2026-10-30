@@ -7,6 +7,18 @@
 
 ## 0. Próximo passo global
 
+Estado em 2026-10-30:
+
+- **Correções da rodada QA-06 na `main`:** do app, #118 a #128 e #130 a #133 (D1, D2, D3, D6 no
+  app, D14 e as divergências #2, #3 e #11). O #119 aguarda o reteste. Coordenação com o agente do
+  outro dev na issue #129: ele assumiu as divergências #1 e #26 e o #128-b (alvos de toque que o
+  `hitSlop` não alcança no Android).
+- **Backend corrigido** (PR #29 do backend, merge `82ef08e`, em produção): B1 (senhas fora das
+  respostas), B2 (`learningTopics` na edição), B3 (403 para quem não é dono do caderno ou grupo) e
+  B4 (403 na anamnese). Pedido e resposta em [CORRECOES-BACKEND](CORRECOES-BACKEND.md). Swagger
+  conferido pelo orquestrador; falta o reteste no emulador (PAC-07.7, BE-06) e a conferência de B3
+  por chamada direta.
+
 Estado em 2026-10-29 (fim do dia):
 
 - **Todas as tarefas de código da Entrega 3 estão na `main`: 23 de 27** (#78 a #111; resumo em
@@ -162,3 +174,5 @@ já concluídas).
 | 2026-10-29 | Documentação                   | Revisão completa: ENTREGA-3 (resumo), AGENTS, README, CONTEXTO-SESSAO (regras, Codex, worktrees, como rodar, documentos), ROADMAP (ondas marcadas), BACKLOG e módulos do PROJECT (Parte I)                                                                                                                                                                                                                                                                                                                                                                                          |
 | 2026-10-29 | Testes detalhados              | Pedido do usuário: máximo contexto nas tarefas de teste. TST-01 (#114) e TST-02 (#115) criaram `docs/entrega-3/testes/` (9 arquivos, 148 casos) com resultado esperado na tela e na rede, código relacionado, testes automatizados e o que verificar se falhar; o PLANO-TESTES virou índice; 28 divergências consolidadas em `testes/00-divergencias.md`. Conferência do orquestrador: 581 caminhos citados existem; 666 de 830 textos de tela batem literalmente com o código (o resto é texto dinâmico, nome de teste ou exemplo)                                                 |
 | 2026-10-29 | Rodada manual (QA-06)          | Executada no emulador `Medium_Phone` (Android 17, Expo Go, backend real, mocks desligados, commit `c7ec327`) a pedido do usuário: 122 casos dos roteiros + fluxos e conferências do backend; 110 OK, 11 FALHA, 13 N/A; 190 capturas fora do repositório. FEC-01 executada (rotas da V1 OK). Defeitos principais: relatório sem saída após retomar sessão (D1), aviso de sessão em andamento sobre a própria sessão (D2), data de revisão em UTC (D3), backend ignora `learningTopics` na edição (D4) e devolve `_password` no `update-educator` (D5). Detalhes no PLANO-TESTES §6.2 |
+| 2026-10-30 | Correções da QA-06             | Revisados e mergeados os PRs do outro dev (#117, #118, #120 a #128; #125 e #127 atualizados com a `main` e CI de novo) e os do orquestrador: D14 (#130), divergências #11 (#131), #2 (#132) e #3 (#133). O #130 foi mergeado com o CI do app ainda rodando (o repositório não bloqueia); o CI da `main` passou depois. Coordenação na issue #129                                                                                                                                                                                                                                    |
+| 2026-10-30 | Backend                        | Documento [CORRECOES-BACKEND](CORRECOES-BACKEND.md) (B1 a B4) enviado; o backend corrigiu tudo (PR #29, `82ef08e`) e o Swagger publicado confere. Mudanças de status: 404 para caderno ou grupo inexistente (antes 500), 400 para dado inválido, 403 na anamnese de outro educador                                                                                                                                                                                                                                                                                                  |
