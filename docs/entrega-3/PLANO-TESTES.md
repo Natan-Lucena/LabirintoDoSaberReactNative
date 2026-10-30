@@ -133,22 +133,26 @@ do backend (BE-01 em diante). São 24 casos, 21 deles P1.
 - **Nenhuma credencial, token, e-mail ou dado pessoal** no relatório, nas capturas ou nos PRs
   de correção (AC-FEC-01-02).
 
-### 6.2 Tabela de resultados (vazia)
+### 6.2 Tabela de resultados (rodada de 2026-10-29)
 
-| Arquivo                       | Casos    | P1      | OK  | FALHA | N/A | BLOQ | Observações |
-| ----------------------------- | -------- | ------- | --- | ----- | --- | ---- | ----------- |
-| 01-agenda                     | 27       | 16      |     |       |     |      |             |
-| 02-pacientes                  | 24       | 15      |     |       |     |      |             |
-| 03-conta-sessao-conteudo-base | 21       | 13      |     |       |     |      |             |
-| 04-planos                     | 30       | 17      |     |       |     |      |             |
-| 05-fec01-rotas-v1             | 10       | 9       |     |       |     |      |             |
-| 06-fluxos-e-backend           | 24       | 21      |     |       |     |      |             |
-| 07-acessibilidade-qa03        | 16 telas |         |     |       |     |      |             |
-| 08-maestro-qa02               | 5 fluxos | 5       |     |       |     |      |             |
-| 09-aparelhos-qa04             | 12       | 7       |     |       |     |      |             |
-| **Total (casos)**             | **148**  | **103** |     |       |     |      |             |
+Defeitos D1 a D6 descritos no [TRACKING §0](TRACKING.md#0-próximo-passo-global); as capturas ficam fora do repositório. As
+contagens são de registros (inclui achados novos e casos registrados por fluxo).
 
-Data da rodada: ______ · Emulador/Android: ______ · Commit testado: ______ · Executor: ______
+| Arquivo                       | Casos    | P1      | OK  | FALHA | N/A | BLOQ | Observações                                                                                     |
+| ----------------------------- | -------- | ------- | --- | ----- | --- | ---- | ----------------------------------------------------------------------------------------------- |
+| 01-agenda                     | 27       | 16      | 26  | 3     | 0   | 0    | AGE-04.1 (D2); AGE-03.12 mostra concluído como próxima sessão; seta "Semana anterior" invertida |
+| 02-pacientes                  | 24       | 15      | 21  | 1     | 2   | 0    | PAC-07.7 (D4, backend)                                                                          |
+| 03-conta-sessao-conteudo-base | 21       | 13      | 16  | 2     | 4   | 0    | SES-05.1 (D1); caderno de outra conta (D6)                                                      |
+| 04-planos                     | 30       | 17      | 28  | 1     | 2   | 0    | PLN-04.5 (D3); nota vazia sem mensagem de erro                                                  |
+| 05-fec01-rotas-v1             | 10       | 9       | 9   | 0     | 1   | 0    | FEC-01.9 sem tela                                                                               |
+| 06-fluxos-e-backend           | 24       | 21      | 10  | 3     | 2   | 0    | BE-06 (D5, backend); F2 e F4 pelas falhas acima                                                 |
+| 07-acessibilidade-qa03        | 16 telas |         | 0   | 1     | 0   | 0    | Parcial: alvos de toque de 17 a 43 dp (divergência #25); sem TalkBack                           |
+| 08-maestro-qa02               | 5 fluxos | 5       | 0   | 0     | 1   | 0    | Maestro não instalado                                                                           |
+| 09-aparelhos-qa04             | 12       | 7       | 0   | 0     | 1   | 0    | Sem aparelho físico nem iOS                                                                     |
+| **Total (casos)**             | **148**  | **103** | 110 | 11    | 13  | 0    |                                                                                                 |
+
+Data da rodada: 2026-10-29 · Emulador/Android: AVD `Medium_Phone`, Android 17, Expo Go · Commit
+testado: `c7ec327` · Executor: Claude Code (a pedido do usuário)
 
 ## 7. Fora do escopo desta entrega (esperado como "Em breve" ou ausente)
 

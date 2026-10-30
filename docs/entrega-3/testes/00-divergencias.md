@@ -56,7 +56,7 @@ Tipos:
 ## 3. Como usar
 
 - Durante a rodada, ao chegar no caso citado, confirme o item e registre **CONFIRMADO** ou
-  **DESCARTADO** na tabela de resultados do [PLANO-TESTES](../PLANO-TESTES.md#62-tabela-de-resultados-vazia).
+  **DESCARTADO** na tabela de resultados do [PLANO-TESTES](../PLANO-TESTES.md#62-tabela-de-resultados-rodada-de-2026-10-29).
 - Os itens **Decisão pendente** (14 e 15) precisam de resposta antes da rodada; até lá, os
   casos afetados ficam como N/A com o motivo.
 - Os itens do tipo **Diferença de documentação** já estão refletidos nos casos detalhados: o
