@@ -1,6 +1,13 @@
 import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
-import { FlatList, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  BackHandler,
+  FlatList,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 
 import { listSessionsByStudent, startSession } from "@/api/endpoints/session";
@@ -19,6 +26,7 @@ import {
   type ContentCatalogItem,
 } from "@/features/sessions/useContentCatalog";
 import {
+  SessionFlowInvalidTransitionError,
   useSessionFlowStore,
   type SessionFlowContentKind,
 } from "@/stores/session-flow";
@@ -97,6 +105,10 @@ export function ContentStep(): ReactElement {
     null,
   );
   const [appointmentMissing, setAppointmentMissing] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [flowConflict, setFlowConflict] = useState(false);
+  const startingRef = useRef(false);
+  const mountedRef = useRef(true);
   const { items, isLoading, isError, refetch } = useContentCatalog(kind);
   const copy = KIND_COPY[kind];
   const filtered = useMemo(
@@ -113,6 +125,19 @@ export function ContentStep(): ReactElement {
       ? "Informe um nome com 1 a 100 caracteres."
       : undefined;
 
+  useEffect(() => {
+    mountedRef.current = true;
+    // Enquanto o início está em andamento, o Voltar do Android também é ignorado.
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => startingRef.current,
+    );
+    return () => {
+      mountedRef.current = false;
+      subscription.remove();
+    };
+  }, []);
+
   function changeKind(next: string) {
     setKind(next as SessionFlowContentKind);
     setSelected(null);
@@ -120,8 +145,13 @@ export function ContentStep(): ReactElement {
   }
 
   async function handleBack() {
+    if (startingRef.current) return;
     try {
-      await cancel();
+      if (step === "startUncertain" || step === "error") {
+        await discard({ confirmed: true });
+      } else {
+        await cancel();
+      }
     } catch {
       /* etapa em que o cancelamento não se aplica: só sai */
     }
@@ -131,47 +161,78 @@ export function ContentStep(): ReactElement {
   async function handleStart(
     linkedAppointmentId: string | null = appointmentId,
   ) {
+    if (startingRef.current) return;
     setNameTouched(true);
     setAppointmentMissing(false);
     if (!student || !selected || !isNameValid(nameInput)) return;
-    const name = nameInput.trim();
-    if (step === "error") {
-      // Falha anterior ainda no store: recomeça mantendo aluno e vínculo.
-      await discard({ confirmed: true });
-      await selectStudent(student);
-      await setAppointmentId(linkedAppointmentId);
-      setMessage(null);
+    startingRef.current = true;
+    setStarting(true);
+    try {
+      await runStart(student.id, selected, linkedAppointmentId);
+    } finally {
+      startingRef.current = false;
+      if (mountedRef.current) setStarting(false);
     }
-    await configure({
-      name,
-      content: { kind: selected.kind, id: selected.id, name: selected.name },
-    });
-    await requestStart();
+  }
+
+  async function runStart(
+    studentId: string,
+    chosen: ContentCatalogItem,
+    linkedAppointmentId: string | null,
+  ) {
+    if (!student) return;
+    const name = nameInput.trim();
+    try {
+      if (step === "error") {
+        // Falha anterior ainda no store: recomeça mantendo aluno e vínculo.
+        await discard({ confirmed: true });
+        await selectStudent(student);
+        await setAppointmentId(linkedAppointmentId);
+        if (mountedRef.current) setMessage(null);
+      }
+      await configure({
+        name,
+        content: { kind: chosen.kind, id: chosen.id, name: chosen.name },
+      });
+      await requestStart();
+    } catch (error) {
+      if (!mountedRef.current) return;
+      if (error instanceof SessionFlowInvalidTransitionError) {
+        setFlowConflict(true);
+        setMessage(
+          "Há uma sessão em andamento neste aparelho. Retome ou encerre antes de iniciar outra.",
+        );
+      } else {
+        setMessage("Não foi possível iniciar a sessão.");
+      }
+      return;
+    }
+    setFlowConflict(false);
     try {
       // Só o caderno tem vínculo no backend (G-06); grupo e atividade ficam sem.
       const session = await startSession({
-        studentId: student.id,
+        studentId,
         name,
-        ...(selected.kind === "notebook"
-          ? { taskNotebookId: selected.id }
-          : {}),
+        ...(chosen.kind === "notebook" ? { taskNotebookId: chosen.id } : {}),
         ...(linkedAppointmentId ? { appointmentId: linkedAppointmentId } : {}),
       });
       await confirmStart(session.id);
-      router.push("/session/player");
+      if (mountedRef.current) router.push("/session/player");
     } catch (error) {
       const apiError = normalizeApiError(error);
       if (apiError.isNetworkError || apiError.isTimeout) {
         await markStartUncertain();
         try {
-          const active = (await listSessionsByStudent(student.id)).find(
+          const active = (await listSessionsByStudent(studentId)).find(
             (session) => !session.finishedAt,
           );
           if (active) {
-            setUncertainSessionId(active.id);
-            setMessage(
-              "Não foi possível confirmar o início, mas há uma sessão aberta.",
-            );
+            if (mountedRef.current) {
+              setUncertainSessionId(active.id);
+              setMessage(
+                "Não foi possível confirmar o início, mas há uma sessão aberta.",
+              );
+            }
             return;
           }
         } catch {
@@ -183,12 +244,16 @@ export function ContentStep(): ReactElement {
         const notFound =
           "Atendimento não encontrado. Inicie a sessão sem vínculo?";
         await failStart(notFound);
-        setAppointmentMissing(true);
-        setMessage(notFound);
+        if (mountedRef.current) {
+          setAppointmentMissing(true);
+          setMessage(notFound);
+        }
         return;
       }
       await failStart(apiError.message || "Não foi possível iniciar a sessão.");
-      setMessage(apiError.message || "Não foi possível iniciar a sessão.");
+      if (mountedRef.current) {
+        setMessage(apiError.message || "Não foi possível iniciar a sessão.");
+      }
     }
   }
 
@@ -289,7 +354,10 @@ export function ContentStep(): ReactElement {
             onPress={() => void startWithoutAppointment()}
           />
         ) : null}
-        {message && !uncertainSessionId && !appointmentMissing ? (
+        {message &&
+        !uncertainSessionId &&
+        !appointmentMissing &&
+        !flowConflict ? (
           <DsButton
             label="Tentar novamente"
             variant="secondary"
@@ -302,8 +370,10 @@ export function ContentStep(): ReactElement {
         <DsButton
           label="Iniciar sessão"
           fullWidth
-          loading={false}
-          disabled={!student || !selected || !isNameValid(nameInput)}
+          loading={starting}
+          disabled={
+            starting || !student || !selected || !isNameValid(nameInput)
+          }
           onPress={() => void handleStart()}
         />
       </View>

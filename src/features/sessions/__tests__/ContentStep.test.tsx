@@ -1,3 +1,4 @@
+import { BackHandler } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { act } from "@testing-library/react-native";
@@ -11,6 +12,7 @@ import {
 } from "@/api/endpoints/content";
 import { startSession } from "@/api/endpoints/session";
 import { ApiError } from "@/api/errors";
+import { SessionFlowInvalidTransitionError } from "@/stores/session-flow";
 import type { TaskGroup, TaskNotebookWithGroups } from "@/api/types";
 import { ContentStep, normalizeForSearch } from "../ContentStep";
 
@@ -49,7 +51,8 @@ let mockContent: {
   id: string;
   name: string;
 } | null = null;
-vi.mock("@/stores/session-flow", () => ({
+vi.mock("@/stores/session-flow", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/stores/session-flow")>()),
   useSessionFlowStore: () => ({
     configure,
     requestStart,
@@ -663,5 +666,163 @@ describe("ContentStep", () => {
     await renderContentStep();
 
     expect(screen.getByRole("button", { name: "Voltar" })).toBeTruthy();
+  });
+
+  describe("REV-SES", () => {
+    const SESSION = {
+      id: "session-9",
+      studentId: "student-1",
+      educatorId: "e1",
+      name: "Sessão",
+      startedAt: "2026-10-07T10:00:00.000Z",
+      answers: [],
+    };
+
+    async function fillAndReady() {
+      vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+      const view = await renderContentStep();
+      await waitFor(() =>
+        expect(screen.getByText("Cores e formas")).toBeTruthy(),
+      );
+      await act(async () => {
+        fireEvent.press(
+          screen.getByRole("checkbox", { name: "Cores e formas" }),
+        );
+      });
+      await act(async () => {
+        fireEvent.changeText(screen.getByLabelText("Nome da sessão"), "Sessão");
+      });
+      return view;
+    }
+
+    async function pressStart() {
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+      });
+    }
+
+    beforeEach(() => {
+      discard.mockClear();
+      configure.mockClear();
+      requestStart.mockClear();
+      confirmStart.mockClear();
+      vi.mocked(startSession).mockReset();
+    });
+
+    it.each(["startUncertain", "error"])(
+      "R1c: Voltar em %s descarta o fluxo e sai",
+      async (step) => {
+        mockStep = step;
+        vi.mocked(listTaskNotebooks).mockResolvedValue([]);
+        await renderContentStep();
+
+        await act(async () => {
+          fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+        });
+
+        await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+        expect(discard).toHaveBeenCalledWith({ confirmed: true });
+      },
+    );
+
+    it("R3: Voltar (cabeçalho e Android) fica bloqueado com o início em andamento", async () => {
+      let resolveStart: (value: typeof SESSION) => void = () => {};
+      vi.mocked(startSession).mockReturnValue(
+        new Promise((resolve) => {
+          resolveStart = resolve;
+        }),
+      );
+      const handlers: (() => boolean)[] = [];
+      const spy = vi
+        .spyOn(BackHandler, "addEventListener")
+        .mockImplementation((_event, handler) => {
+          handlers.push(handler as () => boolean);
+          return { remove: vi.fn() };
+        });
+      await fillAndReady();
+      await pressStart();
+      await waitFor(() => expect(startSession).toHaveBeenCalledTimes(1));
+
+      await act(async () => {
+        fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+      });
+      expect(cancel).not.toHaveBeenCalled();
+      expect(back).not.toHaveBeenCalled();
+      expect(handlers.length).toBeGreaterThan(0);
+      expect(handlers[handlers.length - 1]()).toBe(true);
+
+      await act(async () => {
+        resolveStart(SESSION);
+      });
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/session/player"));
+      spy.mockRestore();
+    });
+
+    it("R4: toque duplo em Iniciar chama a API uma vez e mostra carregando", async () => {
+      let resolveStart: (value: typeof SESSION) => void = () => {};
+      vi.mocked(startSession).mockReturnValue(
+        new Promise((resolve) => {
+          resolveStart = resolve;
+        }),
+      );
+      await fillAndReady();
+      const button = screen.getByRole("button", { name: "Iniciar sessão" });
+
+      await act(async () => {
+        fireEvent.press(button);
+        fireEvent.press(button);
+      });
+
+      await waitFor(() => expect(startSession).toHaveBeenCalledTimes(1));
+      expect(configure).toHaveBeenCalledTimes(1);
+      expect(
+        screen.getByRole("button", { name: "Iniciar sessão" }).props
+          .accessibilityState,
+      ).toMatchObject({ busy: true, disabled: true });
+      await act(async () => {
+        resolveStart(SESSION);
+      });
+    });
+
+    it("R4: transição inválida ao iniciar mostra a mensagem sem estourar", async () => {
+      configure.mockRejectedValueOnce(
+        new SessionFlowInvalidTransitionError("configure", "startUncertain"),
+      );
+      await fillAndReady();
+
+      await pressStart();
+
+      await waitFor(() =>
+        expect(
+          screen.getByText(
+            "Há uma sessão em andamento neste aparelho. Retome ou encerre antes de iniciar outra.",
+          ),
+        ).toBeTruthy(),
+      );
+      expect(startSession).not.toHaveBeenCalled();
+      expect(
+        screen.queryByRole("button", { name: "Tentar novamente" }),
+      ).toBeNull();
+    });
+
+    // Fica por último: desmontar aqui polui os testes seguintes deste arquivo.
+    it("R3: sucesso tardio após desmontar não navega", async () => {
+      let resolveStart: (value: typeof SESSION) => void = () => {};
+      vi.mocked(startSession).mockReturnValue(
+        new Promise((resolve) => {
+          resolveStart = resolve;
+        }),
+      );
+      const view = await fillAndReady();
+      await pressStart();
+      await waitFor(() => expect(startSession).toHaveBeenCalledTimes(1));
+
+      view.unmount();
+      await act(async () => {
+        resolveStart(SESSION);
+      });
+
+      expect(push).not.toHaveBeenCalled();
+    });
   });
 });

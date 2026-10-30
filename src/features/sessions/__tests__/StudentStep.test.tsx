@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { act } from "@testing-library/react-native";
+
 import { render, screen, fireEvent, waitFor } from "@/test-utils/render";
 import { createQueryClient } from "@/api/query-client";
 import { listStudents } from "@/api/endpoints/student";
 import { listTaskNotebooks } from "@/api/endpoints/content";
 import { listSessionsByStudent, finishSession } from "@/api/endpoints/session";
-import type { Student } from "@/api/types";
+import type { Student, TaskNotebookSession } from "@/api/types";
 import { SessionFlowInvalidTransitionError } from "@/stores/session-flow";
 import { StudentStep, normalizeForSearch } from "../StudentStep";
 
@@ -459,5 +461,80 @@ describe("StudentStep", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Voltar" })).toBeTruthy(),
     );
+  });
+
+  it("R2: Voltar sai mesmo se o cancelamento falhar (sessão em andamento)", async () => {
+    vi.mocked(listStudents).mockResolvedValue([]);
+    cancel.mockRejectedValueOnce(
+      new SessionFlowInvalidTransitionError("cancel", "running"),
+    );
+    await render(<StudentStep />);
+    await waitFor(() =>
+      expect(screen.getByText("Escolha o paciente")).toBeTruthy(),
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+  });
+
+  it("R5: resposta antiga de outro paciente não leva ao conteúdo no modo direto", async () => {
+    mockParams = { studentId: "s1" };
+    vi.mocked(listStudents).mockResolvedValue([ANA, JOAO]);
+    let resolveAna: (value: TaskNotebookSession[]) => void = () => {};
+    vi.mocked(listSessionsByStudent).mockImplementation((id: string) =>
+      id === "s1"
+        ? new Promise((resolve) => {
+            resolveAna = resolve;
+          })
+        : Promise.resolve([]),
+    );
+    await render(<StudentStep />);
+    await waitFor(() => expect(screen.getByText("João Pedro")).toBeTruthy());
+    await waitFor(() =>
+      expect(listSessionsByStudent).toHaveBeenCalledWith("s1"),
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: "João Pedro" }));
+    await waitFor(() =>
+      expect(listSessionsByStudent).toHaveBeenCalledWith("s2"),
+    );
+    await act(async () => {
+      resolveAna([]);
+    });
+
+    expect(replace).not.toHaveBeenCalled();
+    expect(selectStudent).not.toHaveBeenCalledWith(ANA);
+  });
+
+  it("R5: resposta antiga não define a sessão aberta do paciente atual", async () => {
+    vi.mocked(listStudents).mockResolvedValue([ANA, JOAO]);
+    let resolveAna: (value: TaskNotebookSession[]) => void = () => {};
+    vi.mocked(listSessionsByStudent).mockImplementation((id: string) =>
+      id === "s1"
+        ? new Promise((resolve) => {
+            resolveAna = resolve;
+          })
+        : Promise.resolve([]),
+    );
+    await render(<StudentStep />);
+    await waitFor(() => expect(screen.getByText("Ana Souza")).toBeTruthy());
+
+    fireEvent.press(screen.getByRole("button", { name: "Ana Souza" }));
+    fireEvent.press(screen.getByRole("button", { name: "João Pedro" }));
+    await act(async () => {
+      resolveAna([
+        {
+          id: "open-ana",
+          studentId: "s1",
+          educatorId: "e1",
+          name: "Sessão da Ana",
+          startedAt: "2026-10-07T10:00:00.000Z",
+          answers: [],
+        },
+      ]);
+    });
+
+    expect(screen.queryByText("Sessão em andamento")).toBeNull();
   });
 });
