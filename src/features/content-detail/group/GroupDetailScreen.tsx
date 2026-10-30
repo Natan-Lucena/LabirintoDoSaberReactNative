@@ -15,7 +15,7 @@ import {
   SectionTitle,
 } from "@/components/ds";
 import { useGroupDetailData } from "@/features/content-detail/group/useGroupDetailData";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 import { useAuthStore } from "@/stores/auth";
 
 const categoryLabels = {
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   section: { gap: 10 },
   actions: { flexDirection: "row", gap: 12 },
-  error: { color: color.danger, fontSize: 13 },
+  error: { color: semanticColor.dangerTextOnSurface, fontSize: 13 },
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

@@ -16,7 +16,7 @@ import {
   SectionTitle,
 } from "@/components/ds";
 import { useAuthStore } from "@/stores/auth";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 
 const categoryLabels = {
   reading: "Leitura",
@@ -135,7 +135,9 @@ export function NotebookDetailScreen({
             Não foi possível excluir o caderno.
           </Text>
         ) : null}
-        {otherEducator ? <Text>Caderno de outro educador</Text> : null}
+        {otherEducator ? (
+          <Text style={styles.ownerNote}>Caderno de outro educador</Text>
+        ) : null}
         {ownNotebook ? (
           <View style={styles.actions}>
             <DsButton
@@ -184,6 +186,12 @@ export function NotebookDetailScreen({
   );
 }
 const styles = StyleSheet.create({
+  ownerNote: {
+    fontFamily: fontFamilies.nunito.semiBold ?? fontFamilies.nunito.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: color.textSecondary,
+  },
   screen: { flex: 1, backgroundColor: color.surfaceSoft },
   scroll: { flexGrow: 1 },
   content: { padding: 20, gap: 16 },
@@ -203,7 +211,7 @@ const styles = StyleSheet.create({
   },
   section: { gap: 10 },
   actions: { flexDirection: "row", gap: 12 },
-  error: { color: color.danger, fontSize: 13 },
+  error: { color: semanticColor.dangerTextOnSurface, fontSize: 13 },
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

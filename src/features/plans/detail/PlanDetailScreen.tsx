@@ -44,7 +44,7 @@ import {
   useSuggestionActions,
 } from "@/features/plans/suggestions/usePlanSuggestions";
 import { useStudents } from "@/features/students/useStudents";
-import { color, typography } from "@/theme";
+import { color, typography, semanticColor } from "@/theme";
 import { dayKey } from "@/utils/date";
 
 function sameKey(a: readonly unknown[], b: readonly unknown[]): boolean {
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   heading: { ...typography.body, color: color.ink[950] },
   body: { ...typography.body, color: color.textSecondary },
   meta: { ...typography.tag, color: color.textSecondary },
-  error: { ...typography.body, color: color.danger },
+  error: { ...typography.body, color: semanticColor.dangerTextOnSurface },
   state: {
     flex: 1,
     alignItems: "center",

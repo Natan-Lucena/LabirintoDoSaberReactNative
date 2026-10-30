@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.body.fontFamily,
     color: color.text,
   },
-  dayTextOtherMonth: { color: color.textTertiary },
+  dayTextOtherMonth: { color: color.textSecondary },
   dot: {
     width: 6,
     height: 6,

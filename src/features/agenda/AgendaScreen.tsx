@@ -95,7 +95,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   current: { borderColor: color.brand[600], backgroundColor: color.brand[50] },
-  cancelled: { opacity: 0.48 },
+  // Cancelado fica "apagado" sem perder contraste (QA-03): com opacity 0,48
+  // o texto caía para 1,9:1. Fundo suave, borda tracejada e texto ink-600.
+  cancelled: {
+    backgroundColor: color.surfaceSoft,
+    borderStyle: "dashed",
+  },
+  cancelledText: { color: color.textSecondary },
   time: { ...typography.time, color: color.text },
   line: {
     width: 3,
@@ -295,7 +301,9 @@ export function AgendaScreen(): ReactElement {
                     cancelled && styles.cancelled,
                   ]}
                 >
-                  <Text style={styles.time}>
+                  <Text
+                    style={[styles.time, cancelled && styles.cancelledText]}
+                  >
                     {formatTime(new Date(appointment.scheduledAt))}
                   </Text>
                   <View
@@ -305,7 +313,11 @@ export function AgendaScreen(): ReactElement {
                     ]}
                   />
                   <View style={styles.copy}>
-                    <Text style={styles.name}>{name}</Text>
+                    <Text
+                      style={[styles.name, cancelled && styles.cancelledText]}
+                    >
+                      {name}
+                    </Text>
                     <Text style={styles.status}>{details}</Text>
                     {completed ? (
                       <View style={styles.complete}>

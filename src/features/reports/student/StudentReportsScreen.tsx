@@ -34,7 +34,13 @@ import {
   getCategoryLabel,
 } from "@/features/reports/session/sessionReport";
 import { useStudents } from "@/features/students/useStudents";
-import { color, fontFamilies, getContentPadding, shape } from "@/theme";
+import {
+  color,
+  fontFamilies,
+  getContentPadding,
+  shape,
+  semanticColor,
+} from "@/theme";
 import { formatLongDate } from "@/utils/date";
 
 import {
@@ -465,7 +471,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   error: {
-    color: color.danger,
+    color: semanticColor.dangerTextOnSurface,
     fontFamily: fontFamilies.nunito.semiBold,
     fontSize: 13,
     lineHeight: 18,

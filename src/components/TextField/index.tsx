@@ -59,7 +59,10 @@ const styles = StyleSheet.create({
     color: semanticColor.textSecondaryOnSurface,
     fontSize: typography.body.fontSize,
   },
-  error: { color: color.pink, fontSize: typography.body.fontSize },
+  error: {
+    color: semanticColor.dangerTextOnSurface,
+    fontSize: typography.body.fontSize,
+  },
   icon: { marginLeft: 14 },
   accessory: { marginRight: 14 },
 });

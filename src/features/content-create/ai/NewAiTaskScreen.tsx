@@ -26,7 +26,7 @@ import {
   Toast,
   useToast,
 } from "@/components/ds";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 
 const categoryOptions = [
   { value: "reading", label: "Leitura" },
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.surfaceSoft },
   content: { padding: 20, gap: 16 },
   errorBox: { gap: 8 },
-  error: { color: color.danger, fontSize: 12 },
+  error: { color: semanticColor.dangerTextOnSurface, fontSize: 12 },
   generatedSheet: { gap: 16, marginTop: 8 },
   generatedHeader: {
     flexDirection: "row",

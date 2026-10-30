@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { listAnamneseTemplates } from "@/api/endpoints/anamnese";
 import { AppHeader, DsButton, FeatureRow } from "@/components/ds";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.background },
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginVertical: 36,
   },
-  error: { color: color.danger },
+  error: { color: semanticColor.dangerTextOnSurface },
 });
 
 export function TemplateListScreen(): ReactElement {

@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     fontFamily: typography.body.fontFamily,
-    color: color.danger,
+    color: semanticColor.dangerTextOnSurface,
   },
   forgotPassword: {
     fontSize: typography.body.fontSize,

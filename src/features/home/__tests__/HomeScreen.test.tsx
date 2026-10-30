@@ -203,8 +203,11 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
   it("AC-AGE-02-03 mostra Lembrete só em item pendente com telefone", async () => {
     setHomeQuery();
     await render(<HomeScreen />);
-    expect(screen.getAllByRole("button", { name: "Lembrete" })).toHaveLength(1);
-    await fireEvent.press(screen.getByRole("button", { name: "Lembrete" }));
+    // QA-03: o rótulo acessível diz o que a ação faz e para quem.
+    const reminder = "Enviar lembrete pelo WhatsApp para Lia";
+    expect(screen.getAllByRole("button", { name: reminder })).toHaveLength(1);
+    expect(screen.getByText("Lembrete")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: reminder }));
     expect(openURL).toHaveBeenCalledWith(
       `https://wa.me/5511999990000?text=${encodeURIComponent("Olá! Passando para lembrar do atendimento de Lia na quinta-feira, 02/04, às 11:00. Qualquer imprevisto, é só avisar por aqui.")}`,
     );
@@ -222,7 +225,10 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
       },
     });
     await render(<HomeScreen />);
-    expect(screen.queryByRole("button", { name: "Lembrete" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /Enviar lembrete pelo WhatsApp/ }),
+    ).toBeNull();
+    expect(screen.queryByText("Lembrete")).toBeNull();
   });
 
   it("mostra carregamento", async () => {
