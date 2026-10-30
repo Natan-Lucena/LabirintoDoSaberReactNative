@@ -138,16 +138,18 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       "idle",
       "studentSelected",
       "configured",
+      "error",
     ]);
 
-    const educatorId =
-      state.step === "idle" ? getActiveEducatorId() : state.educatorId;
+    // Um "error" que sobrou de uma tentativa anterior recomeça como "idle".
+    const fresh = state.step === "idle" || state.step === "error";
+    const educatorId = fresh ? getActiveEducatorId() : state.educatorId;
     if (!educatorId) {
       throw new SessionFlowInvalidTransitionError("selectStudent", state.step);
     }
 
     const next: SessionFlowData = {
-      ...state,
+      ...(state.step === "error" ? initialSessionFlowData : state),
       step: "studentSelected",
       educatorId,
       student,
@@ -176,10 +178,13 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       "idle",
       "studentSelected",
       "configured",
+      "error",
     ]);
 
     const educatorId =
-      state.step === "idle" ? getActiveEducatorId() : state.educatorId;
+      state.step === "idle" || state.step === "error"
+        ? getActiveEducatorId()
+        : state.educatorId;
     if (!educatorId) {
       throw new SessionFlowInvalidTransitionError(
         "seedFromServerSession",
@@ -352,6 +357,7 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       "idle",
       "studentSelected",
       "configured",
+      "error",
     ]);
 
     const educatorId = state.educatorId;

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "../../../test-utils/render";
 import { shape } from "../../../theme";
 import { BackButton } from "../BackButton";
-import { FilterChip } from "../FilterChip";
+import { FilterRow } from "../FilterChip";
 import { IconButton } from "../IconButton";
 import { SectionTitle } from "../SectionTitle";
 import { SegmentedControl } from "../SegmentedControl";
@@ -65,7 +65,9 @@ describe("QA-03 alvos de toque de pelo menos 48 dp", () => {
     expect(sizeDp + slop(button).vertical).toBeGreaterThanOrEqual(MIN);
   });
 
-  it("Tabs (43 dp de altura)", async () => {
+  // No Android, o hitSlop não passa dos limites dos pais (TouchTargetHelper):
+  // a área efetiva é o menor entre o item + hitSlop e a altura do contêiner.
+  it("Tabs: a aba tem 48 dp de altura (a linha da aba não corta o toque)", async () => {
     await render(
       <Tabs
         options={[
@@ -77,12 +79,10 @@ describe("QA-03 alvos de toque de pelo menos 48 dp", () => {
       />,
     );
     const tab = screen.getByLabelText("Planos");
-    expect(boxSize(tab).height + slop(tab).vertical).toBeGreaterThanOrEqual(
-      MIN,
-    );
+    expect(boxSize(tab).height).toBeGreaterThanOrEqual(MIN);
   });
 
-  it("SegmentedControl (39 dp de altura)", async () => {
+  it("SegmentedControl: a faixa (contêiner) tem pelo menos 48 dp", async () => {
     await render(
       <SegmentedControl
         options={[
@@ -94,15 +94,54 @@ describe("QA-03 alvos de toque de pelo menos 48 dp", () => {
       />,
     );
     const segment = screen.getByLabelText("Masculino");
+    const track = StyleSheet.flatten(
+      (screen.toJSON() as { props: { style?: unknown } }).props
+        .style as Parameters<typeof StyleSheet.flatten>[0],
+    ) as { padding?: number; paddingVertical?: number };
+    const trackPadding = track.paddingVertical ?? track.padding ?? 0;
     expect(
-      boxSize(segment).height + slop(segment).vertical,
+      Math.min(
+        boxSize(segment).height + slop(segment).vertical,
+        boxSize(segment).height + trackPadding * 2,
+      ),
     ).toBeGreaterThanOrEqual(MIN);
   });
 
-  it("FilterChip (cerca de 34 dp de altura)", async () => {
-    await render(<FilterChip label="Todos" onPress={vi.fn()} />);
-    const chip = screen.getByRole("button", { name: "Todos" });
-    expect(34 + slop(chip).vertical).toBeGreaterThanOrEqual(MIN);
+  it("FilterRow: o ScrollView dos filtros não corta a área ampliada do chip, sem mudar o layout", async () => {
+    await render(
+      <FilterRow
+        options={[
+          { key: "todos", label: "Todos" },
+          { key: "grupos", label: "Grupos" },
+        ]}
+        value="todos"
+        onChange={vi.fn()}
+      />,
+    );
+    const chip = screen.getByRole("button", { name: "Grupos" });
+    // Chip: lineHeight 15 + paddingVertical 8 × 2 + borda 1 × 2 = 33 dp.
+    const chipHeight = 33;
+    const scroll = screen.toJSON() as {
+      props: { style?: unknown };
+      children: { props: { style?: unknown } }[];
+    };
+    const outer = StyleSheet.flatten(
+      scroll.props.style as Parameters<typeof StyleSheet.flatten>[0],
+    ) as { marginVertical?: number; marginTop?: number };
+    const content = StyleSheet.flatten(
+      scroll.children[0]!.props.style as Parameters<
+        typeof StyleSheet.flatten
+      >[0],
+    ) as { paddingVertical?: number };
+    const contentPadding = content.paddingVertical ?? 0;
+    expect(
+      Math.min(
+        chipHeight + slop(chip).vertical,
+        chipHeight + contentPadding * 2,
+      ),
+    ).toBeGreaterThanOrEqual(MIN);
+    // A margem negativa devolve o espaço: o layout em volta não muda.
+    expect(outer.marginVertical ?? outer.marginTop ?? 0).toBe(-contentPadding);
   });
 
   it("ação de texto do SectionTitle (17 dp de altura)", async () => {

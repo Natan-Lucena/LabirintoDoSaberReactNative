@@ -27,6 +27,23 @@ describe("AGE-02 WhatsApp", () => {
     ).toBe("11999990000");
   });
 
+  it("AGE-02.1: número nacional com DDD 55 (RS) também recebe o código do país", () => {
+    // 10 ou 11 dígitos = DDD + número; o DDD 55 não é o código do país.
+    expect(buildWhatsAppUrl("(55) 99999-8888", "Olá!")).toBe(
+      "https://wa.me/5555999998888?text=Ol%C3%A1!",
+    );
+    expect(buildWhatsAppUrl("(55) 3222-1111", "Olá!")).toBe(
+      "https://wa.me/555532221111?text=Ol%C3%A1!",
+    );
+    // Já com o código do país (12 ou 13 dígitos), não duplica.
+    expect(buildWhatsAppUrl("+55 (55) 99999-8888", "Olá!")).toBe(
+      "https://wa.me/5555999998888?text=Ol%C3%A1!",
+    );
+    expect(buildWhatsAppUrl("55 (11) 3222-1111", "Olá!")).toBe(
+      "https://wa.me/551132221111?text=Ol%C3%A1!",
+    );
+  });
+
   it("AC-AGE-02-02 formata lembrete no fuso de São Paulo", () => {
     expect(
       appointmentReminderMessage({
