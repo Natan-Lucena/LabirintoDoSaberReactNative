@@ -6,6 +6,7 @@ import { color } from "../../theme";
 import { FigmaIcon } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
 import { StaticPressable } from "./StaticPressable";
+import { hitSlopToMinTarget } from "./touchTarget";
 
 export interface BackButtonProps {
   onPress: () => void;
@@ -32,6 +33,7 @@ export function BackButton({
 
   return (
     <StaticPressable
+      hitSlop={hitSlopToMinTarget(40, 40)}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}

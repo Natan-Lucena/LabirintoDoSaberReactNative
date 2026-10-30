@@ -6,6 +6,7 @@ import { color, fontFamilies } from "../../theme";
 import { FigmaIcon } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
 import { StaticPressable } from "./StaticPressable";
+import { hitSlopToMinTarget } from "./touchTarget";
 
 export type TimelineItemStatus = "default" | "done" | "active";
 
@@ -123,7 +124,7 @@ function TimelineItemRow({
             onPress={item.onActionPress}
             accessibilityRole="button"
             accessibilityLabel={item.actionLabel}
-            hitSlop={8}
+            hitSlop={{ ...hitSlopToMinTarget(Infinity, 17), left: 8, right: 8 }}
             style={({ pressed }) => getPressScaleStyle(pressed, reduceMotion)}
           >
             <Text style={styles.actionLabel}>{item.actionLabel}</Text>
