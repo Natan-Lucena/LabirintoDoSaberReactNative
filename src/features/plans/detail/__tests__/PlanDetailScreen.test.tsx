@@ -171,6 +171,22 @@ describe("PlanDetailScreen (PLN-04)", () => {
     expect(await screen.findByText("Boa evolução")).toBeTruthy();
   });
 
+  it("mostra a data da revisão no fuso de São Paulo (21:31 em SP = 00:31 UTC do dia seguinte)", async () => {
+    listPlanReviews.mockResolvedValue([
+      {
+        id: "r-late",
+        planId: "mock-plan-1",
+        reviewedAt: "2026-10-30T00:31:19.092Z",
+        note: "Revisão da noite",
+        goalStatuses: [],
+      },
+    ]);
+    await render(<PlanDetailScreen />);
+    expect(await screen.findByText("Revisão da noite")).toBeTruthy();
+    expect(screen.getByText("29/10/2026")).toBeTruthy();
+    expect(screen.queryByText("30/10/2026")).toBeNull();
+  });
+
   it("confirma encerramento e deixa a tela somente leitura", async () => {
     const closed = {
       ...mockPlans[0],
