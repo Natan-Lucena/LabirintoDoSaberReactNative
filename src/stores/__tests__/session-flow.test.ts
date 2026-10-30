@@ -240,6 +240,58 @@ describe("stores/session-flow", () => {
     expect(useSessionFlowStore.getState().sessionId).toBe("session-1");
   });
 
+  async function reachError() {
+    const mod = await loadStore();
+    const store = mod.useSessionFlowStore;
+    await store.getState().selectStudent(STUDENT);
+    await store.getState().configure({ name: "Sessão 1", content: CONTENT });
+    await store.getState().requestStart();
+    await store.getState().failStart("falha ao iniciar");
+    expect(store.getState().step).toBe("error");
+    return mod;
+  }
+
+  it("cancel() em error volta ao estado inicial e limpa o persistido", async () => {
+    const { useSessionFlowStore, initialSessionFlowData } = await reachError();
+
+    await useSessionFlowStore.getState().cancel();
+
+    expect(useSessionFlowStore.getState()).toMatchObject(
+      initialSessionFlowData,
+    );
+    await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+    expect(useSessionFlowStore.getState().step).toBe("idle");
+  });
+
+  it("selectStudent() em error recomeça do zero com o aluno novo", async () => {
+    const { useSessionFlowStore } = await reachError();
+
+    await useSessionFlowStore.getState().selectStudent(STUDENT);
+
+    expect(useSessionFlowStore.getState()).toMatchObject({
+      step: "studentSelected",
+      educatorId: EDUCATOR_A,
+      student: STUDENT,
+      sessionName: null,
+      content: null,
+      errorReason: null,
+    });
+  });
+
+  it("selectStudent() em running continua inválido", async () => {
+    const { useSessionFlowStore } = await loadStore();
+    await useSessionFlowStore.getState().selectStudent(STUDENT);
+    await useSessionFlowStore
+      .getState()
+      .configure({ name: "Sessão 1", content: CONTENT });
+    await useSessionFlowStore.getState().requestStart();
+    await useSessionFlowStore.getState().confirmStart("session-1");
+
+    await expect(
+      useSessionFlowStore.getState().selectStudent(STUDENT),
+    ).rejects.toThrow(/selectStudent/);
+  });
+
   // AC-701-03: cancelar antes do start limpa; depois do start exige confirmed.
   it("cancel() limpa o fluxo em studentSelected e configured", async () => {
     const { useSessionFlowStore, initialSessionFlowData } = await loadStore();
