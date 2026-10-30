@@ -66,7 +66,11 @@ function PatientCard({
         pressed ? styles.cardPressed : null,
       ]}
     >
-      <Avatar name={patient.name} tone={patientAvatarTone(patient.id)} />
+      <Avatar
+        name={patient.name}
+        tone={patientAvatarTone(patient.id)}
+        photoUrl={patient.photoUrl}
+      />
       <View style={styles.cardCopy}>
         <Text style={styles.patientName} numberOfLines={1}>
           {patient.name}
@@ -203,6 +207,7 @@ export function PatientsListScreen(): ReactElement {
             />
           )}
           contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={ListSeparator}
         />
       )}
       <View style={styles.fabContainer}>
@@ -213,6 +218,10 @@ export function PatientsListScreen(): ReactElement {
       </View>
     </View>
   );
+}
+
+export function ListSeparator(): ReactElement {
+  return <View testID="patients-list-separator" style={styles.separator} />;
 }
 
 const styles = StyleSheet.create({
@@ -226,10 +235,10 @@ const styles = StyleSheet.create({
   eyebrow: { ...typography.eyebrow, color: color.ink[500] },
   title: { ...typography.title, color: color.ink[950] },
   filters: { gap: 10 },
+  separator: { height: 10 },
   listContent: {
     paddingHorizontal: getContentPadding(390),
     paddingBottom: 90,
-    gap: 10,
   },
   emptyList: {
     alignItems: "center",

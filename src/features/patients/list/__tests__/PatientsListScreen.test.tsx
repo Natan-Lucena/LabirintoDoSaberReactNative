@@ -26,7 +26,7 @@ vi.mock("@/features/appointments/useAppointments", () => ({
 }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ push: routerPush }) }));
 
-const { PatientsListScreen } =
+const { PatientsListScreen, ListSeparator } =
   await import("@/features/patients/list/PatientsListScreen");
 
 function makeStudent(overrides: Partial<Student>): Student {
@@ -91,6 +91,34 @@ describe("PatientsListScreen", () => {
       screen.getByLabelText("Pendências · Em breve").props.accessibilityState
         .disabled,
     ).toBe(true);
+  });
+
+  it("mostra a foto do paciente no cartão", async () => {
+    studentsQuery = {
+      ...studentsQuery,
+      data: [
+        makeStudent({
+          id: "1",
+          name: "Zeca Alves",
+          photoUrl: "https://exemplo.test/zeca.jpg",
+        }),
+        makeStudent({ id: "2", name: "Ágata Souza" }),
+      ],
+    };
+    await render(<PatientsListScreen />);
+
+    const image = screen.getByTestId("avatar-photo");
+    expect([image.props.source].flat()[0]).toEqual({
+      uri: "https://exemplo.test/zeca.jpg",
+    });
+  });
+
+  it("separa os cartões com 10 de espaço vertical", async () => {
+    await render(<ListSeparator />);
+    const flat = [screen.getByTestId("patients-list-separator").props.style]
+      .flat(Infinity)
+      .reduce((acc, style) => ({ ...acc, ...style }), {});
+    expect(flat.height).toBe(10);
   });
 
   it("busca e filtra pacientes com sessão hoje", async () => {
