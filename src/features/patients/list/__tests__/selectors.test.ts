@@ -116,6 +116,91 @@ describe("PAC-01 selectors", () => {
     ).toBe("next");
   });
 
+  describe("REV-PAC: atendimento em andamento", () => {
+    const next = (appts: Appointment[], now: string) =>
+      nextAppointmentByStudentId(appts, new Date(now)).get("patient-1")?.id;
+
+    it("em andamento (começou há 10 min, 50 min) é o próximo", () => {
+      expect(
+        next(
+          [
+            makeAppointment({
+              id: "live",
+              scheduledAt: "2026-10-07T13:00:00.000Z",
+            }),
+          ],
+          "2026-10-07T13:10:00.000Z",
+        ),
+      ).toBe("live");
+    });
+
+    it("terminado há 1 min não é o próximo", () => {
+      expect(
+        next(
+          [
+            makeAppointment({
+              id: "over",
+              scheduledAt: "2026-10-07T13:00:00.000Z",
+            }),
+          ],
+          "2026-10-07T13:51:00.000Z",
+        ),
+      ).toBeUndefined();
+    });
+
+    it("no instante exato do fim não é o próximo (limite estrito)", () => {
+      expect(
+        next(
+          [
+            makeAppointment({
+              id: "edge",
+              scheduledAt: "2026-10-07T13:00:00.000Z",
+            }),
+          ],
+          "2026-10-07T13:50:00.000Z",
+        ),
+      ).toBeUndefined();
+    });
+
+    it("ignora cancelado e concluído em andamento", () => {
+      expect(
+        next(
+          [
+            makeAppointment({ id: "c", status: "CANCELLED" }),
+            makeAppointment({ id: "d", status: "COMPLETED" }),
+            makeAppointment({
+              id: "n",
+              scheduledAt: "2026-10-08T13:00:00.000Z",
+            }),
+          ],
+          "2026-10-07T13:10:00.000Z",
+        ),
+      ).toBe("n");
+    });
+
+    it("escolhe o mais cedo entre vários", () => {
+      expect(
+        next(
+          [
+            makeAppointment({
+              id: "late",
+              scheduledAt: "2026-10-09T13:00:00.000Z",
+            }),
+            makeAppointment({
+              id: "live",
+              scheduledAt: "2026-10-07T13:00:00.000Z",
+            }),
+            makeAppointment({
+              id: "mid",
+              scheduledAt: "2026-10-08T13:00:00.000Z",
+            }),
+          ],
+          "2026-10-07T13:10:00.000Z",
+        ),
+      ).toBe("live");
+    });
+  });
+
   it("AC-PAC-01-03: o tom do avatar é determinístico por paciente", () => {
     expect(patientAvatarTone("patient-1")).toBe(patientAvatarTone("patient-1"));
     expect(["mint", "peach", "lavender"]).toContain(
