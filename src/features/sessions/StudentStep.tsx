@@ -22,7 +22,7 @@ import {
 } from "@/components/ds";
 import { useStudents } from "@/features/students/useStudents";
 import { useSessionFlowStore } from "@/stores/session-flow";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 
 export function normalizeForSearch(value: string): string {
   return value
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   actions: { flexDirection: "row", gap: 8 },
   error: {
-    color: color.danger,
+    color: semanticColor.dangerTextOnSurface,
     fontFamily: fontFamilies.nunito.semiBold,
     fontSize: 13,
   },

@@ -13,7 +13,7 @@ import { listAnamneseTemplates } from "@/api/endpoints/anamnese";
 import type { AnamneseResponse } from "@/api/endpoints/anamnese-responses";
 import type { AnamneseTemplate } from "@/api/types";
 import { AppHeader, DsButton, FeatureRow } from "@/components/ds";
-import { color, typography } from "@/theme";
+import { color, typography, semanticColor } from "@/theme";
 
 import { AnamneseForm } from "./AnamneseForm";
 import { describeAnswer, formatResponseDate, sortedQuestions } from "./answers";
@@ -233,5 +233,5 @@ const styles = StyleSheet.create({
   question: { ...typography.cardTitle, color: color.ink[950] },
   answerText: { ...typography.body, color: color.ink[800] },
   state: { ...typography.body, color: color.ink[600], textAlign: "center" },
-  error: { ...typography.small, color: color.danger },
+  error: { ...typography.small, color: semanticColor.dangerTextOnSurface },
 });

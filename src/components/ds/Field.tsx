@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 
-import { color, fontFamilies, shape } from "@/theme";
+import { color, fontFamilies, shape, semanticColor } from "@/theme";
 
 export interface FieldProps {
   label: string;
@@ -88,7 +88,11 @@ const styles = StyleSheet.create({
     lineHeight: 19.5,
     textAlignVertical: "top",
   },
-  error: { color: color.danger, fontSize: 12, lineHeight: 16 },
+  error: {
+    color: semanticColor.dangerTextOnSurface,
+    fontSize: 12,
+    lineHeight: 16,
+  },
   hint: { color: color.ink[600], fontSize: 12, lineHeight: 16 },
 });
 

@@ -22,7 +22,7 @@ import {
 } from "@/features/plans/draft/PlanForm";
 import { afterSavePlanRoute, planDetailRoute } from "@/features/plans/routes";
 import { planQueryKeys } from "@/features/plans/hub/usePlans";
-import { color, typography } from "@/theme";
+import { color, typography, semanticColor } from "@/theme";
 
 export function DraftPreview({
   draft,
@@ -188,6 +188,6 @@ const styles = StyleSheet.create({
   },
   body: { ...typography.body, color: color.ink[950] },
   meta: { ...typography.tag, color: color.textSecondary },
-  error: { ...typography.body, color: color.danger },
+  error: { ...typography.body, color: semanticColor.dangerTextOnSurface },
   block: { gap: 8 },
 });

@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontFamily: fontFamilies.nunito.extraBold ?? fontFamilies.nunito.regular,
-    color: color.ink[500],
+    color: color.ink[600],
   },
   labelActive: { color: color.brand[700] },
 });

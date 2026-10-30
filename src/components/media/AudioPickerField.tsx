@@ -2,7 +2,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { TaskMediaFile } from "@/api/endpoints/task-upload-media";
-import { color, shape, typography } from "@/theme";
+import { color, shape, typography, semanticColor } from "@/theme";
 
 export interface AudioPickerFieldProps {
   value: (TaskMediaFile & { duration?: number }) | null;
@@ -107,7 +107,13 @@ const styles = StyleSheet.create({
     color: color.textSecondary,
     fontFamily: typography.body.fontFamily,
   },
-  remove: { color: color.pink, fontFamily: typography.body.fontFamily },
+  remove: {
+    color: semanticColor.dangerTextOnSurface,
+    fontFamily: typography.body.fontFamily,
+  },
   status: { color: color.text, fontFamily: typography.body.fontFamily },
-  error: { color: color.pink, fontFamily: typography.body.fontFamily },
+  error: {
+    color: semanticColor.dangerTextOnSurface,
+    fontFamily: typography.body.fontFamily,
+  },
 });

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DsButton, Field, SectionTitle } from "@/components/ds";
-import { color, typography } from "@/theme";
+import { color, typography, semanticColor } from "@/theme";
 
 export const planFormSchema = z.object({
   title: z.string().trim().min(1, "Informe o título").max(120),
@@ -202,7 +202,7 @@ export function PlanForm({
 const styles = StyleSheet.create({
   container: { gap: 12 },
   body: { ...typography.body, color: color.ink[950] },
-  error: { ...typography.body, color: color.danger },
+  error: { ...typography.body, color: semanticColor.dangerTextOnSurface },
   goal: {
     gap: 8,
     paddingVertical: 8,

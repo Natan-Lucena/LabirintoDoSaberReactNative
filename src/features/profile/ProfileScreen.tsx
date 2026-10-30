@@ -32,7 +32,7 @@ import {
 import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { homeQueryKeys } from "@/features/home/useHomeData";
 import { useAuthStore } from "@/stores/auth";
-import { color, typography } from "@/theme";
+import { color, typography, semanticColor } from "@/theme";
 
 const optionalText = z
   .string()
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   photoCopy: { flex: 1 },
   name: { ...typography.cardTitle, color: color.text },
   secondary: { ...typography.body, color: color.textSecondary },
-  error: { color: color.danger },
+  error: { color: semanticColor.dangerTextOnSurface },
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

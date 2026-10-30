@@ -22,7 +22,7 @@ import {
   Field,
   SelectField,
 } from "@/components/ds";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 
 const categoryOptions = [
   { value: "reading", label: "Leitura" },
@@ -190,6 +190,6 @@ const styles = StyleSheet.create({
     color: color.ink[950],
   },
   hint: { color: color.ink[600], fontSize: 12 },
-  error: { color: color.danger, fontSize: 12 },
+  error: { color: semanticColor.dangerTextOnSurface, fontSize: 12 },
   actions: { flexDirection: "row", gap: 12, justifyContent: "flex-end" },
 });

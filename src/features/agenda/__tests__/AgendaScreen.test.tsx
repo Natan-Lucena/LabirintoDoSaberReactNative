@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Appointment, Student } from "@/api/types";
@@ -116,6 +117,16 @@ describe("AgendaScreen (AGE-01)", () => {
     const right = tree.indexOf("m9 18 6-6-6-6");
     expect(left).toBeGreaterThan(-1);
     expect(right).toBeGreaterThan(left);
+  });
+
+  it("QA-03: atendimento cancelado fica legível (sem opacidade reduzida no cartão)", async () => {
+    await render(<AgendaScreen />);
+    const cancelled = screen.getByRole("button", { name: /Cancelado$/ });
+    const style = StyleSheet.flatten(cancelled.props.style) as {
+      opacity?: number;
+    };
+    // Com opacity 0,48 o texto ficava em 1,9:1 sobre o fundo.
+    expect(style.opacity ?? 1).toBe(1);
   });
 
   it("mostra status e abre detalhe e criação com dia selecionado (AC-AGE-01-04)", async () => {

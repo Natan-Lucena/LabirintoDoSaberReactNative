@@ -31,7 +31,7 @@ import {
   Toast,
   useToast,
 } from "@/components/ds";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 
 const difficultyOptions = [
   { key: "Linguagem", label: "Linguagem" },
@@ -494,6 +494,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
   },
-  error: { color: color.danger, fontSize: 12, lineHeight: 16 },
+  error: {
+    color: semanticColor.dangerTextOnSurface,
+    fontSize: 12,
+    lineHeight: 16,
+  },
   customDifficulty: { gap: 10 },
 });

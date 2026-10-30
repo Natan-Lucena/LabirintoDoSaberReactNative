@@ -23,7 +23,7 @@ import {
   SelectField,
 } from "@/components/ds";
 import { useStudents } from "@/features/students/useStudents";
-import { color, typography } from "@/theme";
+import { color, typography, semanticColor } from "@/theme";
 import { dayKey } from "@/utils/date";
 import { DraftPreview } from "./DraftPreview";
 
@@ -330,5 +330,5 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 40, gap: 18 },
   section: { gap: 10 },
   body: { ...typography.body, color: color.ink[950] },
-  error: { ...typography.body, color: color.danger },
+  error: { ...typography.body, color: semanticColor.dangerTextOnSurface },
 });

@@ -5,7 +5,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 
 import { FigmaIcon } from "@/components/FigmaIcon";
-import { color, fontFamilies, shape } from "@/theme";
+import { color, fontFamilies, shape, semanticColor } from "@/theme";
 import { formatLongDate, toBrasiliaISOString } from "@/utils/date";
 
 export interface DateFieldProps {
@@ -51,9 +51,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontFamily: fontFamilies.nunito.semiBold,
-    color: color.ink[500],
+    color: color.ink[600],
   },
-  error: { color: color.danger, fontSize: 12, lineHeight: 16 },
+  error: {
+    color: semanticColor.dangerTextOnSurface,
+    fontSize: 12,
+    lineHeight: 16,
+  },
 });
 
 /**

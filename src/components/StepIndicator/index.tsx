@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   circleTextPending: {
-    color: color.textTertiary,
+    color: color.textSecondary,
     fontWeight: "700",
     fontSize: 9,
   },
@@ -99,5 +99,5 @@ const styles = StyleSheet.create({
     fontFamily: typography.body.fontFamily,
   },
   labelActive: { color: semanticColor.textAccentOnSurface, fontWeight: "700" },
-  labelInactive: { color: color.textTertiary },
+  labelInactive: { color: color.textSecondary },
 });

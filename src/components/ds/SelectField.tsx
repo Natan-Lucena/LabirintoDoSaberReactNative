@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 import { FigmaIcon } from "@/components/FigmaIcon";
-import { color, fontFamilies, shape } from "@/theme";
+import { color, fontFamilies, shape, semanticColor } from "@/theme";
 
 export interface SelectOption {
   label: string;
@@ -59,9 +59,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontFamily: fontFamilies.nunito.semiBold,
-    color: color.ink[500],
+    color: color.ink[600],
   },
-  error: { color: color.danger, fontSize: 12, lineHeight: 16 },
+  error: {
+    color: semanticColor.dangerTextOnSurface,
+    fontSize: 12,
+    lineHeight: 16,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

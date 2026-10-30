@@ -12,7 +12,7 @@ import {
 } from "@/api/endpoints/anamnese-responses";
 import type { AnamneseTemplate } from "@/api/types";
 import { CheckList, DsButton, Field, SelectField } from "@/components/ds";
-import { color, fontFamilies, typography } from "@/theme";
+import { color, fontFamilies, typography, semanticColor } from "@/theme";
 
 import {
   buildAnswers,
@@ -250,5 +250,5 @@ const styles = StyleSheet.create({
     color: color.ink[800],
   },
   file: { ...typography.small, color: color.ink[600] },
-  error: { ...typography.small, color: color.danger },
+  error: { ...typography.small, color: semanticColor.dangerTextOnSurface },
 });
