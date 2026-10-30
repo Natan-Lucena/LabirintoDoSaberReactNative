@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   rowValue: { ...typography.body, color: color.text },
   actions: { gap: 10 },
   error: {
-    color: color.danger,
+    color: semanticColor.dangerTextOnSurface,
     fontFamily: fontFamilies.nunito.regular,
     fontSize: 12,
     lineHeight: 16,

@@ -25,7 +25,7 @@ import {
   IconButton,
   SelectField,
 } from "@/components/ds";
-import { color, fontFamilies, shape } from "@/theme";
+import { color, fontFamilies, shape, semanticColor } from "@/theme";
 import {
   templateSchema,
   toTemplateInput,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   options: { gap: 8 },
   optionField: { flex: 1 },
-  error: { color: color.danger },
+  error: { color: semanticColor.dangerTextOnSurface },
   backdrop: {
     flex: 1,
     justifyContent: "center",

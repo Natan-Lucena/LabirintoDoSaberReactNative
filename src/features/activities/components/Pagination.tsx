@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.body.fontFamily,
     color: color.text,
   },
-  labelDisabled: { color: color.textTertiary },
+  labelDisabled: { color: color.textSecondary },
 });
 
 export function Pagination({

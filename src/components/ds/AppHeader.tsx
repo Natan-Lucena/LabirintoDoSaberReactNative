@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.eyebrow.fontFamily,
     letterSpacing: typography.eyebrow.letterSpacing,
     textTransform: typography.eyebrow.textTransform,
-    color: color.ink[500],
+    color: color.ink[600],
   },
   title: {
     fontSize: typography.title.fontSize,

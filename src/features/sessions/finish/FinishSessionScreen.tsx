@@ -14,7 +14,7 @@ import type { TaskNotebookSession } from "@/api/types";
 import { AppHeader, DsButton, Field, InfoCard } from "@/components/ds";
 import { appointmentQueryKeys } from "@/features/appointments/useAppointments";
 import { useSessionFlowStore } from "@/stores/session-flow";
-import { color, fontFamilies, shape } from "@/theme";
+import { color, fontFamilies, shape, semanticColor } from "@/theme";
 
 export const SESSION_REPORT_ROUTE = (sessionId: string) =>
   `/reports/session/${sessionId}`;
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     borderRadius: shape.radius.md,
   },
   error: {
-    color: color.danger,
+    color: semanticColor.dangerTextOnSurface,
     fontFamily: fontFamilies.nunito.semiBold,
     fontSize: 13,
     lineHeight: 18,

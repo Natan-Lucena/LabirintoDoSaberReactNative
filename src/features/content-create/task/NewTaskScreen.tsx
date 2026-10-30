@@ -30,7 +30,7 @@ import {
 import { AudioPickerField } from "@/components/media/AudioPickerField";
 import { AudioPlayer } from "@/components/media/AudioPlayer";
 import { ImagePickerField } from "@/components/media/ImagePickerField";
-import { color, fontFamilies, shape } from "@/theme";
+import { color, fontFamilies, shape, semanticColor } from "@/theme";
 
 const categoryOptions = [
   { value: "reading", label: "Leitura" },
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.nunito.regular,
   },
   error: {
-    color: color.danger,
+    color: semanticColor.dangerTextOnSurface,
     padding: 20,
     fontFamily: fontFamilies.nunito.regular,
   },

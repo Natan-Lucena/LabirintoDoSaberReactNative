@@ -20,7 +20,7 @@ import {
   SearchField,
   SelectField,
 } from "@/components/ds";
-import { color, fontFamilies } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 
 const categoryOptions = [
   { value: "reading", label: "Leitura" },
@@ -176,6 +176,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: color.ink[950],
   },
-  error: { color: color.danger, fontSize: 12 },
+  error: { color: semanticColor.dangerTextOnSurface, fontSize: 12 },
   actions: { flexDirection: "row", gap: 12, justifyContent: "flex-end" },
 });

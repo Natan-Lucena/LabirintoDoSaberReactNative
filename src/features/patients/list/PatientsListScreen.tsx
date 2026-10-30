@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 12,
   },
-  eyebrow: { ...typography.eyebrow, color: color.ink[500] },
+  eyebrow: { ...typography.eyebrow, color: color.ink[600] },
   title: { ...typography.title, color: color.ink[950] },
   filters: { gap: 10 },
   listContent: {

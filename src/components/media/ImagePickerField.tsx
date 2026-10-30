@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import type { TaskMediaFile } from "@/api/endpoints/task-upload-media";
-import { color, shape, typography } from "@/theme";
+import { color, shape, typography, semanticColor } from "@/theme";
 
 export interface ImagePickerFieldProps {
   value: TaskMediaFile | null;
@@ -149,5 +149,8 @@ const styles = StyleSheet.create({
     fontFamily: typography.button.fontFamily,
   },
   status: { color: color.text, fontFamily: typography.body.fontFamily },
-  error: { color: color.pink, fontFamily: typography.body.fontFamily },
+  error: {
+    color: semanticColor.dangerTextOnSurface,
+    fontFamily: typography.body.fontFamily,
+  },
 });

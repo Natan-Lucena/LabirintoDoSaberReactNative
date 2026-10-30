@@ -23,7 +23,7 @@ import {
   getCategoryLabel,
   getTypeLabel,
 } from "@/features/reports/session/sessionReport";
-import { color, shape, typography } from "@/theme";
+import { color, shape, typography, semanticColor } from "@/theme";
 
 export const taskQueryKeys = {
   detail: (id: string) => ["task", id] as const,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 24,
   },
-  deleteError: { ...typography.body, color: color.pink },
+  deleteError: { ...typography.body, color: semanticColor.dangerTextOnSurface },
   actions: { gap: 10 },
   modalBackdrop: {
     flex: 1,
