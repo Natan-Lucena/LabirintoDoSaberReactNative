@@ -1,4 +1,4 @@
-import { BackHandler } from "react-native";
+import { BackHandler, Keyboard } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { act } from "@testing-library/react-native";
@@ -589,6 +589,53 @@ describe("ContentStep", () => {
       expect(screen.getByText("Validation error")).toBeTruthy(),
     );
     expect(startSession).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [
+      "NOTEBOOK_NOT_FOUND",
+      "Este caderno não pode ser usado para iniciar a sessão. Escolha outro.",
+    ],
+    ["SOME_OTHER_CODE", "Não foi possível iniciar a sessão."],
+    ["Mensagem do servidor", "Mensagem do servidor"],
+  ])("E-13: erro %s aparece como %s", async (raw, shown) => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(startSession)
+      .mockReset()
+      .mockRejectedValue(new ApiError({ message: raw, status: 404 }));
+
+    await renderContentStep();
+    await waitFor(() =>
+      expect(screen.getByText("Cores e formas")).toBeTruthy(),
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+      fireEvent.changeText(
+        screen.getByLabelText("Nome da sessão"),
+        "Sessão de teste",
+      );
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+
+    await waitFor(() => expect(screen.getByText(shown)).toBeTruthy());
+    if (raw !== shown) expect(screen.queryByText(raw)).toBeNull();
+  });
+
+  it("E-01b: selecionar um item fecha o teclado", async () => {
+    const dismiss = vi.spyOn(Keyboard, "dismiss").mockImplementation(() => {});
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    await renderContentStep();
+    await waitFor(() =>
+      expect(screen.getByText("Cores e formas")).toBeTruthy(),
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+    });
+
+    expect(dismiss).toHaveBeenCalled();
+    dismiss.mockRestore();
   });
 
   it("busca filtra por descrição ignorando acento e maiúscula", async () => {
