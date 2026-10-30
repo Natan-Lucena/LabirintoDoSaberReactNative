@@ -174,7 +174,8 @@ function AppointmentForm({
   const updateMutation = useUpdateAppointmentMutation();
   const mutation = mode === "create" ? createMutation : updateMutation;
   const scheduleLocked = mode === "observation";
-  const detailsLocked = mode === "reschedule" || mode === "observation";
+  const detailsLocked =
+    mode === "reschedule" || mode === "observation" || mode === "reactivate";
   const observationLocked = mode === "reschedule";
   const {
     control,

@@ -400,6 +400,21 @@ describe("AppointmentFormScreen — editar, remarcar e reativar (AGE-03)", () =>
     );
   });
 
+  it("AGE-03.8 reativar bloqueia tipo e duração", async () => {
+    getAppointment.mockResolvedValue(appointment({ status: "CANCELLED" }));
+    await render(
+      <AppointmentFormScreen appointmentId="appt-1" mode="reactivate" />,
+    );
+
+    await screen.findByLabelText("Horário");
+    expect(screen.getByLabelText("Tipo de atendimento").props.editable).toBe(
+      false,
+    );
+    expect(screen.getByLabelText("Duração (minutos)").props.editable).toBe(
+      false,
+    );
+  });
+
   it("reativar aceita a remarcação opcional", async () => {
     getAppointment.mockResolvedValue(appointment({ status: "CANCELLED" }));
     updateAppointment.mockResolvedValue(appointment());
