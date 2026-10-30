@@ -34,6 +34,22 @@ describe("TemplateFormScreen PAC-08", () => {
     update.mockReset();
     deletion.mockReset();
   });
+  it("QA-03: o botão Remover diz qual pergunta remove", async () => {
+    await render(<TemplateFormScreen />);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Adicionar pergunta" }),
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Adicionar pergunta" }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Remover pergunta 1" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Remover pergunta 2" }),
+    ).toBeTruthy();
+  });
+
   it("cria modelo com perguntas em ordem e opções só para escolha", async () => {
     create.mockResolvedValue({ id: "new" });
     await render(<TemplateFormScreen />);

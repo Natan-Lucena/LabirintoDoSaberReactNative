@@ -135,7 +135,9 @@ export function NotebookDetailScreen({
             Não foi possível excluir o caderno.
           </Text>
         ) : null}
-        {otherEducator ? <Text>Caderno de outro educador</Text> : null}
+        {otherEducator ? (
+          <Text style={styles.ownerNote}>Caderno de outro educador</Text>
+        ) : null}
         {ownNotebook ? (
           <View style={styles.actions}>
             <DsButton
@@ -184,6 +186,12 @@ export function NotebookDetailScreen({
   );
 }
 const styles = StyleSheet.create({
+  ownerNote: {
+    fontFamily: fontFamilies.nunito.semiBold ?? fontFamilies.nunito.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: color.textSecondary,
+  },
   screen: { flex: 1, backgroundColor: color.surfaceSoft },
   scroll: { flexGrow: 1 },
   content: { padding: 20, gap: 16 },

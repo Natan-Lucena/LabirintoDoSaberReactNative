@@ -237,6 +237,10 @@ export function HomeScreen(): ReactElement {
               ? "active"
               : "default",
         actionLabel: reminderUrl ? "Lembrete" : undefined,
+        actionAccessibilityLabel:
+          reminderUrl && student
+            ? `Enviar lembrete pelo WhatsApp para ${student.name}`
+            : undefined,
         onActionPress: reminderUrl
           ? () => {
               void Linking.openURL(reminderUrl).catch(() =>
