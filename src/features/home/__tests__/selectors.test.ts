@@ -90,11 +90,48 @@ describe("seletores da Home (AC-HOME-01-01, AC-HOME-01-04)", () => {
       appointment("next", 10, "PENDING"),
     ];
 
-    expect(selectNextAppointment(appointments)?.id).toBe("next");
+    const beforeTen = new Date("2026-04-02T12:00:00.000Z");
+
+    expect(selectNextAppointment(appointments, beforeTen)?.id).toBe("next");
     expect(
       selectNextAppointment(
         appointments.filter(({ status }) => status !== "PENDING"),
+        beforeTen,
       ),
+    ).toBeUndefined();
+  });
+
+  it("D14: atendimento que já terminou sem ser concluído não é o próximo", () => {
+    const missed = {
+      ...appointment("missed", 8, "PENDING"),
+      durationMinutes: 30,
+    };
+    const later = appointment("later", 16, "PENDING");
+    const now = new Date("2026-04-02T18:00:00.000Z"); // 15:00 em São Paulo
+
+    expect(selectNextAppointment([missed, later], now)?.id).toBe("later");
+    expect(selectNextAppointment([missed], now)).toBeUndefined();
+  });
+
+  it("D14: atendimento em andamento ainda é o próximo", () => {
+    const inProgress = {
+      ...appointment("in-progress", 10, "PENDING"),
+      durationMinutes: 50,
+    };
+    const later = appointment("later", 14, "PENDING");
+    const now = new Date("2026-04-02T13:10:00.000Z"); // 10:10 em São Paulo
+
+    expect(selectNextAppointment([inProgress, later], now)?.id).toBe(
+      "in-progress",
+    );
+  });
+
+  it("D14: sem atendimento elegível devolve undefined", () => {
+    const now = new Date("2026-04-02T12:00:00.000Z");
+
+    expect(selectNextAppointment([], now)).toBeUndefined();
+    expect(
+      selectNextAppointment([appointment("done", 10, "COMPLETED")], now),
     ).toBeUndefined();
   });
 });
