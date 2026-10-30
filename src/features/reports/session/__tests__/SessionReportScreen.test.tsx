@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SessionReport } from "@/api/endpoints/session-report";
 import type { ApiError } from "@/api/errors";
+import { BackHandler } from "react-native";
+
 import { fireEvent, render, screen } from "@/test-utils/render";
 
 const routerBack = vi.fn();
+const routerReplace = vi.fn();
+const routerCanGoBack = vi.fn(() => true);
 const printAsync = vi.fn();
 const printToFileAsync = vi.fn(async () => ({
   uri: "file://print/report.pdf",
@@ -24,7 +28,11 @@ interface QueryState {
 }
 
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ back: routerBack }),
+  useRouter: () => ({
+    back: routerBack,
+    replace: routerReplace,
+    canGoBack: routerCanGoBack,
+  }),
 }));
 vi.mock("expo-print", () => ({ printAsync, printToFileAsync }));
 vi.mock("expo-sharing", () => ({ shareAsync }));
@@ -62,6 +70,8 @@ const report: SessionReport = {
 describe("SessionReportScreen (REL-04)", () => {
   beforeEach(() => {
     routerBack.mockClear();
+    routerReplace.mockClear();
+    routerCanGoBack.mockReset().mockReturnValue(true);
     printAsync.mockClear();
     printToFileAsync.mockClear();
     shareAsync.mockClear();
@@ -109,6 +119,42 @@ describe("SessionReportScreen (REL-04)", () => {
     );
   });
 
+  it("SES-05.1: sem tela anterior (sessão retomada com o app reaberto), Voltar leva à Início", async () => {
+    routerCanGoBack.mockReturnValue(false);
+    await render(<SessionReportScreen sessionId="mock-session-1" />);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+
+    expect(routerBack).not.toHaveBeenCalled();
+    expect(routerReplace).toHaveBeenCalledWith("/");
+  });
+
+  it("SES-05.1: o Voltar do Android também leva à Início quando não há tela anterior", async () => {
+    type BackListener = Parameters<typeof BackHandler.addEventListener>[1];
+    const handlers: BackListener[] = [];
+    const spy = vi
+      .spyOn(BackHandler, "addEventListener")
+      .mockImplementation((_event, handler) => {
+        handlers.push(handler);
+        return { remove: vi.fn() };
+      });
+    routerCanGoBack.mockReturnValue(false);
+    await render(<SessionReportScreen sessionId="mock-session-1" />);
+
+    expect(handlers.length).toBeGreaterThan(0);
+    expect(handlers.at(-1)!({} as Parameters<BackListener>[0])).toBe(true);
+    expect(routerReplace).toHaveBeenCalledWith("/");
+    spy.mockRestore();
+  });
+
+  it("com tela anterior, Voltar continua voltando normalmente", async () => {
+    await render(<SessionReportScreen sessionId="mock-session-1" />);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+
+    expect(routerBack).toHaveBeenCalledTimes(1);
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
   it("mostra erro recuperável e o estado de sessão ausente", async () => {
     const refetch = vi.fn();
     query = { isPending: false, isError: true, refetch };
