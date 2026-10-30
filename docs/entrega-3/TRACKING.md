@@ -7,6 +7,26 @@
 
 ## 0. Próximo passo global
 
+Estado em 2026-10-30 (noite):
+
+- **Pedidos novos do usuário na `main`:**
+  - #135: "Atendimento atual" da Agenda pela regra de D14.
+  - #140: a sessão não fica presa depois de falhar ao iniciar.
+  - #141: foto do paciente no avatar e espaço entre os cartões da lista.
+  - #142: "Iniciar sessão" pela Agenda, Início ou ficha vai direto com o paciente do atendimento. O conteúdo pode ser caderno, grupo ou atividade. Só o caderno tem vínculo no backend, então grupo e atividade só são retomáveis no mesmo aparelho, por decisão do usuário.
+- **Correções do outro dev na `main`:**
+  - #136: área de toque.
+  - #137: WhatsApp com DDD 55.
+  - #138: contraste.
+  - #139: rótulos de acessibilidade.
+- **Revisão de código da entrega** (orquestrador, 2026-10-30), com as correções:
+  - #143: o próximo atendimento da lista de pacientes segue a regra da Início e da Agenda.
+  - #144: o fluxo de sessão não trava ao sair durante o início. Também foram corrigidos o Voltar com sessão aberta, a navegação atrasada, o toque duplo, o paciente errado no modo direto e o conteúdo do paciente anterior.
+  - Fica registrado e não foi corrigido: o destaque da Início e da Agenda não se atualiza sozinho com a tela aberta.
+- **Emulador:** o Windows ficou sem memória e encerrou o emulador e o Metro. #141, #142, #143 e #144 têm só os testes automatizados. A validação no aparelho está com o agente do outro dev (S4 e S7 na issue #129).
+- **Incidente na rodada de sanidade:** a automação do outro dev marcou como "Concluído" um atendimento real da conta. O backend não permite voltar de concluído, e recriar ou não fica com o usuário.
+- **Documento da entrega:** [ESCOPO-ENTREGA-3](ESCOPO-ENTREGA-3.md), autocontido, descreve tudo o que a Entrega 3 entrega.
+
 Estado em 2026-10-30:
 
 - **Correções da rodada QA-06 na `main`:** do app, #118 a #128 e #130 a #133 (D1, D2, D3, D6 no
@@ -176,3 +196,6 @@ já concluídas).
 | 2026-10-29 | Rodada manual (QA-06)          | Executada no emulador `Medium_Phone` (Android 17, Expo Go, backend real, mocks desligados, commit `c7ec327`) a pedido do usuário: 122 casos dos roteiros + fluxos e conferências do backend; 110 OK, 11 FALHA, 13 N/A; 190 capturas fora do repositório. FEC-01 executada (rotas da V1 OK). Defeitos principais: relatório sem saída após retomar sessão (D1), aviso de sessão em andamento sobre a própria sessão (D2), data de revisão em UTC (D3), backend ignora `learningTopics` na edição (D4) e devolve `_password` no `update-educator` (D5). Detalhes no PLANO-TESTES §6.2 |
 | 2026-10-30 | Correções da QA-06             | Revisados e mergeados os PRs do outro dev (#117, #118, #120 a #128; #125 e #127 atualizados com a `main` e CI de novo) e os do orquestrador: D14 (#130), divergências #11 (#131), #2 (#132) e #3 (#133). O #130 foi mergeado com o CI do app ainda rodando (o repositório não bloqueia); o CI da `main` passou depois. Coordenação na issue #129                                                                                                                                                                                                                                    |
 | 2026-10-30 | Backend                        | Documento [CORRECOES-BACKEND](CORRECOES-BACKEND.md) (B1 a B4) enviado; o backend corrigiu tudo (PR #29, `82ef08e`) e o Swagger publicado confere. Mudanças de status: 404 para caderno ou grupo inexistente (antes 500), 400 para dado inválido, 403 na anamnese de outro educador                                                                                                                                                                                                                                                                                                  |
+| 2026-10-30 | Pedidos do usuário             | Agenda com a regra de D14 (#135); a sessão sai do estado de erro (#140); foto no avatar e espaço na lista (#141); sessão direta com o paciente e conteúdo caderno, grupo ou atividade (#142). Do outro dev: #136 a #139 (QA-03 e WhatsApp 55). Tudo mergeado com o CI verde                                                                                                                                                                                                                                                                                                         |
+| 2026-10-30 | Revisão de código              | Revisão independente da `main` em `706885a`: 6 defeitos no fluxo de sessão e 1 na lista de pacientes, corrigidos com teste primeiro em #144 (`1103042`) e #143 (`91b1a28`). O emulador foi encerrado por falta de memória; validação no aparelho pendente (issue #129, S4 e S7)                                                                                                                                                                                                                                                                                                     |
+| 2026-10-30 | Documentação                   | [ESCOPO-ENTREGA-3](ESCOPO-ENTREGA-3.md): documento autocontido com tudo o que a Entrega 3 entrega                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
