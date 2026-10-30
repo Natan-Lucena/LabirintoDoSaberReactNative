@@ -181,12 +181,21 @@ function AppointmentForm({
     handleSubmit,
     getValues,
     setValue,
-    formState: { errors, isValid },
+    trigger,
+    formState: { errors, isValid, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
     defaultValues: initialValues(appointment, studentId, date),
   });
+
+  // Com mode "onChange" o RHF só valida o campo alterado; na primeira interação
+  // validamos data e horário para mostrar "Selecione a data/o horário".
+  useEffect(() => {
+    if (isDirty) {
+      void trigger(["date", "time"]);
+    }
+  }, [isDirty, trigger]);
 
   useEffect(() => {
     if (!toast.message) {
@@ -306,6 +315,7 @@ function AppointmentForm({
                   mutation.reset();
                 }}
                 disabled={scheduleLocked}
+                error={errors.date?.message}
               />
             )}
           />
@@ -322,7 +332,7 @@ function AppointmentForm({
                   mutation.reset();
                 }}
                 disabled={scheduleLocked}
-                error={conflictId ? CONFLICT_MESSAGE : undefined}
+                error={conflictId ? CONFLICT_MESSAGE : errors.time?.message}
               />
             )}
           />
