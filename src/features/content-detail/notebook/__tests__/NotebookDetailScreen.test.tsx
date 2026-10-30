@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useAuthStore } from "@/stores/auth";
 import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 import { NotebookDetailScreen } from "../NotebookDetailScreen";
 
@@ -25,6 +26,8 @@ vi.mock("@/api/endpoints/content", () => ({
   listTaskGroupsByEducator: (...args: unknown[]) =>
     listTaskGroupsByEducator(...args),
 }));
+
+vi.mock("@/api/endpoints/educator", () => ({ getMe: vi.fn() }));
 
 vi.mock("@/api/endpoints/task-notebook-delete", () => ({
   deleteTaskNotebook: (...args: unknown[]) => deleteTaskNotebook(...args),
@@ -61,6 +64,28 @@ describe("NotebookDetailScreen (D-04, D-05, D-06, D-08)", () => {
     listTaskGroupsByEducator.mockReset();
     listTaskGroupsByEducator.mockResolvedValue(notebooksData[0].taskGroups);
     deleteTaskNotebook.mockReset();
+    useAuthStore.setState({
+      status: "authenticated",
+      token: "token",
+      educatorId: "educator-1",
+    });
+  });
+
+  it("FEC-03: caderno de outro educador não oferece editar nem excluir", async () => {
+    listTaskNotebooks.mockResolvedValue([
+      {
+        ...notebooksData[0],
+        notebook: { ...notebooksData[0].notebook, educator: "educator-2" },
+      },
+    ]);
+    await render(<NotebookDetailScreen notebookId="notebook-1" />);
+
+    expect(await screen.findByText("Sons e Letras")).toBeTruthy();
+    expect(screen.getByText("Caderno de outro educador")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Editar Caderno" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Excluir Caderno" }),
+    ).toBeNull();
   });
 
   it("mostra descrição, categoria, contagem de tarefas e grupos do caderno", async () => {
