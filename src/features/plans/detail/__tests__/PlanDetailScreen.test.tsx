@@ -189,6 +189,22 @@ describe("PlanDetailScreen (PLN-04)", () => {
     expect(screen.queryByText("30/10/2026")).toBeNull();
   });
 
+  it("mostra o erro da nota vazia dentro do formulário de revisão, antes do botão de salvar", async () => {
+    await render(<PlanDetailScreen />);
+    await screen.findByText("PDI de leitura e escrita");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Registrar revisão" }),
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Salvar revisão" }),
+    );
+    const message = "A nota deve ter entre 1 e 2000 caracteres.";
+    expect(await screen.findByText(message)).toBeTruthy();
+    expect(createPlanReview).not.toHaveBeenCalled();
+    const tree = JSON.stringify(screen.toJSON());
+    expect(tree.indexOf(message)).toBeLessThan(tree.indexOf("Salvar revisão"));
+  });
+
   it("confirma encerramento e deixa a tela somente leitura", async () => {
     const closed = {
       ...mockPlans[0],
