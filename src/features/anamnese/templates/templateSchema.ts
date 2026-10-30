@@ -33,7 +33,7 @@ export const templateSchema = z.object({
     .string()
     .trim()
     .max(1000, "A descrição deve ter até 1000 caracteres"),
-  questions: z.array(questionSchema),
+  questions: z.array(questionSchema).min(1, "Adicione pelo menos uma pergunta"),
 });
 
 export type TemplateFormValues = z.infer<typeof templateSchema>;

@@ -291,6 +291,11 @@ export function TemplateFormScreen({
                 />
               </View>
             ))}
+            {errors.questions?.root?.message || errors.questions?.message ? (
+              <Text style={styles.error} accessibilityRole="alert">
+                {errors.questions?.root?.message ?? errors.questions?.message}
+              </Text>
+            ) : null}
             <DsButton
               label="Adicionar pergunta"
               variant="soft"
