@@ -55,6 +55,16 @@ describe("TemplateFormScreen PAC-08", () => {
       }),
     );
   });
+  it("não salva modelo sem perguntas e mostra o aviso (PAC-08.3)", async () => {
+    await render(<TemplateFormScreen />);
+    await fireEvent.changeText(screen.getByLabelText("Título *"), "Inicial");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Salvar modelo" }),
+    );
+    const alert = await screen.findByText("Adicione pelo menos uma pergunta");
+    expect(alert.props.accessibilityRole).toBe("alert");
+    expect(create).not.toHaveBeenCalled();
+  });
   it("mantém formulário e mostra erro de modelo com respostas", async () => {
     update.mockRejectedValue({ code: "TEMPLATE_HAS_RESPONSES" });
     await render(<TemplateFormScreen templateId="template-1" />);

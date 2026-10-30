@@ -74,7 +74,11 @@ export function nextAppointmentByStudentId(
   const nextAppointments = new Map<string, Appointment>();
   for (const appointment of appointments) {
     const scheduledAt = new Date(appointment.scheduledAt);
-    if (appointment.status === "CANCELLED" || scheduledAt < now) {
+    if (
+      appointment.status === "CANCELLED" ||
+      appointment.status === "COMPLETED" ||
+      scheduledAt < now
+    ) {
       continue;
     }
     const current = nextAppointments.get(appointment.studentId);
