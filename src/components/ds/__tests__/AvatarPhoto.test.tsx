@@ -35,4 +35,20 @@ describe("Avatar com foto", () => {
     expect(screen.getByText("MS")).toBeTruthy();
     expect(screen.queryByTestId("avatar-photo")).toBeNull();
   });
+
+  it("não propaga a falha de uma foto para outra url (reciclagem)", async () => {
+    const view = await render(
+      <Avatar name="Maria Souza" photoUrl="https://exemplo.test/a.jpg" />,
+    );
+    await fireEvent(screen.getByTestId("avatar-photo"), "error");
+    expect(screen.queryByTestId("avatar-photo")).toBeNull();
+
+    await view.rerender(
+      <Avatar name="Maria Souza" photoUrl="https://exemplo.test/b.jpg" />,
+    );
+    const image = screen.getByTestId("avatar-photo");
+    expect([image.props.source].flat()[0]).toEqual({
+      uri: "https://exemplo.test/b.jpg",
+    });
+  });
 });

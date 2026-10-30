@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
     borderRadius: shape.radius.avatar,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   photo: { width: "100%", height: "100%" },
   initials: {
@@ -71,8 +72,8 @@ export function Avatar({
 }: AvatarProps): ReactElement {
   const resolvedTone = toneStyles[tone ?? toneForName(name)];
   const dimension = size ?? 46;
-  const [photoFailed, setPhotoFailed] = useState(false);
-  const showPhoto = Boolean(photoUrl) && !photoFailed;
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const showPhoto = !!photoUrl && failedUrl !== photoUrl;
 
   return (
     <View
@@ -91,8 +92,8 @@ export function Avatar({
           testID="avatar-photo"
           source={{ uri: photoUrl as string }}
           resizeMode="cover"
-          onError={() => setPhotoFailed(true)}
-          style={[styles.photo, { borderRadius: dimension / 2 }]}
+          onError={() => setFailedUrl(photoUrl ?? null)}
+          style={styles.photo}
         />
       ) : (
         <Text style={[styles.initials, { color: resolvedTone.color }]}>
