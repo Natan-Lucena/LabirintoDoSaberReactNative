@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
   FlatList,
+  Keyboard,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -31,6 +32,16 @@ import {
   type SessionFlowContentKind,
 } from "@/stores/session-flow";
 import { color, fontFamilies } from "@/theme";
+
+/** Esconde códigos crus do backend (ex.: `NOTEBOOK_NOT_FOUND`) do educador. */
+function friendlyStartError(message: string | undefined): string {
+  const fallback = "Não foi possível iniciar a sessão.";
+  if (!message) return fallback;
+  if (message === "NOTEBOOK_NOT_FOUND") {
+    return "Este caderno não pode ser usado para iniciar a sessão. Escolha outro.";
+  }
+  return /^[A-Z][A-Z0-9_]+$/.test(message) ? fallback : message;
+}
 
 export function normalizeForSearch(value: string): string {
   return value
@@ -250,9 +261,10 @@ export function ContentStep(): ReactElement {
         }
         return;
       }
-      await failStart(apiError.message || "Não foi possível iniciar a sessão.");
+      const failure = friendlyStartError(apiError.message);
+      await failStart(failure);
       if (mountedRef.current) {
-        setMessage(apiError.message || "Não foi possível iniciar a sessão.");
+        setMessage(failure);
       }
     }
   }
@@ -341,7 +353,10 @@ export function ContentStep(): ReactElement {
               <CheckList
                 options={[{ key: item.id, label: item.name }]}
                 selected={selected?.id === item.id ? [item.id] : []}
-                onChange={() => setSelected(item)}
+                onChange={() => {
+                  Keyboard.dismiss();
+                  setSelected(item);
+                }}
               />
             )}
           />

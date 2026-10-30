@@ -1,4 +1,8 @@
-import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
+import {
+  AxiosError,
+  AxiosHeaders,
+  type InternalAxiosRequestConfig,
+} from "axios";
 import { describe, expect, it } from "vitest";
 
 import { ApiError, normalizeApiError } from "@/api/errors";
@@ -9,16 +13,22 @@ const axiosConfig = {
 
 describe("normalizeApiError", () => {
   it("preserves the HTTP status, server message, and field errors", () => {
-    const error = new AxiosError("Request failed", undefined, undefined, undefined, {
-      config: axiosConfig,
-      data: {
-        message: "Validation error",
-        errors: [{ path: "email", message: "Invalid email" }],
+    const error = new AxiosError(
+      "Request failed",
+      undefined,
+      undefined,
+      undefined,
+      {
+        config: axiosConfig,
+        data: {
+          message: "Validation error",
+          errors: [{ path: "email", message: "Invalid email" }],
+        },
+        headers: {},
+        status: 400,
+        statusText: "Bad Request",
       },
-      headers: {},
-      status: 400,
-      statusText: "Bad Request",
-    });
+    );
 
     const normalized = normalizeApiError(error);
 
@@ -37,13 +47,19 @@ describe("normalizeApiError", () => {
     [500, "TASK_NOT_FOUND"],
     [400, "NOT_FOUND"],
   ])("keeps %i %s distinguishable", (status, message) => {
-    const error = new AxiosError("Request failed", undefined, undefined, undefined, {
-      config: axiosConfig,
-      data: { message },
-      headers: {},
-      status,
-      statusText: "Error",
-    });
+    const error = new AxiosError(
+      "Request failed",
+      undefined,
+      undefined,
+      undefined,
+      {
+        config: axiosConfig,
+        data: { message },
+        headers: {},
+        status,
+        statusText: "Error",
+      },
+    );
 
     const normalized = normalizeApiError(error);
 
@@ -69,5 +85,21 @@ describe("normalizeApiError", () => {
     expect(normalized.status).toBeUndefined();
     expect(normalized.isNetworkError).toBe(true);
     expect(normalized.isTimeout).toBe(false);
+  });
+
+  it("E-12: traduz falha de rede e timeout do axios para português", () => {
+    const network = normalizeApiError(
+      new AxiosError("Network Error", "ERR_NETWORK"),
+    );
+    const timeout = normalizeApiError(
+      new AxiosError("timeout of 15000ms exceeded", "ECONNABORTED"),
+    );
+
+    expect(network.message).toBe(
+      "Sem conexão com a internet. Verifique a rede e tente novamente.",
+    );
+    expect(timeout.message).toBe(
+      "O servidor demorou para responder. Tente novamente.",
+    );
   });
 });

@@ -75,8 +75,16 @@ export function normalizeApiError(error: unknown): ApiError {
     error.code === AxiosError.ETIMEDOUT || error.code === "ECONNABORTED";
   const isNetworkError = !response && !isTimeout;
 
+  const message =
+    serverMessage ??
+    (isTimeout
+      ? "O servidor demorou para responder. Tente novamente."
+      : isNetworkError
+        ? "Sem conexão com a internet. Verifique a rede e tente novamente."
+        : error.message);
+
   return new ApiError({
-    message: serverMessage ?? error.message,
+    message,
     status: response?.status,
     code: serverMessage,
     errors: getFieldErrors(payload.errors),
