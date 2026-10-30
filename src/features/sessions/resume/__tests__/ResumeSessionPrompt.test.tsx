@@ -98,6 +98,24 @@ describe("ResumeSessionPrompt", () => {
     expect(screen.queryByText("Sessão em andamento")).toBeNull();
   });
 
+  it("AGE-04.1: não oferece retomada para a sessão iniciada depois de abrir o app", async () => {
+    persisted = { step: "idle" };
+    await render(<ResumeSessionPrompt />);
+    await waitFor(() => expect(hydrate).toHaveBeenCalledTimes(1));
+
+    // O usuário inicia uma sessão nova: o fluxo passa a "running".
+    await act(async () => {
+      useSessionFlowStore.setState({
+        step: "running",
+        student: STUDENT,
+        sessionName: "Sessão nova",
+        sessionId: "session-nova",
+      });
+    });
+
+    expect(screen.queryByText("Sessão em andamento")).toBeNull();
+  });
+
   it("não hidrata sem usuário autenticado", async () => {
     useAuthStore.setState({ status: "unauthenticated", educatorId: null });
     await render(<ResumeSessionPrompt />);
@@ -138,7 +156,9 @@ describe("ResumeSessionPrompt", () => {
       fireEvent.press(screen.getByRole("button", { name: "Retomar" })),
     );
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/session/player"));
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/session/player"),
+    );
     expect(finish).not.toHaveBeenCalled();
     expect(screen.queryByText("Sessão em andamento")).toBeNull();
   });
@@ -185,7 +205,9 @@ describe("ResumeSessionPrompt", () => {
   it("Encerrar agora finaliza o fluxo e abre o encerramento", async () => {
     await render(<ResumeSessionPrompt />);
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Encerrar agora" })).toBeTruthy(),
+      expect(
+        screen.getByRole("button", { name: "Encerrar agora" }),
+      ).toBeTruthy(),
     );
 
     await act(async () =>
@@ -210,7 +232,9 @@ describe("ResumeSessionPrompt", () => {
     ];
     await render(<ResumeSessionPrompt />);
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Encerrar agora" })).toBeTruthy(),
+      expect(
+        screen.getByRole("button", { name: "Encerrar agora" }),
+      ).toBeTruthy(),
     );
 
     await act(async () =>

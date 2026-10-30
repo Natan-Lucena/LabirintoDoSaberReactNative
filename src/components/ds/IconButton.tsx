@@ -6,6 +6,7 @@ import { color } from "../../theme";
 import { FigmaIcon, type FigmaIconName } from "../FigmaIcon";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
 import { StaticPressable } from "./StaticPressable";
+import { hitSlopToMinTarget } from "./touchTarget";
 
 export interface IconButtonProps {
   icon: FigmaIconName;
@@ -48,6 +49,7 @@ export function IconButton({
 
   return (
     <StaticPressable
+      hitSlop={hitSlopToMinTarget(size, size)}
       onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}

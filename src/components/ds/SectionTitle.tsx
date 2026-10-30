@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { color, fontFamilies } from "../../theme";
 import { getPressScaleStyle, useReduceMotion } from "./usePressScale";
 import { StaticPressable } from "./StaticPressable";
+import { hitSlopToMinTarget } from "./touchTarget";
 
 export interface SectionTitleProps {
   title: string;
@@ -47,7 +48,7 @@ export function SectionTitle({
           onPress={onActionPress}
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
-          hitSlop={8}
+          hitSlop={{ ...hitSlopToMinTarget(Infinity, 17), left: 8, right: 8 }}
           style={({ pressed }) => getPressScaleStyle(pressed, reduceMotion)}
         >
           <Text style={styles.action}>{actionLabel}</Text>
