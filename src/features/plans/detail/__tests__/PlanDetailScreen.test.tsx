@@ -3,6 +3,8 @@ import { Alert } from "react-native";
 import { ApiError } from "@/api/errors";
 import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 import { mockPlans } from "@/mocks/handlers/plans";
+import { QueryObserver } from "@tanstack/react-query";
+import { createQueryClient } from "@/api/query-client";
 
 const router = { back: vi.fn(), push: vi.fn() };
 const getPlan = vi.fn();
@@ -216,6 +218,49 @@ describe("PlanDetailScreen (PLN-04)", () => {
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: "Editar plano" })).toBeNull(),
     );
+    alert.mockRestore();
+  });
+});
+
+describe("PlanDetailScreen — telas abertas atrás (PLN-04.6)", () => {
+  beforeEach(() => {
+    getPlan.mockReset().mockResolvedValue(structuredClone(mockPlans[0]));
+    listPlanReviews.mockReset().mockResolvedValue([]);
+    listPlanSuggestions.mockReset().mockResolvedValue([]);
+    updatePlanStatus.mockReset();
+  });
+
+  it("encerrar o plano recarrega os planos da ficha aberta, sem pedir o detalhe de novo", async () => {
+    updatePlanStatus.mockResolvedValue({
+      ...mockPlans[0],
+      status: "COMPLETED",
+      closedAt: "2026-10-29T12:00:00Z",
+    });
+    const alert = vi
+      .spyOn(Alert, "alert")
+      .mockImplementation((_title, _message, buttons) => {
+        buttons?.find((button) => button.text === "Confirmar")?.onPress?.();
+      });
+    const queryClient = createQueryClient();
+    // A ficha do paciente continua montada atrás do detalhe, observando a lista.
+    const patientPlans = vi.fn(async () => []);
+    const unsubscribe = new QueryObserver(queryClient, {
+      queryKey: ["plan", "student", "student-1"],
+      queryFn: patientPlans,
+    }).subscribe(() => undefined);
+    await waitFor(() => expect(patientPlans).toHaveBeenCalledTimes(1));
+
+    await render(<PlanDetailScreen />, { queryClient });
+    await screen.findByText("PDI de leitura e escrita");
+    expect(getPlan).toHaveBeenCalledTimes(1);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Encerrar plano" }),
+    );
+    await fireEvent.press(screen.getByRole("button", { name: "Concluído" }));
+
+    await waitFor(() => expect(patientPlans).toHaveBeenCalledTimes(2));
+    expect(getPlan).toHaveBeenCalledTimes(1);
+    unsubscribe();
     alert.mockRestore();
   });
 });
