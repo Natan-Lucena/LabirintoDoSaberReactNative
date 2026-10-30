@@ -54,6 +54,7 @@ export function StudentStep(): ReactElement {
     seedFromServerSession,
     step: flowStep,
     sessionId: flowSessionId,
+    student: flowStudent,
   } = useSessionFlowStore();
   const { data, isLoading, isError, refetch } = useStudents();
   const [query, setQuery] = useState("");
@@ -61,6 +62,7 @@ export function StudentStep(): ReactElement {
   const [existing, setExisting] = useState<TaskNotebookSession | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [flowConflict, setFlowConflict] = useState(false);
   // Evita rodar o fluxo direto duas vezes (efeitos podem repetir).
   const directStarted = useRef(false);
   // Só a escolha mais recente pode alterar a tela.
@@ -99,6 +101,7 @@ export function StudentStep(): ReactElement {
     setSelected(student);
     setExisting(null);
     setError(null);
+    setFlowConflict(false);
     setCheckingExisting(true);
     try {
       const open = openSession(await listSessionsByStudent(student.id)) ?? null;
@@ -135,7 +138,7 @@ export function StudentStep(): ReactElement {
 
   async function resume() {
     if (hasLocalFlow || !existing || !selected) {
-      router.push("/session/player");
+      router.replace("/session/player");
       return;
     }
     setError(null);
@@ -156,7 +159,7 @@ export function StudentStep(): ReactElement {
           name: notebook.notebook.description,
         },
       });
-      router.push("/session/player");
+      router.replace("/session/player");
     } catch {
       setError("Não foi possível retomar a sessão agora.");
     }
@@ -168,7 +171,7 @@ export function StudentStep(): ReactElement {
       if (hasLocalFlow) {
         // Passa pelo encerramento do app (SES-04) para registrar a observação.
         await finish();
-        router.push("/session/finish");
+        router.replace("/session/finish");
         return;
       }
       await finishSession({ sessionId: existing.id });
@@ -177,6 +180,15 @@ export function StudentStep(): ReactElement {
       setError("Não foi possível encerrar a sessão agora.");
     }
   }
+
+  const otherFlowRoute =
+    flowStep === "running"
+      ? "/session/player"
+      : flowStep === "finishing" || flowStep === "awaitingObservation"
+        ? "/session/finish"
+        : null;
+  const showResumeOther =
+    flowConflict && otherFlowRoute !== null && Boolean(flowStudent);
 
   async function handleNext() {
     if (!selected || existing) return;
@@ -194,8 +206,10 @@ export function StudentStep(): ReactElement {
           : null,
       );
     } catch (caught) {
+      const conflict = caught instanceof SessionFlowInvalidTransitionError;
+      setFlowConflict(conflict);
       setError(
-        caught instanceof SessionFlowInvalidTransitionError
+        conflict
           ? "Há uma sessão em andamento neste aparelho. Retome ou encerre antes de iniciar outra."
           : "Não foi possível preparar a sessão.",
       );
@@ -236,6 +250,8 @@ export function StudentStep(): ReactElement {
         {!isLoading && !isError ? (
           <FlatList
             style={styles.list}
+            keyboardShouldPersistTaps="handled"
+            testID="student-list"
             data={filtered}
             keyExtractor={(student) => student.id}
             ListEmptyComponent={
@@ -297,6 +313,13 @@ export function StudentStep(): ReactElement {
           <Text accessibilityRole="alert" style={styles.error}>
             {error}
           </Text>
+        ) : null}
+        {showResumeOther && otherFlowRoute ? (
+          <DsButton
+            label={`Retomar sessão de ${flowStudent?.name}`}
+            variant="secondary"
+            onPress={() => router.replace(otherFlowRoute)}
+          />
         ) : null}
         <DsButton
           label="Continuar"
