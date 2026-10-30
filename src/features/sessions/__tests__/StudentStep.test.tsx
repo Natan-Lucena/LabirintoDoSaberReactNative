@@ -11,8 +11,9 @@ import { StudentStep, normalizeForSearch } from "../StudentStep";
 let mockParams: { studentId?: string; appointmentId?: string } = {};
 const push = vi.fn();
 const back = vi.fn();
+const replace = vi.fn();
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ push, back }),
+  useRouter: () => ({ push, back, replace }),
   useLocalSearchParams: () => mockParams,
 }));
 
@@ -78,22 +79,86 @@ describe("StudentStep", () => {
     flowState = { step: "idle", sessionId: null };
     mockParams = {};
     setAppointmentId.mockClear();
+    selectStudent.mockClear();
+    push.mockClear();
+    replace.mockClear();
     vi.mocked(listSessionsByStudent).mockResolvedValue([]);
   });
-  it("AC-AGE-04-02: guarda o appointmentId da rota ao continuar com o paciente do atendimento", async () => {
+  it("AC-AGE-04-02: com o paciente do atendimento, vincula o appointmentId e vai direto ao conteúdo", async () => {
     mockParams = { studentId: "s1", appointmentId: "appt-1" };
     vi.mocked(listStudents).mockResolvedValue([ANA, JOAO]);
 
     await render(<StudentStep />);
 
-    const next = await screen.findByRole("button", { name: "Continuar" });
     await waitFor(() =>
-      expect(next.props.accessibilityState).toMatchObject({ disabled: false }),
+      expect(replace).toHaveBeenCalledWith("/session/content"),
     );
-    await fireEvent.press(next);
-
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/session/content"));
+    expect(selectStudent).toHaveBeenCalledWith(ANA);
     expect(setAppointmentId).toHaveBeenCalledWith("appt-1");
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(selectStudent).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("com studentId e sem atendimento, vai direto e limpa o vínculo", async () => {
+    mockParams = { studentId: "s1" };
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+
+    await render(<StudentStep />);
+
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/session/content"),
+    );
+    expect(setAppointmentId).toHaveBeenCalledWith(null);
+  });
+
+  it("com studentId e sessão aberta, mantém Retomar e Encerrar sem navegar", async () => {
+    mockParams = { studentId: "s1", appointmentId: "appt-1" };
+    flowState = { step: "running", sessionId: "open-session" };
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+    vi.mocked(listSessionsByStudent).mockResolvedValue([
+      {
+        id: "open-session",
+        studentId: "s1",
+        educatorId: "e1",
+        name: "Sessão aberta",
+        startedAt: "2026-10-07T10:00:00.000Z",
+        answers: [],
+      },
+    ]);
+
+    await render(<StudentStep />);
+
+    expect(await screen.findByRole("button", { name: "Retomar" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Encerrar agora" })).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+    expect(selectStudent).not.toHaveBeenCalled();
+  });
+
+  it("com studentId inexistente, cai na lista com Continuar", async () => {
+    mockParams = { studentId: "nao-existe" };
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+
+    await render(<StudentStep />);
+
+    expect(await screen.findByText("Ana Souza")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("com studentId e falha ao verificar sessões, cai na tela atual sem navegar", async () => {
+    mockParams = { studentId: "s1" };
+    vi.mocked(listStudents).mockResolvedValue([ANA]);
+    vi.mocked(listSessionsByStudent).mockRejectedValue(new Error("falha"));
+
+    await render(<StudentStep />);
+
+    expect(
+      await screen.findByText(
+        "Não foi possível verificar sessões em andamento.",
+      ),
+    ).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
   });
 
   it("sessão avulsa limpa o appointmentId herdado", async () => {

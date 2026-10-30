@@ -39,6 +39,7 @@ const failStart = vi.fn().mockResolvedValue(undefined);
 const discard = vi.fn().mockResolvedValue(undefined);
 const selectStudent = vi.fn().mockResolvedValue(undefined);
 const setAppointmentId = vi.fn().mockResolvedValue(undefined);
+const cancel = vi.fn().mockResolvedValue(undefined);
 let mockAppointmentId: string | null = null;
 let mockStep = "configured";
 const mockStudent = { id: "student-1", name: "Ana Souza" };
@@ -58,6 +59,7 @@ vi.mock("@/stores/session-flow", () => ({
     discard,
     selectStudent,
     setAppointmentId,
+    cancel,
     step: mockStep,
     appointmentId: mockAppointmentId,
     student: mockStudent,
@@ -116,6 +118,11 @@ describe("ContentStep", () => {
   beforeEach(() => {
     mockAppointmentId = null;
     mockStep = "configured";
+    mockContent = null;
+    mockSessionName = null;
+    cancel.mockClear();
+    back.mockClear();
+    push.mockClear();
     failStart.mockImplementation(async () => {
       mockStep = "error";
     });
@@ -412,14 +419,130 @@ describe("ContentStep", () => {
     });
   });
 
-  it("AC-703-04/07: Voltar não cancela o fluxo, só sai preservando o aluno", async () => {
+  it("Voltar cancela o fluxo parcial no store e sai", async () => {
     vi.mocked(listTaskNotebooks).mockResolvedValue([]);
 
     await renderContentStep();
 
-    fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+    });
 
-    expect(back).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+    expect(cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("Voltar sai mesmo se o cancelamento falhar em outra etapa", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([]);
+    cancel.mockRejectedValueOnce(new Error("etapa inválida"));
+
+    await renderContentStep();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
+    });
+
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+  });
+
+  it("seletor de tipo troca a lista para grupos e atividades com os textos do tipo", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(listTaskGroupsByEducator).mockResolvedValue([GROUP]);
+    vi.mocked(listTasks).mockResolvedValue([
+      {
+        id: "task-1",
+        prompt: "Qual é a vogal?",
+        category: "reading",
+      } as never,
+    ]);
+
+    await renderContentStep();
+    expect(await screen.findByText("Escolha o caderno")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Buscar caderno")).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("radio", { name: "Grupo" }));
+    });
+    expect(screen.getByText("Escolha o grupo")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Buscar grupo")).toBeTruthy();
+    expect(await screen.findByText("Alfabeto e sons")).toBeTruthy();
+    expect(screen.queryByText("Cores e formas")).toBeNull();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("radio", { name: "Atividade" }));
+    });
+    expect(screen.getByText("Escolha a atividade")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Buscar atividade")).toBeTruthy();
+    expect(await screen.findByText("Qual é a vogal?")).toBeTruthy();
+  });
+
+  it("trocar o tipo limpa a seleção e a busca", async () => {
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(listTaskGroupsByEducator).mockResolvedValue([GROUP]);
+
+    await renderContentStep();
+    await screen.findByText("Cores e formas");
+    await act(async () => {
+      fireEvent.press(screen.getByRole("checkbox", { name: "Cores e formas" }));
+      fireEvent.changeText(screen.getByLabelText("Nome da sessão"), "Sessão");
+      fireEvent.changeText(
+        screen.getByPlaceholderText("Buscar caderno"),
+        "cores",
+      );
+    });
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("radio", { name: "Grupo" }));
+    });
+    await screen.findByText("Alfabeto e sons");
+
+    expect(screen.getByPlaceholderText("Buscar grupo").props.value).toBe("");
+    expect(
+      screen.getByRole("button", { name: "Iniciar sessão" }).props
+        .accessibilityState,
+    ).toMatchObject({ disabled: true });
+  });
+
+  it("iniciar com um grupo envia o start sem taskNotebookId, com o atendimento, e abre o player", async () => {
+    mockAppointmentId = "appt-1";
+    vi.mocked(listTaskNotebooks).mockResolvedValue([NOTEBOOK]);
+    vi.mocked(listTaskGroupsByEducator).mockResolvedValue([GROUP]);
+    vi.mocked(startSession).mockReset().mockResolvedValue({
+      id: "session-g",
+      studentId: "student-1",
+      educatorId: "e1",
+      name: "Grupo",
+      startedAt: "2026-10-07T10:00:00.000Z",
+      answers: [],
+    });
+
+    await renderContentStep();
+    await act(async () => {
+      fireEvent.press(screen.getByRole("radio", { name: "Grupo" }));
+    });
+    await screen.findByText("Alfabeto e sons");
+    await act(async () => {
+      fireEvent.press(
+        screen.getByRole("checkbox", { name: "Alfabeto e sons" }),
+      );
+      fireEvent.changeText(screen.getByLabelText("Nome da sessão"), "Grupo");
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole("button", { name: "Iniciar sessão" }));
+    });
+
+    await waitFor(() => expect(startSession).toHaveBeenCalledTimes(1));
+    expect(startSession).toHaveBeenCalledWith({
+      studentId: "student-1",
+      name: "Grupo",
+      appointmentId: "appt-1",
+    });
+    expect(configure).toHaveBeenLastCalledWith({
+      name: "Grupo",
+      content: { kind: "group", id: "group-1", name: "Alfabeto e sons" },
+    });
+    expect(confirmStart).toHaveBeenLastCalledWith("session-g");
+    expect(push).toHaveBeenCalledWith("/session/player");
   });
 
   it("AC-SES-01-03: erro de início mostra mensagem e não reenvia automaticamente", async () => {
