@@ -42,7 +42,9 @@ export function SectionTitle({
 
   return (
     <View style={styles.row}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} accessibilityRole="header" accessible>
+        {title}
+      </Text>
       {actionLabel && onActionPress ? (
         <StaticPressable
           onPress={onActionPress}

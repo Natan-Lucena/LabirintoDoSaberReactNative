@@ -176,6 +176,7 @@ export function TemplateFormScreen({
                   <Text style={styles.questionTitle}>Pergunta {index + 1}</Text>
                   <DsButton
                     label="Remover"
+                    accessibilityLabel={`Remover pergunta ${index + 1}`}
                     variant="ghost"
                     onPress={() => remove(index)}
                   />

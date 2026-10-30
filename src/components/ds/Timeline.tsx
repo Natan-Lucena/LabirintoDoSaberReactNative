@@ -17,6 +17,8 @@ export interface TimelineItemData {
   subtitle?: string;
   status?: TimelineItemStatus;
   actionLabel?: string;
+  /** Rótulo para leitores de tela, quando o texto visível é curto demais. */
+  actionAccessibilityLabel?: string;
   onActionPress?: () => void;
 }
 
@@ -123,7 +125,9 @@ function TimelineItemRow({
           <StaticPressable
             onPress={item.onActionPress}
             accessibilityRole="button"
-            accessibilityLabel={item.actionLabel}
+            accessibilityLabel={
+              item.actionAccessibilityLabel ?? item.actionLabel
+            }
             hitSlop={{ ...hitSlopToMinTarget(Infinity, 17), left: 8, right: 8 }}
             style={({ pressed }) => getPressScaleStyle(pressed, reduceMotion)}
           >

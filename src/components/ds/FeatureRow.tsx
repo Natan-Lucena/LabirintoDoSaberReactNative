@@ -63,6 +63,7 @@ export function FeatureRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityHint={subtitle}
       style={({ pressed }) => [
         styles.row,
         getPressScaleStyle(pressed, reduceMotion),
