@@ -273,3 +273,166 @@ export interface PlanSuggestion {
   createdAt: string;
   resolvedAt?: string;
 }
+
+// Entrega 4, leva 1 (senha e evolução da sessão).
+// Contrato PROVISÓRIO, copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §2 e §3
+// (G-29: mock-first). Deve ser conferido contra o contrato real publicado
+// pelo backend na tarefa API-04. Campos opcionais vêm AUSENTES do JSON.
+
+/** `PUT /educator/generate-token`: sempre a mesma resposta, exista ou não o e-mail (SN-02). */
+export interface PasswordTokenSentResponse {
+  message: "TOKEN_SENT";
+}
+
+/** `POST /educator/verify-token`: confere o código sem consumi-lo (SN-03). */
+export interface VerifyPasswordTokenPayload {
+  email: string;
+  token: string;
+}
+
+export interface VerifyPasswordTokenResponse {
+  valid: true;
+}
+
+/** `POST /educator/update-password`: o `token` é obrigatório (SN-04, SN-05); senha de 6 a 100 caracteres (SN-06). */
+export interface ResetPasswordPayload {
+  email: string;
+  token: string;
+  newPassword: string;
+}
+
+/** `PUT /educator/change-password` (Bearer, SN-07). */
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/** Depois da troca logada, o token anterior deixa de valer (SN-08). */
+export interface ChangePasswordResponse {
+  token: string;
+}
+
+export type CriterionResult =
+  "ACHIEVED" | "PARTIAL" | "NOT_ACHIEVED" | "NOT_OBSERVED";
+
+export interface EvolutionCriterion {
+  id: string;
+  /** Meta do plano; ausente = critério livre. */
+  goalId?: string;
+  description: string;
+  successCriterion?: string;
+  attempts?: number;
+  successes?: number;
+  result: CriterionResult;
+  note?: string;
+}
+
+/** Critério enviado ao salvar: igual ao salvo, sem `id` (o servidor gera). */
+export type EvolutionCriterionInput = Omit<EvolutionCriterion, "id">;
+
+export interface EvolutionGoalUpdate {
+  goalId: string;
+  status: GoalStatus;
+}
+
+export interface SessionEvolution {
+  id: string;
+  /** Única: uma evolução por sessão (EV-02). */
+  sessionId: string;
+  studentId: string;
+  educatorId: string;
+  appointmentId?: string;
+  planId?: string;
+  planType?: PlanType;
+  /** Ex.: "PE · {tema}". */
+  planTitle?: string;
+  /** `AAAA-MM-DD`, do `startedAt` da sessão. */
+  sessionDate: string;
+  durationMinutes?: number;
+  criteria: EvolutionCriterion[];
+  descriptiveRecord: string;
+  nextSessionSuggestion?: string;
+  goalUpdates: EvolutionGoalUpdate[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SessionEvolutionSummary {
+  id: string;
+  sessionId: string;
+  studentId: string;
+  studentName: string;
+  sessionDate: string;
+  planTitle?: string;
+  criteriaCount: number;
+  achievedCount: number;
+  /** Primeiros 200 caracteres do registro. */
+  excerpt: string;
+  createdAt: string;
+}
+
+export interface PendingEvolution {
+  sessionId: string;
+  studentId: string;
+  studentName: string;
+  sessionName: string;
+  finishedAt: string;
+  appointmentId?: string;
+}
+
+/** `GET /session-evolution/context/:sessionId` (§3.5). */
+export interface EvolutionContext {
+  session: {
+    id: string;
+    studentId: string;
+    studentName: string;
+    name: string;
+    startedAt: string;
+    finishedAt: string;
+    durationMinutes: number;
+    appointmentId?: string;
+    answeredCount: number;
+    correctCount: number;
+  };
+  /** PE `ACTIVE` escolhido pelo servidor (EV-12, G-57: sem PDI); ausente = sem plano. */
+  plan?: { id: string; type: PlanType; title: string };
+  suggestedCriteria: {
+    goalId: string;
+    description: string;
+    successCriterion?: string;
+    goalStatus: GoalStatus;
+  }[];
+  existingEvolutionId?: string;
+}
+
+/** `POST /session-evolution/` (EVO-01). */
+export interface CreateSessionEvolutionPayload {
+  sessionId: string;
+  planId?: string;
+  criteria: EvolutionCriterionInput[];
+  descriptiveRecord: string;
+  nextSessionSuggestion?: string;
+  goalUpdates?: EvolutionGoalUpdate[];
+}
+
+/** `PUT /session-evolution/:id` (EVO-02): `criteria`, quando presente, é a lista completa. */
+export interface UpdateSessionEvolutionPayload {
+  criteria?: EvolutionCriterionInput[];
+  descriptiveRecord?: string;
+  nextSessionSuggestion?: string;
+  goalUpdates?: EvolutionGoalUpdate[];
+}
+
+/** `POST /session-evolution/next-session-suggestion` (IA, não persiste; EVO-04). */
+export interface NextSessionSuggestionPayload {
+  sessionId: string;
+  criteria?: EvolutionCriterionInput[];
+  descriptiveRecord?: string;
+}
+
+export interface NextSessionSuggestion {
+  /** Até 1000 caracteres. */
+  suggestion: string;
+  /** Até 500 caracteres. */
+  rationale?: string;
+}

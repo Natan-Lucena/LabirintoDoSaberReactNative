@@ -285,3 +285,49 @@ respondem `409 SUGGESTION_NOT_APPLICABLE` e a sugestão vira `DISMISSED`. Sugest
 responde `409 SUGGESTION_ALREADY_RESOLVED`, ID inexistente `404 SUGGESTION_NOT_FOUND`.
 `POST /plan/suggestions/:id/dismiss` devolve a sugestão `DISMISSED`. Encerrar um plano descarta
 as pendentes dele. As rotas usam o import de `plans.ts` já presente em `src/mocks/install.ts`.
+
+## Senha e evolução da sessão (API-05, leva 1)
+
+Contrato **provisório**, copiado de `docs/entrega-4/ESPECIFICACAO-BACKEND.md` §2 e §3 (G-29, mock-first)
+e a conferir em API-04. Os tipos estão em `src/api/types.ts`, as leituras em
+`src/api/endpoints/evolution.ts` e os mocks em `handlers/password.ts` e `handlers/evolution.ts`.
+
+### Senha (`handlers/password.ts`)
+
+- `PUT /educator/generate-token` (`{ email }`; `educatorEmail` também é aceito, como no contrato
+  atual) responde sempre `200 { message: "TOKEN_SENT" }`, exista ou não a conta. Só a conta fictícia
+  (`educadora.mock@labirinto.test`) recebe o código `123456`, válido por 15 min; um envio novo
+  invalida o anterior. O 4º envio em 15 min para o mesmo e-mail dá `429 TOO_MANY_REQUESTS`.
+- `POST /educator/verify-token` confere o código sem consumi-lo: `200 { valid: true }`,
+  `400 INVALID_TOKEN` ou `400 EXPIRED_TOKEN`. E-mail sem conta também responde `INVALID_TOKEN`.
+- `POST /educator/update-password` exige `token` (sem ele, `400 Validation error`) e senha de 6 a
+  100 caracteres. Erros: `INVALID_TOKEN`, `EXPIRED_TOKEN`, `PASSWORD_SAME_AS_OLD`; a 5ª tentativa
+  errada (somando verify e update) invalida o código e a seguinte dá `429 TOO_MANY_ATTEMPTS`.
+  Sucesso consome o código e responde `200 { message: "PASSWORD_UPDATED" }` (corpo não definido na
+  especificação).
+- `PUT /educator/change-password` (exige o login do mock; senão `401`) devolve `200 { token }` com o
+  mesmo token do mock, porque `GET /educator/me` só reconhece esse (SN-08 não é simulado).
+  Erros: `INVALID_CURRENT_PASSWORD`, `PASSWORD_SAME_AS_OLD`.
+- A senha vigente fica só no estado do módulo (começa em `senha123`); o `sign-in` do mock continua
+  não conferindo senha. Testes usam `resetMockPasswordState()` e `expireMockPasswordToken(email)`.
+
+### Evolução (`handlers/evolution.ts`)
+
+- `GET /session-evolution/context/:sessionId` escolhe o plano pela regra G-57 (PE ativo do mesmo
+  atendimento; senão PE ativo da data; **nunca PDI**) e devolve os critérios sugeridos (metas
+  `NOT_STARTED` e `IN_PROGRESS`). `mock-evo-session-pe` tem PE (`mock-plan-2`);
+  `mock-session-1` só tem PDI e vem sem plano.
+- `POST /session-evolution/` valida o corpo e grava de forma atômica: `404 SESSION_NOT_FOUND`,
+  `403 UNAUTHORIZED`, `409 SESSION_NOT_FINISHED` (use `mock-open-session`), `400 INVALID_PLAN`,
+  `GOAL_NOT_IN_PLAN`, `INVALID_ATTEMPTS`, `409 PLAN_NOT_EDITABLE` (plano encerrado do paciente).
+  A segunda evolução da mesma sessão responde `409` com `{ message: "EVOLUTION_ALREADY_EXISTS",
+evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito de atendimentos;
+  `goalUpdates` muda as metas do plano em `mockPlans` e o registro vira a observação da sessão.
+- `GET /session-evolution/` (`studentId`, `from`, `to`, `limit` 1 a 100), `GET /session-evolution/:id`,
+  `PUT /session-evolution/:id` (`goalUpdates` aplica só a diferença; nunca exclui) e
+  `GET /session-evolution/pending` (`days` 1 a 90; padrão 30). `mock-session-2` já tem a evolução
+  `mock-evolution-1`; `mock-evolution-foreign` e `mock-evo-session-foreign` simulam `403`.
+  `mock-evo-session-recent` está pendente; `mock-evo-session-old` (60 dias) só com `days` maior.
+- `POST /session-evolution/next-session-suggestion` devolve `{ suggestion, rationale }` sem persistir.
+  `[AI_GENERATION_FAILED]` ou `[AI_INVALID_OUTPUT]` no `descriptiveRecord` simulam as falhas `500`.
+- As sessões vêm de `mock-session-*` (fluxo de sessão do app) mais as do próprio arquivo.
