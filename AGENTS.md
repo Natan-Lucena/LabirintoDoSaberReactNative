@@ -25,6 +25,14 @@ a recursos implementados. Em 2026-10-29, as **23 tarefas de código** da Entrega
 [CONTEXTO-SESSAO](docs/CONTEXTO-SESSAO.md). O histórico fica nos TRACKING da
 [Entrega 2](docs/entrega-2/TRACKING.md) e da [Entrega 1](docs/entrega-1/TRACKING.md).
 
+**Entrega 4 (planejada em 2026-11-12, depois da apresentação da Entrega 3):** fecha o ciclo
+clínico (evolução da sessão e prontuário, avaliações com escalas, relatórios configuráveis),
+corrige a senha e acrescenta notificações no app. Tem 25 tarefas e depende muito do backend.
+Antes de qualquer dispatch, leia o [Roadmap](docs/entrega-4/ROADMAP.md), o
+[Backlog](docs/entrega-4/BACKLOG.md), o [Tracking](docs/entrega-4/TRACKING.md) e a
+[Especificação para o backend](docs/entrega-4/ESPECIFICACAO-BACKEND.md). As decisões G-54 a
+G-60 são **propostas** até o usuário confirmar.
+
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
   (TanStack Query e fluxo de sessão) fica em `expo-sqlite/kv-store`, cifrado em
