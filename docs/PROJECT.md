@@ -33,6 +33,7 @@
     - [Anamnese Template — 5 rotas](#anamnese-template--5-rotas)
     - [Anamnese Response — 4 rotas](#anamnese-response--4-rotas)
     - [Appointment — 7 rotas](#appointment--7-rotas)
+    - [Planos (PDI e PE) e sugestões da IA — 13 rotas](#planos-pdi-e-pe-e-sugestões-da-ia--13-rotas)
 - [Apêndice — Tabela consolidada dos 55 endpoints](#apêndice--tabela-consolidada-dos-55-endpoints)
 - [Limitações desta documentação](#limitações-desta-documentação)
 
@@ -183,7 +184,7 @@ Telas e rotas de API que cada módulo consome:
   Consome `/anamnese`, `/anamnese/templates`.
 - **Planos** — PDI e PE: lista, geração com IA, rascunho editável, detalhe com metas e
   revisões, encerramento e sugestões da IA. Consome `/plan` (Entrega 3; contrato em
-  [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md)).
+  [Planos e sugestões da IA](#planos-pdi-e-pe-e-sugestões-da-ia--13-rotas), na Parte II).
 
 ## 6. Fluxo de sessão
 
@@ -1205,6 +1206,282 @@ Todas as rotas deste módulo exigem **Bearer**.
 
 ---
 
+### Planos (PDI e PE) e sugestões da IA — 13 rotas
+
+> **Procedência (diferente das demais seções):** este domínio não vem do material
+> original da API. Foi entregue pelo backend na Entrega 3 (backend PR #28) e está
+> registrado aqui a partir do que o app **já integra** (`src/api/endpoints/plans.ts`,
+> `src/api/types.ts`), validado no emulador contra o backend real, e do relato do
+> backend em [BACKEND-ENTREGUE](entrega-3/BACKEND-ENTREGUE.md) (§2 a §5 e §9). Nada
+> foi chamado nesta tarefa. Pedido original do app:
+> [ESPECIFICACAO-BACKEND](entrega-3/ESPECIFICACAO-BACKEND.md). Este bloco fecha a
+> pendência PLN-00 e o item API-04 (planos) da Entrega 4.
+
+Todas as rotas exigem **Bearer**. O educador vem sempre do token, nunca do corpo.
+
+**Convenções do domínio:**
+
+- Só o educador **dono do paciente** (`Student.educatorId`) acessa os planos dele.
+  Recurso de outro educador: `403 { message: 'UNAUTHORIZED' }`.
+- Recurso inexistente é `404`, nunca `500`. Um id que não é UUID também vira `404` nas
+  rotas de plano.
+- Erro de regra de negócio: `{ message: 'CODIGO' }`. Erro de validação:
+  `{ message, errors: [{ message, field }] }`. Falha de IA: `500 { message, error }`.
+- Datas sem hora (vigência, revisão, `sessionDate`): `AAAA-MM-DD`, validadas no
+  calendário (`2026-02-30` dá `400`). "Hoje" é calculado em `America/Sao_Paulo`.
+  Datas com hora: ISO 8601 em UTC.
+- Campos opcionais vêm **ausentes** do JSON, nunca `null`.
+- Sem paginação e sem exclusão física de plano: só encerramento.
+- Rotas de IA (`/plan/generate` e `/plan/:id/suggestions/generate`) levam cerca de 30 s.
+  O app usa **timeout de 90 s e não repete a chamada sozinho** (G-46).
+- Os `409` de plano trazem `{ message: 'CODIGO' }`; só `ACTIVE_PDI_ALREADY_EXISTS`
+  acrescenta `activePlanId`.
+
+#### Tipos do domínio
+
+```ts
+type PlanType = "PDI" | "PE";
+type PlanStatus = "ACTIVE" | "COMPLETED" | "CANCELLED"; // nasce ACTIVE
+type GoalStatus = "NOT_STARTED" | "IN_PROGRESS" | "ACHIEVED" | "DISCONTINUED";
+type PlanSource = "AI" | "MANUAL";
+type SuggestionKind =
+  "UPDATE_GOAL_STATUS" | "ADD_GOAL" | "REWRITE_GOAL" | "SCHEDULE_REVIEW";
+type SuggestionStatus = "PENDING" | "ACCEPTED" | "DISMISSED";
+
+interface PlanGoal {
+  id: string;
+  order: number; // 0..n-1, pela posição na lista
+  description: string; // 1–500
+  successCriterion?: string; // até 500
+  status: GoalStatus; // nasce NOT_STARTED
+  achievedAt?: string; // gravado ao virar ACHIEVED; limpo ao sair
+  updatedAt: string;
+}
+
+interface PlanProgress {
+  totalGoals: number; // sem as DISCONTINUED
+  achievedGoals: number;
+  inProgressGoals: number;
+  percent: number; // round(100 × achieved / total); 0 se total = 0
+}
+
+interface Plan {
+  id: string;
+  educatorId: string;
+  studentId: string;
+  type: PlanType;
+  status: PlanStatus;
+  source: PlanSource;
+  title: string; // 1–120
+  generalObjective: string; // 1–2000
+  professionalNotes?: string; // até 2000
+  focus?: string; // até 1000
+  consideredDifficulties: string[]; // até 20 itens de 1–100
+  startDate: string; // AAAA-MM-DD
+  endDate: string; // AAAA-MM-DD
+  nextReviewDate?: string; // AAAA-MM-DD
+  parentPlanId?: string; // só PE
+  sessionDate?: string; // só PE, obrigatório nele
+  appointmentId?: string; // só PE, opcional
+  goals: PlanGoal[]; // ordenadas por order
+  progress: PlanProgress; // calculado pelo servidor
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string;
+}
+
+// GET /plan/: todos os campos do plano, menos goals, mais studentName.
+type PlanSummary = Omit<Plan, "goals"> & { studentName: string };
+
+interface PlanReview {
+  id: string;
+  planId: string;
+  reviewedAt: string;
+  note: string;
+  nextReviewDate?: string;
+  goalStatuses: { goalId: string; status: GoalStatus }[]; // retrato das metas
+}
+
+// POST /plan/generate: rascunho, não salva nada.
+interface PlanDraft {
+  type: PlanType;
+  title: string; // até 120
+  generalObjective: string; // até 2000
+  goals: { description: string; successCriterion?: string }[]; // 3 a 6
+  suggestedStartDate: string; // PDI: hoje (SP); PE: sessionDate
+  suggestedEndDate: string; // PDI: início + durationMonths; PE: sessionDate
+  suggestedNextReviewDate?: string; // PDI: início + 1 mês; PE: ausente
+  rationale?: string; // até 1000
+}
+
+interface PlanSuggestion {
+  id: string;
+  planId: string;
+  studentId: string;
+  studentName: string;
+  goalId?: string; // UPDATE_GOAL_STATUS e REWRITE_GOAL
+  kind: SuggestionKind;
+  text: string; // até 500
+  proposedChange: {
+    status?: GoalStatus;
+    description?: string;
+    successCriterion?: string;
+    nextReviewDate?: string;
+  };
+  status: SuggestionStatus;
+  createdAt: string;
+  resolvedAt?: string;
+}
+```
+
+**Regras de negócio:**
+
+- **Um PDI `ACTIVE` por paciente.** O segundo dá
+  `409 { message: 'ACTIVE_PDI_ALREADY_EXISTS', activePlanId }`. Para trocar, encerre o
+  atual e crie o novo.
+- **PE:** `sessionDate` é obrigatório no PE e proibido no PDI. O servidor define
+  `startDate = endDate = sessionDate`. `parentPlanId` precisa ser um PDI do mesmo
+  paciente. `appointmentId` precisa ser atendimento do mesmo educador e paciente.
+- **PDI:** `endDate > startDate`; `nextReviewDate` fica entre as duas, inclusive.
+- **Metas:** de 1 a 10 por plano. Lista vazia dá `400 PLAN_WITHOUT_GOALS`.
+- **Editar metas** usa a lista completa: meta com `id` é atualizada; sem `id` é criada;
+  ausente é removida (meta `ACHIEVED` não pode ser removida); `id` repetido é recusado.
+- **Só plano `ACTIVE`** aceita edição, mudança de meta, revisão e sugestão. Encerrar
+  (`COMPLETED` ou `CANCELLED`) grava `closedAt`, é definitivo e descarta as sugestões
+  pendentes do plano.
+- **Limitação atual:** `PUT /plan/:id` não apaga `nextReviewDate` nem
+  `professionalNotes`; vazio ou omitido mantém o valor atual.
+
+#### `POST /plan/`
+
+- **Body:** `studentId: string` (uuid), `type: PlanType`, `source: PlanSource`,
+  `title`, `generalObjective`, `professionalNotes?`, `focus?`,
+  `consideredDifficulties?: string[]`, `startDate` e `endDate` (PDI),
+  `nextReviewDate?`, `parentPlanId?`, `sessionDate?`, `appointmentId?`,
+  `goals: { description: string, successCriterion?: string }[]`. O app envia
+  `source: 'AI'` ao salvar um rascunho gerado e `'MANUAL'` nos demais casos.
+- **Resposta:** `201 Plan`.
+- **Erros:** `400` de validação, `PLAN_WITHOUT_GOALS`, `TOO_MANY_GOALS`,
+  `SESSION_DATE_REQUIRED`, `INVALID_FIELDS_FOR_PDI`, `INVALID_DATES`,
+  `INVALID_PARENT_PLAN`, `INVALID_APPOINTMENT`; `401`; `403`;
+  `404 STUDENT_NOT_FOUND`; `409 ACTIVE_PDI_ALREADY_EXISTS` (com `activePlanId`).
+
+#### `POST /plan/generate`
+
+- **Descrição:** gera um rascunho com Gemini e **não persiste** nada. Para salvar, o app
+  chama `POST /plan/` com `source: 'AI'`.
+- **Body:** `studentId: string`, `type: PlanType`, `focus: string` (1–1000),
+  `consideredDifficulties: string[]` (1–20 itens de 1–100),
+  `durationMonths?: 3 | 6` (obrigatório no PDI, ignorado no PE),
+  `sessionDate?: string` (obrigatório no PE), `parentPlanId?: string` (PE; as metas do
+  PDI entram no contexto), `includeAnamnesisTemplateId?: string`.
+- **Resposta:** `200 PlanDraft`. As datas são calculadas pelo servidor, nunca pela IA.
+  Sem sessões registradas, `rationale` informa que o plano foi gerado sem histórico.
+- **Dados enviados à IA pelo servidor:** idade, gênero, dificuldades, métricas e
+  observações das sessões recentes e, se pedido, a anamnese. **Não** envia nome,
+  endereço, telefone, documentos nem URLs de arquivos do paciente.
+- **Erros:** `400` validação ou `INVALID_PARENT_PLAN`; `401`; `403`;
+  `404 STUDENT_NOT_FOUND`, `PLAN_NOT_FOUND` (plano pai) ou `TEMPLATE_NOT_FOUND`;
+  `500 { message: 'AI_GENERATION_FAILED', error }` (provedor indisponível);
+  `500 { message: 'AI_INVALID_OUTPUT', error }` (saída fora do contrato).
+- **Nota:** o backend faz até 2 tentativas ao provedor; o app usa timeout de 90 s.
+
+#### `GET /plan/`
+
+- **Query:** `studentId?: string`, `status?: PlanStatus`, `type?: PlanType`.
+- **Resposta:** `200 PlanSummary[]`: `ACTIVE` primeiro, depois `updatedAt`
+  decrescente; sem paginação.
+- **Erros:** `400`; `401`; `403` (paciente de outro educador).
+- **Nota:** o Swagger publica a rota sem a barra final (`/plan`); o Express aceita as
+  duas formas e o app usa `/plan/`.
+
+#### `GET /plan/:id`
+
+- **Resposta:** `200 Plan`.
+- **Erros:** `401`; `403 UNAUTHORIZED`; `404 PLAN_NOT_FOUND`.
+
+#### `PUT /plan/:id`
+
+- **Body** (todos opcionais): `title`, `generalObjective`, `professionalNotes`,
+  `endDate`, `nextReviewDate`,
+  `goals: { id?: string, description: string, successCriterion?: string }[]`
+  (substitui a lista completa; ver regras acima).
+- **Resposta:** `200 Plan`.
+- **Erros:** `400` (`INVALID_DATES`, `GOAL_NOT_FOUND`, `DUPLICATE_GOAL_ID`,
+  `PLAN_WITHOUT_GOALS`, `TOO_MANY_GOALS`); `401`; `403`; `404 PLAN_NOT_FOUND`;
+  `409 PLAN_NOT_EDITABLE` ou `GOAL_ACHIEVED_CANNOT_BE_REMOVED`.
+
+#### `PUT /plan/:id/goals/:goalId`
+
+- **Body:** `status: GoalStatus`.
+- **Resposta:** `200 Plan`.
+- **Erros:** `400`; `401`; `403`; `404 PLAN_NOT_FOUND` ou `GOAL_NOT_FOUND`;
+  `409 PLAN_NOT_EDITABLE`.
+
+#### `PUT /plan/:id/status`
+
+- **Descrição:** encerramento definitivo.
+- **Body:** `status: 'COMPLETED' | 'CANCELLED'`.
+- **Resposta:** `200 Plan` (com `closedAt`).
+- **Erros:** `400`; `401`; `403`; `404 PLAN_NOT_FOUND`; `409 PLAN_NOT_EDITABLE`.
+
+#### `POST /plan/:id/reviews`
+
+- **Body:** `note: string` (1–2000), `nextReviewDate?: string`.
+- **Resposta:** `201 PlanReview`; `goalStatuses` guarda o retrato das metas.
+- **Erros:** `400 INVALID_DATES` ou validação; `401`; `403`; `404 PLAN_NOT_FOUND`;
+  `409 PLAN_NOT_EDITABLE`.
+
+#### `GET /plan/:id/reviews`
+
+- **Resposta:** `200 PlanReview[]`, mais recente primeiro.
+- **Erros:** `401`; `403`; `404 PLAN_NOT_FOUND`.
+
+#### `POST /plan/:id/suggestions/generate`
+
+- **Descrição:** pede sugestões da IA para o plano. São geradas **sob demanda**, não
+  automaticamente ao encerrar a sessão (G-52). Sem body.
+- **Resposta:** `201 PlanSuggestion[]` com as novas; ou `200 []` se o plano já tem 3
+  pendentes ou a IA não trouxe nada válido. Sugestões que não mudariam nada são
+  descartadas na geração.
+- **Erros:** `401`; `403`; `404 PLAN_NOT_FOUND`; `409 PLAN_NOT_EDITABLE`;
+  `500 { message: 'AI_*', error }` (falha da IA).
+- **Nota:** no máximo **3 pendentes por plano**; timeout de 90 s, sem repetição
+  automática.
+
+#### `GET /plan/suggestions`
+
+- **Query:** `status?: SuggestionStatus` (ex.: `PENDING`).
+- **Resposta:** `200 PlanSuggestion[]`, mais recentes primeiro.
+- **Erros:** `400`; `401`.
+
+#### `POST /plan/suggestions/:id/accept`
+
+- **Descrição:** aplica a mudança proposta, com as mesmas regras da edição.
+- **Resposta:** `200 Plan` atualizado.
+- **Erros:** `401`; `403`; `404 SUGGESTION_NOT_FOUND`;
+  `409 SUGGESTION_NOT_APPLICABLE` (meta removida, plano encerrado ou limite de metas;
+  a sugestão vira `DISMISSED`) ou `409 SUGGESTION_ALREADY_RESOLVED`.
+
+#### `POST /plan/suggestions/:id/dismiss`
+
+- **Resposta:** `200 PlanSuggestion` com `status: 'DISMISSED'`.
+- **Erros:** `401`; `403`; `404 SUGGESTION_NOT_FOUND`;
+  `409 SUGGESTION_ALREADY_RESOLVED`.
+
+**Divergências entre as fontes:**
+
+- **Sugestões:** a especificação pedia geração automática ao encerrar a sessão (SG-02).
+  O backend entregou sob demanda; vale o que está acima.
+- **`activePdi` em `GET /student/`:** pedido na especificação, **não implementado**. Use
+  `GET /plan/?studentId=…&type=PDI&status=ACTIVE`.
+- **`429 AI_RATE_LIMITED` e paginação:** pedidos, não implementados.
+- **`PlanSummary`:** o relato do backend cita só alguns campos; o Swagger e o app usam
+  todos os campos do plano, menos `goals`, mais `studentName`.
+- **`GOAL_NOT_FOUND`:** o relato do backend o lista como `400` em `PUT /plan/:id` e como
+  `404` em `PUT /plan/:id/goals/:goalId`. O app trata os dois pelo `message`.
+- **Tempo da IA:** ainda não medido em produção pelo backend; o app mantém 90 s.
+
 ## Apêndice — Tabela consolidada dos 55 endpoints
 
 O healthcheck (`GET /`) e o Swagger (`GET /api-docs`) são recursos de visão
@@ -1269,6 +1546,26 @@ geral da API e **não contam** entre os 55 endpoints de domínio listados abaixo
 | 55  | DELETE | `/appointment/:id`                                            | Bearer          | Remove um agendamento                      |
 
 **Total: 55 endpoints.**
+
+### Rotas de planos (Entrega 3)
+
+Não entram na contagem dos 55 acima. Detalhes em [Planos](#planos-pdi-e-pe-e-sugestões-da-ia--13-rotas). Todas exigem Bearer.
+
+| Método | Caminho                          | Descrição                     |
+| ------ | -------------------------------- | ----------------------------- |
+| POST   | `/plan/`                         | Cria plano (PDI ou PE)        |
+| POST   | `/plan/generate`                 | Rascunho de plano via IA      |
+| GET    | `/plan/`                         | Lista planos                  |
+| GET    | `/plan/:id`                      | Detalha um plano              |
+| PUT    | `/plan/:id`                      | Atualiza plano e metas        |
+| PUT    | `/plan/:id/goals/:goalId`        | Atualiza o status de uma meta |
+| PUT    | `/plan/:id/status`               | Encerra o plano               |
+| POST   | `/plan/:id/reviews`              | Registra revisão              |
+| GET    | `/plan/:id/reviews`              | Lista revisões                |
+| POST   | `/plan/:id/suggestions/generate` | Gera sugestões da IA          |
+| GET    | `/plan/suggestions`              | Lista sugestões               |
+| POST   | `/plan/suggestions/:id/accept`   | Aceita sugestão               |
+| POST   | `/plan/suggestions/:id/dismiss`  | Descarta sugestão             |
 
 ## Limitações desta documentação
 
