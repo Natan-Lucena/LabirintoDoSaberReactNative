@@ -8,18 +8,21 @@ import { DateField } from "../DateField";
 
 // Mock mínimo do picker nativo: um botão de teste que simula a escolha de
 // uma data fixa pelo usuário, no formato de evento do
-// @react-native-community/datetimepicker (`{ type: "set" }`, `Date`).
+// @react-native-community/datetimepicker (`onValueChange`, `onDismiss`).
 vi.mock("@react-native-community/datetimepicker", () => ({
   __esModule: true,
   default: ({
-    onChange,
+    onValueChange,
+    onDismiss,
   }: {
-    onChange: (event: { type: string }, picked?: Date) => void;
+    onValueChange: (event: unknown, picked: Date) => void;
+    onDismiss: () => void;
   }) =>
     createElement(Pressable, {
       testID: "mock-datetimepicker",
       accessibilityLabel: "mock-datetimepicker",
-      onPress: () => onChange({ type: "set" }, new Date(2026, 2, 15, 9, 30)),
+      onPress: () => onValueChange({}, new Date(2026, 2, 15, 9, 30)),
+      onLongPress: () => onDismiss(),
     }),
 }));
 
@@ -62,5 +65,18 @@ describe("AC-DS-04-02 DateField ancora no fuso America/Sao_Paulo", () => {
       }),
     );
     expect(onChange).toHaveBeenCalledWith(expected);
+  });
+});
+
+describe("DateField cancelar o seletor não altera o valor", () => {
+  it("fecha o seletor sem chamar onChange", async () => {
+    const onChange = vi.fn();
+    await render(<DateField label="Data" value={null} onChange={onChange} />);
+
+    await fireEvent.press(screen.getByLabelText("Data"));
+    await fireEvent(screen.getByLabelText("mock-datetimepicker"), "longPress");
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("mock-datetimepicker")).toBeNull();
   });
 });

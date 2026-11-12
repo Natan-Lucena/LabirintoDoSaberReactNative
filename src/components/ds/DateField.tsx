@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { FigmaIcon } from "@/components/FigmaIcon";
 import { color, fontFamilies, shape, semanticColor } from "@/theme";
@@ -89,11 +87,12 @@ export function DateField({
 }: DateFieldProps) {
   const [open, setOpen] = useState(false);
 
-  function handleChange(event: DateTimePickerEvent, picked?: Date) {
+  function handleDismiss() {
     setOpen(false);
-    if (event.type !== "set" || !picked) {
-      return;
-    }
+  }
+
+  function handleChange(_event: unknown, picked: Date) {
+    setOpen(false);
     onChange(toSaoPauloMidnight(picked));
   }
 
@@ -127,7 +126,8 @@ export function DateField({
         <DateTimePicker
           value={value ?? new Date()}
           mode="date"
-          onChange={handleChange}
+          onValueChange={handleChange}
+          onDismiss={handleDismiss}
         />
       ) : null}
     </View>

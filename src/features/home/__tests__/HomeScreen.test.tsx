@@ -24,7 +24,15 @@ vi.mock("@/features/plans/suggestions/usePlanSuggestions", () => ({
   }),
 }));
 vi.mock("@/hooks/useOnline", () => ({ useOnline: () => onlineState.value }));
-vi.mock("expo-router", () => ({ useRouter: () => ({ push: routerPush }) }));
+vi.mock("expo-router", async () => {
+  const { useEffect } = await import("react");
+  return {
+    useRouter: () => ({ push: routerPush }),
+    useFocusEffect: (effect: () => void | (() => void)) => {
+      useEffect(effect, [effect]);
+    },
+  };
+});
 
 const homeData: HomeData = {
   educator: {
