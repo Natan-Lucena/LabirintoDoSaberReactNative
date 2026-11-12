@@ -7,15 +7,15 @@
 
 ## 0. Próximo passo global
 
-Estado em 2026-11-12: **planejamento escrito; nenhuma tarefa iniciada.**
+Estado em 2026-11-12: **especificação enviada ao backend; G-54 a G-60 e E-10 decididos; onda E4-0 em andamento.** O app avança sem esperar o backend: a especificação serve de contrato provisório para os tipos e mocks (G-29), e cada leva publicada é conferida na API-04.
 
-| #   | Ação                                                                                                                                                       | Responsável            | Condição de conclusão                     |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------- |
-| 1   | Decidir G-54 a G-60 ([ROADMAP §5](ROADMAP.md#5-decisões)) e a E-10                                                                                         | Usuário                | Decisões registradas no GATES             |
-| 2   | G-55: escolher as escalas do catálogo, com responsável clínico, fonte e licença                                                                            | Usuário + equipe       | Lista de escalas enviada ao backend       |
-| 3   | Enviar ao backend a [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md) (mensagem em [PEDIDOS-BACKEND §3](PEDIDOS-BACKEND.md#3-mensagem-pronta-para-enviar)) | Usuário                | Resposta registrada em PEDIDOS-BACKEND §4 |
-| 4   | Onda E4-0: FEC-05, API-04 (planos) e o esqueleto da QA-07                                                                                                  | Orquestrador → workers | PRs mergeados com CI verde                |
-| 5   | A cada leva do backend: API-04, depois API-05, depois as telas                                                                                             | Orquestrador → workers | Rotas registradas no PROJECT.md           |
+| #   | Ação                                                                                                     | Responsável            | Condição de conclusão                     |
+| --- | -------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------- |
+| 1   | ~~Decidir G-54 a G-60 e a E-10~~ (feito em 2026-11-12, pelo protótipo e pelos requisitos)                | Usuário                | Feito                                     |
+| 2   | G-55: escolher as escalas do catálogo, com responsável clínico, fonte e licença                          | Usuário + equipe       | Lista de escalas enviada ao backend       |
+| 3   | ~~Enviar a especificação ao backend~~ (enviada em 2026-11-12); avisar a mudança da EV-12 (G-57: só o PE) | Usuário                | Resposta registrada em PEDIDOS-BACKEND §4 |
+| 4   | Onda E4-0: FEC-05, API-04 (planos) e o esqueleto da QA-07                                                | Orquestrador → workers | PRs mergeados com CI verde                |
+| 5   | A cada leva do backend: API-04, depois API-05, depois as telas                                           | Orquestrador → workers | Rotas registradas no PROJECT.md           |
 
 ## 1. Estados
 
@@ -27,8 +27,8 @@ Estado em 2026-11-12: **planejamento escrito; nenhuma tarefa iniciada.**
 | Tarefa                                    | Bloco | Onda         | Estado    | Bloqueio / próximo passo                                                     | PR / evidência |
 | ----------------------------------------- | ----- | ------------ | --------- | ---------------------------------------------------------------------------- | -------------- |
 | API-04 Contrato no PROJECT.md             | A     | E4-0 e levas | pronta    | Parte de planos (pendência da Entrega 3) pode começar; o resto, a cada leva  | —              |
-| API-05 Tipos, leitura e mocks             | A     | E4-1 e levas | bloqueada | G-54; pode começar pelos mocks da especificação depois da decisão            | —              |
-| FEC-05 Pendências da Entrega 3            | A     | E4-0         | pronta    | E-10 aguarda decisão do usuário; o resto não depende de nada                 | —              |
+| API-05 Tipos, leitura e mocks             | A     | E4-1 e levas | pronta    | Depois da E4-0: tipos e mocks pela especificação, leva 1 (senha e evolução)  | —              |
+| FEC-05 Pendências da Entrega 3            | A     | E4-0         | pronta    | E4-0; E-10 decidida: mantém a contagem                                       | —              |
 | AUT-01 Recuperação de senha com código    | A     | E4-2         | bloqueada | Backend §2.1 (leva 1) e API-05                                               | —              |
 | REC-03 Trocar senha no perfil             | A     | E4-2         | bloqueada | Backend §2.2 (leva 1) e API-05                                               | —              |
 | EVO-01 Evolução da sessão                 | B     | E4-2         | bloqueada | G-56, G-57; backend §3 (leva 1); API-05                                      | —              |
@@ -58,7 +58,7 @@ Estado em 2026-11-12: **planejamento escrito; nenhuma tarefa iniciada.**
 | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | S-01, S-03, S-06, S-07                     | Com o outro dev (issue #129); revisar e mergear os PRs quando chegarem                      |
 | E-09, E-11, destaque da Início e da Agenda | Entram na FEC-05                                                                            |
-| E-10 (contagem da Agenda)                  | Decisão do usuário; entra na FEC-05                                                         |
+| E-10 (contagem da Agenda)                  | Decidida em 2026-11-12: mantém a contagem atual                                             |
 | S-02 (sugestão da IA igual à meta)         | Pedido ao backend (PP-02)                                                                   |
 | QA-02, QA-03, QA-04                        | Passam para esta entrega, ampliados com as telas novas                                      |
 | FEC-01                                     | Coberta na prática pelas rodadas no emulador da Entrega 3; o registro formal entra na QA-07 |
@@ -66,6 +66,7 @@ Estado em 2026-11-12: **planejamento escrito; nenhuma tarefa iniciada.**
 
 ## 4. Histórico
 
-| Data       | Itens        | Registro                                                                                                                     |
-| ---------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-12 | Planejamento | Roadmap, backlog (25 tarefas), especificação para o backend, pedidos e tracking da Entrega 4; G-54 a G-60 propostos no GATES |
+| Data       | Itens        | Registro                                                                                                                         |
+| ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-12 | Planejamento | Roadmap, backlog (25 tarefas), especificação para o backend, pedidos e tracking da Entrega 4; G-54 a G-60 propostos no GATES     |
+| 2026-11-12 | Decisões     | Especificação enviada ao backend; G-54 a G-60 e E-10 decididos pelo protótipo e pelos requisitos (G-57: só o PE; EV-12 ajustada) |

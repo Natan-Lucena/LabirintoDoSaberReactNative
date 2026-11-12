@@ -98,23 +98,23 @@ demais vêm do mapa da Entrega 2 e mantêm o ID.
 
 ## 5. Decisões
 
-Propostas do orquestrador, **a confirmar pelo usuário** antes dos dispatches afetados. O texto
+Decididas em 2026-11-12: o usuário pediu decidir 100% pelo protótipo e pelos requisitos. O texto
 completo, com as alternativas, está no [GATES](../entrega-1/GATES.md).
 
-| Gate | Decisão proposta                                                                                                                                               | Bloqueia                | Estado   |
-| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | -------- |
-| G-54 | Escopo da Entrega 4: Evolução, Avaliações, Relatórios, Notificações no app e senha; Equipe, Ajuda e atividades jogáveis ficam fora                             | Todo o planejamento     | Proposta |
-| G-55 | Escalas: catálogo mantido pelo backend; começar com 1 ou 2 escalas de rastreio de uso livre, escolhidas e conferidas por responsável clínico, com fonte citada | AVA-01 a AVA-05, PAC-05 | Proposta |
-| G-56 | Depois de finalizar a sessão, o app abre a **Evolução** no lugar da observação; o registro descritivo substitui a observação                                   | EVO-01, EVO-05          | Proposta |
-| G-57 | Critérios da evolução: metas do PE da sessão; sem PE, do PDI vigente; sem plano, só o registro descritivo e o atalho "Criar PE"                                | EVO-01                  | Proposta |
-| G-58 | Relatório: o backend monta o conteúdo, a síntese e o histórico; o app gera o PDF (`expo-print`)                                                                | REL-01 a REL-03         | Proposta |
-| G-59 | Notificações só dentro do app (sino e lista), sem push, enquanto o app rodar no Expo Go                                                                        | NOT-01                  | Proposta |
-| G-60 | Pontuação parcial da escala mostra a faixa marcada como "parcial"; a definitiva vem na conclusão                                                               | AVA-03                  | Proposta |
+| Gate | Decisão                                                                                                                                            | Bloqueia                | Estado   |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | -------- |
+| G-54 | Escopo da Entrega 4: Evolução, Avaliações, Relatórios, Notificações no app e senha; Equipe, Ajuda e atividades jogáveis ficam fora                 | Todo o planejamento     | Decidida |
+| G-55 | Escalas: catálogo mantido pelo backend; começa pela "Escala de rastreio TDAH" do protótipo, conferida por responsável clínico, com fonte e licença | AVA-01 a AVA-05, PAC-05 | Decidida |
+| G-56 | Depois de finalizar a sessão, o app abre a **Evolução** no lugar da observação; o registro descritivo substitui a observação                       | EVO-01, EVO-05          | Decidida |
+| G-57 | Critérios da evolução: só as metas do PE da sessão; sem PE, só o registro descritivo e o atalho "Criar PE" (o PDI não é reserva)                   | EVO-01                  | Decidida |
+| G-58 | Relatório: o backend monta o conteúdo, a síntese e o histórico; o app gera o PDF (`expo-print`)                                                    | REL-01 a REL-03         | Decidida |
+| G-59 | Notificações só dentro do app (sino e lista), sem push, enquanto o app rodar no Expo Go                                                            | NOT-01                  | Decidida |
+| G-60 | Pontuação parcial da escala mostra a faixa marcada como "parcial"; a definitiva vem na conclusão                                                   | AVA-03                  | Decidida |
 
 Decisões de produto que o backend confirma estão na
 [ESPECIFICACAO-BACKEND §11](ESPECIFICACAO-BACKEND.md#11-decisões-de-produto-para-confirmar-com-o-backend).
-Também fica com o usuário a E-10 da revisão da Entrega 3 (a contagem da Agenda exclui os
-cancelados); a FEC-05 segue a resposta, e sem resposta o comportamento atual fica.
+E-10 da revisão da Entrega 3 (a contagem da Agenda exclui os cancelados): **mantida** como está,
+pela decisão antiga; o protótipo não mostra atendimento cancelado.
 
 ## 6. Ondas
 
