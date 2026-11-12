@@ -69,3 +69,28 @@ describe("selectCurrentAppointment (AC-AGE-01-03)", () => {
     });
   });
 });
+
+describe("selectCurrentAppointment com o relógio avançando (AC-FEC-05-02)", () => {
+  const items = [
+    at("first", "2026-04-02T12:00:00Z", "PENDING"),
+    at("second", "2026-04-02T14:00:00Z", "PENDING"),
+  ];
+  it("destaca o primeiro enquanto ele não terminou", () => {
+    expect(
+      selectCurrentAppointment(
+        items,
+        "2026-04-02",
+        new Date("2026-04-02T12:49:00Z"),
+      )?.id,
+    ).toBe("first");
+  });
+  it("passa ao próximo quando `now` ultrapassa o fim do atendimento", () => {
+    expect(
+      selectCurrentAppointment(
+        items,
+        "2026-04-02",
+        new Date("2026-04-02T12:50:00Z"),
+      )?.id,
+    ).toBe("second");
+  });
+});

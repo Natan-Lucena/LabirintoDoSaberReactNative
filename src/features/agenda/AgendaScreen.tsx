@@ -20,6 +20,7 @@ import {
 import { useAppointments } from "@/features/appointments/useAppointments";
 import { useStudents } from "@/features/students/useStudents";
 import { selectCurrentAppointment } from "@/features/agenda/selectors";
+import { useNow } from "@/hooks/useNow";
 import { useOnline } from "@/hooks/useOnline";
 import { color, semanticColor, typography } from "@/theme";
 import { dayKey, formatTime } from "@/utils/date";
@@ -134,13 +135,14 @@ export function AgendaScreen(): ReactElement {
   const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
   const appointmentsQuery = useAppointments();
   const studentsQuery = useStudents();
-  const today = dayKey(new Date());
+  const now = useNow();
+  const today = dayKey(now);
   const start = weekStart(selectedDay);
   const days = Array.from({ length: 7 }, (_, index) => shiftKey(start, index));
   const allAppointments = appointmentsQuery.data ?? [];
   const appointments = selectAppointmentsForDay(allAppointments, selectedDay);
   const summary = selectDaySummary(appointments);
-  const current = selectCurrentAppointment(appointments, selectedDay);
+  const current = selectCurrentAppointment(appointments, selectedDay, now);
   const studentsById = new Map(
     (studentsQuery.data ?? []).map((student) => [student.id, student.name]),
   );

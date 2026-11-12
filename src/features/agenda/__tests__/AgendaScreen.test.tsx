@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Appointment, Student } from "@/api/types";
+import { act } from "@testing-library/react-native";
 import { fireEvent, render, screen } from "@/test-utils/render";
 
 const push = vi.fn();
@@ -13,7 +14,15 @@ let students: Student[] | undefined;
 let appointmentsPending = false;
 let appointmentsError = false;
 
-vi.mock("expo-router", () => ({ useRouter: () => ({ push }) }));
+vi.mock("expo-router", async () => {
+  const { useEffect } = await import("react");
+  return {
+    useRouter: () => ({ push }),
+    useFocusEffect: (effect: () => void | (() => void)) => {
+      useEffect(effect, [effect]);
+    },
+  };
+});
 vi.mock("@/hooks/useOnline", () => ({ useOnline: () => online.value }));
 vi.mock("@/features/appointments/useAppointments", () => ({
   useAppointments: () => ({
@@ -117,6 +126,37 @@ describe("AgendaScreen (AGE-01)", () => {
     const right = tree.indexOf("m9 18 6-6-6-6");
     expect(left).toBeGreaterThan(-1);
     expect(right).toBeGreaterThan(left);
+  });
+
+  it("AC-FEC-05-02: com o relógio avançado, o destaque passa ao próximo sem reabrir a tela", async () => {
+    appointments = [
+      appointment("lia", "2026-04-02", 10),
+      appointment("mia", "2026-04-02", 14),
+    ];
+    students = [student("lia", "Lia"), student("mia", "Mia")];
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    vi.setSystemTime(new Date("2026-04-02T12:00:00Z"));
+    try {
+      await render(<AgendaScreen />);
+      const border = (name: RegExp) =>
+        (
+          StyleSheet.flatten(
+            screen.getByRole("button", { name }).props.style,
+          ) as { borderColor?: string }
+        ).borderColor;
+      const liaBefore = border(/Lia/);
+      expect(liaBefore).not.toBe(border(/Mia/));
+
+      await act(async () => {
+        vi.advanceTimersByTime(2 * 60 * 60 * 1000);
+      });
+
+      // Agora é o Mia que tem o destaque que a Lia tinha.
+      expect(border(/Mia/)).toBe(liaBefore);
+      expect(border(/Lia/)).not.toBe(liaBefore);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("QA-03: atendimento cancelado fica legível (sem opacidade reduzida no cartão)", async () => {
