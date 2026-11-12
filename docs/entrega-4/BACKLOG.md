@@ -135,7 +135,7 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
      da Agenda são recalculados quando a tela volta ao foco e a cada minuto com a tela aberta.
   3. **E-11:** remover os avisos de API obsoleta que aparecem no log do Metro (identificar
      cada um e trocar pela API indicada).
-  4. **E-10:** aplicar a decisão do usuário sobre a contagem da Agenda; sem decisão, nada muda.
+  4. **E-10:** decidido manter a contagem atual (sem os cancelados); nada muda no código.
 - **Fora do escopo:** S-01, S-03, S-06 e S-07, que estão com o outro dev (issue #129).
 - **Arquivos:** `src/features/sessions/StudentStep.tsx`, `src/features/home/HomeScreen.tsx`,
   `src/features/home/selectors.ts`, `src/features/agenda/**` (só destaque e contagem) e os

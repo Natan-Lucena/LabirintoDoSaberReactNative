@@ -116,8 +116,8 @@ critério do plano, um registro descritivo e uma sugestão para a próxima sess�
 - "Salvar e atualizar prontuário" e o painel "Evolução registrada".
 
 Hoje só existe `POST /task-notebook-session/observation`, um texto solto na sessão. Os
-**critérios** vêm das metas do plano (PE da sessão ou PDI vigente), que já existem desde a
-Entrega 3 (G-57).
+**critérios** vêm das metas do **PE da sessão**, que já existe desde a Entrega 3 (G-57). Sem PE, não há
+critérios sugeridos.
 
 ### 3.2 Entidades
 
@@ -130,8 +130,8 @@ interface SessionEvolution {
   studentId: string;
   educatorId: string; // do token
   appointmentId?: string; // herdado da sessão
-  planId?: string; // plano de onde vieram os critérios (PE ou PDI)
-  planType?: "PDI" | "PE";
+  planId?: string; // PE de onde vieram os critérios
+  planType?: "PE";
   planTitle?: string; // "PE · {tema}"
   sessionDate: string; // AAAA-MM-DD, do startedAt da sessão
   durationMinutes?: number; // finishedAt − startedAt, arredondado
@@ -178,7 +178,7 @@ interface SessionEvolutionSummary {
 | EV-02 | **Uma evolução por sessão.** Segunda criação: `409 { message: "EVOLUTION_ALREADY_EXISTS", evolutionId }`                                                                                                                     |
 | EV-03 | **Só sessão finalizada.** Sessão sem `finishedAt`: `409 SESSION_NOT_FINISHED`. Sessão inexistente: `404 SESSION_NOT_FOUND`                                                                                                   |
 | EV-04 | **Critérios.** De 0 a 20; `successes ≤ attempts`; os dois são opcionais, mas `successes` exige `attempts` (`400 INVALID_ATTEMPTS`)                                                                                           |
-| EV-05 | **Plano.** `planId`, se vier, é um plano `ACTIVE` do mesmo paciente (PE ou PDI). Senão: `400 INVALID_PLAN`                                                                                                                   |
+| EV-05 | **Plano.** `planId`, se vier, é um PE `ACTIVE` do mesmo paciente (G-57). Senão: `400 INVALID_PLAN`                                                                                                                           |
 | EV-06 | **Metas.** Cada `goalId` pertence ao `planId` (`400 GOAL_NOT_IN_PLAN`); `goalId` sem `planId` é `400`                                                                                                                        |
 | EV-07 | **"Atualizar prontuário".** `goalUpdates` muda o estado das metas do plano **na mesma transação** da evolução, com as regras PL-06 e PL-08 da Entrega 3 (plano `ACTIVE`; `achievedAt`). Se falhar, nada é gravado            |
 | EV-08 | **Compatibilidade.** O `descriptiveRecord` também é gravado em `TaskNotebookSession.observation`, para os relatórios e telas antigas continuarem mostrando a observação                                                      |
@@ -229,7 +229,7 @@ interface EvolutionContext {
     answeredCount: number; // respostas no player
     correctCount: number;
   };
-  plan?: { id: string; type: "PDI" | "PE"; title: string }; // EV-12
+  plan?: { id: string; type: "PE"; title: string }; // EV-12
   suggestedCriteria: {
     goalId: string;
     description: string;
@@ -240,9 +240,9 @@ interface EvolutionContext {
 }
 ```
 
-| ID    | Regra                                                                                                                                                                                                                                                                      |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| EV-12 | **Escolha do plano (G-57):** 1) PE `ACTIVE` com `appointmentId` igual ao da sessão; 2) PE `ACTIVE` com `sessionDate` igual à data da sessão; 3) PDI `ACTIVE` do paciente; 4) nenhum (`plan` ausente). Metas `DISCONTINUED` e `ACHIEVED` não entram nos critérios sugeridos |
+| ID    | Regra                                                                                                                                                                                                                                                                                             |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| EV-12 | **Escolha do plano (G-57):** 1) PE `ACTIVE` com `appointmentId` igual ao da sessão; 2) PE `ACTIVE` com `sessionDate` igual à data da sessão; 3) nenhum (`plan` ausente). **O PDI não entra** (G-57, decidido em 2026-11-12). Metas `DISCONTINUED` e `ACHIEVED` não entram nos critérios sugeridos |
 
 ### 3.6 Sugestão para a próxima sessão (IA) — P2
 
@@ -303,8 +303,8 @@ sem pontuação. A escala é um **instrumento fixo do catálogo**, com regras de
 - **Quais escalas entram é decisão do produto (G-55)**, com responsável clínico da equipe:
   - o conteúdo (itens, opções, faixas de corte) precisa vir de **fonte publicada e citada**;
   - a **licença** de uso precisa ser verificada antes de cadastrar;
-  - recomendação para começar: **uma ou duas** escalas de rastreio de uso livre, como a do
-    exemplo do design.
+  - decidido (G-55): começar pela **"Escala de rastreio TDAH"** do design (opções Nunca, Às
+    vezes, Frequentemente, Muito); o instrumento exato vem do responsável clínico.
 - O formato abaixo é genérico, para novas escalas entrarem só com dados, sem código.
 
 ### 4.3 Entidades
@@ -682,7 +682,7 @@ O app propõe uma regra em cada ponto; confirme ou mude antes de implementar:
    finaliza a sessão.
 2. **Evolução editável sem prazo e sem exclusão** (EV-09). Alternativa: travar a edição depois
    de N dias, para valor de prontuário.
-3. **Critérios a partir do PE, com o PDI como reserva** (EV-12, G-57).
+3. **Critérios só a partir do PE** (EV-12, G-57; decidido: o PDI não é reserva).
 4. **Faixa parcial durante a aplicação** (AV-06, G-60). Alternativa: só na conclusão.
 5. **Um rascunho por paciente e escala** (AV-03).
 6. **PDF gerado no app, conteúdo no backend** (G-58).
