@@ -1,13 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 import { listTaskNotebooks } from "@/api/endpoints/content";
@@ -270,7 +264,7 @@ export function StudentStep(): ReactElement {
                   selected?.id === item.id && styles.patientSelected,
                 ]}
               >
-                <Avatar name={item.name} />
+                <Avatar name={item.name} photoUrl={item.photoUrl} />
                 <View style={styles.patientCopy}>
                   <Text style={styles.patientName}>{item.name}</Text>
                   <Text style={styles.patientDetail}>{item.age} anos</Text>

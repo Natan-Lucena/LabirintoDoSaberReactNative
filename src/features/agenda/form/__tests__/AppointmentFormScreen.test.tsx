@@ -36,16 +36,16 @@ vi.mock("@react-native-community/datetimepicker", () => ({
   __esModule: true,
   default: ({
     mode,
-    onChange,
+    onValueChange,
   }: {
     mode: string;
-    onChange: (event: { type: string }, picked?: Date) => void;
+    onValueChange: (event: unknown, picked: Date) => void;
   }) =>
     createElement(Pressable, {
       accessibilityLabel: `seletor-${mode}`,
       onPress: () =>
-        onChange(
-          { type: "set" },
+        onValueChange(
+          {},
           mode === "time"
             ? new Date(2026, 3, 11, 15, 30)
             : new Date(2026, 3, 11, 12),

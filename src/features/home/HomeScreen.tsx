@@ -33,6 +33,7 @@ import {
   selectNextAppointment,
 } from "@/features/home/selectors";
 import { useHomeQuery } from "@/features/home/useHomeData";
+import { useNow } from "@/hooks/useNow";
 import { useOnline } from "@/hooks/useOnline";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { formatLongDate, formatTime } from "@/utils/date";
@@ -194,6 +195,7 @@ function QuickAccess({
 export function HomeScreen(): ReactElement {
   const router = useRouter();
   const isOnline = useOnline();
+  const now = useNow();
   const { data, isPending, isError, refetch } = useHomeQuery();
   const toast = useToast();
   const pendingSuggestions = usePendingSuggestions().data?.length ?? 0;
@@ -206,7 +208,6 @@ export function HomeScreen(): ReactElement {
   const appointments = data.todayAppointments.map(
     ({ appointment }) => appointment,
   );
-  const now = new Date();
   const nextAppointment = selectNextAppointment(appointments, now);
   const nextPatient = data.todayAppointments.find(
     ({ appointment }) => appointment.id === nextAppointment?.id,
