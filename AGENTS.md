@@ -31,7 +31,8 @@ corrige a senha e acrescenta notificações no app. Tem 25 tarefas e depende mui
 Antes de qualquer dispatch, leia o [Roadmap](docs/entrega-4/ROADMAP.md), o
 [Backlog](docs/entrega-4/BACKLOG.md), o [Tracking](docs/entrega-4/TRACKING.md) e a
 [Especificação para o backend](docs/entrega-4/ESPECIFICACAO-BACKEND.md). As decisões G-54 a
-G-60 foram resolvidas em 2026-11-12, pelo protótipo e pelos requisitos.
+G-60 foram resolvidas em 2026-11-12, pelo protótipo e pelos requisitos. O resumo do que foi
+entregue está em [ENTREGA-4](docs/entrega-4/ENTREGA-4.md).
 
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido

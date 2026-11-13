@@ -7,7 +7,7 @@
 > [BACKLOG](BACKLOG.md), o progresso no [TRACKING](TRACKING.md) e o que o backend precisa
 > construir na [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md) (resumo em
 > [PEDIDOS-BACKEND](PEDIDOS-BACKEND.md)). Este documento não marca nenhuma implementação como
-> pronta.
+> pronta. O resumo do que foi entregue está em [ENTREGA-4](ENTREGA-4.md).
 
 ## 1. Objetivo
 
