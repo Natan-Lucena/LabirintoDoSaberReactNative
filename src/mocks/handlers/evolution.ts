@@ -290,9 +290,11 @@ function withIds(
 
 function ownPlan(planId: string, studentId: string): Plan {
   const plan = mockPlans.find((item) => item.id === planId);
-  // EV-05: plano inexistente, de outro paciente ou de outro educador é inválido.
+  // EV-05 (G-57): só PE do mesmo paciente; inexistente, PDI, de outro paciente
+  // ou de outro educador é inválido.
   if (
     !plan ||
+    plan.type !== "PE" ||
     plan.studentId !== studentId ||
     plan.educatorId !== MOCK_EDUCATOR.id
   )
@@ -363,15 +365,11 @@ export const mockEvolutions: SessionEvolution[] = [
     sessionId: "mock-session-2",
     studentId: "student-1",
     educatorId: MOCK_EDUCATOR.id,
-    planId: "mock-plan-1",
-    planType: "PDI",
-    planTitle: "PDI · PDI de leitura e escrita",
     sessionDate: "2026-10-03",
     durationMinutes: 20,
     criteria: [
       {
         id: `${MOCK_EVOLUTION_ID}-criterion-1`,
-        goalId: "mock-plan-1-goal-2",
         description: "Escrever frases com letra maiúscula",
         attempts: 10,
         successes: 8,
@@ -456,7 +454,7 @@ registerMockHandler(
           .length,
       },
       ...(plan
-        ? { plan: { id: plan.id, type: plan.type, title: plan.title } }
+        ? { plan: { id: plan.id, type: "PE" as const, title: plan.title } }
         : {}),
       suggestedCriteria: (plan?.goals ?? [])
         .filter(
@@ -536,8 +534,8 @@ registerMockHandler(
       ...(plan
         ? {
             planId: plan.id,
-            planType: plan.type,
-            planTitle: `${plan.type} · ${plan.title}`,
+            planType: "PE" as const,
+            planTitle: `PE · ${plan.title}`,
           }
         : {}),
       sessionDate: sessionDay(session),
@@ -652,6 +650,11 @@ registerMockHandler(
     const criteria =
       input.criteria === undefined ? undefined : parseCriteria(input.criteria);
     const goalUpdates = parseGoalUpdates(input.goalUpdates);
+    // O corpo do PUT não troca o plano; se `planId` vier, vale a regra do EV-05 (só PE).
+    if (input.planId !== undefined) {
+      if (typeof input.planId !== "string") throw validationError();
+      ownPlan(input.planId, evolution.studentId);
+    }
     const plan = evolution.planId
       ? mockPlans.find((item) => item.id === evolution.planId)
       : undefined;

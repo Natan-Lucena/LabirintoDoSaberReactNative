@@ -3,11 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { apiClient } from "@/api/client";
 import { mockAdapter } from "@/mocks/adapter";
 import {
+  MOCK_EVOLUTION_ID,
   MOCK_EVOLUTION_SESSION_FOREIGN,
   MOCK_EVOLUTION_SESSION_FREE,
   MOCK_EVOLUTION_SESSION_PE,
   MOCK_FOREIGN_EVOLUTION_ID,
 } from "@/mocks/handlers/evolution";
+import type { Plan } from "@/api/types";
 import { mockPlans } from "@/mocks/handlers/plans";
 
 vi.mock("@/config/env", () => ({
@@ -264,9 +266,20 @@ describe("mocks da evolução da sessão (API-05, leva 1)", () => {
   });
 
   it("BE-EV-03: plano encerrado do mesmo paciente faz tudo falhar com 409 PLAN_NOT_EDITABLE, sem gravar", async () => {
-    const closed = mockPlans.find(
-      (plan) => plan.status === "COMPLETED" && plan.studentId === "student-3",
-    )!;
+    const template = mockPlans.find((plan) => plan.id === "mock-plan-2")!;
+    const closed: Plan = {
+      ...template,
+      id: "mock-plan-closed-pe",
+      studentId: "student-3",
+      status: "COMPLETED",
+      closedAt: "2026-10-29T12:00:00.000Z",
+      goals: template.goals.map((goal) => ({
+        ...goal,
+        id: `mock-plan-closed-pe-${goal.id}`,
+        status: "ACHIEVED" as const,
+      })),
+    };
+    mockPlans.push(closed);
 
     const reply = await send("post", "/session-evolution/", {
       sessionId: MOCK_EVOLUTION_SESSION_FREE,
@@ -284,6 +297,37 @@ describe("mocks da evolução da sessão (API-05, leva 1)", () => {
     const context = await send(
       "get",
       `/session-evolution/context/${MOCK_EVOLUTION_SESSION_FREE}`,
+    );
+    expect(context.data.existingEvolutionId).toBeUndefined();
+  });
+
+  it("EV-05 (G-57): planId de um PDI do mesmo paciente é recusado com 400 INVALID_PLAN, no POST e no PUT", async () => {
+    // mock-plan-1 é um PDI ACTIVE de student-1; mock-session-1 é de student-1.
+    const created = await send("post", "/session-evolution/", {
+      sessionId: "mock-session-1",
+      planId: "mock-plan-1",
+      criteria: [],
+      descriptiveRecord: "ok",
+    });
+    const edited = await send(
+      "put",
+      `/session-evolution/${MOCK_EVOLUTION_ID}`,
+      {
+        planId: "mock-plan-1",
+        descriptiveRecord: "novo",
+      },
+    );
+
+    for (const reply of [created, edited]) {
+      expect(reply).toMatchObject({
+        status: 400,
+        data: { message: "INVALID_PLAN" },
+      });
+    }
+    // nada foi gravado
+    const context = await send(
+      "get",
+      "/session-evolution/context/mock-session-1",
     );
     expect(context.data.existingEvolutionId).toBeUndefined();
   });

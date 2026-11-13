@@ -318,7 +318,7 @@ e a conferir em API-04. Os tipos estão em `src/api/types.ts`, as leituras em
   `NOT_STARTED` e `IN_PROGRESS`). `mock-evo-session-pe` tem PE (`mock-plan-2`);
   `mock-session-1` só tem PDI e vem sem plano.
 - `POST /session-evolution/` valida o corpo e grava de forma atômica: `404 SESSION_NOT_FOUND`,
-  `403 UNAUTHORIZED`, `409 SESSION_NOT_FINISHED` (use `mock-open-session`), `400 INVALID_PLAN`,
+  `403 UNAUTHORIZED`, `409 SESSION_NOT_FINISHED` (use `mock-open-session`), `400 INVALID_PLAN` (`planId` precisa ser um PE do paciente; PDI é recusado, EV-05/G-57),
   `GOAL_NOT_IN_PLAN`, `INVALID_ATTEMPTS`, `409 PLAN_NOT_EDITABLE` (plano encerrado do paciente).
   A segunda evolução da mesma sessão responde `409` com `{ message: "EVOLUTION_ALREADY_EXISTS",
 evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito de atendimentos;

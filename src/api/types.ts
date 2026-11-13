@@ -343,7 +343,7 @@ export interface SessionEvolution {
   educatorId: string;
   appointmentId?: string;
   planId?: string;
-  planType?: PlanType;
+  planType?: "PE";
   /** Ex.: "PE · {tema}". */
   planTitle?: string;
   /** `AAAA-MM-DD`, do `startedAt` da sessão. */
@@ -395,7 +395,7 @@ export interface EvolutionContext {
     correctCount: number;
   };
   /** PE `ACTIVE` escolhido pelo servidor (EV-12, G-57: sem PDI); ausente = sem plano. */
-  plan?: { id: string; type: PlanType; title: string };
+  plan?: { id: string; type: "PE"; title: string };
   suggestedCriteria: {
     goalId: string;
     description: string;
