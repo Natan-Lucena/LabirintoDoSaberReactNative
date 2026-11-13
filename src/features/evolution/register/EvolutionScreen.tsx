@@ -513,6 +513,7 @@ function EvolutionRegister({
           remove={remove}
           saving={saving}
           showCriteria={Boolean(plan)}
+          sessionId={sessionId}
           showGoalStatus
         />
 

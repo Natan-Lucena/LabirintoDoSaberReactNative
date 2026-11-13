@@ -4,6 +4,7 @@
 import type { ReactElement } from "react";
 import {
   Controller,
+  useWatch,
   type Control,
   type FieldArrayWithId,
   type FieldErrors,
@@ -30,6 +31,7 @@ import {
   type EvolutionCriterionValues,
   type EvolutionFormValues,
 } from "./schema";
+import { NextSessionSuggestionBlock } from "./NextSessionSuggestionBlock";
 
 const resultOptions = CRITERION_RESULTS.map((value) => ({
   value,
@@ -56,6 +58,8 @@ export interface EvolutionFormSectionsProps {
   showCriteria: boolean;
   /** "Atualizar prontuário": estado das metas, só no registro (EVO-01). */
   showGoalStatus: boolean;
+  /** Sessão da evolução, usada na sugestão da IA (EVO-04). */
+  sessionId: string;
 }
 
 export function EvolutionFormSections({
@@ -68,10 +72,13 @@ export function EvolutionFormSections({
   saving,
   showCriteria,
   showGoalStatus,
+  sessionId,
 }: EvolutionFormSectionsProps): ReactElement {
   const goalCriteria = fields
     .map((field, index) => ({ field, index }))
     .filter(({ index }) => Boolean(criteria[index]?.goalId));
+
+  const descriptiveRecord = useWatch({ control, name: "descriptiveRecord" });
 
   return (
     <>
@@ -262,6 +269,21 @@ export function EvolutionFormSections({
           )}
         />
       </View>
+
+      <Controller
+        control={control}
+        name="nextSessionSuggestion"
+        render={({ field: input }) => (
+          <NextSessionSuggestionBlock
+            sessionId={sessionId}
+            value={input.value ?? ""}
+            onChange={input.onChange}
+            descriptiveRecord={descriptiveRecord ?? ""}
+            disabled={saving}
+            error={errors.nextSessionSuggestion?.message}
+          />
+        )}
+      />
     </>
   );
 }
