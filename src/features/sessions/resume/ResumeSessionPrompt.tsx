@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { getMe } from "@/api/endpoints/educator";
 import { listSessionsByStudent } from "@/api/endpoints/session";
 import { DsButton, InfoCard } from "@/components/ds";
+import { evolutionRoute } from "@/features/evolution/register/routes";
 import { activateEducator } from "@/storage/mmkv";
 import { useAuthStore } from "@/stores/auth";
 import { useSessionFlowStore } from "@/stores/session-flow";
@@ -13,7 +14,7 @@ import { color, fontFamilies, shape } from "@/theme";
 
 const PLAYER_ROUTE = "/session/player";
 const FINISH_ROUTE = "/session/finish";
-const RESUMABLE_STEPS = ["running", "finishing", "awaitingObservation"];
+const RESUMABLE_STEPS = ["running", "finishing", "awaitingEvolution"];
 
 /**
  * SES-03 (G-21): ao abrir o app com uma sessão salva e ainda não encerrada,
@@ -27,6 +28,7 @@ export function ResumeSessionPrompt(): ReactElement | null {
   const authEducatorId = useAuthStore((state) => state.educatorId);
   const {
     step,
+    sessionId,
     sessionName,
     student,
     pendingAnswers,
@@ -88,6 +90,14 @@ export function ResumeSessionPrompt(): ReactElement | null {
     }
   }
 
+  // Sessão já encerrada: o próximo passo é a Evolução (EVO-01, G-56).
+  const evolutionSessionId = step === "awaitingEvolution" ? sessionId : null;
+
+  function openEvolution(id: string) {
+    setDismissed(true);
+    router.replace(evolutionRoute(id));
+  }
+
   async function resume() {
     if (busy) {
       return;
@@ -145,29 +155,45 @@ export function ResumeSessionPrompt(): ReactElement | null {
         <View style={styles.card}>
           <InfoCard
             icon="play"
-            title="Sessão em andamento"
+            title={
+              evolutionSessionId ? "Evolução pendente" : "Sessão em andamento"
+            }
             description={`“${sessionName ?? "Sessão"}”${
               student ? ` · ${student.name}` : ""
-            } ainda não foi encerrada.`}
+            } ${
+              evolutionSessionId
+                ? "foi encerrada; falta registrar a evolução."
+                : "ainda não foi encerrada."
+            }`}
           />
           {warning ? (
             <Text style={styles.warning} accessibilityRole="alert" accessible>
               {warning}
             </Text>
           ) : null}
-          <DsButton
-            label="Retomar"
-            fullWidth
-            loading={busy}
-            onPress={() => void resume()}
-          />
-          <DsButton
-            label="Encerrar agora"
-            variant="secondary"
-            fullWidth
-            disabled={busy}
-            onPress={() => void endNow()}
-          />
+          {evolutionSessionId ? (
+            <DsButton
+              label="Registrar evolução"
+              fullWidth
+              onPress={() => openEvolution(evolutionSessionId)}
+            />
+          ) : (
+            <>
+              <DsButton
+                label="Retomar"
+                fullWidth
+                loading={busy}
+                onPress={() => void resume()}
+              />
+              <DsButton
+                label="Encerrar agora"
+                variant="secondary"
+                fullWidth
+                disabled={busy}
+                onPress={() => void endNow()}
+              />
+            </>
+          )}
         </View>
       </View>
     </Modal>

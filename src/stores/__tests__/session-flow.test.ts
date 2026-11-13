@@ -134,8 +134,12 @@ describe("stores/session-flow", () => {
     await useSessionFlowStore.getState().finish();
     expect(useSessionFlowStore.getState().step).toBe("finishing");
 
-    await useSessionFlowStore.getState().awaitObservation();
-    expect(useSessionFlowStore.getState().step).toBe("awaitingObservation");
+    await useSessionFlowStore.getState().awaitEvolution();
+    expect(useSessionFlowStore.getState().step).toBe("awaitingEvolution");
+    // AC-EVO-01-05: fechar o app na Evolução e reabrir volta à mesma sessão.
+    await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+    expect(useSessionFlowStore.getState().step).toBe("awaitingEvolution");
+    expect(useSessionFlowStore.getState().sessionId).toBe("session-1");
 
     await useSessionFlowStore.getState().close();
     expect(useSessionFlowStore.getState().step).toBe("closed");
@@ -480,6 +484,72 @@ describe("stores/session-flow", () => {
 
     expect(useSessionFlowStore.getState().step).toBe("studentSelected");
     expect(useSessionFlowStore.getState().appointmentId).toBeNull();
+  });
+
+  describe("EVO-01: evolução no lugar da observação (G-56)", () => {
+    async function toFinishing(
+      store: Awaited<ReturnType<typeof loadStore>>["useSessionFlowStore"],
+    ) {
+      await store.getState().selectStudent(STUDENT);
+      await store.getState().configure({ name: "S", content: CONTENT });
+      await store.getState().requestStart();
+      await store.getState().confirmStart("session-1");
+      await store.getState().finish();
+    }
+
+    it("finish -> awaitEvolution leva à etapa da Evolução e a persiste", async () => {
+      const { useSessionFlowStore } = await loadStore();
+      await toFinishing(useSessionFlowStore);
+
+      await useSessionFlowStore.getState().awaitEvolution();
+
+      const storage = await (
+        await import("@/storage/mmkv")
+      ).getStorage(EDUCATOR_A);
+      const saved = JSON.parse(storage.getString("session:flow") as string);
+      expect(saved.step).toBe("awaitingEvolution");
+      expect(saved.sessionId).toBe("session-1");
+    });
+
+    it("awaitEvolution só vale a partir de finishing", async () => {
+      const { useSessionFlowStore, SessionFlowInvalidTransitionError } =
+        await loadStore();
+      await useSessionFlowStore.getState().selectStudent(STUDENT);
+
+      await expect(
+        useSessionFlowStore.getState().awaitEvolution(),
+      ).rejects.toBeInstanceOf(SessionFlowInvalidTransitionError);
+    });
+
+    it("AC-EVO-01-05: fluxo salvo em awaitingObservation (versão anterior) reabre na Evolução da mesma sessão", async () => {
+      const { useSessionFlowStore } = await loadStore();
+      await toFinishing(useSessionFlowStore);
+      const storage = await (
+        await import("@/storage/mmkv")
+      ).getStorage(EDUCATOR_A);
+      const saved = JSON.parse(storage.getString("session:flow") as string);
+      saved.step = "awaitingObservation";
+      storage.set("session:flow", JSON.stringify(saved));
+
+      await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+
+      expect(useSessionFlowStore.getState().step).toBe("awaitingEvolution");
+      expect(useSessionFlowStore.getState().sessionId).toBe("session-1");
+      await useSessionFlowStore.getState().close();
+      expect(useSessionFlowStore.getState().step).toBe("closed");
+    });
+
+    it("close e discard limpam o fluxo na etapa da Evolução", async () => {
+      const { useSessionFlowStore } = await loadStore();
+      await toFinishing(useSessionFlowStore);
+      await useSessionFlowStore.getState().awaitEvolution();
+
+      await useSessionFlowStore.getState().discard({ confirmed: true });
+
+      expect(useSessionFlowStore.getState().step).toBe("idle");
+      await useSessionFlowStore.getState().hydrate(EDUCATOR_A);
+      expect(useSessionFlowStore.getState().step).toBe("idle");
+    });
   });
 
   describe("REV-SES: fluxo não trava", () => {

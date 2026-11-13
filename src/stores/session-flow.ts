@@ -19,7 +19,8 @@ export type SessionFlowStep =
   | "startUncertain"
   | "running"
   | "finishing"
-  | "awaitingObservation"
+  /** Sessão encerrada no servidor; falta registrar a Evolução (EVO-01, G-56). */
+  | "awaitingEvolution"
   | "closed"
   | "error";
 
@@ -72,7 +73,7 @@ export type SessionFlowState = SessionFlowData & {
   markAnswerPending: (answer: TaskNotebookSessionAnswer) => Promise<void>;
   markAnswerConflict: (answer: TaskNotebookSessionAnswer) => Promise<void>;
   finish: () => Promise<void>;
-  awaitObservation: () => Promise<void>;
+  awaitEvolution: () => Promise<void>;
   close: () => Promise<void>;
   cancel: () => Promise<void>;
   discard: (input: { confirmed: boolean }) => Promise<void>;
@@ -87,6 +88,22 @@ export class SessionFlowInvalidTransitionError extends Error {
 }
 
 export const SESSION_FLOW_STORAGE_KEY = "session:flow";
+
+/**
+ * Etapas salvas por versões anteriores do app e a etapa que as substitui.
+ * `awaitingObservation` (observação pós-sessão, SES-04) virou
+ * `awaitingEvolution` (EVO-01, G-56): a sessão salva nessa etapa reabre na
+ * Evolução.
+ */
+const LEGACY_STEPS: Record<string, SessionFlowStep> = {
+  awaitingObservation: "awaitingEvolution",
+};
+
+function migrateStep(step: string): SessionFlowStep {
+  const migrated = LEGACY_STEPS[step] ?? (step as SessionFlowStep);
+  // Nenhuma requisição de início sobrevive a um reinício do app.
+  return migrated === "starting" ? "startUncertain" : migrated;
+}
 
 export const initialSessionFlowData: SessionFlowData = {
   step: "idle",
@@ -342,18 +359,18 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
     await persist(next);
   },
 
-  awaitObservation: async () => {
+  awaitEvolution: async () => {
     const state = get();
-    requireStep("awaitObservation", state.step, ["finishing"]);
+    requireStep("awaitEvolution", state.step, ["finishing"]);
 
-    const next: SessionFlowData = { ...state, step: "awaitingObservation" };
+    const next: SessionFlowData = { ...state, step: "awaitingEvolution" };
     set(next);
     await persist(next);
   },
 
   close: async () => {
     const state = get();
-    requireStep("close", state.step, ["awaitingObservation"]);
+    requireStep("close", state.step, ["awaitingEvolution"]);
 
     set({ ...state, step: "closed" });
     await clearPersisted(state.educatorId);
@@ -381,7 +398,7 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       "startUncertain",
       "running",
       "finishing",
-      "awaitingObservation",
+      "awaitingEvolution",
       "error",
     ]);
     if (!confirmed) {
@@ -408,12 +425,12 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       return;
     }
 
-    // Fluxos salvos antes de campos novos (ex.: appointmentId) não os trazem.
-    // Nenhuma requisição de início sobrevive a um reinício do app.
+    // Fluxos salvos antes de campos novos (ex.: appointmentId) não os trazem;
+    // etapas renomeadas são migradas (ver LEGACY_STEPS).
     set({
       ...initialSessionFlowData,
       ...persisted,
-      step: persisted.step === "starting" ? "startUncertain" : persisted.step,
+      step: migrateStep(persisted.step),
     });
   },
 }));

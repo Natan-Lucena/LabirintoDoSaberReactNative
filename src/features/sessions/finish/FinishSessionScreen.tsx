@@ -3,32 +3,26 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter, type Href } from "expo-router";
+import { useRouter } from "expo-router";
 
-import {
-  addSessionObservation,
-  finishSession,
-  listSessionsByStudent,
-} from "@/api/endpoints/session";
+import { finishSession, listSessionsByStudent } from "@/api/endpoints/session";
 import { normalizeApiError } from "@/api/errors";
 import type { TaskNotebookSession } from "@/api/types";
-import { AppHeader, DsButton, Field, InfoCard } from "@/components/ds";
+import { AppHeader, DsButton, InfoCard } from "@/components/ds";
 import { appointmentQueryKeys } from "@/features/appointments/useAppointments";
+import { evolutionRoute } from "@/features/evolution/register/routes";
 import { useSessionFlowStore } from "@/stores/session-flow";
 import { color, fontFamilies, shape, semanticColor } from "@/theme";
-
-export const SESSION_REPORT_ROUTE = (sessionId: string) =>
-  `/reports/session/${sessionId}`;
 
 function questionsLabel(total: number): string {
   return total === 1 ? "1 questão" : `${total} questões`;
 }
 
 /**
- * SES-04: encerra a sessão (`finish`) e registra a observação (`observation`).
- * Nenhuma mutação é repetida sozinha (G-08): em timeout ou erro de rede, a
- * tela consulta a listagem do paciente antes de pedir uma nova tentativa
- * explícita.
+ * SES-04: encerra a sessão (`finish`). Desde a EVO-01 (G-56), o passo seguinte
+ * é a Evolução da sessão, no lugar da observação. Nenhuma mutação é repetida
+ * sozinha (G-08): em timeout ou erro de rede, a tela consulta a listagem do
+ * paciente antes de pedir uma nova tentativa explícita.
  */
 export function FinishSessionScreen(): ReactElement | null {
   const router = useRouter();
@@ -37,34 +31,27 @@ export function FinishSessionScreen(): ReactElement | null {
     step,
     sessionId,
     sessionName,
-    educatorId,
     student,
     confirmedAnswers,
     pendingAnswers,
     conflictedAnswers,
-    awaitObservation,
-    close,
-    hydrate,
+    awaitEvolution,
   } = useSessionFlowStore();
   const [finishError, setFinishError] = useState<string | null>(null);
-  const [observation, setObservation] = useState("");
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const startedFinishRef = useRef(false);
-  const savingRef = useRef(false);
-  const completedRef = useRef(false);
 
   const hasUnconfirmed = pendingAnswers.length + conflictedAnswers.length > 0;
-  const isValidStep = step === "finishing" || step === "awaitingObservation";
+  const isValidStep = step === "finishing" || step === "awaitingEvolution";
 
   useEffect(() => {
-    if (completedRef.current) {
-      return;
-    }
     if (!sessionId || !isValidStep) {
       router.replace("/");
+      return;
     }
-  }, [isValidStep, router, sessionId]);
+    if (step === "awaitingEvolution") {
+      router.replace(evolutionRoute(sessionId));
+    }
+  }, [isValidStep, router, sessionId, step]);
 
   async function findServerSession(): Promise<TaskNotebookSession | undefined> {
     if (!student || !sessionId) {
@@ -78,6 +65,15 @@ export function FinishSessionScreen(): ReactElement | null {
     }
   }
 
+  async function finished() {
+    // A ficha do paciente e a análise passam a incluir a sessão recém-encerrada.
+    void queryClient.invalidateQueries({ queryKey: ["task-notebook-session"] });
+    void queryClient.invalidateQueries({ queryKey: ["student-analysis"] });
+    // O backend conclui o atendimento ligado à sessão (AGE-04): Agenda e Início.
+    void queryClient.invalidateQueries({ queryKey: appointmentQueryKeys.all });
+    await awaitEvolution();
+  }
+
   async function runFinish() {
     if (!sessionId) {
       return;
@@ -85,7 +81,7 @@ export function FinishSessionScreen(): ReactElement | null {
     setFinishError(null);
     try {
       await finishSession({ sessionId });
-      await awaitObservation();
+      await finished();
     } catch (error) {
       const apiError = normalizeApiError(error);
       const ambiguous =
@@ -95,7 +91,7 @@ export function FinishSessionScreen(): ReactElement | null {
       if (ambiguous) {
         const server = await findServerSession();
         if (server?.finishedAt) {
-          await awaitObservation();
+          await finished();
           return;
         }
       }
@@ -122,142 +118,41 @@ export function FinishSessionScreen(): ReactElement | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, sessionId, hasUnconfirmed]);
 
-  async function complete() {
-    const finishedSessionId = sessionId;
-    if (!finishedSessionId) {
-      return;
-    }
-    completedRef.current = true;
-    await close();
-    // A ficha do paciente e a análise passam a incluir a sessão recém-encerrada.
-    await queryClient.invalidateQueries({
-      queryKey: ["task-notebook-session"],
-    });
-    await queryClient.invalidateQueries({ queryKey: ["student-analysis"] });
-    // O backend conclui o atendimento ligado à sessão (AGE-04): Agenda e Início.
-    await queryClient.invalidateQueries({ queryKey: appointmentQueryKeys.all });
-    // `close` deixa a store em "closed"; volta a "idle" para a próxima sessão.
-    if (educatorId) {
-      await hydrate(educatorId);
-    }
-    router.replace(SESSION_REPORT_ROUTE(finishedSessionId) as Href);
-  }
-
-  async function save() {
-    const text = observation.trim();
-    if (!sessionId || !text || savingRef.current) {
-      return;
-    }
-    savingRef.current = true;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      await addSessionObservation({ sessionId, observation: text });
-      await complete();
-    } catch (error) {
-      completedRef.current = false;
-      const apiError = normalizeApiError(error);
-      if (apiError.isNetworkError || apiError.isTimeout) {
-        const server = await findServerSession();
-        if (server?.observation === text) {
-          await complete();
-          return;
-        }
-      }
-      setSaveError(
-        apiError.isNetworkError || apiError.isTimeout
-          ? "Não foi possível confirmar o registro. Verifique a conexão e tente novamente."
-          : "Não foi possível salvar o registro. Tente novamente.",
-      );
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
-  }
-
-  async function skip() {
-    if (savingRef.current) {
-      return;
-    }
-    savingRef.current = true;
-    try {
-      await complete();
-    } finally {
-      savingRef.current = false;
-    }
-  }
-
-  if (!sessionId || !isValidStep) {
+  if (!sessionId || step !== "finishing") {
     return null;
   }
-
-  const summary = (
-    <InfoCard
-      icon="clipboard"
-      title={sessionName ?? "Sessão"}
-      description={`${student?.name ?? "Paciente"} · ${questionsLabel(confirmedAnswers.length)}`}
-    />
-  );
 
   return (
     <SafeAreaView style={styles.screen}>
       <AppHeader title="Registro da sessão" subtitle="Encerramento" />
       <ScrollView contentContainerStyle={styles.content}>
-        {summary}
+        <InfoCard
+          icon="clipboard"
+          title={sessionName ?? "Sessão"}
+          description={`${student?.name ?? "Paciente"} · ${questionsLabel(confirmedAnswers.length)}`}
+        />
 
-        {step === "finishing" ? (
-          hasUnconfirmed ? (
-            <Text style={styles.error} accessibilityRole="alert" accessible>
-              Há respostas pendentes de confirmação. Reenvie as respostas no
-              player antes de encerrar a sessão.
-            </Text>
-          ) : finishError ? (
-            <View style={styles.block}>
-              <Text style={styles.error} accessibilityRole="alert" accessible>
-                {finishError}
-              </Text>
-              <DsButton
-                label="Tentar novamente"
-                variant="secondary"
-                fullWidth
-                onPress={() => void runFinish()}
-              />
-            </View>
-          ) : (
-            <Text style={styles.hint} accessibilityRole="progressbar">
-              Encerrando a sessão...
-            </Text>
-          )
-        ) : (
+        {hasUnconfirmed ? (
+          <Text style={styles.error} accessibilityRole="alert" accessible>
+            Há respostas pendentes de confirmação. Reenvie as respostas no
+            player antes de encerrar a sessão.
+          </Text>
+        ) : finishError ? (
           <View style={styles.block}>
-            <Field
-              label="Registro descritivo"
-              accessibilityLabel="Registro descritivo"
-              placeholder="Como foi a sessão? Observações importantes para o prontuário."
-              value={observation}
-              onChangeText={setObservation}
-              multiline
-            />
-            {saveError ? (
-              <Text style={styles.error} accessibilityRole="alert" accessible>
-                {saveError}
-              </Text>
-            ) : null}
+            <Text style={styles.error} accessibilityRole="alert" accessible>
+              {finishError}
+            </Text>
             <DsButton
-              label="Salvar e atualizar prontuário"
+              label="Tentar novamente"
+              variant="secondary"
               fullWidth
-              loading={saving}
-              disabled={observation.trim().length === 0}
-              onPress={() => void save()}
-            />
-            <DsButton
-              label="Pular"
-              variant="ghost"
-              fullWidth
-              disabled={saving}
-              onPress={() => void skip()}
+              onPress={() => void runFinish()}
             />
           </View>
+        ) : (
+          <Text style={styles.hint} accessibilityRole="progressbar">
+            Encerrando a sessão...
+          </Text>
         )}
       </ScrollView>
     </SafeAreaView>
