@@ -1,11 +1,25 @@
 import { useMemo, useState, type ReactElement } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { saveScaleAnswers, scaleQueryKeys } from "@/api/endpoints/scales";
+import {
+  completeScaleApplication,
+  deleteScaleApplication,
+  generateScaleInsight,
+  saveScaleAnswers,
+  scaleQueryKeys,
+  ScaleIncompleteError,
+} from "@/api/endpoints/scales";
 import { normalizeApiError } from "@/api/errors";
 import type { ScaleApplication, ScaleTemplate } from "@/api/types";
-import { AppHeader, DsButton, ProgressBar } from "@/components/ds";
+import { AIInsight, AppHeader, DsButton, ProgressBar } from "@/components/ds";
 import { StaticPressable } from "@/components/ds/StaticPressable";
 import { color, fontFamilies, semanticColor, shape } from "@/theme";
 import { firstUnansweredIndex, savedAnswer, sortedItems } from "./selectors";
@@ -67,6 +81,39 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  scorePreview: {
+    gap: 6,
+    padding: 16,
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: shape.radius.md,
+  },
+  scoreLabel: {
+    color: color.ink[600],
+    fontFamily: fontFamilies.nunito.bold,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  scoreValue: {
+    color: color.text,
+    fontFamily: fontFamilies.nunito.extraBold,
+    fontSize: 28,
+    lineHeight: 34,
+  },
+  scoreBand: {
+    color: color.brand[700],
+    fontFamily: fontFamilies.nunito.bold,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  notice: {
+    color: color.ink[600],
+    fontFamily: fontFamilies.nunito.regular,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  insightBox: { gap: 8 },
   done: { gap: 12 },
   doneTitle: {
     color: color.text,
@@ -84,7 +131,11 @@ export interface QuestionFlowProps {
   onExit: () => void;
   /** Volta ao hub de avaliações (fim das perguntas). */
   onFinishLater: () => void;
+  /** A escala foi concluída: segue para o resultado (AVA-04). */
+  onCompleted: (applicationId: string) => void;
 }
+
+const DEFAULT_NOTICE = "O resultado não substitui avaliação clínica completa.";
 
 interface PendingAnswer {
   itemId: string;
@@ -103,6 +154,7 @@ export function QuestionFlow({
   initialApplication,
   onExit,
   onFinishLater,
+  onCompleted,
 }: QuestionFlowProps): ReactElement {
   const queryClient = useQueryClient();
   const items = useMemo(() => sortedItems(template), [template]);
@@ -118,6 +170,11 @@ export function QuestionFlow({
   const [pending, setPending] = useState<PendingAnswer | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState<string | null>(null);
+  const [discarding, setDiscarding] = useState(false);
 
   const item = items[index];
   const total = application.score.total || items.length;
@@ -152,8 +209,82 @@ export function QuestionFlow({
     }
   }
 
+  async function generateInsight(): Promise<void> {
+    if (insightLoading || completing) return;
+    setInsightLoading(true);
+    setInsightError(null);
+    try {
+      // Sem repetição automática: a IA leva até 90 s e só o botão chama de novo.
+      setApplication(await generateScaleInsight(application.id));
+    } catch (error) {
+      setInsightError(normalizeApiError(error).message);
+    } finally {
+      setInsightLoading(false);
+    }
+  }
+
+  async function complete(): Promise<void> {
+    if (completing || insightLoading) return;
+    setCompleting(true);
+    setCompleteError(null);
+    try {
+      const completed = await completeScaleApplication(application.id);
+      setApplication(completed);
+      queryClient.setQueryData(
+        scaleQueryKeys.application(completed.id),
+        completed,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: [...scaleQueryKeys.all, "applications"],
+      });
+      onCompleted(completed.id);
+    } catch (error) {
+      if (error instanceof ScaleIncompleteError) {
+        const missing = items.findIndex((candidate) =>
+          error.missingItemIds.includes(candidate.id),
+        );
+        if (missing !== -1) {
+          setFinished(false);
+          setIndex(missing);
+        }
+      }
+      setCompleteError(normalizeApiError(error).message);
+      setCompleting(false);
+    }
+  }
+
+  function confirmDiscard(): void {
+    Alert.alert(
+      "Descartar rascunho?",
+      "As respostas salvas serão apagadas e não podem ser recuperadas.",
+      [
+        { text: "Voltar", style: "cancel" },
+        {
+          text: "Descartar",
+          style: "destructive",
+          onPress: () => void discard(),
+        },
+      ],
+    );
+  }
+
+  async function discard(): Promise<void> {
+    if (discarding) return;
+    setDiscarding(true);
+    try {
+      await deleteScaleApplication(application.id);
+      void queryClient.invalidateQueries({
+        queryKey: [...scaleQueryKeys.all, "applications"],
+      });
+      onFinishLater();
+    } catch (error) {
+      setCompleteError(normalizeApiError(error).message);
+      setDiscarding(false);
+    }
+  }
+
   function goBack(): void {
-    if (saving) return;
+    if (saving || completing) return;
     setPending(null);
     setSaveError(null);
     if (finished) {
@@ -175,25 +306,97 @@ export function QuestionFlow({
   );
 
   if (finished || !item) {
+    const { score } = application;
+    const locked = completing || discarding;
+
     return (
       <View style={styles.screen}>
         {header}
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.done}>
-            <Text style={styles.doneTitle}>Respostas salvas</Text>
-            <Text style={styles.instruction}>
-              As respostas desta escala estão salvas no rascunho.
+            <View style={styles.scorePreview}>
+              <Text style={styles.scoreLabel}>
+                {score.partial ? "Pontuação parcial" : "Pontuação"}
+              </Text>
+              <Text style={styles.scoreValue}>
+                {`${score.value} de ${score.max}`}
+              </Text>
+              <Text style={styles.scoreLabel}>
+                {`${score.answered}/${score.total} respondidas`}
+              </Text>
+              {score.band ? (
+                <Text style={styles.scoreBand}>
+                  {score.partial
+                    ? `${score.band.label} (parcial)`
+                    : score.band.label}
+                </Text>
+              ) : null}
+            </View>
+            <Text style={styles.notice}>
+              {application.disclaimer || DEFAULT_NOTICE}
             </Text>
+            {application.insight ? (
+              <View style={styles.insightBox}>
+                <Text style={styles.scoreLabel}>Insight preliminar</Text>
+                <AIInsight text={application.insight.text} />
+              </View>
+            ) : null}
+            {insightLoading ? (
+              <ActivityIndicator color={semanticColor.primaryFill} />
+            ) : null}
+            {insightError ? (
+              <Text accessibilityRole="alert" style={styles.error}>
+                {insightError}
+              </Text>
+            ) : null}
             <DsButton
-              label="Voltar às avaliações"
+              label={
+                insightError
+                  ? "Tentar gerar o insight de novo"
+                  : application.insight
+                    ? "Gerar insight de novo"
+                    : "Gerar insight"
+              }
+              variant="secondary"
               fullWidth
+              disabled={insightLoading || locked}
+              onPress={() => void generateInsight()}
+            />
+            {completeError ? (
+              <Text accessibilityRole="alert" style={styles.error}>
+                {completeError}
+              </Text>
+            ) : null}
+            <DsButton
+              label="Concluir escala"
+              fullWidth
+              disabled={
+                locked ||
+                insightLoading ||
+                firstUnansweredIndex(items, application) !== -1
+              }
+              onPress={() => void complete()}
+            />
+            <DsButton
+              label="Salvar rascunho"
+              variant="secondary"
+              fullWidth
+              disabled={locked}
               onPress={onFinishLater}
             />
             <DsButton
               label="Revisar respostas"
               variant="secondary"
               fullWidth
+              disabled={locked}
               onPress={goBack}
+            />
+            <DsButton
+              label="Descartar rascunho"
+              variant="secondary"
+              fullWidth
+              disabled={locked}
+              onPress={confirmDiscard}
             />
           </View>
         </ScrollView>

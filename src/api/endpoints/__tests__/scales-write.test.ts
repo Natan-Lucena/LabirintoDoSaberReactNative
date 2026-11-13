@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/api/client";
 import {
+  completeScaleApplication,
   createScaleApplication,
+  deleteScaleApplication,
+  generateScaleInsight,
+  ScaleIncompleteError,
   getScaleApplication,
   getScaleTemplate,
   saveScaleAnswers,
@@ -182,5 +186,28 @@ describe("escrita das escalas pelo apiClient (AVA-02)", () => {
       ]),
     ).rejects.toThrow();
     expect(adapter).toHaveBeenCalledTimes(1);
+  });
+
+  it("concluir com itens faltando lança ScaleIncompleteError com os ids", async () => {
+    const error = await completeScaleApplication(
+      MOCK_SCALE_APPLICATION_DRAFT_ID,
+    ).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ScaleIncompleteError);
+    expect(
+      (error as ScaleIncompleteError).missingItemIds.length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("gera o insight e descarta um rascunho", async () => {
+    const withInsight = await generateScaleInsight(
+      MOCK_SCALE_APPLICATION_DRAFT_ID,
+    );
+    expect(withInsight.insight?.text).toBeTruthy();
+
+    await deleteScaleApplication(MOCK_SCALE_APPLICATION_DRAFT_ID);
+    await expect(
+      getScaleApplication(MOCK_SCALE_APPLICATION_DRAFT_ID),
+    ).rejects.toBeTruthy();
   });
 });
