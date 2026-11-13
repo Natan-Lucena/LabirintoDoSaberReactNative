@@ -68,6 +68,33 @@ describe("documento do relatório (REL-02)", () => {
     expect(html).not.toMatch(/telefone|e-mail|cpf|endereço/i);
   });
 
+  it("REL-02.1: datas em DD/MM/AAAA, seção vazia com texto e metas em lista", () => {
+    const html = buildReportHtml({
+      ...report,
+      content: {
+        ...report.content,
+        evolutions: [],
+        planProgress: [
+          {
+            title: "PDI",
+            type: "PDI",
+            percent: 50,
+            goals: [
+              { description: "Meta A", status: "IN_PROGRESS" },
+              { description: "Meta B", status: "ACHIEVED" },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(html).toContain("01/10/2026 a 31/10/2026");
+    expect(html).not.toContain("2026-10-01");
+    expect(html).toContain("Sem evoluções no período.");
+    expect(html).toContain("<li>Meta A · Em andamento</li>");
+    expect(html).toContain("<li>Meta B · Atingida</li>");
+  });
+
   it("AC-REL-02-03: apaga o arquivo temporário depois de compartilhar, mesmo se falhar", async () => {
     const { sharePdfFromBase64 } = await import("../../sharePdf");
 
