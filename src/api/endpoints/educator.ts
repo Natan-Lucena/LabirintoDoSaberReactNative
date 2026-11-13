@@ -1,5 +1,12 @@
 import { apiClient } from "@/api/client";
-import type { Educator, EducatorLastSession } from "@/api/types";
+import type {
+  Educator,
+  EducatorLastSession,
+  PasswordTokenSentResponse,
+  ResetPasswordPayload,
+  VerifyPasswordTokenPayload,
+  VerifyPasswordTokenResponse,
+} from "@/api/types";
 
 /** POST /educator/sign-in */
 export interface SignInInput {
@@ -35,20 +42,35 @@ export async function getMe(token?: string): Promise<Educator> {
   return response.data;
 }
 
-/** PUT /educator/generate-token */
+/**
+ * PUT /educator/generate-token (contrato provisório, SN-01/SN-02).
+ * A resposta é sempre a mesma, exista ou não a conta; o app a descarta.
+ */
 export interface GenerateTokenInput {
-  educatorEmail: string;
+  email: string;
 }
 
 export async function generateToken(input: GenerateTokenInput): Promise<void> {
-  await apiClient.put<void>("/educator/generate-token", input);
+  await apiClient.put<PasswordTokenSentResponse>(
+    "/educator/generate-token",
+    input,
+  );
 }
 
-/** POST /educator/update-password */
-export interface UpdatePasswordInput {
-  email: string;
-  newPassword: string;
+/** POST /educator/verify-token: confere o código sem consumi-lo (SN-03). */
+export async function verifyToken(
+  input: VerifyPasswordTokenPayload,
+): Promise<VerifyPasswordTokenResponse> {
+  const response = await apiClient.post<VerifyPasswordTokenResponse>(
+    "/educator/verify-token",
+    input,
+  );
+
+  return response.data;
 }
+
+/** POST /educator/update-password: exige o `token` (SN-04, SN-05). */
+export type UpdatePasswordInput = ResetPasswordPayload;
 
 export async function updatePassword(
   input: UpdatePasswordInput,

@@ -96,18 +96,23 @@ describe("endpoints (fase vermelha — stubs sem comportamento)", () => {
     },
     {
       name: "generateToken",
-      call: () => generateToken({ educatorEmail: "a@a.com" }),
+      call: () => generateToken({ email: "a@a.com" }),
       method: "put",
       url: "/educator/generate-token",
-      body: { educatorEmail: "a@a.com" },
+      body: { email: "a@a.com" },
       response: undefined,
     },
     {
       name: "updatePassword",
-      call: () => updatePassword({ email: "a@a.com", newPassword: "abcdef" }),
+      call: () =>
+        updatePassword({
+          email: "a@a.com",
+          token: "123456",
+          newPassword: "abcdef",
+        }),
       method: "post",
       url: "/educator/update-password",
-      body: { email: "a@a.com", newPassword: "abcdef" },
+      body: { email: "a@a.com", token: "123456", newPassword: "abcdef" },
       response: undefined,
     },
     {

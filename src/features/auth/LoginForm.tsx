@@ -1,9 +1,9 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useState, type ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { DsButton, Field } from "@/components/ds";
 import { color, semanticColor, typography } from "@/theme";
@@ -12,6 +12,11 @@ import {
   wasSessionExpired,
 } from "@/features/auth/session-expiry";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
+import {
+  PASSWORD_CHANGED_NOTICE,
+  acknowledgePasswordChanged,
+  wasPasswordChanged,
+} from "@/features/auth/password-reset/notice";
 import { useSignIn } from "@/features/auth/useSignIn";
 import { APP_DESTINATION } from "@/features/auth/routes";
 
@@ -48,6 +53,19 @@ export function LoginForm(): ReactElement {
   const { submit, isSubmitting, formError, clearFormError } = useSignIn();
   const showSessionExpiredNotice = wasSessionExpired();
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordChangedNotice, setShowPasswordChangedNotice] =
+    useState(false);
+
+  // O login continua montado por baixo da tela de recuperação: o aviso é
+  // consumido a cada foco, não só na montagem.
+  useFocusEffect(
+    useCallback(() => {
+      if (wasPasswordChanged()) {
+        acknowledgePasswordChanged();
+        setShowPasswordChangedNotice(true);
+      }
+    }, []),
+  );
 
   useEffect(() => {
     if (showSessionExpiredNotice) {
@@ -87,6 +105,12 @@ export function LoginForm(): ReactElement {
 
   return (
     <View style={styles.container}>
+      {showPasswordChangedNotice ? (
+        <Text style={styles.notice} accessibilityRole="alert">
+          {PASSWORD_CHANGED_NOTICE}
+        </Text>
+      ) : null}
+
       {showSessionExpiredNotice ? (
         <Text style={styles.notice} accessibilityRole="alert">
           Sua sessão expirou. Entre novamente.
