@@ -42,7 +42,7 @@ describe("AnamneseSummaryScreen (PAC-09)", () => {
       },
     };
     await render(<AnamneseSummaryScreen patientId="s-1" />);
-    expect(await screen.findByText("- Histórico resumido")).toBeTruthy();
+    expect(await screen.findByText("• Histórico resumido")).toBeTruthy();
     expect(await screen.findByText(/Gerada em/)).toBeTruthy();
     expect(await screen.findByText("Gerar de novo")).toBeTruthy();
   });

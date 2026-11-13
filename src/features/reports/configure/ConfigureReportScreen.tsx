@@ -136,7 +136,7 @@ export function ConfigureReportScreen(): ReactElement {
   const typeInfo = data?.types.find((item) => item.type === activeType);
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <AppHeader
         title="Novo relatório"
         subtitle="Configurar documento"

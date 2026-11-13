@@ -214,7 +214,7 @@ export function StudentStep(): ReactElement {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <AppHeader
         title="Nova sessão"
         subtitle="Nova sessão"

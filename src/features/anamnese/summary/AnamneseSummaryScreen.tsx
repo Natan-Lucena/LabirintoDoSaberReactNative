@@ -13,6 +13,7 @@ import {
   anamneseResponsesKey,
   useAnamneseResponses,
 } from "@/features/anamnese/responses/useAnamneseResponses";
+import { splitSummaryTopics } from "@/features/anamnese/summary/summaryTopics";
 import { color, getContentPadding, typography } from "@/theme";
 
 export interface AnamneseSummaryScreenProps {
@@ -51,6 +52,8 @@ export function AnamneseSummaryScreen({
   });
 
   const summary = response?.summary;
+  const topics = summary ? splitSummaryTopics(summary.text) : [];
+  const hasBullets = topics.length > 1 || /^\s*-\s/.test(summary?.text ?? "");
 
   return (
     <View style={styles.screen}>
@@ -84,7 +87,11 @@ export function AnamneseSummaryScreen({
                 <Text style={styles.meta}>
                   {`Gerada em ${formatResponseDate(summary.generatedAt)}`}
                 </Text>
-                <Text style={styles.body}>{summary.text}</Text>
+                {topics.map((topic, index) => (
+                  <Text key={index} style={styles.body}>
+                    {hasBullets ? `• ${topic}` : topic}
+                  </Text>
+                ))}
               </View>
             ) : (
               <Text style={styles.body}>

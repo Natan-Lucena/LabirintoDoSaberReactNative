@@ -88,7 +88,7 @@ export function ReportHistoryScreen(): ReactElement {
   const items = query.data ?? [];
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <AppHeader
         title="Histórico"
         subtitle="Relatórios gerados"

@@ -81,7 +81,7 @@ export function ReportPreviewScreen({
   const content = report?.content;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <AppHeader
         title="Relatório"
         subtitle={report?.studentName}
