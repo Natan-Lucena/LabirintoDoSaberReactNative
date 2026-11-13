@@ -2,12 +2,13 @@
 export const HOME_ROUTE = "/" as const;
 
 /** Telas que abrem a Evolução e para onde ela volta ao sair. */
-export type EvolutionOrigin = "hub";
+export type EvolutionOrigin = "hub" | "entry";
 
 /**
- * `from` só vem de quem tem uma tela para onde voltar (o hub). Sem ele — fluxo
- * de sessão, retomada — a saída vai para a Início: a pilha abaixo pode ter
- * telas da sessão já encerrada.
+ * `from` só vem de quem tem uma tela para onde voltar: o hub ("hub") e os
+ * atalhos da agenda, da Início e da ficha ("entry"). Sem ele — fluxo de sessão,
+ * retomada — a saída vai para a Início: a pilha abaixo pode ter telas da sessão
+ * já encerrada.
  */
 export const evolutionRoute = (sessionId: string, from?: EvolutionOrigin) =>
   ({

@@ -26,10 +26,15 @@ import { formatResponseDate } from "@/features/anamnese/responses/answers";
 import { useAnamneseResponses } from "@/features/anamnese/responses/useAnamneseResponses";
 import { useAppointments } from "@/features/appointments/useAppointments";
 import { useHomeData } from "@/features/home/useHomeData";
+import {
+  pendingForStudent,
+  usePendingEvolutions,
+} from "@/features/evolution/pending/usePendingEvolutions";
 import { EvolutionSummaryCard } from "@/features/evolution/records/EvolutionSummaryCard";
 import { usePatientEvolutions } from "@/features/evolution/records/useEvolutionRecords";
 import {
   evolutionRecordRoute,
+  evolutionRoute,
   patientRecordRoute,
 } from "@/features/evolution/register/routes";
 import { useStudents } from "@/features/students/useStudents";
@@ -115,6 +120,7 @@ export function PatientDetailScreen({
   const studentsQuery = useStudents();
   const appointmentsQuery = useAppointments();
   const evolutionsQuery = usePatientEvolutions(patientId);
+  const pendingQuery = usePendingEvolutions();
   const sessionsQuery = useStudentSessions(patientId);
   const anamneseQuery = useAnamneseResponses(patientId);
   const patient = studentsQuery.data?.find(
@@ -163,6 +169,7 @@ export function PatientDetailScreen({
     patient.id,
   );
   // O servidor devolve da mais recente para a mais antiga: as duas primeiras.
+  const pendingEvolutions = pendingForStudent(pendingQuery.data, patient.id);
   const latestEvolutions = (evolutionsQuery.data ?? []).slice(0, 2);
   const contactUrl = buildWhatsAppUrl(
     pickContactPhone(patient),
@@ -297,6 +304,33 @@ export function PatientDetailScreen({
                 </Text>
               )}
             </View>
+
+            {pendingEvolutions[0] ? (
+              <View style={styles.section}>
+                {pendingEvolutions.length > 1 ? (
+                  <Text style={styles.emptyText}>
+                    {`${pendingEvolutions.length} sessões sem evolução`}
+                  </Text>
+                ) : null}
+                <DsButton
+                  label="Registrar evolução"
+                  fullWidth
+                  onPress={() =>
+                    router.push(
+                      evolutionRoute(pendingEvolutions[0]!.sessionId, "entry"),
+                    )
+                  }
+                />
+                {pendingEvolutions.length > 1 ? (
+                  <DsButton
+                    label="Ver todas as pendências"
+                    variant="secondary"
+                    fullWidth
+                    onPress={() => router.push("/evolution")}
+                  />
+                ) : null}
+              </View>
+            ) : null}
 
             <View style={styles.section}>
               <SectionTitle

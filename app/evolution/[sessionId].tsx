@@ -12,7 +12,7 @@ export default function EvolutionRoute(): ReactElement {
   return (
     <EvolutionScreen
       sessionId={String(sessionId)}
-      from={from === "hub" ? "hub" : undefined}
+      from={from === "hub" || from === "entry" ? from : undefined}
     />
   );
 }
