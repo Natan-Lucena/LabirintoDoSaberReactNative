@@ -176,7 +176,7 @@ export function StudentReportsScreen(): ReactElement {
   const data = analysis.data;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <AppHeader
         title="Relatórios"
         subtitle="Análise do paciente"

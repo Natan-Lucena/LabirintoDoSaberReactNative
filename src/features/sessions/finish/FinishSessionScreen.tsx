@@ -123,7 +123,7 @@ export function FinishSessionScreen(): ReactElement | null {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <AppHeader title="Registro da sessão" subtitle="Encerramento" />
       <ScrollView contentContainerStyle={styles.content}>
         <InfoCard

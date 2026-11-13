@@ -32,7 +32,7 @@ export function ActivityPlayScreen({
     query.error instanceof ApiError && query.error.code === "TASK_NOT_FOUND";
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <AppHeader title="Jogar" subtitle="Atividade" onBack={router.back} />
       {query.isPending ? (
         <LoadingState label="Carregando atividade" />
