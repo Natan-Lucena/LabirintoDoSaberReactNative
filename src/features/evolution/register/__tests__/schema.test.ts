@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import type { EvolutionContext } from "@/api/types";
+import type { EvolutionContext, SessionEvolution } from "@/api/types";
 import {
   ATTEMPTS_REQUIRED_MESSAGE,
   attemptsLabel,
   emptyCriterion,
   evolutionCriterionSchema,
   evolutionFormSchema,
+  evolutionToFormValues,
   initialEvolutionValues,
   SUCCESSES_OVER_ATTEMPTS_MESSAGE,
   toCreatePayload,
+  toUpdatePayload,
   type EvolutionCriterionValues,
 } from "../schema";
 
@@ -227,5 +229,78 @@ describe("schema da evolução (EVO-01)", () => {
 
       expect(() => toCreatePayload("session-1", CONTEXT, values)).toThrow();
     });
+  });
+});
+
+describe("edição da evolução (EVO-02)", () => {
+  const EVOLUTION: SessionEvolution = {
+    id: "evolution-1",
+    sessionId: "session-1",
+    studentId: "student-1",
+    educatorId: "educator-1",
+    planId: "plan-1",
+    planType: "PE",
+    sessionDate: "2026-10-27",
+    criteria: [
+      {
+        id: "c1",
+        goalId: "goal-1",
+        description: "Contar até 10",
+        successCriterion: "8 de 10",
+        attempts: 10,
+        successes: 8,
+        result: "ACHIEVED",
+        note: "Sem ajuda.",
+      },
+      { id: "c2", description: "Atenção", result: "PARTIAL" },
+    ],
+    descriptiveRecord: "Registro.",
+    goalUpdates: [],
+    createdAt: "2026-10-27T14:00:00.000Z",
+    updatedAt: "2026-10-27T14:00:00.000Z",
+  };
+
+  it("preenche o formulário com o que a evolução já tem", () => {
+    const values = evolutionToFormValues(EVOLUTION);
+
+    expect(values.descriptiveRecord).toBe("Registro.");
+    expect(values.criteria[0]).toMatchObject({
+      goalId: "goal-1",
+      attempts: "10",
+      successes: "8",
+      note: "Sem ajuda.",
+    });
+    expect(values.criteria[1]).toMatchObject({
+      attempts: "",
+      successes: "",
+      note: "",
+    });
+    expect(evolutionFormSchema.safeParse(values).success).toBe(true);
+  });
+
+  it("monta o PUT com a lista completa de critérios, sem goalUpdates nem ids", () => {
+    const payload = toUpdatePayload(evolutionToFormValues(EVOLUTION));
+
+    expect(payload).toEqual({
+      criteria: [
+        {
+          goalId: "goal-1",
+          description: "Contar até 10",
+          successCriterion: "8 de 10",
+          attempts: 10,
+          successes: 8,
+          result: "ACHIEVED",
+          note: "Sem ajuda.",
+        },
+        { description: "Atenção", result: "PARTIAL" },
+      ],
+      descriptiveRecord: "Registro.",
+    });
+  });
+
+  it("recusa o que o formulário não aceita", () => {
+    const values = evolutionToFormValues(EVOLUTION);
+    values.descriptiveRecord = "   ";
+    expect(() => toUpdatePayload(values)).toThrow();
   });
 });

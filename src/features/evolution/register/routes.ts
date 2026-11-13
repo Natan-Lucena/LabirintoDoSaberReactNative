@@ -7,12 +7,16 @@ export const evolutionRoute = (sessionId: string) =>
     params: { sessionId },
   }) as const;
 
-/**
- * "Ver prontuário": o prontuário (`/patients/[id]/records`) chega com a EVO-02.
- * Até lá, o destino é a ficha do paciente.
- */
+/** "Ver prontuário": histórico de evoluções do paciente (EVO-02). */
 export const patientRecordRoute = (studentId: string) =>
   ({
-    pathname: "/patients/[id]",
+    pathname: "/patients/[id]/records",
     params: { id: studentId },
+  }) as const;
+
+/** Detalhe de uma evolução (EVO-02). */
+export const evolutionRecordRoute = (evolutionId: string) =>
+  ({
+    pathname: "/evolution/record/[id]",
+    params: { id: evolutionId },
   }) as const;

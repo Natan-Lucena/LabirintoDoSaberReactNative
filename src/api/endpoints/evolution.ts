@@ -1,7 +1,6 @@
 // Evolução da sessão: leitura (API-05, leva 1) e criação (EVO-01). Contrato
 // PROVISÓRIO copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir
-// em API-04. As outras escritas (PUT da evolução e a sugestão da IA) ficam com
-// as telas EVO-02 e EVO-04.
+// em API-04. A edição (PUT) é da EVO-02; a sugestão da IA fica com a EVO-04.
 import { AxiosError, type AxiosResponse } from "axios";
 
 import { apiClient } from "@/api/client";
@@ -12,6 +11,7 @@ import type {
   PendingEvolution,
   SessionEvolution,
   SessionEvolutionSummary,
+  UpdateSessionEvolutionPayload,
 } from "@/api/types";
 
 export interface ListSessionEvolutionsFilters {
@@ -171,6 +171,25 @@ export async function createSessionEvolution(
     },
   );
   throwOnConflict(response);
+
+  return response.data;
+}
+
+/**
+ * PUT /session-evolution/:id — edita a evolução (EV-09: editável, nunca
+ * excluída). `criteria`, quando enviado, é a lista COMPLETA (substitui a
+ * anterior). Nunca é repetida sozinha. Erros: `400` (validação,
+ * `GOAL_NOT_IN_PLAN`, `INVALID_ATTEMPTS`), `403 UNAUTHORIZED`,
+ * `404 EVOLUTION_NOT_FOUND`, `409 PLAN_NOT_EDITABLE`.
+ */
+export async function updateSessionEvolution(
+  id: string,
+  payload: UpdateSessionEvolutionPayload,
+): Promise<SessionEvolution> {
+  const response = await apiClient.put<SessionEvolution>(
+    `/session-evolution/${id}`,
+    payload,
+  );
 
   return response.data;
 }

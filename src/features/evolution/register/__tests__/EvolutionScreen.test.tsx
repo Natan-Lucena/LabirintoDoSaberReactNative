@@ -5,8 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createSessionEvolution,
   EvolutionApiError,
+  evolutionQueryKeys,
   getEvolutionContext,
 } from "@/api/endpoints/evolution";
+import { createQueryClient } from "@/api/query-client";
 import { ApiError } from "@/api/errors";
 import type { EvolutionContext, SessionEvolution } from "@/api/types";
 import {
@@ -58,9 +60,13 @@ vi.mock("@/api/endpoints/evolution", async (importOriginal) => ({
 
 const SESSION_ID = "session-1";
 const HOME = "/";
-const PATIENT_ROUTE = {
-  pathname: "/patients/[id]",
+const RECORDS_ROUTE = {
+  pathname: "/patients/[id]/records",
   params: { id: "student-1" },
+};
+const RECORD_ROUTE = {
+  pathname: "/evolution/record/[id]",
+  params: { id: "evolution-9" },
 };
 
 const CONTEXT: EvolutionContext = {
@@ -425,10 +431,25 @@ describe("EvolutionScreen — salvar (AC-EVO-01-02)", () => {
     expect(useSessionFlowStore.getState().step).toBe("idle");
 
     await act(async () => fireEvent.press(button("Ver prontuário")));
-    expect(router.replace).toHaveBeenCalledWith(PATIENT_ROUTE);
+    expect(router.replace).toHaveBeenCalledWith(RECORDS_ROUTE);
     await act(async () => fireEvent.press(button("Voltar ao início")));
     expect(router.replace).toHaveBeenCalledWith(HOME);
     expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it("AC-EVO-02-03: ao salvar, invalida todas as consultas da evolução (pendentes, prontuário, ficha)", async () => {
+    const queryClient = createQueryClient();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    vi.mocked(getEvolutionContext).mockResolvedValue(CONTEXT);
+    await render(<EvolutionScreen sessionId={SESSION_ID} />, { queryClient });
+    await screen.findByLabelText("Registro descritivo");
+    await type("Registro descritivo", "Registro.");
+    await pressSave();
+
+    expect(await screen.findByText("Evolução registrada")).toBeTruthy();
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: evolutionQueryKeys.all,
+    });
   });
 
   it("não mexe no fluxo de outra sessão", async () => {
@@ -617,8 +638,8 @@ describe("EvolutionScreen — evolução já existente (AC-EVO-01-06)", () => {
     expect(createSessionEvolution).toHaveBeenCalledTimes(1);
     expect(close).toHaveBeenCalledTimes(1);
 
-    await act(async () => fireEvent.press(button("Ver ficha do paciente")));
-    expect(router.replace).toHaveBeenCalledWith(PATIENT_ROUTE);
+    await act(async () => fireEvent.press(button("Ver evolução registrada")));
+    expect(router.replace).toHaveBeenCalledWith(RECORD_ROUTE);
     expect(alertSpy).not.toHaveBeenCalled();
   });
 

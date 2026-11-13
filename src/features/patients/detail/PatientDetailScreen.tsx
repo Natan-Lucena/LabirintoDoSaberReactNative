@@ -17,7 +17,6 @@ import {
   DsButton,
   FeatureRow,
   IconButton,
-  ProgressBar,
   SectionTitle,
   Tabs,
   Toast,
@@ -27,10 +26,12 @@ import { formatResponseDate } from "@/features/anamnese/responses/answers";
 import { useAnamneseResponses } from "@/features/anamnese/responses/useAnamneseResponses";
 import { useAppointments } from "@/features/appointments/useAppointments";
 import { useHomeData } from "@/features/home/useHomeData";
+import { EvolutionSummaryCard } from "@/features/evolution/records/EvolutionSummaryCard";
+import { usePatientEvolutions } from "@/features/evolution/records/useEvolutionRecords";
 import {
-  accuracyToPercent,
-  getCategoryLabel,
-} from "@/features/reports/session/sessionReport";
+  evolutionRecordRoute,
+  patientRecordRoute,
+} from "@/features/evolution/register/routes";
 import { useStudents } from "@/features/students/useStudents";
 import { color, getContentPadding, shape, typography } from "@/theme";
 import { formatTime } from "@/utils/date";
@@ -40,7 +41,7 @@ import {
   pickContactPhone,
 } from "@/utils/whatsapp";
 
-import { useStudentAnalysis, useStudentSessions } from "./usePatientDetailData";
+import { useStudentSessions } from "./usePatientDetailData";
 import { ActivePdi, PatientPlans } from "./plans/PatientPlans";
 
 export interface PatientDetailScreenProps {
@@ -113,7 +114,7 @@ export function PatientDetailScreen({
   const { educator } = useHomeData();
   const studentsQuery = useStudents();
   const appointmentsQuery = useAppointments();
-  const analysisQuery = useStudentAnalysis(patientId);
+  const evolutionsQuery = usePatientEvolutions(patientId);
   const sessionsQuery = useStudentSessions(patientId);
   const anamneseQuery = useAnamneseResponses(patientId);
   const patient = studentsQuery.data?.find(
@@ -141,7 +142,7 @@ export function PatientDetailScreen({
     );
   }
 
-  const detailQueries = [appointmentsQuery, analysisQuery, sessionsQuery];
+  const detailQueries = [appointmentsQuery, sessionsQuery];
   if (detailQueries.some((query) => query.isPending && !query.data)) {
     return <StatePanel title="Carregando paciente" />;
   }
@@ -151,7 +152,6 @@ export function PatientDetailScreen({
         title="Não foi possível carregar o paciente"
         retry={() => {
           void appointmentsQuery.refetch();
-          void analysisQuery.refetch();
           void sessionsQuery.refetch();
         }}
       />
@@ -162,8 +162,8 @@ export function PatientDetailScreen({
     appointmentsQuery.data ?? [],
     patient.id,
   );
-  const analysis = analysisQuery.data;
-  const categoryEntries = Object.values(analysis?.categories ?? {});
+  // O servidor devolve da mais recente para a mais antiga: as duas primeiras.
+  const latestEvolutions = (evolutionsQuery.data ?? []).slice(0, 2);
   const contactUrl = buildWhatsAppUrl(
     pickContactPhone(patient),
     patientContactMessage({
@@ -299,32 +299,30 @@ export function PatientDetailScreen({
             </View>
 
             <View style={styles.section}>
-              <SectionTitle title="Evolução recente" />
-              {analysisQuery.isError ? (
+              <SectionTitle
+                title="Evolução recente"
+                actionLabel="Ver prontuário"
+                onActionPress={() =>
+                  router.push(patientRecordRoute(patient.id))
+                }
+              />
+              {evolutionsQuery.isError && !evolutionsQuery.data ? (
                 <StatePanel
                   title="Não foi possível carregar a evolução"
-                  retry={() => void analysisQuery.refetch()}
+                  retry={() => void evolutionsQuery.refetch()}
                 />
-              ) : analysis && analysis.total.total > 0 ? (
-                <View style={styles.evolutionCard}>
-                  <Text style={styles.accuracy}>
-                    {Math.round(accuracyToPercent(analysis.total.accuracy))}% de
-                    acerto geral
-                  </Text>
-                  {categoryEntries.map((category) =>
-                    category ? (
-                      <View key={category.category} style={styles.category}>
-                        <Text style={styles.categoryLabel}>
-                          {getCategoryLabel(category.category)}
-                        </Text>
-                        <ProgressBar
-                          value={accuracyToPercent(category.accuracy)}
-                          accessibilityLabel={`${getCategoryLabel(category.category)}: ${Math.round(accuracyToPercent(category.accuracy))}%`}
-                        />
-                      </View>
-                    ) : null,
-                  )}
-                </View>
+              ) : evolutionsQuery.isPending ? (
+                <Text style={styles.emptyText}>Carregando a evolução</Text>
+              ) : latestEvolutions.length > 0 ? (
+                latestEvolutions.map((evolution) => (
+                  <EvolutionSummaryCard
+                    key={evolution.id}
+                    evolution={evolution}
+                    onPress={() =>
+                      router.push(evolutionRecordRoute(evolution.id))
+                    }
+                  />
+                ))
               ) : (
                 <Text style={styles.emptyText}>Sem evolução registrada</Text>
               )}
@@ -449,21 +447,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   tagText: { ...typography.tag, color: color.brand[700] },
-  evolutionCard: {
-    backgroundColor: color.surface,
-    borderColor: color.border,
-    borderRadius: shape.radius.md,
-    borderWidth: 1,
-    gap: 14,
-    padding: 16,
-  },
-  accuracy: { ...typography.cardTitle, color: color.brand[700] },
-  category: { gap: 5 },
-  categoryLabel: {
-    ...typography.small,
-    color: color.ink[600],
-    textTransform: "capitalize",
-  },
   sessionRow: {
     alignItems: "center",
     backgroundColor: color.surface,

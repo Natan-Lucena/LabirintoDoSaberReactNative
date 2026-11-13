@@ -12,7 +12,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   Alert,
   BackHandler,
@@ -31,35 +31,18 @@ import {
 } from "@/api/endpoints/evolution";
 import { normalizeApiError, type ApiError } from "@/api/errors";
 import type { EvolutionContext } from "@/api/types";
-import {
-  AppHeader,
-  DsButton,
-  Field,
-  InfoCard,
-  SectionTitle,
-  SelectField,
-  SuccessPanel,
-} from "@/components/ds";
+import { AppHeader, DsButton, InfoCard, SuccessPanel } from "@/components/ds";
 import { appointmentQueryKeys } from "@/features/appointments/useAppointments";
 import { planQueryKeys } from "@/features/plans/hub/usePlans";
 import { NEW_PLAN_ROUTE } from "@/features/plans/routes";
 import { useSessionFlowStore } from "@/stores/session-flow";
-import { color, fontFamilies, semanticColor, shape, typography } from "@/theme";
+import { color, fontFamilies, semanticColor } from "@/theme";
 import { dayKey, TIME_ZONE } from "@/utils/date";
-import { HOME_ROUTE, patientRecordRoute } from "./routes";
+import { EvolutionFormSections } from "./EvolutionFormSections";
+import { evolutionRecordRoute, HOME_ROUTE, patientRecordRoute } from "./routes";
 import {
-  attemptsLabel,
-  CRITERION_RESULTS,
-  criterionResultLabels,
-  emptyCriterion,
   evolutionFormSchema,
-  GOAL_STATUSES,
-  goalStatusLabels,
   initialEvolutionValues,
-  MAX_COUNT,
-  MAX_CRITERIA,
-  MAX_RECORD,
-  MAX_TEXT,
   toCreatePayload,
   type EvolutionFormValues,
 } from "./schema";
@@ -70,15 +53,6 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   month: "2-digit",
   year: "numeric",
 });
-
-const resultOptions = CRITERION_RESULTS.map((value) => ({
-  value,
-  label: criterionResultLabels[value],
-}));
-const goalStatusOptions = GOAL_STATUSES.map((value) => ({
-  value,
-  label: goalStatusLabels[value],
-}));
 
 /** Códigos que a API traduz em `normalizeApiError` (mensagem já em português). */
 const TRANSLATED_SAVE_CODES = new Set([
@@ -433,6 +407,7 @@ function EvolutionRegister({
 
   if (outcome) {
     const saved = outcome.kind === "saved";
+    const existingId = saved ? undefined : outcome.evolutionId;
     return (
       <SafeAreaView style={styles.screen}>
         {header}
@@ -442,14 +417,18 @@ function EvolutionRegister({
             description={
               saved
                 ? "O prontuário do paciente foi atualizado."
-                : "Esta sessão já tem uma evolução registrada; nada foi duplicado. Consulte-a na ficha do paciente."
+                : "Esta sessão já tem uma evolução registrada; nada foi duplicado. Consulte-a no prontuário do paciente."
             }
           />
           <DsButton
-            label={saved ? "Ver prontuário" : "Ver ficha do paciente"}
+            label={existingId ? "Ver evolução registrada" : "Ver prontuário"}
             fullWidth
             onPress={() =>
-              router.replace(patientRecordRoute(session.studentId))
+              router.replace(
+                existingId
+                  ? evolutionRecordRoute(existingId)
+                  : patientRecordRoute(session.studentId),
+              )
             }
           />
           <DsButton
@@ -462,10 +441,6 @@ function EvolutionRegister({
       </SafeAreaView>
     );
   }
-
-  const goalCriteria = fields
-    .map((field, index) => ({ field, index }))
-    .filter(({ index }) => Boolean(criteria[index]?.goalId));
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -500,195 +475,17 @@ function EvolutionRegister({
           />
         )}
 
-        {plan ? (
-          <View style={styles.block}>
-            <SectionTitle title="Critérios da sessão" />
-            {fields.length === 0 ? (
-              <Text style={styles.hint}>
-                Nenhum critério nesta evolução. Inclua um critério livre, se
-                quiser.
-              </Text>
-            ) : null}
-            {fields.map((field, index) => {
-              const number = index + 1;
-              const current = criteria[index];
-              const fieldErrors = errors.criteria?.[index];
-              const detail = current
-                ? attemptsLabel(current.attempts, current.successes)
-                : null;
-              return (
-                <View key={field.id} style={styles.card}>
-                  {current?.goalId ? (
-                    <View style={styles.cardHeader}>
-                      <Text style={styles.cardTitle}>
-                        {current.description}
-                      </Text>
-                      {current.successCriterion ? (
-                        <Text style={styles.caption}>
-                          Critério de sucesso: {current.successCriterion}
-                        </Text>
-                      ) : null}
-                    </View>
-                  ) : (
-                    <Controller
-                      control={control}
-                      name={`criteria.${index}.description`}
-                      render={({ field: input }) => (
-                        <Field
-                          label={`Critério ${number}`}
-                          accessibilityLabel={`Descrição do critério ${number}`}
-                          placeholder="Descreva o critério observado"
-                          value={input.value}
-                          onChangeText={input.onChange}
-                          onBlur={input.onBlur}
-                          maxLength={MAX_TEXT}
-                          error={fieldErrors?.description?.message}
-                        />
-                      )}
-                    />
-                  )}
-                  <Controller
-                    control={control}
-                    name={`criteria.${index}.result`}
-                    render={({ field: input }) => (
-                      <SelectField
-                        label="Resultado"
-                        accessibilityLabel={`Resultado do critério ${number}`}
-                        value={input.value}
-                        options={resultOptions}
-                        onChange={input.onChange}
-                        error={fieldErrors?.result?.message}
-                      />
-                    )}
-                  />
-                  <View style={styles.row}>
-                    <View style={styles.rowItem}>
-                      <Controller
-                        control={control}
-                        name={`criteria.${index}.attempts`}
-                        render={({ field: input }) => (
-                          <Field
-                            label="Tentativas"
-                            accessibilityLabel={`Tentativas do critério ${number}`}
-                            placeholder="Opcional"
-                            keyboardType="number-pad"
-                            value={input.value}
-                            onChangeText={input.onChange}
-                            onBlur={input.onBlur}
-                            maxLength={String(MAX_COUNT).length}
-                            error={fieldErrors?.attempts?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                    <View style={styles.rowItem}>
-                      <Controller
-                        control={control}
-                        name={`criteria.${index}.successes`}
-                        render={({ field: input }) => (
-                          <Field
-                            label="Acertos"
-                            accessibilityLabel={`Acertos do critério ${number}`}
-                            placeholder="Opcional"
-                            keyboardType="number-pad"
-                            value={input.value}
-                            onChangeText={input.onChange}
-                            onBlur={input.onBlur}
-                            maxLength={String(MAX_COUNT).length}
-                            error={fieldErrors?.successes?.message}
-                          />
-                        )}
-                      />
-                    </View>
-                  </View>
-                  {detail ? <Text style={styles.detail}>{detail}</Text> : null}
-                  <Controller
-                    control={control}
-                    name={`criteria.${index}.note`}
-                    render={({ field: input }) => (
-                      <Field
-                        label="Nota"
-                        accessibilityLabel={`Nota do critério ${number}`}
-                        placeholder="Opcional"
-                        value={input.value}
-                        onChangeText={input.onChange}
-                        onBlur={input.onBlur}
-                        maxLength={MAX_TEXT}
-                        error={fieldErrors?.note?.message}
-                      />
-                    )}
-                  />
-                  <DsButton
-                    label={`Remover critério ${number}`}
-                    variant="ghost"
-                    disabled={saving}
-                    onPress={() => remove(index)}
-                  />
-                </View>
-              );
-            })}
-            {errors.criteria?.message ? (
-              <Text style={styles.error} accessibilityRole="alert">
-                {errors.criteria.message}
-              </Text>
-            ) : null}
-            <DsButton
-              label="Incluir critério livre"
-              variant="soft"
-              icon="plus"
-              disabled={saving || fields.length >= MAX_CRITERIA}
-              onPress={() => append(emptyCriterion())}
-            />
-          </View>
-        ) : null}
-
-        {goalCriteria.length > 0 ? (
-          <View style={styles.block}>
-            <SectionTitle title="Atualizar prontuário" />
-            <Text style={styles.caption}>
-              Ao salvar, o estado das metas do PE muda junto com a evolução.
-            </Text>
-            {goalCriteria.map(({ field, index }) => {
-              const description = criteria[index]?.description ?? "";
-              return (
-                <Controller
-                  key={field.id}
-                  control={control}
-                  name={`criteria.${index}.goalStatus`}
-                  render={({ field: input }) => (
-                    <SelectField
-                      label={description}
-                      accessibilityLabel={`Estado da meta: ${description}`}
-                      value={input.value ?? null}
-                      options={goalStatusOptions}
-                      onChange={input.onChange}
-                    />
-                  )}
-                />
-              );
-            })}
-          </View>
-        ) : null}
-
-        <View style={styles.block}>
-          <SectionTitle title="Registro descritivo" />
-          <Controller
-            control={control}
-            name="descriptiveRecord"
-            render={({ field: input }) => (
-              <Field
-                label="Registro descritivo"
-                placeholder="Como foi a sessão? Observações importantes para o prontuário."
-                value={input.value}
-                onChangeText={input.onChange}
-                onBlur={input.onBlur}
-                multiline
-                maxLength={MAX_RECORD}
-                error={errors.descriptiveRecord?.message}
-              />
-            )}
-          />
-        </View>
+        <EvolutionFormSections
+          control={control}
+          fields={fields}
+          criteria={criteria}
+          errors={errors}
+          append={append}
+          remove={remove}
+          saving={saving}
+          showCriteria={Boolean(plan)}
+          showGoalStatus
+        />
 
         {saveError ? (
           <Text style={styles.error} accessibilityRole="alert" accessible>
@@ -711,33 +508,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.surfaceSoft },
   content: { padding: 20, gap: 16 },
   block: { gap: 12 },
-  card: {
-    gap: 12,
-    padding: 14,
-    backgroundColor: color.surface,
-    borderWidth: 1,
-    borderColor: color.border,
-    borderRadius: shape.radius.md,
-  },
-  cardHeader: { gap: 4 },
-  cardTitle: {
-    ...typography.cardTitle,
-    color: color.text,
-  },
-  row: { flexDirection: "row", gap: 12 },
-  rowItem: { flex: 1 },
-  detail: {
-    fontFamily: fontFamilies.nunito.bold ?? fontFamilies.nunito.regular,
-    fontSize: 13,
-    lineHeight: 18,
-    color: color.brand[700],
-  },
-  caption: {
-    fontFamily: fontFamilies.nunito.regular,
-    fontSize: 12,
-    lineHeight: 16,
-    color: color.ink[600],
-  },
   hint: {
     color: color.ink[600],
     fontFamily: fontFamilies.nunito.regular,
