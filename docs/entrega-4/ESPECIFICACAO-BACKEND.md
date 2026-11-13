@@ -265,16 +265,16 @@ Regras IA-02 a IA-07 (§1). Erros: `400`; `403`; `404 SESSION_NOT_FOUND`;
 
 ### 3.7 Critérios de aceite
 
-| ID       | Critério                                                                                                                                         |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| BE-EV-01 | Salvar a evolução de uma sessão finalizada; a segunda tentativa devolve `409 EVOLUTION_ALREADY_EXISTS`                                           |
-| BE-EV-02 | Sessão aberta devolve `409 SESSION_NOT_FINISHED`                                                                                                 |
-| BE-EV-03 | `goalUpdates` com uma meta `ACHIEVED` recalcula o `progress` do plano; plano encerrado faz a evolução inteira falhar com `409 PLAN_NOT_EDITABLE` |
-| BE-EV-04 | O `context` de uma sessão com PE do atendimento traz as metas do PE; sem PE, as do PDI ativo; sem plano, `plan` ausente                          |
-| BE-EV-05 | A observação da sessão (`report/:sessionId`) mostra o registro descritivo salvo (EV-08)                                                          |
-| BE-EV-06 | Evolução de paciente de outro educador devolve 403 em leitura e escrita                                                                          |
-| BE-EV-07 | `pending` lista as sessões finalizadas sem evolução dos últimos 30 dias e some com a sessão depois de salvar                                     |
-| BE-EV-08 | A sugestão da IA não cria registro e responde em português, sem diagnóstico                                                                      |
+| ID       | Critério                                                                                                                                                    |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BE-EV-01 | Salvar a evolução de uma sessão finalizada; a segunda tentativa devolve `409 EVOLUTION_ALREADY_EXISTS`                                                      |
+| BE-EV-02 | Sessão aberta devolve `409 SESSION_NOT_FINISHED`                                                                                                            |
+| BE-EV-03 | `goalUpdates` com uma meta `ACHIEVED` recalcula o `progress` do plano; plano encerrado faz a evolução inteira falhar com `409 PLAN_NOT_EDITABLE`            |
+| BE-EV-04 | O `context` de uma sessão com PE do atendimento (ou da data) traz as metas do PE; sem PE, `plan` ausente e nenhum critério sugerido (o PDI não entra, G-57) |
+| BE-EV-05 | A observação da sessão (`report/:sessionId`) mostra o registro descritivo salvo (EV-08)                                                                     |
+| BE-EV-06 | Evolução de paciente de outro educador devolve 403 em leitura e escrita                                                                                     |
+| BE-EV-07 | `pending` lista as sessões finalizadas sem evolução dos últimos 30 dias e some com a sessão depois de salvar                                                |
+| BE-EV-08 | A sugestão da IA não cria registro e responde em português, sem diagnóstico                                                                                 |
 
 ## 4. Avaliações e escalas — P1
 
