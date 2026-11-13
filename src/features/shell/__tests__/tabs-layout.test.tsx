@@ -31,6 +31,10 @@ vi.mock("expo-router", () => ({
   Tabs: FakeTabs,
 }));
 
+vi.mock("@/features/notifications/useNotifications", () => ({
+  useUnreadNotificationCount: () => ({ data: 3 }),
+}));
+
 const { default: TabsLayout } = await import("../../../../app/(tabs)/_layout");
 
 // NAV-01/NAV-02: casca nova (BottomNav + AppHeader) composta no layout das abas.
@@ -55,14 +59,13 @@ describe("app/(tabs)/_layout (NAV-01, NAV-02)", () => {
     );
   });
 
-  it("shows the header bell that opens the Notificações coming-soon screen", async () => {
+  it("shows the unread count on the bell (AC-NOT-01-01) and opens the notifications screen", async () => {
     await render(<TabsLayout />);
 
-    await fireEvent.press(screen.getByLabelText("Notificações"));
+    await fireEvent.press(
+      await screen.findByLabelText("3 notificações não lidas"),
+    );
 
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Notificações" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/notifications");
   });
 });

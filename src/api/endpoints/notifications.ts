@@ -3,7 +3,11 @@
 // Marcar como lida e "marcar todas" ficam com a NOT-01. Mocks em
 // src/mocks/handlers/notifications.ts.
 import { apiClient } from "@/api/client";
-import type { ListNotificationsFilters, NotificationsPage } from "@/api/types";
+import type {
+  AppNotification,
+  ListNotificationsFilters,
+  NotificationsPage,
+} from "@/api/types";
 
 export const notificationQueryKeys = {
   all: ["notifications"] as const,
@@ -36,4 +40,24 @@ export async function getUnreadNotificationCount(): Promise<number> {
   );
 
   return response.data.count;
+}
+
+/** POST /notification/:id/read — idempotente; `403 UNAUTHORIZED`, `404 NOTIFICATION_NOT_FOUND`. */
+export async function markNotificationRead(
+  id: string,
+): Promise<AppNotification> {
+  const response = await apiClient.post<AppNotification>(
+    `/notification/${id}/read`,
+  );
+
+  return response.data;
+}
+
+/** POST /notification/read-all — devolve quantas notificações mudaram. */
+export async function markAllNotificationsRead(): Promise<number> {
+  const response = await apiClient.post<{ updated: number }>(
+    "/notification/read-all",
+  );
+
+  return response.data.updated;
 }
