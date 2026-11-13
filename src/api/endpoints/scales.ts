@@ -4,6 +4,7 @@
 // responder entram com a AVA-02. Os mocks existem em src/mocks/handlers/scales.ts.
 import { AxiosError, type AxiosResponse } from "axios";
 
+import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
 import { apiClient } from "@/api/client";
 import { ApiError, normalizeApiError } from "@/api/errors";
 import type {
@@ -166,4 +167,92 @@ export async function saveScaleAnswers(
   );
 
   return response.data;
+}
+
+/** `400 SCALE_INCOMPLETE` ao concluir: `missingItemIds` traz os itens sem resposta (AV-07). */
+export class ScaleIncompleteError extends ApiError {
+  readonly missingItemIds: string[];
+
+  constructor({
+    missingItemIds,
+    ...rest
+  }: ConstructorParameters<typeof ApiError>[0] & {
+    missingItemIds: string[];
+  }) {
+    super(rest);
+    this.name = "ScaleIncompleteError";
+    this.missingItemIds = missingItemIds;
+  }
+}
+
+/**
+ * POST /scale-application/:id/complete — conclui e trava a edição. O `400` chega
+ * como resposta (o adaptador de mocks também); `SCALE_INCOMPLETE` vira
+ * {@link ScaleIncompleteError}, os outros `400` voltam a `normalizeApiError`.
+ * Erros: `403`, `404`, `409 APPLICATION_NOT_EDITABLE`.
+ */
+export async function completeScaleApplication(
+  applicationId: string,
+): Promise<ScaleApplication> {
+  const response = await apiClient.post<ScaleApplication>(
+    `/scale-application/${applicationId}/complete`,
+    undefined,
+    {
+      validateStatus: (status) =>
+        (status >= 200 && status < 300) || status === 400,
+    },
+  );
+  if (response.status === 400) {
+    const normalized = normalizeApiError(
+      new AxiosError(
+        `Request failed with status code ${response.status}`,
+        AxiosError.ERR_BAD_REQUEST,
+        response.config,
+        response.request,
+        response,
+      ),
+    );
+    const body = (response.data ?? {}) as {
+      message?: unknown;
+      missingItemIds?: unknown;
+    };
+    if (body.message !== "SCALE_INCOMPLETE") throw normalized;
+
+    throw new ScaleIncompleteError({
+      message: normalized.message,
+      status: normalized.status,
+      code: normalized.code,
+      errors: normalized.errors,
+      missingItemIds: Array.isArray(body.missingItemIds)
+        ? body.missingItemIds.filter(
+            (id): id is string => typeof id === "string",
+          )
+        : [],
+    });
+  }
+
+  return response.data;
+}
+
+/**
+ * POST /scale-application/:id/insight — IA (90 s, sem repetição automática).
+ * Devolve a aplicação com o `insight`; falhas respondem `500 AI_*`.
+ */
+export async function generateScaleInsight(
+  applicationId: string,
+): Promise<ScaleApplication> {
+  const response = await apiClient.post<ScaleApplication>(
+    `/scale-application/${applicationId}/insight`,
+    undefined,
+    { timeout: AI_TIMEOUT_MS },
+  );
+
+  return response.data;
+}
+
+/** DELETE /scale-application/:id — só rascunhos; `409 APPLICATION_NOT_EDITABLE` nos demais. */
+export async function deleteScaleApplication(
+  applicationId: string,
+): Promise<void> {
+  await apiClient.delete(`/scale-application/${applicationId}`);
 }

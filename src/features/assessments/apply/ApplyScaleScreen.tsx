@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 
 import { getScaleTemplate, scaleQueryKeys } from "@/api/endpoints/scales";
 import { AppHeader, DsButton } from "@/components/ds";
-import { ASSESSMENTS_ROUTE } from "@/features/assessments/routes";
+import { ASSESSMENTS_ROUTE, resultRoute } from "@/features/assessments/routes";
 import { color, semanticColor } from "@/theme";
 import { PatientPicker } from "./PatientPicker";
 import { QuestionFlow } from "./QuestionFlow";
@@ -47,6 +47,11 @@ function ApplyFlow({
     applicationId,
   });
   const template = templateQuery.data;
+  const backToHub = () =>
+    router.replace({
+      pathname: ASSESSMENTS_ROUTE,
+      params: studentId ? { studentId } : {},
+    });
 
   if (template && state.status === "ready") {
     return (
@@ -54,12 +59,8 @@ function ApplyFlow({
         template={template}
         initialApplication={state.application}
         onExit={() => router.back()}
-        onFinishLater={() =>
-          router.replace({
-            pathname: ASSESSMENTS_ROUTE,
-            params: studentId ? { studentId } : {},
-          })
-        }
+        onFinishLater={backToHub}
+        onCompleted={(id) => router.replace(resultRoute(id))}
       />
     );
   }

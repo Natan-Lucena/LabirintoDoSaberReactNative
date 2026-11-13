@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { Alert } from "react-native";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/api/client";
@@ -9,6 +10,7 @@ import {
   MOCK_SCALE_APPLICATION_DRAFT_ID,
   MOCK_SCALE_TEMPLATE_ID,
   resetMockScaleState,
+  setMockScaleAiFailure,
 } from "@/mocks/handlers/scales";
 import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 
@@ -26,6 +28,7 @@ const { ApplyScaleScreen } = await import("../ApplyScaleScreen");
 const originalAdapter = apiClient.defaults.adapter;
 let requests: { method: string; url: string; data: unknown }[] = [];
 let failNextPut = false;
+let incompleteItemId: string | null = null;
 
 function useRecordingAdapter() {
   apiClient.defaults.adapter = async (config) => {
@@ -38,8 +41,35 @@ function useRecordingAdapter() {
       failNextPut = false;
       throw new AxiosError("Network Error", AxiosError.ERR_NETWORK, config);
     }
+    if (incompleteItemId && config.url?.endsWith("/complete")) {
+      return {
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config,
+        data: {
+          message: "SCALE_INCOMPLETE",
+          missingItemIds: [incompleteItemId],
+        },
+      };
+    }
     return mockAdapter(config);
   };
+}
+
+async function reachSummary() {
+  await render(
+    <ApplyScaleScreen
+      templateId={MOCK_SCALE_TEMPLATE_ID}
+      applicationId={MOCK_SCALE_APPLICATION_DRAFT_ID}
+    />,
+  );
+  await screen.findByText("4 de 6");
+  await answer("Nunca");
+  await screen.findByText("5 de 6");
+  await answer("Nunca");
+  await screen.findByText("6 de 6");
+  await answer("Nunca");
 }
 
 const puts = () => requests.filter((request) => request.method === "put");
@@ -55,6 +85,8 @@ describe("ApplyScaleScreen (AVA-02)", () => {
     replace.mockClear();
     requests = [];
     failNextPut = false;
+    incompleteItemId = null;
+    setMockScaleAiFailure(null);
     resetMockScaleState();
     useRecordingAdapter();
   });
@@ -243,26 +275,99 @@ describe("ApplyScaleScreen (AVA-02)", () => {
     expect(back).toHaveBeenCalled();
   });
 
-  it("na última pergunta mostra Respostas salvas e volta às avaliações", async () => {
-    await render(
-      <ApplyScaleScreen
-        templateId={MOCK_SCALE_TEMPLATE_ID}
-        applicationId={MOCK_SCALE_APPLICATION_DRAFT_ID}
-      />,
-    );
-    await screen.findByText("4 de 6");
+  it("no fim mostra escore do servidor e aviso clínico, e salvar rascunho volta ao hub (AC-AVA-03-01, AC-AVA-03-02, AC-AVA-05-01)", async () => {
+    await reachSummary();
 
-    await answer("Nunca");
-    await screen.findByText("5 de 6");
-    await answer("Nunca");
-    await screen.findByText("6 de 6");
-    await answer("Nunca");
-
-    expect(await screen.findByText("Respostas salvas")).toBeTruthy();
+    expect(await screen.findByText("Pontuação")).toBeTruthy();
+    expect(screen.getByText(/não substitui avaliação clínica/i)).toBeTruthy();
+    expect(screen.getByText("6/6 respondidas")).toBeTruthy();
     await fireEvent.press(
-      screen.getByRole("button", { name: "Voltar às avaliações" }),
+      screen.getByRole("button", { name: "Salvar rascunho" }),
     );
     await waitFor(() => expect(replace).toHaveBeenCalled());
+  });
+
+  it("concluir chama o servidor e leva ao resultado (AC-AVA-03-03)", async () => {
+    await reachSummary();
+    await screen.findByText("Pontuação");
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Concluir escala" }),
+    );
+
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith({
+        pathname: "/assessments/results/[id]",
+        params: { id: MOCK_SCALE_APPLICATION_DRAFT_ID },
+      }),
+    );
+    expect(
+      requests.some(
+        (request) =>
+          request.method === "post" && request.url.endsWith("/complete"),
+      ),
+    ).toBe(true);
+  });
+
+  it("SCALE_INCOMPLETE leva ao primeiro item faltante (AC-AVA-03-03)", async () => {
+    await reachSummary();
+    await screen.findByText("Pontuação");
+    incompleteItemId = "mock-scale-1-item-2";
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Concluir escala" }),
+    );
+
+    expect(await screen.findByText("2 de 6")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("gera o insight pelo botão; se a IA falha, ainda dá para concluir (AC-AVA-03-04)", async () => {
+    await reachSummary();
+    await screen.findByText("Pontuação");
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Gerar insight" }),
+    );
+    expect(await screen.findByText("Insight preliminar")).toBeTruthy();
+    expect(screen.getByText(/sem diagnóstico/)).toBeTruthy();
+
+    setMockScaleAiFailure("AI_GENERATION_FAILED");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Gerar insight de novo" }),
+    );
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Concluir escala" }),
+    );
+    await waitFor(() => expect(replace).toHaveBeenCalled());
+  });
+
+  it("descartar pede confirmação e apaga o rascunho (AC-AVA-05-02)", async () => {
+    const alert = vi
+      .spyOn(Alert, "alert")
+      .mockImplementation((_title, _message, buttons) => {
+        buttons?.find((button) => button.style === "destructive")?.onPress?.();
+      });
+    await reachSummary();
+    await screen.findByText("Pontuação");
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Descartar rascunho" }),
+    );
+
+    expect(alert).toHaveBeenCalled();
+    await waitFor(() => expect(replace).toHaveBeenCalled());
+    expect(
+      requests.some(
+        (request) =>
+          request.method === "delete" &&
+          request.url.endsWith(
+            `/scale-application/${MOCK_SCALE_APPLICATION_DRAFT_ID}`,
+          ),
+      ),
+    ).toBe(true);
+    alert.mockRestore();
   });
 
   it("mostra erro ao carregar e tenta de novo", async () => {
