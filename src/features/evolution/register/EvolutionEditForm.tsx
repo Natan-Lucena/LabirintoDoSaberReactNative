@@ -26,6 +26,7 @@ import type { GoalStatus, SessionEvolution } from "@/api/types";
 import { AppHeader, DsButton } from "@/components/ds";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { planQueryKeys } from "@/features/plans/hub/usePlans";
+import { useScrollToFirstError } from "./useScrollToFirstError";
 import { EvolutionFormSections } from "./EvolutionFormSections";
 import {
   evolutionFormSchema,
@@ -114,6 +115,7 @@ function EvolutionEditFormBody({
   const [saveError, setSaveError] = useState<string | null>(null);
   const savingRef = useRef(false);
 
+  const { scrollRef, setAnchor, onInvalid } = useScrollToFirstError();
   const {
     control,
     handleSubmit,
@@ -221,10 +223,12 @@ function EvolutionEditFormBody({
         onBack={requestCancel}
       />
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
         <EvolutionFormSections
+          onAnchor={setAnchor}
           control={control}
           fields={fields}
           criteria={criteria}
@@ -246,7 +250,7 @@ function EvolutionEditFormBody({
           fullWidth
           loading={saving}
           disabled={saving}
-          onPress={() => void handleSubmit(save)()}
+          onPress={() => void handleSubmit(save, onInvalid)()}
         />
         <DsButton
           label="Cancelar"

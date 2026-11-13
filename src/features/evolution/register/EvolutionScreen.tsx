@@ -38,6 +38,7 @@ import { NEW_PLAN_ROUTE } from "@/features/plans/routes";
 import { useSessionFlowStore } from "@/stores/session-flow";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { dayKey, TIME_ZONE } from "@/utils/date";
+import { useScrollToFirstError } from "./useScrollToFirstError";
 import { EvolutionFormSections } from "./EvolutionFormSections";
 import {
   evolutionRecordRoute,
@@ -289,6 +290,7 @@ function EvolutionRegister({
   // Saída autorizada (salvo, já existente ou descarte confirmado).
   const leavingRef = useRef(false);
 
+  const { scrollRef, setAnchor, onInvalid } = useScrollToFirstError();
   const {
     control,
     handleSubmit,
@@ -482,6 +484,7 @@ function EvolutionRegister({
     <SafeAreaView style={styles.screen}>
       {header}
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -512,6 +515,7 @@ function EvolutionRegister({
         )}
 
         <EvolutionFormSections
+          onAnchor={setAnchor}
           control={control}
           fields={fields}
           criteria={criteria}
@@ -534,7 +538,7 @@ function EvolutionRegister({
           fullWidth
           loading={saving}
           disabled={saving}
-          onPress={() => void handleSubmit(save)()}
+          onPress={() => void handleSubmit(save, onInvalid)()}
         />
       </ScrollView>
     </SafeAreaView>

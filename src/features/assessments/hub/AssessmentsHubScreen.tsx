@@ -19,7 +19,11 @@ import {
   SectionTitle,
 } from "@/components/ds";
 import { StaticPressable } from "@/components/ds/StaticPressable";
-import { applyRoute, resultRoute } from "@/features/assessments/routes";
+import {
+  applyRoute,
+  ASSESSMENTS_ROUTE,
+  resultRoute,
+} from "@/features/assessments/routes";
 import { useOnline } from "@/hooks/useOnline";
 import { color, fontFamilies, semanticColor, shape, typography } from "@/theme";
 import {
@@ -42,6 +46,18 @@ const styles = StyleSheet.create({
     borderColor: color.border,
     borderRadius: shape.radius.md,
   },
+  filter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: 12,
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: color.border,
+    borderRadius: shape.radius.md,
+  },
+  filterText: { ...typography.body, color: color.text, flexShrink: 1 },
   rowTitle: { ...typography.body, color: color.text },
   rowMeta: { ...typography.tag, color: color.textSecondary },
   badge: {
@@ -207,6 +223,18 @@ export function AssessmentsHubScreen({
         ) : null}
         {refreshFailed ? (
           <PendingBanner message="Não foi possível atualizar as avaliações. Mostrando dados salvos." />
+        ) : null}
+        {studentId ? (
+          <View style={styles.filter}>
+            <Text style={styles.filterText}>
+              {`Mostrando só ${applications[0]?.studentName ?? "o paciente escolhido"}`}
+            </Text>
+            <DsButton
+              label="Ver todos"
+              variant="secondary"
+              onPress={() => router.replace(ASSESSMENTS_ROUTE)}
+            />
+          </View>
         ) : null}
         <AIHero
           title="Nova aplicação"
