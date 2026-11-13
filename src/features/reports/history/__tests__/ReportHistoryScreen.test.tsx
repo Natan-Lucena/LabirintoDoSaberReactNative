@@ -11,6 +11,7 @@ const deleteReport = vi.fn();
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
 }));
+vi.mock("../../document/pdf", () => ({ shareReportPdf: vi.fn() }));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: routerPush, back: vi.fn() }),
   useLocalSearchParams: () => ({}),
@@ -49,7 +50,7 @@ describe("ReportHistoryScreen (REL-03)", () => {
     const alert = vi.spyOn(Alert, "alert").mockImplementation(() => {});
     await render(<ReportHistoryScreen />);
 
-    expect(await screen.findByText(/Evolução · Maria Souza/)).toBeTruthy();
+    expect(await screen.findByText(/Progresso · Maria Souza/)).toBeTruthy();
     expect(screen.getByText(/Enviado em 03\/11\/2026/)).toBeTruthy();
 
     await fireEvent.press(

@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,31 +7,24 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import {
   deleteReport,
+  getReport,
   listReports,
   reportQueryKeys,
+  shareReport,
 } from "@/api/endpoints/reports";
 import { normalizeApiError } from "@/api/errors";
-import type { ReportAudience, ReportSummary, ReportType } from "@/api/types";
+import type { ReportSummary } from "@/api/types";
 import { AppHeader, DsButton } from "@/components/ds";
 import { LoadingState } from "@/components/LoadingState";
+import { shareReportPdf } from "../document/pdf";
+import {
+  REPORT_AUDIENCE_LABELS,
+  REPORT_TYPE_LABELS,
+  formatReportDate,
+} from "../document/reportLabels";
 import { color, fontFamilies, shape } from "@/theme";
 
-const TYPE_LABELS: Record<ReportType, string> = {
-  PROGRESS: "Evolução",
-  ASSESSMENT: "Avaliação",
-  PDI_PROGRESS: "Progresso do plano",
-};
-
-const AUDIENCE_LABELS: Record<ReportAudience, string> = {
-  FAMILY: "Família",
-  SCHOOL: "Escola",
-  PROFESSIONAL: "Profissional",
-};
-
-function formatDay(iso: string): string {
-  const [year, month, day] = iso.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-}
+const formatDay = formatReportDate;
 
 function lastShareText(item: ReportSummary): string {
   if (!item.lastShare) return "Nunca enviado";
@@ -55,6 +49,26 @@ export function ReportHistoryScreen(): ReactElement {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: reportQueryKeys.all }),
   });
+
+  const [resendError, setResendError] = useState<string | null>(null);
+
+  async function resend(item: ReportSummary) {
+    setResendError(null);
+    try {
+      await shareReportPdf(await getReport(item.id));
+    } catch {
+      setResendError("Não foi possível reenviar o relatório.");
+      return;
+    }
+    // Só registra depois que o compartilhamento resolve; no Android não há
+    // como saber se o usuário cancelou a folha (limitação da plataforma).
+    try {
+      await shareReport(item.id, { channel: "SHARE" });
+      await queryClient.invalidateQueries({ queryKey: reportQueryKeys.all });
+    } catch {
+      // O PDF já foi entregue; falha no registro não o esconde.
+    }
+  }
 
   function confirmDelete(item: ReportSummary) {
     Alert.alert(
@@ -94,6 +108,11 @@ export function ReportHistoryScreen(): ReactElement {
             />
           </View>
         ) : null}
+        {resendError ? (
+          <Text style={styles.body} accessibilityRole="alert" accessible>
+            {resendError}
+          </Text>
+        ) : null}
         {remove.isError ? (
           <Text style={styles.body} accessibilityRole="alert" accessible>
             {normalizeApiError(remove.error).message}
@@ -106,11 +125,11 @@ export function ReportHistoryScreen(): ReactElement {
         {items.map((item) => (
           <View key={item.id} style={styles.card}>
             <Text style={styles.title}>
-              {TYPE_LABELS[item.type]} · {item.studentName}
+              {REPORT_TYPE_LABELS[item.type]} · {item.studentName}
             </Text>
             <Text style={styles.body}>
-              {AUDIENCE_LABELS[item.audience]} · {formatDay(item.period.from)} a{" "}
-              {formatDay(item.period.to)}
+              {REPORT_AUDIENCE_LABELS[item.audience]} ·{" "}
+              {formatDay(item.period.from)} a {formatDay(item.period.to)}
             </Text>
             <Text style={styles.body}>
               Criado em {formatDay(item.createdAt)} · {lastShareText(item)}
@@ -121,6 +140,12 @@ export function ReportHistoryScreen(): ReactElement {
                 variant="secondary"
                 accessibilityLabel={`Abrir relatório de ${item.studentName}`}
                 onPress={() => router.push(`/reports/${item.id}` as never)}
+              />
+              <DsButton
+                label="Reenviar"
+                variant="secondary"
+                accessibilityLabel={`Reenviar relatório de ${item.studentName}`}
+                onPress={() => void resend(item)}
               />
               <DsButton
                 label="Excluir"

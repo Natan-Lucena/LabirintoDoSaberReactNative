@@ -5,13 +5,12 @@ import {
   formatMetric,
   getCategoryLabel,
 } from "@/features/reports/session/sessionReport";
-import { formatLongDate } from "@/utils/date";
+import { EMPTY_TEXTS, formatReportDate, goalStatusLabel } from "./reportLabels";
 
 const e = escapeHtml;
 
 function date(value: string): string {
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? e(value) : e(formatLongDate(parsed));
+  return e(formatReportDate(value));
 }
 
 function section(title: string, body: string): string {
@@ -60,7 +59,12 @@ export function buildReportHtml(report: Report): string {
           `<li><strong>${date(item.sessionDate)}</strong>${item.planTitle ? ` · ${e(item.planTitle)}` : ""} · ${item.achieved} de ${item.total} metas<br/>${e(item.record)}</li>`,
       )
       .join("");
-    parts.push(section("Evolução das sessões", `<ul>${items}</ul>`));
+    parts.push(
+      section(
+        "Evolução das sessões",
+        items ? `<ul>${items}</ul>` : `<p>${EMPTY_TEXTS.evolutions}</p>`,
+      ),
+    );
   }
 
   if (content.planProgress) {
@@ -68,11 +72,19 @@ export function buildReportHtml(report: Report): string {
       .map(
         (plan) =>
           `<li><strong>${e(plan.title)}</strong> (${plan.type}) · ${plan.percent}%<ul>${plan.goals
-            .map((g) => `<li>${e(g.description)} · ${e(g.status)}</li>`)
+            .map(
+              (g) =>
+                `<li>${e(g.description)} · ${e(goalStatusLabel(g.status))}</li>`,
+            )
             .join("")}</ul></li>`,
       )
       .join("");
-    parts.push(section("Progresso dos planos", `<ul>${items}</ul>`));
+    parts.push(
+      section(
+        "Progresso dos planos",
+        items ? `<ul>${items}</ul>` : `<p>${EMPTY_TEXTS.planProgress}</p>`,
+      ),
+    );
   }
 
   if (content.assessments) {
@@ -82,7 +94,12 @@ export function buildReportHtml(report: Report): string {
           `<tr><td>${e(item.templateName)}</td><td>${date(item.completedAt)}</td><td>${item.value} de ${item.max}${item.band ? ` · ${e(item.band)}` : ""}</td></tr>`,
       )
       .join("");
-    parts.push(section("Avaliações", `<table>${rows}</table>`));
+    parts.push(
+      section(
+        "Avaliações",
+        rows ? `<table>${rows}</table>` : `<p>${EMPTY_TEXTS.assessments}</p>`,
+      ),
+    );
   }
 
   if (content.anamnesisSummary) {

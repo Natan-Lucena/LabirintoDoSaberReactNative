@@ -27,6 +27,7 @@ import {
 } from "@/features/reports/session/sessionReport";
 import { color, fontFamilies, getContentPadding, semanticColor } from "@/theme";
 
+import { EMPTY_TEXTS, formatReportDate, goalStatusLabel } from "./reportLabels";
 import { printReport, shareReportPdf } from "./pdf";
 
 function Paragraph({ text }: { text: string }): ReactElement {
@@ -64,6 +65,9 @@ export function ReportPreviewScreen({
     if (!report) return;
     setExportError(null);
     try {
+      // Plataforma: no Android a folha de compartilhamento não informa se o
+      // usuário cancelou; `shareAsync` resolve igual. Por isso o registro só
+      // ocorre depois que a ação resolve sem erro (melhor esforço).
       await action(report);
     } catch {
       setExportError("Não foi possível gerar o PDF.");
@@ -113,7 +117,8 @@ export function ReportPreviewScreen({
             <View style={styles.paper}>
               <Text style={styles.title}>{content.title}</Text>
               <Text style={styles.caption}>
-                {report.studentName} · {report.period.from} a {report.period.to}
+                {report.studentName} · {formatReportDate(report.period.from)} a{" "}
+                {formatReportDate(report.period.to)}
               </Text>
 
               {content.patient ? (
@@ -143,11 +148,14 @@ export function ReportPreviewScreen({
               {content.evolutions ? (
                 <>
                   <SectionTitle title="Evolução das sessões" />
+                  {content.evolutions.length === 0 ? (
+                    <Paragraph text={EMPTY_TEXTS.evolutions} />
+                  ) : null}
                   {content.evolutions.map((item) => (
                     <InfoCard
                       key={`${item.sessionDate}-${item.planTitle ?? ""}`}
                       icon="clipboard"
-                      title={`${item.sessionDate} · ${item.achieved} de ${item.total} metas`}
+                      title={`${formatReportDate(item.sessionDate)} · ${item.achieved} de ${item.total} metas`}
                       description={item.record}
                     />
                   ))}
@@ -157,14 +165,20 @@ export function ReportPreviewScreen({
               {content.planProgress ? (
                 <>
                   <SectionTitle title="Progresso dos planos" />
+                  {content.planProgress.length === 0 ? (
+                    <Paragraph text={EMPTY_TEXTS.planProgress} />
+                  ) : null}
                   {content.planProgress.map((plan) => (
                     <InfoCard
                       key={plan.title}
                       icon="file"
                       title={`${plan.title} · ${plan.percent}%`}
                       description={plan.goals
-                        .map((goal) => goal.description)
-                        .join("; ")}
+                        .map(
+                          (goal) =>
+                            `• ${goal.description} · ${goalStatusLabel(goal.status)}`,
+                        )
+                        .join("\n")}
                     />
                   ))}
                 </>
@@ -173,11 +187,14 @@ export function ReportPreviewScreen({
               {content.assessments ? (
                 <>
                   <SectionTitle title="Avaliações" />
+                  {content.assessments.length === 0 ? (
+                    <Paragraph text={EMPTY_TEXTS.assessments} />
+                  ) : null}
                   {content.assessments.map((item) => (
                     <InfoCard
                       key={`${item.templateName}-${item.completedAt}`}
                       icon="chart"
-                      title={item.templateName}
+                      title={`${item.templateName} · ${formatReportDate(item.completedAt)}`}
                       description={`${item.value} de ${item.max}${item.band ? ` · ${item.band}` : ""}`}
                     />
                   ))}
