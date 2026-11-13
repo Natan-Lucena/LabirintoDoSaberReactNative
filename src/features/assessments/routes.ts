@@ -1,5 +1,4 @@
-// Destinos do módulo de avaliações. A tela de aplicar (AVA-02) existe; a de
-// resultado (AVA-04) ainda não, então `resultRoute` segue com o cast.
+// Destinos do módulo de avaliações.
 export const ASSESSMENTS_ROUTE = "/assessments" as const;
 
 interface ApplyRouteOptions {
@@ -28,4 +27,4 @@ export const resultRoute = (applicationId: string) =>
   ({
     pathname: "/assessments/results/[id]",
     params: { id: applicationId },
-  }) as never;
+  }) as const;
