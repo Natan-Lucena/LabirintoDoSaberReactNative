@@ -2,12 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/api/client";
 import {
+  changePassword,
   generateToken,
   updatePassword,
   verifyToken,
 } from "@/api/endpoints/educator";
 import { mockAdapter } from "@/mocks/adapter";
-import { MOCK_EDUCATOR } from "@/mocks/fixtures";
+import {
+  MOCK_EDUCATOR,
+  MOCK_TOKEN,
+  MOCK_VALID_CREDENTIALS,
+} from "@/mocks/fixtures";
+import { clearMockSession, setMockSession } from "@/mocks/mock-auth-state";
 import {
   MOCK_PASSWORD_VALID_CODE,
   resetMockPasswordState,
@@ -75,5 +81,34 @@ describe("endpoints de senha pelo apiClient real (AUT-01)", () => {
     await expect(
       updatePassword({ email: EMAIL, token: "999999", newPassword: "abcdef" }),
     ).rejects.toMatchObject({ code: "INVALID_TOKEN" });
+  });
+
+  describe("changePassword (REC-03)", () => {
+    beforeEach(() => setMockSession(MOCK_TOKEN));
+    afterEach(() => clearMockSession());
+
+    it("troca a senha e devolve o token novo", async () => {
+      await expect(
+        changePassword({
+          currentPassword: MOCK_VALID_CREDENTIALS.password,
+          newPassword: "novaSenha1",
+        }),
+      ).resolves.toEqual({ token: expect.any(String) });
+    });
+
+    it("rejeita INVALID_CURRENT_PASSWORD e PASSWORD_SAME_AS_OLD", async () => {
+      await expect(
+        changePassword({
+          currentPassword: "errada",
+          newPassword: "novaSenha1",
+        }),
+      ).rejects.toMatchObject({ code: "INVALID_CURRENT_PASSWORD" });
+      await expect(
+        changePassword({
+          currentPassword: MOCK_VALID_CREDENTIALS.password,
+          newPassword: MOCK_VALID_CREDENTIALS.password,
+        }),
+      ).rejects.toMatchObject({ code: "PASSWORD_SAME_AS_OLD" });
+    });
   });
 });

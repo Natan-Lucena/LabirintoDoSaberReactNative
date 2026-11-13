@@ -1,5 +1,7 @@
 import { apiClient } from "@/api/client";
 import type {
+  ChangePasswordPayload,
+  ChangePasswordResponse,
   Educator,
   EducatorLastSession,
   PasswordTokenSentResponse,
@@ -76,6 +78,23 @@ export async function updatePassword(
   input: UpdatePasswordInput,
 ): Promise<void> {
   await apiClient.post<void>("/educator/update-password", input);
+}
+
+/**
+ * PUT /educator/change-password (Bearer, SN-07). Devolve um token novo: o
+ * anterior deixa de valer (SN-08), então o chamador precisa guardá-lo.
+ */
+export type ChangePasswordInput = ChangePasswordPayload;
+
+export async function changePassword(
+  input: ChangePasswordInput,
+): Promise<ChangePasswordResponse> {
+  const response = await apiClient.put<ChangePasswordResponse>(
+    "/educator/change-password",
+    input,
+  );
+
+  return response.data;
 }
 
 /** GET /educator/get-last-sessions */
