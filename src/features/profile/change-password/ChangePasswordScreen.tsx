@@ -30,6 +30,7 @@ export function ChangePasswordScreen(): ReactElement {
   const [showPasswords, setShowPasswords] = useState(false);
   const [done, setDone] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mounted = useRef(true);
   const {
     control,
     handleSubmit,
@@ -43,19 +44,21 @@ export function ChangePasswordScreen(): ReactElement {
     },
   });
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
       if (timer.current) clearTimeout(timer.current);
-    },
-    [],
-  );
+    };
+  }, []);
 
   async function onSubmit(values: ChangePasswordValues) {
     const ok = await submit({
       currentPassword: values.currentPassword,
       newPassword: values.newPassword,
     });
-    if (!ok) return;
+    // O token já foi guardado; fora da tela, nada de aviso nem de voltar.
+    if (!ok || !mounted.current) return;
     setDone(true);
     toast.show("Senha alterada");
     timer.current = setTimeout(() => router.back(), BACK_DELAY_MS);

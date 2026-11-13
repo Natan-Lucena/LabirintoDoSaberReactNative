@@ -42,6 +42,7 @@ export function useChangePassword() {
     retry: false,
   });
 
+  const { mutateAsync } = mutation;
   const submit = useCallback(
     async (input: {
       currentPassword: string;
@@ -49,7 +50,7 @@ export function useChangePassword() {
     }): Promise<boolean> => {
       setFailure(null);
       try {
-        const { token } = await mutation.mutateAsync(input);
+        const { token } = await mutateAsync(input);
         const { educatorId, login } = useAuthStore.getState();
         await login(token, educatorId ?? undefined);
         return true;
@@ -58,7 +59,7 @@ export function useChangePassword() {
         return false;
       }
     },
-    [mutation],
+    [mutateAsync],
   );
 
   return { submit, failure, isBusy: mutation.isPending };

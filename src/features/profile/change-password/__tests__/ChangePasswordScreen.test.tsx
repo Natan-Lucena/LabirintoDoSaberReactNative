@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { render } from "@/test-utils/render";
@@ -35,26 +35,55 @@ async function press() {
 }
 
 describe("ChangePasswordScreen (REC-03)", () => {
+  afterEach(() => vi.useRealTimers());
+
   beforeEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     login.mockResolvedValue(undefined);
   });
 
   it("AC-REC-03-01: sucesso guarda o token novo e volta ao perfil", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     changePassword.mockResolvedValue({ token: "token-novo" });
     await render(<ChangePasswordScreen />);
     await fill();
     await press();
+    await vi.advanceTimersByTimeAsync(0);
 
-    await waitFor(() =>
-      expect(login).toHaveBeenCalledWith("token-novo", "edu-1"),
-    );
+    expect(login).toHaveBeenCalledWith("token-novo", "edu-1");
     expect(changePassword).toHaveBeenCalledWith({
       currentPassword: "atual123",
       newPassword: "novaSenha1",
     });
-    expect(await screen.findByText("Senha alterada")).toBeTruthy();
-    await waitFor(() => expect(back).toHaveBeenCalled(), { timeout: 3000 });
+    expect(screen.getByText("Senha alterada")).toBeTruthy();
+    expect(back).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1300);
+    expect(back).toHaveBeenCalledTimes(1);
+  });
+
+  it("sair durante o envio guarda o token, sem aviso nem voltar", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    let resolve: (value: { token: string }) => void = () => undefined;
+    changePassword.mockReturnValue(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    );
+    const view = await render(<ChangePasswordScreen />);
+    await fill();
+    await press();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(changePassword).toHaveBeenCalledTimes(1);
+
+    view.unmount();
+    resolve({ token: "token-novo" });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(login).toHaveBeenCalledWith("token-novo", "edu-1");
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(back).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("AC-REC-03-02: INVALID_CURRENT_PASSWORD marca a senha atual", async () => {
