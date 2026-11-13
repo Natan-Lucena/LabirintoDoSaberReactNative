@@ -3,11 +3,14 @@
 // (gerar, registrar envio, excluir) ficam com as telas REL-01 a REL-03; a geração
 // usa IA e deve levar AI_TIMEOUT_MS, sem reenvio. Mocks em src/mocks/handlers/reports.ts.
 import { apiClient } from "@/api/client";
+import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
 import type {
+  CreateReportPayload,
   ListReportsFilters,
   Report,
   ReportOptions,
   ReportSummary,
+  ShareReportPayload,
 } from "@/api/types";
 
 export const reportQueryKeys = {
@@ -55,6 +58,30 @@ export async function listReports(
 /** GET /report/:id — `403 UNAUTHORIZED` ou `404 REPORT_NOT_FOUND`. */
 export async function getReport(id: string): Promise<Report> {
   const response = await apiClient.get<Report>(`/report/${id}`);
+
+  return response.data;
+}
+
+/**
+ * POST /report/ — gera o relatório; a síntese por IA leva até ~30 s (`AI_TIMEOUT_MS`).
+ * Sem reenvio automático: quem chama não deve repetir a requisição sozinho.
+ */
+export async function createReport(
+  payload: CreateReportPayload,
+): Promise<Report> {
+  const response = await apiClient.post<Report>("/report/", payload, {
+    timeout: AI_TIMEOUT_MS,
+  });
+
+  return response.data;
+}
+
+/** POST /report/:id/share — registra uma impressão (PRINT) ou envio (SHARE). */
+export async function shareReport(
+  id: string,
+  payload: ShareReportPayload,
+): Promise<Report> {
+  const response = await apiClient.post<Report>(`/report/${id}/share`, payload);
 
   return response.data;
 }
