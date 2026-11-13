@@ -75,12 +75,15 @@ export function usePasswordReset(): UsePasswordResetResult {
 
   const sendMutation = useMutation({
     mutationFn: withOfflineGuard(generateToken),
+    gcTime: 0,
   });
   const verifyMutation = useMutation({
     mutationFn: withOfflineGuard(verifyToken),
+    gcTime: 0,
   });
   const updateMutation = useMutation({
     mutationFn: withOfflineGuard(updatePassword),
+    gcTime: 0,
   });
 
   const counting = secondsLeft > 0;
@@ -116,7 +119,17 @@ export function usePasswordReset(): UsePasswordResetResult {
     [sendMutation],
   );
 
-  const sendCode = useCallback((target: string) => send(target, true), [send]);
+  const sendCode = useCallback(
+    async (target: string) => {
+      // O reenvio não pode ser contornado voltando ao e-mail.
+      if (secondsLeft > 0) {
+        setError(`Aguarde ${secondsLeft} s para solicitar um novo código.`);
+        return;
+      }
+      await send(target, true);
+    },
+    [secondsLeft, send],
+  );
 
   const resend = useCallback(async () => {
     if (secondsLeft > 0 || sendMutation.isPending) return;

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react-native";
+import { act, screen } from "@testing-library/react-native";
 
 import { render } from "@/test-utils/render";
 import { LoginForm } from "@/features/auth/LoginForm";
@@ -9,9 +9,24 @@ import {
   wasPasswordChanged,
 } from "@/features/auth/password-reset/notice";
 
-vi.mock("expo-router", () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+// Simula o foco da tela: o login fica montado por baixo da recuperação de
+// senha, então o aviso precisa aparecer quando ele volta a ter foco.
+const focus = vi.hoisted(() => ({
+  callbacks: [] as (() => void | (() => void))[],
 }));
+
+vi.mock("expo-router", async () => {
+  const { useEffect } = await import("react");
+  return {
+    useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+    useFocusEffect: (effect: () => void | (() => void)) => {
+      useEffect(() => {
+        focus.callbacks.push(effect);
+        return effect();
+      }, [effect]);
+    },
+  };
+});
 
 vi.mock("@/features/auth/useSignIn", () => ({
   useSignIn: () => ({
@@ -28,19 +43,23 @@ vi.mock("@/features/auth/session-expiry", () => ({
 }));
 
 describe("aviso de senha alterada no login (AUT-01)", () => {
-  it("mostra o aviso uma vez e depois o limpa", async () => {
-    markPasswordChanged();
-    const first = await render(<LoginForm />);
+  it("aparece ao voltar o foco para um login já montado e é consumido", async () => {
+    await render(<LoginForm />);
+    expect(screen.queryByText(PASSWORD_CHANGED_NOTICE)).toBeNull();
 
-    expect(
-      screen.getByText("Senha alterada. Entre com a nova senha."),
-    ).toBeTruthy();
+    markPasswordChanged();
+    await act(async () => {
+      focus.callbacks.forEach((callback) => callback());
+    });
+
+    expect(screen.getByText(PASSWORD_CHANGED_NOTICE)).toBeTruthy();
     expect(PASSWORD_CHANGED_NOTICE).toBe(
       "Senha alterada. Entre com a nova senha.",
     );
     expect(wasPasswordChanged()).toBe(false);
+  });
 
-    first.unmount();
+  it("não mostra o aviso em um login novo depois de consumido", async () => {
     await render(<LoginForm />);
     expect(screen.queryByText(PASSWORD_CHANGED_NOTICE)).toBeNull();
   });

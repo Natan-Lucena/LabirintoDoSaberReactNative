@@ -1,14 +1,21 @@
 import type { ReactElement } from "react";
-import { StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 
 import { Screen } from "@/components/Screen";
-import { PasswordResetFlow } from "@/features/auth/password-reset/PasswordResetFlow";
 import { AUTH_DESTINATION } from "@/features/auth/routes";
+import { PasswordResetFlow } from "@/features/auth/password-reset/PasswordResetFlow";
 import { markPasswordChanged } from "@/features/auth/password-reset/notice";
 import { shape } from "@/theme";
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: {
     flexGrow: 1,
     justifyContent: "center",
@@ -30,21 +37,37 @@ const styles = StyleSheet.create({
 export default function ForgotPasswordScreen(): ReactElement {
   const router = useRouter();
 
+  // O login empurrou esta tela: voltar evita empilhar outro login. Sem
+  // histórico (link direto), cai no replace.
   function goToLogin() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
     router.replace(AUTH_DESTINATION);
   }
 
   return (
-    <Screen scroll style={styles.content}>
-      <View style={styles.card}>
-        <PasswordResetFlow
-          onDone={() => {
-            markPasswordChanged();
-            goToLogin();
-          }}
-          onCancel={goToLogin}
-        />
-      </View>
+    <Screen>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.card}>
+            <PasswordResetFlow
+              onDone={() => {
+                markPasswordChanged();
+                goToLogin();
+              }}
+              onCancel={goToLogin}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

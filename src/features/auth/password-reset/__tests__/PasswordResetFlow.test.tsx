@@ -195,6 +195,26 @@ describe("PasswordResetFlow (AUT-01)", () => {
     expect(screen.queryByLabelText("Nova senha")).toBeNull();
   });
 
+  it("AC-AUT-01-03: voltar ao e-mail não contorna a espera de 60 s", async () => {
+    await render(<PasswordResetFlow onDone={onDone} onCancel={onCancel} />);
+    await sendEmail();
+    expect(generateToken).toHaveBeenCalledTimes(1);
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Alterar e-mail" }),
+    );
+    await fireEvent.changeText(screen.getByLabelText("Email"), EMAIL);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Enviar código" }),
+    );
+
+    expect(
+      await screen.findByText(/aguarde \d+ s para solicitar um novo código/i),
+    ).toBeTruthy();
+    expect(generateToken).toHaveBeenCalledTimes(1);
+    expect(screen.queryByLabelText("Código de 6 dígitos")).toBeNull();
+  });
+
   it("AC-AUT-01-03: reenvio desabilitado por 60 s com contagem visível", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: false });
     await render(<PasswordResetFlow onDone={onDone} onCancel={onCancel} />);

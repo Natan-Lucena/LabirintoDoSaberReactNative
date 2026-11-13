@@ -187,8 +187,7 @@ function CodeStep({
     <>
       {/* SN-02: o texto é o mesmo exista ou não a conta. */}
       <Text style={styles.info}>
-        Se o e-mail tiver cadastro, enviamos um código de 6 dígitos para {email}
-        .
+        {`Se o e-mail tiver cadastro, enviamos um código de 6 dígitos para ${email}.`}
       </Text>
       <Controller
         control={control}
@@ -203,6 +202,8 @@ function CodeStep({
             placeholder="000000"
             maxLength={6}
             keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete="sms-otp"
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -282,6 +283,8 @@ function PasswordStep({
             hint="Mínimo de 6 caracteres"
             secureTextEntry={!showPassword}
             accessibilityLabel="Nova senha"
+            textContentType="newPassword"
+            autoComplete="new-password"
             placeholder="••••••••"
             autoCapitalize="none"
             autoCorrect={false}
@@ -300,6 +303,8 @@ function PasswordStep({
             error={errors.confirmPassword?.message}
             secureTextEntry={!showPassword}
             accessibilityLabel="Confirmar nova senha"
+            textContentType="newPassword"
+            autoComplete="new-password"
             placeholder="••••••••"
             autoCapitalize="none"
             autoCorrect={false}

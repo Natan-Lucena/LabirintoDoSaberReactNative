@@ -1,9 +1,9 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useState, type ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { DsButton, Field } from "@/components/ds";
 import { color, semanticColor, typography } from "@/theme";
@@ -53,14 +53,19 @@ export function LoginForm(): ReactElement {
   const { submit, isSubmitting, formError, clearFormError } = useSignIn();
   const showSessionExpiredNotice = wasSessionExpired();
   const [showPassword, setShowPassword] = useState(false);
-  // Lido uma vez na montagem: o aviso some ao reabrir o login.
-  const [showPasswordChangedNotice] = useState(wasPasswordChanged);
+  const [showPasswordChangedNotice, setShowPasswordChangedNotice] =
+    useState(false);
 
-  useEffect(() => {
-    if (showPasswordChangedNotice) {
-      acknowledgePasswordChanged();
-    }
-  }, [showPasswordChangedNotice]);
+  // O login continua montado por baixo da tela de recuperação: o aviso é
+  // consumido a cada foco, não só na montagem.
+  useFocusEffect(
+    useCallback(() => {
+      if (wasPasswordChanged()) {
+        acknowledgePasswordChanged();
+        setShowPasswordChangedNotice(true);
+      }
+    }, []),
+  );
 
   useEffect(() => {
     if (showSessionExpiredNotice) {

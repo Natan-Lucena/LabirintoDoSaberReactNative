@@ -16,9 +16,15 @@ const clearFormErrorMock = vi.fn();
 let formError: string | null = null;
 let isSubmitting = false;
 
-vi.mock("expo-router", () => ({
-  useRouter: () => ({ replace: routerReplace, push: routerPush }),
-}));
+vi.mock("expo-router", async () => {
+  const { useEffect } = await import("react");
+  return {
+    useRouter: () => ({ replace: routerReplace, push: routerPush }),
+    useFocusEffect: (effect: () => void | (() => void)) => {
+      useEffect(effect, [effect]);
+    },
+  };
+});
 
 vi.mock("expo-image", () => ({
   Image: ({ accessibilityLabel }: { accessibilityLabel?: string }) => (
