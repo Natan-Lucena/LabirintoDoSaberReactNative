@@ -255,6 +255,12 @@ function ProfileContents({ onLoggedOut }: { onLoggedOut: () => void }) {
             onPress={() => void handleSubmit(save)()}
           />
           <DsButton
+            label="Trocar senha"
+            variant="secondary"
+            fullWidth
+            onPress={() => router.push("/profile/change-password")}
+          />
+          <DsButton
             label="Sair"
             variant="ghost"
             fullWidth
