@@ -331,3 +331,22 @@ evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito 
 - `POST /session-evolution/next-session-suggestion` devolve `{ suggestion, rationale }` sem persistir.
   `[AI_GENERATION_FAILED]` ou `[AI_INVALID_OUTPUT]` no `descriptiveRecord` simulam as falhas `500`.
 - As sessões vêm de `mock-session-*` (fluxo de sessão do app) mais as do próprio arquivo.
+- `resetMockEvolutionState()` (`handlers/evolution.ts`) restaura as evoluções semente, as sessões do
+  arquivo e uma cópia limpa dos planos (metas, progresso; planos criados depois saem de `mockPlans`).
+  Não há reset global dos mocks; os testes o chamam em `beforeEach` e `afterEach`.
+- **EV-08:** o registro descritivo aparece como `observation` em
+  `GET /task-notebook-session/report/:sessionId`. O handler de `session-report.ts` só conhece
+  `mock-session-1` e `mock-session-2`; `handlers/evolution.ts` o envolve: a observação vem da
+  evolução (inclusive após `PUT`) e, para uma sessão finalizada criada pelo fluxo do app, o
+  relatório é montado com o nome e as respostas da sessão.
+
+### Pendências e lacunas da especificação (mocks da leva 1)
+
+- **EV-10/EV-11 não simulados:** `evolutionId` em `GET /task-notebook-session/student/:studentId` e
+  no detalhe da sessão fica para o EVO-05.
+- **EV-05 × BE-EV-03:** EV-05 manda `INVALID_PLAN` para plano que não seja PE `ACTIVE`, mas BE-EV-03
+  pede `409 PLAN_NOT_EDITABLE` para plano encerrado. O mock segue BE-EV-03 para um PE encerrado do
+  paciente (409) e `INVALID_PLAN` para PDI, inexistente ou de outro paciente. A confirmar na API-04.
+- **`TOO_MANY_ATTEMPTS` em `verify-token` revela conta real:** só o e-mail com conta acumula
+  tentativas e chega ao `429`; e-mail sem conta responde sempre `INVALID_TOKEN`. Lacuna da
+  especificação (SN-02 quer não revelar contas); a confirmar na API-04.

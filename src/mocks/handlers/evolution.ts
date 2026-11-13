@@ -2,6 +2,7 @@
 // de docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir em API-04. Estado só
 // em memória; dados fictícios. Decisões G-56/G-57: a evolução substitui a
 // observação pós-sessão e os critérios vêm só do PE da sessão (sem PDI, EV-12).
+import type { SessionReport } from "@/api/endpoints/session-report";
 import type {
   CriterionResult,
   EvolutionContext,
@@ -19,6 +20,7 @@ import type {
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
 import { dayKey } from "@/utils/date";
 import "./session-analysis";
+import "./session-report";
 import {
   computeMockProgress,
   MOCK_FOREIGN_STUDENT_ID,
@@ -382,8 +384,7 @@ export const mockEvolutions: SessionEvolution[] = [
         result: "PARTIAL",
       },
     ],
-    descriptiveRecord:
-      "Participou com interesse e pediu para continuar. Oscilou na atenção no fim da atividade.",
+    descriptiveRecord: "Participou com interesse e pediu para continuar.",
     nextSessionSuggestion:
       "Retomar a leitura de frases curtas com apoio visual.",
     goalUpdates: [],
@@ -404,6 +405,55 @@ export const mockEvolutions: SessionEvolution[] = [
     updatedAt: "2026-10-20T14:00:00.000Z",
   },
 ];
+
+// Cópias das sementes e do estado que este handler muta (evoluções, planos, sessões
+// deste arquivo e a observação das sessões), para `resetMockEvolutionState()`.
+const seedEvolutions = structuredClone(mockEvolutions);
+const seedPlans = structuredClone(mockPlans);
+const seedExtraSessions = structuredClone(extraSessions);
+const observationBackups = new Map<
+  TaskNotebookSession,
+  TaskNotebookSession["observation"]
+>();
+
+/**
+ * Restaura as evoluções, os planos e as sessões fictícias ao estado inicial
+ * (uso em testes e cenários manuais). Planos criados depois do carregamento
+ * saem de `mockPlans`; as metas e o progresso dos planos semente voltam.
+ */
+export function resetMockEvolutionState(): void {
+  for (const [session, observation] of observationBackups) {
+    session.observation = observation;
+  }
+  observationBackups.clear();
+  extraSessions.splice(
+    0,
+    extraSessions.length,
+    ...structuredClone(seedExtraSessions),
+  );
+  mockEvolutions.splice(
+    0,
+    mockEvolutions.length,
+    ...structuredClone(seedEvolutions),
+  );
+  const seedIds = new Set(seedPlans.map((plan) => plan.id));
+  for (let index = mockPlans.length - 1; index >= 0; index -= 1) {
+    if (!seedIds.has(mockPlans[index]!.id)) mockPlans.splice(index, 1);
+  }
+  for (const seed of seedPlans) {
+    const fresh = structuredClone(seed);
+    const live = mockPlans.find((plan) => plan.id === seed.id);
+    if (!live) {
+      mockPlans.push(fresh);
+      continue;
+    }
+    for (const key of Object.keys(live)) {
+      if (!(key in fresh))
+        delete (live as unknown as Record<string, unknown>)[key];
+    }
+    Object.assign(live, fresh);
+  }
+}
 
 function ownEvolution(id: string): SessionEvolution {
   const evolution = mockEvolutions.find((item) => item.id === id);
@@ -548,7 +598,9 @@ registerMockHandler(
       updatedAt: now,
     };
     mockEvolutions.push(evolution);
-    // EV-08: o registro também vira a observação da sessão.
+    // EV-08: o registro também vira a observação da sessão (e o relatório a lê, ver abaixo).
+    if (!observationBackups.has(session))
+      observationBackups.set(session, session.observation);
     session.observation = evolution.descriptiveRecord;
 
     return { status: 201, data: evolution };
@@ -720,5 +772,60 @@ registerMockHandler(
     };
 
     return { status: 200, data };
+  },
+);
+
+// EV-08: o relatório da sessão mostra o registro descritivo salvo. O handler de
+// `session-report.ts` só conhece duas sessões fixas, então este o envolve: a
+// observação vem da evolução e, para sessões criadas pelo fluxo do app, o
+// relatório é montado das respostas da sessão.
+const reportHandler = getMockHandler(
+  "get",
+  "/task-notebook-session/report/:sessionId",
+);
+
+registerMockHandler(
+  { method: "get", path: "/task-notebook-session/report/:sessionId" },
+  async (context) => {
+    const evolution = mockEvolutions.find(
+      (item) => item.sessionId === context.params.sessionId,
+    );
+    try {
+      const result = reportHandler ? await reportHandler(context) : undefined;
+      if (!result) throw new MockApiError(404, "SESSION_NOT_FOUND");
+      if (!evolution) return result;
+
+      return {
+        ...result,
+        data: {
+          ...(result.data as SessionReport),
+          observation: evolution.descriptiveRecord,
+        },
+      };
+    } catch (error) {
+      if (!(error instanceof MockApiError) || error.status !== 404) throw error;
+      const session = (await listSessions()).find(
+        (item) => item.id === context.params.sessionId,
+      );
+      if (!session?.finishedAt) throw error;
+
+      const report: SessionReport = {
+        sessionName: session.name,
+        totalTimeSession:
+          durationMinutes({
+            startedAt: session.startedAt,
+            finishedAt: session.finishedAt,
+          }) * 60,
+        totalQuestions: session.answers.length,
+        averageTimePerQuestion: 0,
+        averageCorrectTime: null,
+        averageIncorrectTime: null,
+        percentageByCategory: {},
+        percentageByType: {},
+        observation:
+          evolution?.descriptiveRecord ?? session.observation ?? null,
+      };
+      return { status: 200, data: report };
+    }
   },
 );

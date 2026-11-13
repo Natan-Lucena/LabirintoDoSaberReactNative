@@ -8,6 +8,7 @@ import {
   MOCK_EVOLUTION_SESSION_FREE,
   MOCK_EVOLUTION_SESSION_PE,
   MOCK_FOREIGN_EVOLUTION_ID,
+  resetMockEvolutionState,
 } from "@/mocks/handlers/evolution";
 import type { Plan } from "@/api/types";
 import { mockPlans } from "@/mocks/handlers/plans";
@@ -48,10 +49,88 @@ const validCriterion = {
 describe("mocks da evolução da sessão (API-05, leva 1)", () => {
   beforeEach(() => {
     apiClient.defaults.adapter = mockAdapter;
+    resetMockEvolutionState();
   });
 
   afterEach(() => {
     apiClient.defaults.adapter = originalAdapter;
+    // Remove o PE encerrado e devolve metas/progresso dos planos semente.
+    resetMockEvolutionState();
+  });
+
+  it("resetMockEvolutionState restaura evoluções, planos e sessões semente", async () => {
+    await send("post", "/session-evolution/", {
+      sessionId: MOCK_EVOLUTION_SESSION_PE,
+      planId: "mock-plan-2",
+      criteria: [],
+      descriptiveRecord: "x",
+      goalUpdates: [{ goalId: "mock-plan-2-goal-1", status: "ACHIEVED" }],
+    });
+    mockPlans.push({
+      ...mockPlans.find((plan) => plan.id === "mock-plan-2")!,
+      id: "mock-plan-extra",
+    });
+
+    resetMockEvolutionState();
+
+    const plan = mockPlans.find((item) => item.id === "mock-plan-2")!;
+    expect(plan.goals[0]!.status).toBe("IN_PROGRESS");
+    expect(plan.progress.achievedGoals).toBe(0);
+    expect(mockPlans.some((item) => item.id === "mock-plan-extra")).toBe(false);
+    const context = await send(
+      "get",
+      `/session-evolution/context/${MOCK_EVOLUTION_SESSION_PE}`,
+    );
+    expect(context.data.existingEvolutionId).toBeUndefined();
+  });
+
+  it("EV-08: o registro vira a observação do relatório, também em sessão criada pelo fluxo do app", async () => {
+    const started = await send("post", "/task-notebook-session/start", {
+      studentId: "student-4",
+      name: "Sessão criada pelo app",
+    });
+    await send("post", "/task-notebook-session/finish", {
+      sessionId: started.data.id,
+    });
+    const before = await send(
+      "get",
+      `/task-notebook-session/report/${started.data.id}`,
+    );
+    expect(before.data.observation).toBeNull();
+
+    const created = await send("post", "/session-evolution/", {
+      sessionId: started.data.id,
+      criteria: [],
+      descriptiveRecord: "Registro da sessão viva.",
+    });
+    expect(created.status).toBe(201);
+
+    const report = await send(
+      "get",
+      `/task-notebook-session/report/${started.data.id}`,
+    );
+    expect(report.status).toBe(200);
+    expect(report.data.sessionName).toBe("Sessão criada pelo app");
+    expect(report.data.observation).toBe("Registro da sessão viva.");
+
+    const edited = await send("put", `/session-evolution/${created.data.id}`, {
+      descriptiveRecord: "Registro revisado.",
+    });
+    expect(edited.status).toBe(200);
+    const after = await send(
+      "get",
+      `/task-notebook-session/report/${started.data.id}`,
+    );
+    expect(after.data.observation).toBe("Registro revisado.");
+
+    // sessão com relatório fixo também reflete a evolução salva
+    const fixed = await send(
+      "get",
+      "/task-notebook-session/report/mock-session-2",
+    );
+    expect(fixed.data.observation).toBe(
+      "Participou com interesse e pediu para continuar.",
+    );
   });
 
   it("EV-03: sessão aberta não aceita evolução (409) e sessão inexistente dá 404", async () => {

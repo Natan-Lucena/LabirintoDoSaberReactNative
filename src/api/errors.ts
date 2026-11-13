@@ -60,6 +60,9 @@ function getFieldErrors(value: unknown): readonly ApiFieldError[] {
 // PROVISÓRIO da Entrega 4, leva 1 (senha §2 e evolução §3 da
 // ESPECIFICACAO-BACKEND); conferir em API-04. O `code` continua sendo o
 // código do servidor; só a `message` é traduzida.
+// TODO(API-04): SESSION_NOT_FOUND e SESSION_NOT_FINISHED ficam SEM tradução de
+// propósito: já existem no contrato da observação/relatório e as telas as
+// mapeiam pelo `code` (testes leem a mensagem crua). Reavaliar na API-04.
 const API_ERROR_MESSAGES: Record<string, string> = {
   TOO_MANY_REQUESTS:
     "Muitas solicitações de código. Aguarde alguns minutos e tente de novo.",
