@@ -58,6 +58,7 @@ const OPTIONS: ReportOptions = {
         "PATIENT_DATA",
         "SESSION_METRICS",
         "EVOLUTIONS",
+        "PLAN_PROGRESS",
         "AI_SYNTHESIS",
       ],
     },
@@ -71,7 +72,12 @@ const OPTIONS: ReportOptions = {
         "ANAMNESIS_SUMMARY",
         "AI_SYNTHESIS",
       ],
-      defaultSections: ["PATIENT_DATA", "AI_SYNTHESIS"],
+      defaultSections: [
+        "PATIENT_DATA",
+        "ASSESSMENTS",
+        "ANAMNESIS_SUMMARY",
+        "AI_SYNTHESIS",
+      ],
     },
     {
       type: "PDI_PROGRESS",
@@ -83,7 +89,12 @@ const OPTIONS: ReportOptions = {
         "EVOLUTIONS",
         "AI_SYNTHESIS",
       ],
-      defaultSections: ["PATIENT_DATA", "PLAN_PROGRESS", "AI_SYNTHESIS"],
+      defaultSections: [
+        "PATIENT_DATA",
+        "PLAN_PROGRESS",
+        "EVOLUTIONS",
+        "AI_SYNTHESIS",
+      ],
     },
   ],
   sections: [
@@ -150,8 +161,8 @@ function buildContent(
       answered: 48,
       accuracy: 0.75,
       byCategory: [
-        { category: "Leitura", accuracy: 0.8 },
-        { category: "Atenção", accuracy: 0.7 },
+        { category: "reading", accuracy: 0.8 },
+        { category: "comprehension", accuracy: 0.7 },
       ],
     };
   if (has("EVOLUTIONS"))
@@ -219,6 +230,7 @@ function makeReport(
       ...buildContent(student, type, audience, sections, period, true),
       generatedAt: createdAt,
     },
+    synthesisFailed: false,
     createdAt,
     shares: [],
   };
@@ -258,7 +270,7 @@ export function resetMockReportState(): void {
 }
 
 function validationError(): MockApiError {
-  return new MockApiError(400, "Validation error");
+  return new MockApiError(400, "Bad Request");
 }
 
 function ownReport(id: string): Report {
@@ -270,8 +282,11 @@ function ownReport(id: string): Report {
 }
 
 function toSummary(report: Report): ReportSummary {
-  const { content: _content, ...summary } = report;
-  return structuredClone(summary);
+  const { content: _content, shares, ...summary } = report;
+  return structuredClone({
+    ...summary,
+    ...(shares.length > 0 ? { lastShare: shares[shares.length - 1] } : {}),
+  });
 }
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -308,25 +323,32 @@ registerMockHandler({ method: "post", path: "/report/" }, ({ body }) => {
     Number.isNaN(dayNumber(period.to)) ||
     !Array.isArray(input.sections) ||
     input.sections.length === 0 ||
+    input.sections.length > 20 ||
     input.sections.some((s) => !ALL_SECTIONS.includes(s))
   )
     throw validationError();
   // RP-04: from <= to e no máximo `maxPeriodDays`.
   const span = (dayNumber(period.to) - dayNumber(period.from)) / 86_400_000;
-  if (span < 0 || span + 1 > MAX_PERIOD_DAYS) throw validationError();
+  if (span < 0 || span + 1 > MAX_PERIOD_DAYS)
+    throw new MockApiError(400, "INVALID_PERIOD");
 
   const type = input.type as ReportType;
   const audience = input.audience as ReportAudience;
-  const sections = [...new Set(input.sections)];
+  const requested = new Set(input.sections);
   const student = checkStudentAccess(input.studentId);
   const allowed = OPTIONS.types.find((t) => t.type === type)!.allowedSections;
-  if (sections.some((section) => !allowed.includes(section)))
+  if ([...requested].some((section) => !allowed.includes(section)))
     throw new MockApiError(400, "SECTION_NOT_ALLOWED");
-  // RP-05: sem nenhum dado no período.
-  if (
-    student.id === MOCK_REPORT_EMPTY_STUDENT_ID ||
-    period.to < MOCK_DATA_START
-  )
+  // Sem repetição e na ordem do tipo.
+  const sections = allowed.filter((section) => requested.has(section));
+  // RP-05: vazio só quando NENHUMA das seções pedidas tem dado. PATIENT_DATA e
+  // AI_SYNTHESIS não contam; a anamnese vale independente do período.
+  const noData = student.id === MOCK_REPORT_EMPTY_STUDENT_ID;
+  const hasData = (section: ReportSection): boolean =>
+    section === "PATIENT_DATA" || section === "AI_SYNTHESIS" || noData
+      ? false
+      : section === "ANAMNESIS_SUMMARY" || period.to >= MOCK_DATA_START;
+  if (!sections.some(hasData))
     throw new MockApiError(400, "REPORT_EMPTY_PERIOD");
 
   const asked = sections.includes("AI_SYNTHESIS");
@@ -343,7 +365,7 @@ registerMockHandler({ method: "post", path: "/report/" }, ({ body }) => {
     period: { from: period.from, to: period.to },
     sections,
     content: buildContent(student, type, audience, sections, period, !failed),
-    ...(failed ? { synthesisFailed: true } : {}),
+    synthesisFailed: failed,
     createdAt,
     shares: [],
   };

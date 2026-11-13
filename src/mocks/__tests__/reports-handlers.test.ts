@@ -99,9 +99,28 @@ describe("mocks dos relatórios (API-05, leva 3)", () => {
       { from: "2026-10-31", to: "2026-10-01" },
       { from: "2025-01-01", to: "2026-10-01" },
     ])
-      expect((await send("post", "/report/", payload({ period }))).status).toBe(
-        400,
-      );
+      expect(
+        (await send("post", "/report/", payload({ period }))).data.message,
+      ).toBe("INVALID_PERIOD");
+
+    // Só PATIENT_DATA e AI_SYNTHESIS não contam como dado (RP-05).
+    const onlyFree = await send(
+      "post",
+      "/report/",
+      payload({ sections: ["PATIENT_DATA", "AI_SYNTHESIS"] }),
+    );
+    expect(onlyFree.data.message).toBe("REPORT_EMPTY_PERIOD");
+    // A anamnese vale independente do período.
+    const anamnesis = await send(
+      "post",
+      "/report/",
+      payload({
+        type: "ASSESSMENT",
+        period: { from: "2025-01-01", to: "2025-02-01" },
+        sections: ["ANAMNESIS_SUMMARY"],
+      }),
+    );
+    expect(anamnesis.status).toBe(201);
     expect(
       (await send("post", "/report/", payload({ sections: [] }))).status,
     ).toBe(400);
@@ -119,7 +138,7 @@ describe("mocks dos relatórios (API-05, leva 3)", () => {
     expect(created.data.synthesisFailed).toBe(true);
     expect(created.data.content.synthesis).toBeUndefined();
     const next = await send("post", "/report/", payload());
-    expect(next.data.synthesisFailed).toBeUndefined();
+    expect(next.data.synthesisFailed).toBe(false);
   });
 
   it("registra envios e exclui (RP-07, RP-08)", async () => {
@@ -128,6 +147,9 @@ describe("mocks dos relatórios (API-05, leva 3)", () => {
     });
     expect(shared.data.shares).toHaveLength(1);
     expect(shared.data.shares[0].channel).toBe("PRINT");
+    const history = await send("get", "/report/");
+    expect(history.data[0].lastShare.channel).toBe("PRINT");
+    expect(history.data[0].shares).toBeUndefined();
     expect(
       (await send("post", `/report/${MOCK_REPORT_ID}/share`, { channel: "X" }))
         .status,

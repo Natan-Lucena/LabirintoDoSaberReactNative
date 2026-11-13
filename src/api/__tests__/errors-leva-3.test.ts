@@ -24,6 +24,8 @@ function failure(status: number, message: string): AxiosError {
 // API-05, leva 3: códigos novos de relatórios (§6) e notificações (§7), provisório.
 const NEW_CODES: [number, string, RegExp][] = [
   [400, "SECTION_NOT_ALLOWED", /não está disponível/i],
+  [400, "INVALID_PERIOD", /período é inválido/i],
+  [400, "INVALID_CURSOR", /atualize a lista/i],
   [400, "REPORT_EMPTY_PERIOD", /não há dados/i],
   [404, "REPORT_NOT_FOUND", /relatório não encontrado/i],
   [404, "NOTIFICATION_NOT_FOUND", /notificação não encontrada/i],

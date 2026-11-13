@@ -73,6 +73,7 @@ describe("leitura das notificações pelo apiClient (API-05, leva 3)", () => {
     });
     await expect(listNotifications({ cursor: "abc" })).rejects.toMatchObject({
       status: 400,
+      code: "INVALID_CURSOR",
     });
   });
 

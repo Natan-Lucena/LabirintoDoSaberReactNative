@@ -640,13 +640,17 @@ export interface ReportOptions {
     label: string;
     description: string;
     allowedSections: ReportSection[];
+    /** Igual a `allowedSections`; o app tira as sensíveis para FAMILY e SCHOOL (RP-01). */
     defaultSections: ReportSection[];
   }[];
   sections: { section: ReportSection; label: string; sensitive: boolean }[];
   audiences: { audience: ReportAudience; label: string }[];
-  periods: { key: string; label: string; days: number }[];
-  /** 365. */
-  maxPeriodDays: number;
+  periods: {
+    key: "30d" | "90d" | "180d";
+    label: string;
+    days: 30 | 90 | 180;
+  }[];
+  maxPeriodDays: 365;
 }
 
 export interface ReportContent {
@@ -659,7 +663,10 @@ export interface ReportContent {
     answered: number;
     /** Fração de 0 a 1 (G-43). */
     accuracy: number;
-    byCategory: { category: string; accuracy: number }[];
+    byCategory: {
+      category: "reading" | "writing" | "vocabulary" | "comprehension";
+      accuracy: number;
+    }[];
   };
   evolutions?: {
     sessionDate: string;
@@ -704,17 +711,19 @@ export interface Report {
   /** Retrato gravado na geração (RP-03). */
   content: ReportContent;
   /** `true` quando a IA falhou e o relatório foi criado sem a síntese (RP-06). */
-  synthesisFailed?: boolean;
+  synthesisFailed: boolean;
   createdAt: string;
   shares: ReportShare[];
 }
 
-/** `GET /report/`: igual ao relatório, sem `content`. */
-export type ReportSummary = Omit<Report, "content">;
+/** `GET /report/`: sem `content` e sem `shares`; traz só o último envio. */
+export type ReportSummary = Omit<Report, "content" | "shares"> & {
+  lastShare?: ReportShare;
+};
 
 export interface ListReportsFilters {
   studentId?: string;
-  /** 1 a 100. */
+  /** 1 a 100 (padrão do servidor: 50). */
   limit?: number;
 }
 
@@ -724,6 +733,7 @@ export interface CreateReportPayload {
   type: ReportType;
   audience: ReportAudience;
   period: { from: string; to: string };
+  /** 1 a 20, todas em `allowedSections` do tipo. */
   sections: ReportSection[];
 }
 
@@ -747,6 +757,7 @@ export interface AppNotification {
   body: string;
   target?: {
     type: "AGENDA_DAY" | "SESSION" | "PLAN" | "SCALE_APPLICATION";
+    /** `AGENDA_DAY`: a data `AAAA-MM-DD` (não é UUID); os outros: UUID do recurso. */
     id: string;
   };
   createdAt: string;
@@ -757,9 +768,11 @@ export interface ListNotificationsFilters {
   unreadOnly?: boolean;
   /** 1 a 50 (padrão do servidor: 20). */
   limit?: number;
+  /** `nextCursor` da página anterior. */
   cursor?: string;
 }
 
+/** Uma página pode vir com menos itens que `limit`, ou vazia com `nextCursor`. */
 export interface NotificationsPage {
   items: AppNotification[];
   nextCursor?: string;

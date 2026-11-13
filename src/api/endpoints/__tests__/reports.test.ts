@@ -53,14 +53,10 @@ describe("leitura dos relatórios pelo apiClient (API-05, leva 3)", () => {
       .map((s) => s.section);
     expect(sensitive).toEqual(["ASSESSMENTS", "ANAMNESIS_SUMMARY"]);
     for (const type of options.types) {
-      expect(type.defaultSections.some((s) => sensitive.includes(s))).toBe(
-        false,
-      );
-      expect(
-        type.defaultSections.every((s) => type.allowedSections.includes(s)),
-      ).toBe(true);
+      // O backend entrega todas as permitidas como padrão (RP-01 fica no app).
+      expect(type.defaultSections).toEqual(type.allowedSections);
     }
-    expect(options.periods.length).toBeGreaterThan(0);
+    expect(options.periods.map((p) => p.key)).toEqual(["30d", "90d", "180d"]);
     expect(options.maxPeriodDays).toBe(365);
   });
 
@@ -69,6 +65,8 @@ describe("leitura dos relatórios pelo apiClient (API-05, leva 3)", () => {
 
     expect(list.map((r) => r.id)).toEqual([MOCK_REPORT_ID]);
     expect(list[0]).not.toHaveProperty("content");
+    expect(list[0]).not.toHaveProperty("shares");
+    expect(list[0].synthesisFailed).toBe(false);
   });
 
   it("filtra por paciente e rejeita limite inválido e paciente alheio", async () => {

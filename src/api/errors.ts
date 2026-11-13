@@ -101,10 +101,14 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   // STUDENT_NOT_FOUND segue SEM tradução (ver leva 2).
   SECTION_NOT_ALLOWED:
     "Uma das seções escolhidas não está disponível para este tipo de relatório.",
+  INVALID_PERIOD:
+    "O período é inválido: a data inicial deve ser anterior à final e o intervalo, de até 365 dias.",
   REPORT_EMPTY_PERIOD:
     "Não há dados do paciente neste período. Escolha outro período.",
   REPORT_NOT_FOUND: "Relatório não encontrado.",
   NOTIFICATION_NOT_FOUND: "Notificação não encontrada.",
+  INVALID_CURSOR:
+    "Não foi possível carregar mais notificações. Atualize a lista.",
 };
 
 export function normalizeApiError(error: unknown): ApiError {

@@ -34,16 +34,16 @@ const seedNotifications: AppNotification[] = [
   {
     id: MOCK_NOTIFICATION_IDS.planReviewDue,
     kind: "PLAN_REVIEW_DUE",
-    title: "Revisão de plano próxima",
-    body: "A revisão do plano de Lia vence em 2 dias.",
+    title: "Revisão de plano",
+    body: "A revisão do plano de Lia vence em 12/11.",
     target: { type: "PLAN", id: "mock-plan-1" },
     createdAt: "2026-11-11T09:00:00.000Z",
   },
   {
     id: MOCK_NOTIFICATION_IDS.scaleDraftStale,
     kind: "SCALE_DRAFT_STALE",
-    title: "Rascunho de escala parado",
-    body: "O rascunho de escala de Caio está parado há 7 dias.",
+    title: "Escala em rascunho",
+    body: "A escala Escala fictícia de exemplo de Caio está em rascunho há 7 dias.",
     target: { type: "SCALE_APPLICATION", id: "mock-scale-app-draft" },
     createdAt: "2026-11-10T09:00:00.000Z",
   },
@@ -87,14 +87,14 @@ registerMockHandler({ method: "get", path: "/notification/" }, ({ params }) => {
     unreadOnly !== "true" &&
     unreadOnly !== "false"
   )
-    throw new MockApiError(400, "Validation error");
+    throw new MockApiError(400, "Bad Request");
   if (
     limit !== undefined &&
     (!/^\d+$/.test(limit) || Number(limit) < 1 || Number(limit) > 50)
   )
-    throw new MockApiError(400, "Validation error");
+    throw new MockApiError(400, "Bad Request");
   if (cursor !== undefined && !/^\d+$/.test(cursor))
-    throw new MockApiError(400, "Validation error");
+    throw new MockApiError(400, "INVALID_CURSOR");
 
   const size = limit === undefined ? 20 : Number(limit);
   const start = cursor === undefined ? 0 : Number(cursor);
