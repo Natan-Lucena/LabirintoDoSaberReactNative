@@ -27,6 +27,8 @@ import "@/mocks/handlers/session-report";
 import "@/mocks/handlers/anamnese";
 import "@/mocks/handlers/anamnese-responses";
 import "@/mocks/handlers/plans";
+import "@/mocks/handlers/password";
+import "@/mocks/handlers/evolution";
 
 let installed = false;
 
