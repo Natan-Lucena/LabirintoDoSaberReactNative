@@ -33,7 +33,6 @@ const styles = StyleSheet.create({
   },
   info: { ...bodyText, color: color.ink[950] },
   error: { ...bodyText, color: semanticColor.dangerTextOnSurface },
-  hint: { ...bodyText, color: color.textTertiary },
 });
 
 export interface PasswordResetFlowProps {
