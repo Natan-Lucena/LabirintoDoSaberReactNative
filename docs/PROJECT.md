@@ -34,6 +34,7 @@
     - [Anamnese Response — 4 rotas](#anamnese-response--4-rotas)
     - [Appointment — 7 rotas](#appointment--7-rotas)
     - [Planos (PDI e PE) e sugestões da IA — 13 rotas](#planos-pdi-e-pe-e-sugestões-da-ia--13-rotas)
+  - [Entrega 4 — Senha, evolução, escalas, relatórios e notificações](#entrega-4--senha-evolução-escalas-relatórios-e-notificações)
 - [Apêndice — Tabela consolidada dos 55 endpoints](#apêndice--tabela-consolidada-dos-55-endpoints)
 - [Limitações desta documentação](#limitações-desta-documentação)
 
@@ -649,7 +650,8 @@ origem; onde algo não foi informado, o item permanece em aberto.
 #### `POST /educator/update-password`
 
 - **Autenticação:** público.
-- **Body:** `email: string` (e-mail válido), `newPassword: string` (6–100).
+- **Mudou na Entrega 4:** exige também `token` (código de 6 dígitos); `EDUCATOR_NOT_FOUND` virou `INVALID_TOKEN`. Ver [Senha](#senha--4-rotas).
+- **Body (antigo):** `email: string` (e-mail válido), `newPassword: string` (6–100).
 - **Resposta:** `200` vazio.
 - **Erros:** `400` validação / `EDUCATOR_NOT_FOUND` / `PASSWORD_SAME_AS_OLD`; `500`.
 - **Ver pendência de arquitetura:** não há campo de token neste endpoint (Parte I).
@@ -657,7 +659,8 @@ origem; onde algo não foi informado, o item permanece em aberto.
 #### `PUT /educator/generate-token`
 
 - **Autenticação:** público.
-- **Body:** `educatorEmail: string` (e-mail válido).
+- **Mudou na Entrega 4:** o corpo é `{ email }` e a resposta é sempre `200 { message: 'TOKEN_SENT' }`. Ver [Senha](#senha--4-rotas).
+- **Body (antigo):** `educatorEmail: string` (e-mail válido).
 - **Resposta:** `200` vazio; token é enviado por e-mail.
 - **Erros:** `400` validação; `404 EDUCATOR_NOT_FOUND`; `500 INTERNAL_ERROR`.
 
@@ -1482,6 +1485,150 @@ interface PlanSuggestion {
   `404` em `PUT /plan/:id/goals/:goalId`. O app trata os dois pelo `message`.
 - **Tempo da IA:** ainda não medido em produção pelo backend; o app mantém 90 s.
 
+## Entrega 4 — Senha, evolução, escalas, relatórios e notificações
+
+> **Procedência:** o backend publicou estas rotas em 2026-11-12 (PRs #30 a #34 dele, em produção).
+> O texto completo, com todos os tipos TypeScript, tabelas de erro e regras de negócio, está em
+> [BACKEND-ENTREGUE](entrega-4/BACKEND-ENTREGUE.md); este bloco resume método, caminho, corpo,
+> resposta e erros, e **não repete os tipos**. O que o app integra está em `src/api/endpoints/` e
+> `src/api/types.ts` (INT-1, INT-2 e telas). Nada foi chamado nesta tarefa. Pedido original:
+> [ESPECIFICACAO-BACKEND](entrega-4/ESPECIFICACAO-BACKEND.md). Este bloco fecha a API-04 da Entrega 4.
+
+**Convenções:** todas as rotas novas exigem **Bearer**, menos `generate-token`, `verify-token` e
+`update-password`. O educador vem do token. Erro de regra: `{ message: 'CODIGO' }`; validação:
+`400 { message: 'Bad Request', errors: [{ message, field }] }`; IA: `500 AI_GENERATION_FAILED` ou
+`AI_INVALID_OUTPUT`. Recurso de paciente de outro educador: `403 UNAUTHORIZED`; inexistente (ou id de
+path que não é UUID): `404` com código próprio. Datas sem hora: `AAAA-MM-DD` (São Paulo); com hora: ISO 8601
+em UTC. Opcionais vêm ausentes, nunca `null`. Rotas de IA: até 2 tentativas de 40 s no servidor; o app
+mantém **timeout de 90 s sem repetir sozinho**. Outros `401` do Bearer: `Missing or invalid token`,
+`Invalid or expired token`, `Educator not found`.
+
+### Senha — 4 rotas
+
+> **Atenção:** `generate-token` e `update-password` **mudaram** em relação à seção
+> [Educator](#educator--8-rotas), que descreve o contrato antigo. Vale o que está aqui.
+
+- **`PUT /educator/generate-token`** (público). Body `{ email }` (antes `educatorEmail`). Resposta
+  `200 { message: 'TOKEN_SENT' }`, **sempre**, exista ou não a conta (o antigo `404 EDUCATOR_NOT_FOUND`
+  deixou de existir). Código de 6 dígitos, válido por 15 min. Erros: `400` validação;
+  `429 TOO_MANY_REQUESTS` (4º pedido da conta em 15 min).
+- **`POST /educator/verify-token`** (público). Body `{ email, token }` (`token`: 6 dígitos). Resposta
+  `200 { valid: true }`; **não consome** o código. Erros: `400` validação, `INVALID_TOKEN`,
+  `EXPIRED_TOKEN`; `429 TOO_MANY_ATTEMPTS` (5 erros com o código).
+- **`POST /educator/update-password`** (público). Body `{ email, token, newPassword }` (`token`
+  obrigatório agora; `newPassword` 6–100). Resposta `200` sem JSON (texto "OK"). Erros: `400` validação,
+  `INVALID_TOKEN` (substitui o antigo `EDUCATOR_NOT_FOUND`), `EXPIRED_TOKEN`, `PASSWORD_SAME_AS_OLD` (não
+  gasta o código); `429 TOO_MANY_ATTEMPTS`.
+- **`PUT /educator/change-password`** (Bearer). Body `{ currentPassword, newPassword }`. Resposta
+  `200 { token }` com um **JWT novo**, que substitui o atual. Erros: `400` validação,
+  `INVALID_CURRENT_PASSWORD`, `PASSWORD_SAME_AS_OLD`; `401`.
+- **Invalidação de JWT:** depois de `update-password` ou `change-password`, todo JWT emitido antes
+  recebe `401 Invalid or expired token` (inclusive em outros aparelhos). Depois de `update-password`,
+  o app manda o usuário ao login.
+
+### Evolução da sessão — 7 rotas
+
+Rotas `/session-evolution`. Só sessões finalizadas; sem exclusão. Tipos (`EvolutionContext`,
+`SessionEvolution`, `EvolutionCriterionInput`, `PendingEvolution`) em
+[BACKEND-ENTREGUE §3.2](entrega-4/BACKEND-ENTREGUE.md#32-evolução-da-sessão-session-evolution-bearer).
+
+| Método e caminho                                  | Body / query                                                                                                                      | Resposta                         | Erros principais                                                                                                                                                          |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /session-evolution/context/:sessionId`       | —                                                                                                                                 | `200 EvolutionContext`           | `403`; `404 SESSION_NOT_FOUND`, `STUDENT_NOT_FOUND`; `409 SESSION_NOT_FINISHED`                                                                                           |
+| `POST /session-evolution/`                        | `sessionId`, `planId?`, `criteria` (0–20), `descriptiveRecord` (1–5000), `nextSessionSuggestion?` (≤2000), `goalUpdates?` (≤10)   | `201 SessionEvolution`           | `400 INVALID_PLAN`, `GOAL_NOT_IN_PLAN`, `INVALID_ATTEMPTS`; `403`; `404`; `409 EVOLUTION_ALREADY_EXISTS` (com `evolutionId`), `SESSION_NOT_FINISHED`, `PLAN_NOT_EDITABLE` |
+| `GET /session-evolution/`                         | query `studentId?`, `from?`, `to?`, `limit?` (1–100, padrão 50)                                                                   | `200 SessionEvolutionSummary[]`  | `400`; `403`; `404 STUDENT_NOT_FOUND`                                                                                                                                     |
+| `GET /session-evolution/pending`                  | query `days?` (1–90, padrão 30)                                                                                                   | `200 PendingEvolution[]`         | `400`                                                                                                                                                                     |
+| `GET /session-evolution/:id`                      | —                                                                                                                                 | `200 SessionEvolution`           | `403`; `404 EVOLUTION_NOT_FOUND`, `STUDENT_NOT_FOUND`                                                                                                                     |
+| `PUT /session-evolution/:id`                      | todos opcionais: `criteria` (lista completa, substitui), `descriptiveRecord`, `nextSessionSuggestion` (`""` limpa), `goalUpdates` | `200 SessionEvolution`           | `400 INVALID_PLAN`, `GOAL_NOT_IN_PLAN`, `INVALID_ATTEMPTS`; `403`; `404`; `409 PLAN_NOT_EDITABLE`                                                                         |
+| `POST /session-evolution/next-session-suggestion` | `sessionId`, `criteria?`, `descriptiveRecord?` (IA; não grava)                                                                    | `200 { suggestion, rationale? }` | `400`; `403`; `404`; `409 SESSION_NOT_FINISHED`; `500` de IA                                                                                                              |
+
+**Plano da evolução (EV-12, G-57 revisto):** o contexto traz o plano escolhido pelo servidor, com o
+**PDI como reserva**. O app aceita `plan.type` `"PDI" | "PE"` e mostra o plano que vier ("PDI · …" ou
+"PE · …"). Plano encerrado: sem `goalUpdates` é `400 INVALID_PLAN`; com `goalUpdates` é `409 PLAN_NOT_EDITABLE`.
+
+### Escalas — 9 rotas
+
+Rotas `/scale-template` (2) e `/scale-application` (7). Tipos (`ScaleTemplate`, `ScaleScore`,
+`ScaleApplication`) em
+[BACKEND-ENTREGUE §3.3 e §3.4](entrega-4/BACKEND-ENTREGUE.md#33-escalas-catálogo-scale-template-bearer).
+O escore e a faixa são calculados **no servidor**; toda resposta traz `disclaimer`.
+
+| Método e caminho                       | Body / query                                                  | Resposta                             | Erros principais                                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /scale-template/`                 | —                                                             | `200 ScaleTemplateSummary[]`         | só `401`                                                                                                                                         |
+| `GET /scale-template/:id`              | —                                                             | `200 ScaleTemplate`                  | `404 SCALE_NOT_FOUND`                                                                                                                            |
+| `POST /scale-application/`             | `studentId`, `templateId`, `appointmentId?`                   | `201 ScaleApplication` (DRAFT)       | `400 INVALID_APPOINTMENT`; `403`; `404 STUDENT_NOT_FOUND`, `SCALE_NOT_FOUND`; `409 DRAFT_ALREADY_EXISTS` (com `applicationId`), `SCALE_INACTIVE` |
+| `GET /scale-application/`              | query `studentId?`, `status?` (`DRAFT`/`COMPLETED`), `limit?` | `200 ScaleApplicationSummary[]`      | `400`; `403`; `404`                                                                                                                              |
+| `GET /scale-application/:id`           | —                                                             | `200 ScaleApplication`               | `403`; `404 APPLICATION_NOT_FOUND`                                                                                                               |
+| `PUT /scale-application/:id/answers`   | `answers: { itemId, value }[]` (1–200), upsert por `itemId`   | `200 ScaleApplication`               | `400 ITEM_NOT_IN_SCALE`, `INVALID_ANSWER_VALUE`; `409 APPLICATION_NOT_EDITABLE`                                                                  |
+| `POST /scale-application/:id/complete` | —                                                             | `200 ScaleApplication` (COMPLETED)   | `400 SCALE_INCOMPLETE` (com `missingItemIds`); `409 APPLICATION_NOT_EDITABLE`                                                                    |
+| `POST /scale-application/:id/insight`  | — (IA; em DRAFT vem `preliminary: true`)                      | `200 ScaleApplication` com `insight` | `400 NO_ANSWERS_YET`; `500` de IA                                                                                                                |
+| `DELETE /scale-application/:id`        | —                                                             | `204`                                | `409 APPLICATION_NOT_EDITABLE` (só rascunho)                                                                                                     |
+
+**Catálogo de hoje:** só a escala **fictícia** `DEMO-RASTREIO`, sem validade clínica. A escala real
+(G-55) entra como dados quando o responsável clínico enviar conteúdo, referência e licença; o app
+**não fixa** `code` nem `id`.
+
+### Anamnese — síntese e `summaryOutdated`
+
+- **`POST /anamnese/responses/:responseId/summary`** (IA, Bearer). Sem corpo. Resposta
+  `200 AnamneseResponse` com `summary { text, generatedAt }` (até 1500 caracteres) e
+  `summaryOutdated: false`. Erros: `400 NO_ANSWERS_TO_SUMMARIZE`; `403`; `404 RESPONSE_NOT_FOUND`,
+  `TEMPLATE_NOT_FOUND`, `STUDENT_NOT_FOUND`; `500` de IA. O dono aqui é quem respondeu a anamnese
+  (`AnamneseResponse.educatorId`).
+- **Campos novos** em `GET /anamnese/responses/:responseId` e `GET /anamnese/responses/student/:studentId`:
+  `summary?` e `summaryOutdated: boolean` (`true` quando a resposta foi editada depois da síntese).
+  `PUT` e `POST` de resposta devolvem `summary`, mas **não** `summaryOutdated`: releia com `GET`.
+- `GET /anamnese/responses/:responseId` com id não-UUID agora dá `404 RESPONSE_NOT_FOUND` (antes `500`).
+
+### Relatórios — 6 rotas
+
+Rotas `/report`. Tipos (`ReportOptions`, `Report`, `ReportContent`, `ReportSummary`) em
+[BACKEND-ENTREGUE §3.6](entrega-4/BACKEND-ENTREGUE.md#36-relatórios-report-bearer). Tipos de relatório:
+`PROGRESS`, `ASSESSMENT`, `PDI_PROGRESS`; audiências: `FAMILY`, `SCHOOL`, `PROFESSIONAL`. O conteúdo é
+**congelado** na geração.
+
+| Método e caminho         | Body / query                                                                                              | Resposta                                        | Erros principais                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `GET /report/options`    | —                                                                                                         | `200 ReportOptions` (estático)                  | só `401`                                                                                           |
+| `POST /report/`          | `studentId`, `type`, `audience`, `period { from, to }` (≤365 dias), `sections` (1–20, permitidas do tipo) | `201 Report` (`synthesisFailed` se a IA falhou) | `400 INVALID_PERIOD`, `SECTION_NOT_ALLOWED`, `REPORT_EMPTY_PERIOD`; `403`; `404 STUDENT_NOT_FOUND` |
+| `GET /report/`           | query `studentId?`, `limit?` (1–100, padrão 50)                                                           | `200 ReportSummary[]`                           | `400`; `403`; `404`                                                                                |
+| `GET /report/:id`        | —                                                                                                         | `200 Report`                                    | `403`; `404 REPORT_NOT_FOUND`                                                                      |
+| `POST /report/:id/share` | `{ channel: 'SHARE' \| 'PRINT' }`                                                                         | `200 Report` (com o envio em `shares`)          | `400`; `403`; `404`                                                                                |
+| `DELETE /report/:id`     | —                                                                                                         | `204`                                           | `403`; `404`                                                                                       |
+
+**Decisões do app:**
+
+- `defaultSections` vem com **todas** as seções permitidas do tipo; para as audiências `FAMILY` e `SCHOOL` o
+  **app desmarca** as seções `sensitive` (`ASSESSMENTS` e `ANAMNESIS_SUMMARY`).
+- O **PDF é gerado no app** (G-58); o backend só registra o envio em `share` (não manda e-mail).
+- `patient.displayName` é o nome completo em todas as audiências (ponto em aberto, BACKEND-ENTREGUE §6).
+
+### Notificações — 4 rotas
+
+Rotas `/notification`, geradas por um job diário (06:00, São Paulo). Tipos (`AppNotification`,
+`NotificationKind`) em [BACKEND-ENTREGUE §3.7](entrega-4/BACKEND-ENTREGUE.md#37-notificações-notification-bearer).
+
+- **`GET /notification/`**: query `unreadOnly?`, `limit?` (1–50, padrão 20), `cursor?`. Resposta
+  `200 { items: AppNotification[]; nextCursor?: string }`. Erros: `400`, `400 INVALID_CURSOR`.
+- **`GET /notification/unread-count`**: `200 { count }`.
+- **`POST /notification/:id/read`**: `200 AppNotification` (idempotente). Erros: `403`; `404 NOTIFICATION_NOT_FOUND`.
+- **`POST /notification/read-all`**: `200 { updated }`.
+- `target.id` de `AGENDA_DAY` é a **data** `AAAA-MM-DD`, não um UUID. A mesma pendência gera uma
+  notificação nova por dia (ponto em aberto).
+- **Sem push (G-59):** o app só mostra o sino e a lista; não há notificação do sistema.
+
+### Pequenas mudanças em rotas existentes
+
+- **`GET /appointment/`:** aceita `from` e `to` (`AAAA-MM-DD`, opcionais e independentes, inclusivos, dia
+  de São Paulo). Sem eles, devolve tudo. Ordem por `scheduledAt` asc. Erros: `400`, `400 INVALID_PERIOD` (`from > to`).
+- **`POST /task-notebook-session/answer`:** `timeToAnswer` é oficialmente em **milissegundos**
+  (fecha a pendência da unidade). Respostas anteriores a 2026-10-09 ficaram em segundos, sem migração.
+- **`GET /task-notebook-session/report/:sessionId`:** as médias de tempo saem em ms; `totalTimeSession`
+  continua em segundos; novo campo `evolutionId?`.
+- **`GET /task-notebook-session/student/:studentId`:** cada sessão ganha `evolutionId?`.
+- **Planos:** a sugestão `REWRITE_GOAL` repetida é descartada pelo servidor.
+
 ## Apêndice — Tabela consolidada dos 55 endpoints
 
 O healthcheck (`GET /`) e o Swagger (`GET /api-docs`) são recursos de visão
@@ -1491,8 +1638,8 @@ geral da API e **não contam** entre os 55 endpoints de domínio listados abaixo
 | --- | ------ | ------------------------------------------------------------- | --------------- | ------------------------------------------ |
 | 1   | POST   | `/educator/sign-in`                                           | Público         | Login e emissão de JWT                     |
 | 2   | POST   | `/educator/register`                                          | Público         | Cadastro de educador                       |
-| 3   | POST   | `/educator/update-password`                                   | Público         | Redefinição de senha                       |
-| 4   | PUT    | `/educator/generate-token`                                    | Público         | Envio de token de autenticação por e-mail  |
+| 3   | POST   | `/educator/update-password`                                   | Público         | Redefinição de senha (exige `token`, E4)   |
+| 4   | PUT    | `/educator/generate-token`                                    | Público         | Envia código por e-mail (`email`, E4)      |
 | 5   | GET    | `/educator/me`                                                | Bearer          | Dados do educador autenticado              |
 | 6   | GET    | `/educator/get-last-sessions`                                 | Bearer          | Últimas 2 sessões do educador              |
 | 7   | PUT    | `/educator/update-profile-picture`                            | Bearer          | Atualiza foto de perfil                    |
@@ -1566,6 +1713,42 @@ Não entram na contagem dos 55 acima. Detalhes em [Planos](#planos-pdi-e-pe-e-su
 | GET    | `/plan/suggestions`              | Lista sugestões               |
 | POST   | `/plan/suggestions/:id/accept`   | Aceita sugestão               |
 | POST   | `/plan/suggestions/:id/dismiss`  | Descarta sugestão             |
+
+### Rotas da Entrega 4
+
+Não entram na contagem dos 55 acima. Detalhes em [Entrega 4](#entrega-4--senha-evolução-escalas-relatórios-e-notificações). Todas exigem Bearer, exceto `verify-token`.
+
+| Método | Caminho                                      | Descrição                               |
+| ------ | -------------------------------------------- | --------------------------------------- |
+| POST   | `/educator/verify-token`                     | Confere o código (público, não consome) |
+| PUT    | `/educator/change-password`                  | Troca a senha logado; devolve JWT novo  |
+| GET    | `/session-evolution/context/:sessionId`      | Contexto para registrar a evolução      |
+| POST   | `/session-evolution/`                        | Registra a evolução                     |
+| GET    | `/session-evolution/`                        | Lista evoluções                         |
+| GET    | `/session-evolution/pending`                 | Sessões finalizadas sem evolução        |
+| GET    | `/session-evolution/:id`                     | Detalha a evolução                      |
+| PUT    | `/session-evolution/:id`                     | Atualiza a evolução                     |
+| POST   | `/session-evolution/next-session-suggestion` | Sugestão da IA para a próxima sessão    |
+| GET    | `/scale-template/`                           | Catálogo de escalas                     |
+| GET    | `/scale-template/:id`                        | Detalha uma escala                      |
+| POST   | `/scale-application/`                        | Inicia aplicação (rascunho)             |
+| GET    | `/scale-application/`                        | Lista aplicações                        |
+| GET    | `/scale-application/:id`                     | Detalha uma aplicação                   |
+| PUT    | `/scale-application/:id/answers`             | Grava respostas                         |
+| POST   | `/scale-application/:id/complete`            | Conclui a aplicação                     |
+| POST   | `/scale-application/:id/insight`             | Insight da IA                           |
+| DELETE | `/scale-application/:id`                     | Exclui rascunho                         |
+| POST   | `/anamnese/responses/:responseId/summary`    | Síntese da anamnese pela IA             |
+| GET    | `/report/options`                            | Opções de relatório                     |
+| POST   | `/report/`                                   | Gera relatório                          |
+| GET    | `/report/`                                   | Histórico de relatórios                 |
+| GET    | `/report/:id`                                | Detalha um relatório                    |
+| POST   | `/report/:id/share`                          | Registra o envio                        |
+| DELETE | `/report/:id`                                | Exclui relatório                        |
+| GET    | `/notification/`                             | Lista notificações (cursor)             |
+| GET    | `/notification/unread-count`                 | Contagem de não lidas                   |
+| POST   | `/notification/:id/read`                     | Marca como lida                         |
+| POST   | `/notification/read-all`                     | Marca todas como lidas                  |
 
 ## Limitações desta documentação
 
