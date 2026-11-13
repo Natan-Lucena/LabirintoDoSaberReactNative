@@ -3,6 +3,7 @@ import { Tabs, useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/ds/AppHeader";
 import { BottomNav } from "@/components/ds/BottomNav";
+import { useUnreadNotificationCount } from "@/features/notifications/useNotifications";
 import { TAB_DEFINITIONS, useTabItems } from "@/features/shell/useTabItems";
 
 // NAV-01/NAV-02: casca nova do Figma Make (BottomNav + AppHeader) em vez do
@@ -20,26 +21,27 @@ const HIDDEN_TAB_TITLES: Record<string, string> = {
   reports: "Relatórios",
 };
 
-export default function TabsLayout(): ReactElement {
+// Cabeçalho das abas: sino com o contador de notificações não lidas (NOT-01).
+function TabsHeader({ title }: { title: string }): ReactElement {
   const router = useRouter();
+  const { data: unreadCount } = useUnreadNotificationCount();
 
-  const openNotifications = () =>
-    router.push({
-      pathname: "/shell/coming-soon",
-      params: { title: "Notificações" },
-    });
+  return (
+    <AppHeader
+      title={title}
+      unreadCount={unreadCount ?? 0}
+      onBellPress={() => router.push("/notifications")}
+    />
+  );
+}
 
+export default function TabsLayout(): ReactElement {
   return (
     <Tabs
       tabBar={() => <BottomNavAdapter />}
       screenOptions={{
         headerShown: true,
-        header: ({ options }) => (
-          <AppHeader
-            title={options.title ?? ""}
-            onBellPress={openNotifications}
-          />
-        ),
+        header: ({ options }) => <TabsHeader title={options.title ?? ""} />,
       }}
     >
       {TAB_DEFINITIONS.map((tab) => (

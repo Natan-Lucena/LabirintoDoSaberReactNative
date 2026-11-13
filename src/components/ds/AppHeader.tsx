@@ -5,7 +5,7 @@
 import type { ReactElement } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { color, typography } from "../../theme";
+import { color, semanticColor, typography } from "../../theme";
 import { BackButton } from "./BackButton";
 import { IconButton } from "./IconButton";
 
@@ -17,6 +17,8 @@ export interface AppHeaderProps {
   onBack?: () => void;
   /** Telas de aba: mostra o sino de notificações (ignorado quando há onBack). */
   onBellPress?: () => void;
+  /** Notificações não lidas: mostra o contador no sino (NOT-01). */
+  unreadCount?: number;
 }
 
 export function AppHeader({
@@ -24,6 +26,7 @@ export function AppHeader({
   subtitle,
   onBack,
   onBellPress,
+  unreadCount = 0,
 }: AppHeaderProps): ReactElement {
   return (
     <View style={styles.container}>
@@ -46,11 +49,26 @@ export function AppHeader({
         </View>
       </View>
       {!onBack && onBellPress ? (
-        <IconButton
-          icon="bell"
-          accessibilityLabel="Notificações"
-          onPress={onBellPress}
-        />
+        <View>
+          <IconButton
+            icon="bell"
+            accessibilityLabel={
+              unreadCount === 0
+                ? "Notificações"
+                : unreadCount === 1
+                  ? "1 notificação não lida"
+                  : `${unreadCount} notificações não lidas`
+            }
+            onPress={onBellPress}
+          />
+          {unreadCount > 0 ? (
+            <View style={styles.badge} pointerEvents="none">
+              <Text style={styles.badgeText}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -74,6 +92,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: semanticColor.primaryFill,
+  },
+  badgeText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "800",
+    color: semanticColor.textOnPrimary,
   },
   titleGroup: {
     flex: 1,

@@ -26,6 +26,13 @@ describe("AppHeader (NAV-02)", () => {
     expect(onBellPress).toHaveBeenCalledTimes(1);
   });
 
+  it("labels the bell with the unread count (NOT-01)", async () => {
+    await render(
+      <AppHeader title="Início" onBellPress={vi.fn()} unreadCount={4} />,
+    );
+    expect(screen.getByLabelText("4 notificações não lidas")).toBeTruthy();
+  });
+
   it("does not show the bell when there is no onBellPress", async () => {
     await render(<AppHeader title="Início" />);
     expect(screen.queryByLabelText("Notificações")).toBeNull();
