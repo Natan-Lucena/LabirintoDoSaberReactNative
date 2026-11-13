@@ -4,11 +4,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { createQueryClient } from "@/api/query-client";
 import { render } from "@/test-utils/render";
 import type { TaskNotebookSession } from "@/api/types";
-import {
-  addSessionObservation,
-  finishSession,
-  listSessionsByStudent,
-} from "@/api/endpoints/session";
+import { finishSession, listSessionsByStudent } from "@/api/endpoints/session";
 import { ApiError } from "@/api/errors";
 import { FinishSessionScreen } from "../FinishSessionScreen";
 
@@ -19,13 +15,10 @@ const replace = vi.fn();
 vi.mock("expo-router", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("@/api/endpoints/session", () => ({
   finishSession: vi.fn(),
-  addSessionObservation: vi.fn(),
   listSessionsByStudent: vi.fn(),
 }));
 
-const awaitObservation = vi.fn().mockResolvedValue(undefined);
-const close = vi.fn().mockResolvedValue(undefined);
-const hydrate = vi.fn().mockResolvedValue(undefined);
+const awaitEvolution = vi.fn();
 
 type StoreState = {
   step: string;
@@ -41,13 +34,13 @@ type StoreState = {
 let storeState: StoreState;
 
 vi.mock("@/stores/session-flow", () => ({
-  useSessionFlowStore: () => ({
-    ...storeState,
-    awaitObservation,
-    close,
-    hydrate,
-  }),
+  useSessionFlowStore: () => ({ ...storeState, awaitEvolution }),
 }));
+
+const EVOLUTION_ROUTE = {
+  pathname: "/evolution/[sessionId]",
+  params: { sessionId: "session-1" },
+};
 
 function session(
   overrides: Partial<TaskNotebookSession> = {},
@@ -75,22 +68,23 @@ beforeEach(() => {
     pendingAnswers: [],
     conflictedAnswers: [],
   };
+  awaitEvolution.mockResolvedValue(undefined);
   vi.mocked(finishSession).mockResolvedValue(
     session({ finishedAt: "2026-10-07T12:30:00.000Z" }),
-  );
-  vi.mocked(addSessionObservation).mockResolvedValue(
-    session({ finishedAt: "2026-10-07T12:30:00.000Z", observation: "ok" }),
   );
   vi.mocked(listSessionsByStudent).mockResolvedValue([]);
 });
 
 describe("FinishSessionScreen — encerramento", () => {
-  it("AC-SES-04-01: encerra a sessão uma única vez e segue para o registro", async () => {
+  it("AC-SES-04-01: encerra a sessão uma única vez e segue para a Evolução (G-56)", async () => {
     await render(<FinishSessionScreen />);
 
+    expect(screen.getByText("Leitura de hoje")).toBeTruthy();
+    expect(screen.getByText(/Aluno Fictício/)).toBeTruthy();
+    expect(screen.getByText(/2 questões/)).toBeTruthy();
     await waitFor(() => expect(finishSession).toHaveBeenCalledTimes(1));
     expect(finishSession).toHaveBeenCalledWith({ sessionId: "session-1" });
-    await waitFor(() => expect(awaitObservation).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(awaitEvolution).toHaveBeenCalledTimes(1));
   });
 
   it("não encerra enquanto houver respostas pendentes ou em conflito", async () => {
@@ -115,7 +109,7 @@ describe("FinishSessionScreen — encerramento", () => {
     ]);
     await render(<FinishSessionScreen />);
 
-    await waitFor(() => expect(awaitObservation).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(awaitEvolution).toHaveBeenCalledTimes(1));
     expect(finishSession).toHaveBeenCalledTimes(1);
   });
 
@@ -131,13 +125,26 @@ describe("FinishSessionScreen — encerramento", () => {
         screen.getByRole("button", { name: "Tentar novamente" }),
       ).toBeTruthy(),
     );
-    expect(awaitObservation).not.toHaveBeenCalled();
+    expect(awaitEvolution).not.toHaveBeenCalled();
     expect(finishSession).toHaveBeenCalledTimes(1);
 
     await act(async () =>
       fireEvent.press(screen.getByRole("button", { name: "Tentar novamente" })),
     );
     await waitFor(() => expect(finishSession).toHaveBeenCalledTimes(2));
+  });
+
+  it("ao encerrar, invalida sessões, análise e atendimentos (AC-AGE-04-03)", async () => {
+    const queryClient = createQueryClient();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    await render(<FinishSessionScreen />, { queryClient });
+
+    await waitFor(() => expect(awaitEvolution).toHaveBeenCalledTimes(1));
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["task-notebook-session"],
+    });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["student-analysis"] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["appointment"] });
   });
 
   it("sem sessão em andamento volta para o início", async () => {
@@ -150,163 +157,17 @@ describe("FinishSessionScreen — encerramento", () => {
   });
 });
 
-describe("FinishSessionScreen — registro descritivo", () => {
+describe("FinishSessionScreen — sessão já encerrada (EVO-01)", () => {
   beforeEach(() => {
-    storeState.step = "awaitingObservation";
+    storeState.step = "awaitingEvolution";
   });
 
-  it("mostra o resumo da sessão e não chama finish de novo", async () => {
+  it("vai direto para a Evolução da sessão, sem chamar finish de novo nem mostrar a observação", async () => {
     await render(<FinishSessionScreen />);
 
-    expect(screen.getByText("Leitura de hoje")).toBeTruthy();
-    expect(screen.getByText(/Aluno Fictício/)).toBeTruthy();
-    expect(screen.getByText(/2 questões/)).toBeTruthy();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(EVOLUTION_ROUTE));
     expect(finishSession).not.toHaveBeenCalled();
-  });
-
-  it("AC-SES-04-02: salvar envia a observação uma vez e abre o relatório", async () => {
-    await render(<FinishSessionScreen />);
-
-    await fireEvent.changeText(
-      screen.getByLabelText("Registro descritivo"),
-      "  Boa participação.  ",
-    );
-    await act(async () => {
-      fireEvent.press(
-        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
-      );
-      fireEvent.press(
-        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
-      );
-    });
-
-    await waitFor(() => expect(addSessionObservation).toHaveBeenCalledTimes(1));
-    expect(addSessionObservation).toHaveBeenCalledWith({
-      sessionId: "session-1",
-      observation: "Boa participação.",
-    });
-    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
-    expect(hydrate).toHaveBeenCalledWith("educator-1");
-    expect(replace).toHaveBeenCalledWith("/reports/session/session-1");
-  });
-
-  it("ao concluir, invalida sessões e análise para a ficha do paciente atualizar", async () => {
-    const queryClient = createQueryClient();
-    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    await render(<FinishSessionScreen />, { queryClient });
-
-    await fireEvent.changeText(
-      screen.getByLabelText("Registro descritivo"),
-      "Boa participação.",
-    );
-    await act(async () => {
-      fireEvent.press(
-        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
-      );
-    });
-
-    await waitFor(() => expect(replace).toHaveBeenCalled());
-    expect(invalidate).toHaveBeenCalledWith({
-      queryKey: ["task-notebook-session"],
-    });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["student-analysis"] });
-  });
-
-  it("AC-AGE-04-03: ao concluir, invalida os atendimentos para a Agenda e a Início", async () => {
-    const queryClient = createQueryClient();
-    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    await render(<FinishSessionScreen />, { queryClient });
-
-    await fireEvent.changeText(
-      screen.getByLabelText("Registro descritivo"),
-      "Boa participação.",
-    );
-    await act(async () => {
-      fireEvent.press(
-        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
-      );
-    });
-
-    await waitFor(() => expect(replace).toHaveBeenCalled());
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["appointment"] });
-  });
-
-  it("não permite salvar com o registro vazio", async () => {
-    await render(<FinishSessionScreen />);
-
-    const save = screen.getByRole("button", {
-      name: "Salvar e atualizar prontuário",
-    });
-    expect(save.props.accessibilityState?.disabled).toBe(true);
-    await act(async () => fireEvent.press(save));
-    expect(addSessionObservation).not.toHaveBeenCalled();
-  });
-
-  it("Pular fecha o fluxo sem enviar observação e abre o relatório", async () => {
-    await render(<FinishSessionScreen />);
-
-    await act(async () =>
-      fireEvent.press(screen.getByRole("button", { name: "Pular" })),
-    );
-
-    expect(addSessionObservation).not.toHaveBeenCalled();
-    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
-    expect(replace).toHaveBeenCalledWith("/reports/session/session-1");
-  });
-
-  it("falha ao salvar mostra o erro, mantém o texto e não reenvia sozinho", async () => {
-    vi.mocked(addSessionObservation).mockRejectedValue(
-      new ApiError({
-        message: "INTERNAL_ERROR",
-        status: 500,
-        code: "INTERNAL_ERROR",
-      }),
-    );
-    await render(<FinishSessionScreen />);
-
-    await fireEvent.changeText(
-      screen.getByLabelText("Registro descritivo"),
-      "Texto",
-    );
-    await act(async () =>
-      fireEvent.press(
-        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
-      ),
-    );
-
-    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
-    expect(addSessionObservation).toHaveBeenCalledTimes(1);
-    expect(close).not.toHaveBeenCalled();
-    expect(screen.getByLabelText("Registro descritivo").props.value).toBe(
-      "Texto",
-    );
-  });
-
-  it("timeout ao salvar: se a listagem já tem a observação, conclui sem reenviar", async () => {
-    vi.mocked(addSessionObservation).mockRejectedValue(
-      new ApiError({ message: "network", isNetworkError: true }),
-    );
-    vi.mocked(listSessionsByStudent).mockResolvedValue([
-      session({
-        finishedAt: "2026-10-07T12:30:00.000Z",
-        observation: "Texto",
-      }),
-    ]);
-    await render(<FinishSessionScreen />);
-
-    await fireEvent.changeText(
-      screen.getByLabelText("Registro descritivo"),
-      "Texto",
-    );
-    await act(async () =>
-      fireEvent.press(
-        screen.getByRole("button", { name: "Salvar e atualizar prontuário" }),
-      ),
-    );
-
-    await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith("/reports/session/session-1"),
-    );
-    expect(addSessionObservation).toHaveBeenCalledTimes(1);
+    expect(screen.queryByLabelText("Registro descritivo")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Pular" })).toBeNull();
   });
 });

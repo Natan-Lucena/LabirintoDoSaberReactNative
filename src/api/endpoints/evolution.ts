@@ -1,9 +1,13 @@
-// Evolução da sessão: leitura (API-05, leva 1). Contrato PROVISÓRIO copiado de
-// docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir em API-04. As
-// escritas (POST/PUT da evolução e a sugestão da IA) ficam com as telas
-// EVO-01, EVO-02 e EVO-04.
+// Evolução da sessão: leitura (API-05, leva 1) e criação (EVO-01). Contrato
+// PROVISÓRIO copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir
+// em API-04. As outras escritas (PUT da evolução e a sugestão da IA) ficam com
+// as telas EVO-02 e EVO-04.
+import type { AxiosResponse } from "axios";
+
 import { apiClient } from "@/api/client";
+import { ApiError } from "@/api/errors";
 import type {
+  CreateSessionEvolutionPayload,
   EvolutionContext,
   PendingEvolution,
   SessionEvolution,
@@ -96,6 +100,65 @@ export async function listPendingEvolutions(
   const response = await apiClient.get<PendingEvolution[]>(
     withQuery("/session-evolution/pending", { ...filters }),
   );
+
+  return response.data;
+}
+
+/**
+ * Erro `409` da criação da evolução. O cliente HTTP normaliza só `message`; o
+ * `409` é lido aqui para preservar o `evolutionId` do registro que já existe
+ * (`EVOLUTION_ALREADY_EXISTS`, EV-02).
+ */
+export class EvolutionApiError extends ApiError {
+  readonly evolutionId?: string;
+
+  constructor({
+    evolutionId,
+    ...rest
+  }: ConstructorParameters<typeof ApiError>[0] & { evolutionId?: string }) {
+    super(rest);
+    this.name = "EvolutionApiError";
+    this.evolutionId = evolutionId;
+  }
+}
+
+function throwOnConflict(response: AxiosResponse<unknown>): void {
+  if (response.status !== 409) return;
+  const body = (response.data ?? {}) as {
+    message?: unknown;
+    evolutionId?: unknown;
+  };
+  const code = typeof body.message === "string" ? body.message : undefined;
+
+  throw new EvolutionApiError({
+    message: code ?? "Conflict",
+    status: 409,
+    code,
+    evolutionId:
+      typeof body.evolutionId === "string" ? body.evolutionId : undefined,
+  });
+}
+
+/**
+ * POST /session-evolution/ — cria a evolução da sessão finalizada e aplica os
+ * `goalUpdates` ao plano na mesma transação (EV-07). Nunca é repetida sozinha.
+ * Erros: `400` (validação, `INVALID_PLAN`, `GOAL_NOT_IN_PLAN`,
+ * `INVALID_ATTEMPTS`), `403`, `404 SESSION_NOT_FOUND`, `409`
+ * (`EVOLUTION_ALREADY_EXISTS` com `evolutionId` → {@link EvolutionApiError},
+ * `SESSION_NOT_FINISHED`, `PLAN_NOT_EDITABLE`).
+ */
+export async function createSessionEvolution(
+  payload: CreateSessionEvolutionPayload,
+): Promise<SessionEvolution> {
+  const response = await apiClient.post<SessionEvolution>(
+    "/session-evolution/",
+    payload,
+    {
+      validateStatus: (status) =>
+        (status >= 200 && status < 300) || status === 409,
+    },
+  );
+  throwOnConflict(response);
 
   return response.data;
 }

@@ -163,24 +163,59 @@ describe("ResumeSessionPrompt", () => {
     expect(screen.queryByText("Sessão em andamento")).toBeNull();
   });
 
-  it.each(["finishing", "awaitingObservation"] as const)(
-    "Retomar com a sessão em %s abre o encerramento",
-    async (step) => {
-      persisted.step = step;
+  it("Retomar com a sessão em finishing abre o encerramento", async () => {
+    persisted.step = "finishing";
+    await render(<ResumeSessionPrompt />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Retomar" })).toBeTruthy(),
+    );
+
+    await act(async () =>
+      fireEvent.press(screen.getByRole("button", { name: "Retomar" })),
+    );
+
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/session/finish"),
+    );
+  });
+
+  describe("EVO-01: sessão encerrada aguardando a Evolução", () => {
+    const EVOLUTION_ROUTE = {
+      pathname: "/evolution/[sessionId]",
+      params: { sessionId: "session-1" },
+    };
+
+    beforeEach(() => {
+      persisted.step = "awaitingEvolution";
+    });
+
+    it("AC-EVO-01-05: avisa que falta a evolução e abre a Evolução da mesma sessão", async () => {
       await render(<ResumeSessionPrompt />);
       await waitFor(() =>
-        expect(screen.getByRole("button", { name: "Retomar" })).toBeTruthy(),
+        expect(
+          screen.getByRole("button", { name: "Registrar evolução" }),
+        ).toBeTruthy(),
       );
+      expect(screen.getByText("Evolução pendente")).toBeTruthy();
+      expect(screen.getByText(/falta registrar a evolução/)).toBeTruthy();
+      // A sessão já foi encerrada: não há o que retomar no player nem encerrar.
+      expect(screen.queryByRole("button", { name: "Retomar" })).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: "Encerrar agora" }),
+      ).toBeNull();
 
       await act(async () =>
-        fireEvent.press(screen.getByRole("button", { name: "Retomar" })),
+        fireEvent.press(
+          screen.getByRole("button", { name: "Registrar evolução" }),
+        ),
       );
 
-      await waitFor(() =>
-        expect(replace).toHaveBeenCalledWith("/session/finish"),
-      );
-    },
-  );
+      expect(replace).toHaveBeenCalledWith(EVOLUTION_ROUTE);
+      expect(finish).not.toHaveBeenCalled();
+      expect(listSessionsByStudent).not.toHaveBeenCalled();
+      expect(screen.queryByText("Evolução pendente")).toBeNull();
+    });
+  });
 
   it("sessão já finalizada no servidor não volta ao player: segue para o encerramento", async () => {
     vi.mocked(listSessionsByStudent).mockResolvedValue([

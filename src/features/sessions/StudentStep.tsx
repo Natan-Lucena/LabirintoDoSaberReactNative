@@ -163,7 +163,7 @@ export function StudentStep(): ReactElement {
     if (!existing) return;
     try {
       if (hasLocalFlow) {
-        // Passa pelo encerramento do app (SES-04) para registrar a observação.
+        // Passa pelo encerramento do app (SES-04), que segue para a Evolução (EVO-01).
         await finish();
         router.replace("/session/finish");
         return;
@@ -178,7 +178,7 @@ export function StudentStep(): ReactElement {
   const otherFlowRoute =
     flowStep === "running"
       ? "/session/player"
-      : flowStep === "finishing" || flowStep === "awaitingObservation"
+      : flowStep === "finishing" || flowStep === "awaitingEvolution"
         ? "/session/finish"
         : null;
   const showResumeOther =

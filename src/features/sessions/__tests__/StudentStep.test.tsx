@@ -205,6 +205,31 @@ describe("StudentStep", () => {
     expect(replace).toHaveBeenCalledWith("/session/finish");
   });
 
+  it("EVO-01: com a sessão de outro paciente aguardando a evolução, retomar passa pelo encerramento (que abre a Evolução)", async () => {
+    mockParams = { studentId: "s2" };
+    flowState = {
+      step: "awaitingEvolution",
+      sessionId: "outra-sessao",
+      student: { id: "s1", name: "Ana Souza" },
+    };
+    vi.mocked(listStudents).mockResolvedValue([JOAO]);
+    selectStudent.mockRejectedValueOnce(
+      new SessionFlowInvalidTransitionError(
+        "selectStudent",
+        "awaitingEvolution",
+      ),
+    );
+
+    await render(<StudentStep />);
+
+    fireEvent.press(
+      await screen.findByRole("button", {
+        name: "Retomar sessão de Ana Souza",
+      }),
+    );
+    expect(replace).toHaveBeenCalledWith("/session/finish");
+  });
+
   it("E-01: a lista de pacientes aceita toque com o teclado aberto", async () => {
     vi.mocked(listStudents).mockResolvedValue([ANA]);
     await render(<StudentStep />);
