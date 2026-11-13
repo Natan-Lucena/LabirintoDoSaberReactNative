@@ -8,7 +8,10 @@ import type {
   CreateSessionEvolutionPayload,
   CriterionResult,
   EvolutionContext,
+  EvolutionCriterionInput,
   GoalStatus,
+  SessionEvolution,
+  UpdateSessionEvolutionPayload,
 } from "@/api/types";
 
 export const CRITERION_RESULTS = [
@@ -154,6 +157,36 @@ export function initialEvolutionValues(
   };
 }
 
+/** Valores iniciais da edição (EVO-02): o que a evolução salva já tem. */
+export function evolutionToFormValues(
+  evolution: SessionEvolution,
+  /** Estado atual das metas do PE (`goalId` → status), quando conhecido. */
+  goalStatuses?: Readonly<Record<string, GoalStatus>>,
+): EvolutionFormValues {
+  return {
+    criteria: evolution.criteria.map((criterion) => ({
+      ...(criterion.goalId ? { goalId: criterion.goalId } : {}),
+      description: criterion.description,
+      ...(criterion.successCriterion
+        ? { successCriterion: criterion.successCriterion }
+        : {}),
+      result: criterion.result,
+      attempts:
+        criterion.attempts === undefined ? "" : String(criterion.attempts),
+      successes:
+        criterion.successes === undefined ? "" : String(criterion.successes),
+      note: criterion.note ?? "",
+      ...(criterion.goalId && goalStatuses?.[criterion.goalId]
+        ? {
+            initialGoalStatus: goalStatuses[criterion.goalId],
+            goalStatus: goalStatuses[criterion.goalId],
+          }
+        : {}),
+    })),
+    descriptiveRecord: evolution.descriptiveRecord,
+  };
+}
+
 /** "8 de 10 tentativas" quando as duas contagens estão preenchidas. */
 export function attemptsLabel(
   attempts: string,
@@ -163,6 +196,40 @@ export function attemptsLabel(
   const hits = parseCount(successes);
   if (total === undefined || hits === undefined || hits > total) return null;
   return `${hits} de ${total} ${total === 1 ? "tentativa" : "tentativas"}`;
+}
+
+/** `goalUpdates`: só as metas cujo estado mudou em relação ao aberto na tela. */
+function changedGoalUpdates(criteria: ParsedCriterion[]) {
+  return criteria.flatMap((criterion) =>
+    criterion.goalId &&
+    criterion.goalStatus &&
+    criterion.goalStatus !== criterion.initialGoalStatus
+      ? [{ goalId: criterion.goalId, status: criterion.goalStatus }]
+      : [],
+  );
+}
+
+type ParsedCriterion = z.output<typeof evolutionCriterionSchema>;
+
+function toCriteriaInput(
+  criteria: ParsedCriterion[],
+): EvolutionCriterionInput[] {
+  return criteria.map((criterion) => {
+    const attempts = parseCount(criterion.attempts);
+    const successes = parseCount(criterion.successes);
+    const note = criterion.note.trim();
+    return {
+      ...(criterion.goalId ? { goalId: criterion.goalId } : {}),
+      description: criterion.description,
+      ...(criterion.successCriterion
+        ? { successCriterion: criterion.successCriterion }
+        : {}),
+      ...(attempts === undefined ? {} : { attempts }),
+      ...(successes === undefined ? {} : { successes }),
+      result: criterion.result,
+      ...(note ? { note } : {}),
+    };
+  });
 }
 
 /**
@@ -177,33 +244,28 @@ export function toCreatePayload(
   const parsed = evolutionFormSchema.parse(values);
   const plan = context.plan;
   const criteria = plan ? parsed.criteria : [];
-  const goalUpdates = criteria.flatMap((criterion) =>
-    criterion.goalId &&
-    criterion.goalStatus &&
-    criterion.goalStatus !== criterion.initialGoalStatus
-      ? [{ goalId: criterion.goalId, status: criterion.goalStatus }]
-      : [],
-  );
+  const goalUpdates = changedGoalUpdates(criteria);
 
   return {
     sessionId,
     ...(plan ? { planId: plan.id } : {}),
-    criteria: criteria.map((criterion) => {
-      const attempts = parseCount(criterion.attempts);
-      const successes = parseCount(criterion.successes);
-      const note = criterion.note.trim();
-      return {
-        ...(criterion.goalId ? { goalId: criterion.goalId } : {}),
-        description: criterion.description,
-        ...(criterion.successCriterion
-          ? { successCriterion: criterion.successCriterion }
-          : {}),
-        ...(attempts === undefined ? {} : { attempts }),
-        ...(successes === undefined ? {} : { successes }),
-        result: criterion.result,
-        ...(note ? { note } : {}),
-      };
-    }),
+    criteria: toCriteriaInput(criteria),
+    descriptiveRecord: parsed.descriptiveRecord,
+    ...(goalUpdates.length > 0 ? { goalUpdates } : {}),
+  };
+}
+
+/**
+ * Corpo do `PUT /session-evolution/:id` (EV-09): a lista COMPLETA de critérios
+ * e o registro. `goalUpdates` leva só as metas cujo estado mudou.
+ */
+export function toUpdatePayload(
+  values: EvolutionFormValues,
+): UpdateSessionEvolutionPayload {
+  const parsed = evolutionFormSchema.parse(values);
+  const goalUpdates = changedGoalUpdates(parsed.criteria);
+  return {
+    criteria: toCriteriaInput(parsed.criteria),
     descriptiveRecord: parsed.descriptiveRecord,
     ...(goalUpdates.length > 0 ? { goalUpdates } : {}),
   };

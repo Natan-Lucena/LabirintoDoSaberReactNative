@@ -5,8 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createSessionEvolution,
   EvolutionApiError,
+  evolutionQueryKeys,
   getEvolutionContext,
 } from "@/api/endpoints/evolution";
+import { createQueryClient } from "@/api/query-client";
 import { ApiError } from "@/api/errors";
 import type { EvolutionContext, SessionEvolution } from "@/api/types";
 import {
@@ -58,9 +60,13 @@ vi.mock("@/api/endpoints/evolution", async (importOriginal) => ({
 
 const SESSION_ID = "session-1";
 const HOME = "/";
-const PATIENT_ROUTE = {
-  pathname: "/patients/[id]",
+const RECORDS_ROUTE = {
+  pathname: "/patients/[id]/records",
   params: { id: "student-1" },
+};
+const RECORD_ROUTE = {
+  pathname: "/evolution/record/[id]",
+  params: { id: "evolution-9" },
 };
 
 const CONTEXT: EvolutionContext = {
@@ -145,6 +151,7 @@ let alertSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   vi.clearAllMocks();
   focusEffects.length = 0;
+  // Há histórico (telas da sessão encerrada); sem `from`, mesmo assim vai à Início.
   router.canGoBack.mockReturnValue(true);
   navigation.addListener.mockImplementation(() => () => undefined);
   close.mockImplementation(async () => {
@@ -425,10 +432,25 @@ describe("EvolutionScreen — salvar (AC-EVO-01-02)", () => {
     expect(useSessionFlowStore.getState().step).toBe("idle");
 
     await act(async () => fireEvent.press(button("Ver prontuário")));
-    expect(router.replace).toHaveBeenCalledWith(PATIENT_ROUTE);
+    expect(router.replace).toHaveBeenCalledWith(RECORDS_ROUTE);
     await act(async () => fireEvent.press(button("Voltar ao início")));
     expect(router.replace).toHaveBeenCalledWith(HOME);
     expect(alertSpy).not.toHaveBeenCalled();
+  });
+
+  it("AC-EVO-02-03: ao salvar, invalida todas as consultas da evolução (pendentes, prontuário, ficha)", async () => {
+    const queryClient = createQueryClient();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    vi.mocked(getEvolutionContext).mockResolvedValue(CONTEXT);
+    await render(<EvolutionScreen sessionId={SESSION_ID} />, { queryClient });
+    await screen.findByLabelText("Registro descritivo");
+    await type("Registro descritivo", "Registro.");
+    await pressSave();
+
+    expect(await screen.findByText("Evolução registrada")).toBeTruthy();
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: evolutionQueryKeys.all,
+    });
   });
 
   it("não mexe no fluxo de outra sessão", async () => {
@@ -598,6 +620,61 @@ describe("EvolutionScreen — sair sem salvar (AC-EVO-01-04)", () => {
   });
 });
 
+describe("EvolutionScreen — saída quando aberta pelo hub (from=hub)", () => {
+  const renderFromHub = async () => {
+    vi.mocked(getEvolutionContext).mockResolvedValue(CONTEXT);
+    await render(<EvolutionScreen sessionId={SESSION_ID} from="hub" />);
+    await screen.findByLabelText("Registro descritivo");
+  };
+
+  it("voltar sem alterações volta à tela de origem e libera o fluxo da sessão", async () => {
+    await renderFromHub();
+    await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).not.toHaveBeenCalled();
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+  });
+
+  it("descartar as alterações volta à tela de origem", async () => {
+    await renderFromHub();
+    await type("Registro descritivo", "Rascunho.");
+    await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
+    const discard = alertSpy.mock.calls[0]![2]!.find(
+      (item: AlertButton) => item.text === "Sair sem salvar",
+    );
+    await act(async () => discard?.onPress?.());
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("sair de um erro de carregamento volta à tela de origem", async () => {
+    vi.mocked(getEvolutionContext).mockRejectedValue(
+      new ApiError({ message: "x", status: 404, code: "SESSION_NOT_FOUND" }),
+    );
+    await render(<EvolutionScreen sessionId={SESSION_ID} from="hub" />);
+    await act(async () =>
+      fireEvent.press(
+        await screen.findByRole("button", { name: "Voltar ao início" }),
+      ),
+    );
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).not.toHaveBeenCalled();
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+  });
+
+  it("sem histórico, mesmo com from=hub, vai à Início", async () => {
+    router.canGoBack.mockReturnValue(false);
+    await renderFromHub();
+    await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
+
+    expect(router.replace).toHaveBeenCalledWith(HOME);
+    expect(router.back).not.toHaveBeenCalled();
+  });
+});
+
 describe("EvolutionScreen — evolução já existente (AC-EVO-01-06)", () => {
   it("409 EVOLUTION_ALREADY_EXISTS leva ao registro existente sem duplicar", async () => {
     vi.mocked(createSessionEvolution).mockRejectedValue(
@@ -617,8 +694,8 @@ describe("EvolutionScreen — evolução já existente (AC-EVO-01-06)", () => {
     expect(createSessionEvolution).toHaveBeenCalledTimes(1);
     expect(close).toHaveBeenCalledTimes(1);
 
-    await act(async () => fireEvent.press(button("Ver ficha do paciente")));
-    expect(router.replace).toHaveBeenCalledWith(PATIENT_ROUTE);
+    await act(async () => fireEvent.press(button("Ver evolução registrada")));
+    expect(router.replace).toHaveBeenCalledWith(RECORD_ROUTE);
     expect(alertSpy).not.toHaveBeenCalled();
   });
 

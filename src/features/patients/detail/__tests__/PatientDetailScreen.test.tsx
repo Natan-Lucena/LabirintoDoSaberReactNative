@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Appointment, Student, TaskNotebookSession } from "@/api/types";
+import type {
+  Appointment,
+  SessionEvolutionSummary,
+  Student,
+  TaskNotebookSession,
+} from "@/api/types";
 import { fireEvent, render, screen } from "@/test-utils/render";
 
 const routerPush = vi.fn();
@@ -9,7 +14,7 @@ const openURL = vi.fn();
 
 let studentsQuery: QueryState<Student[]>;
 let appointmentsQuery: QueryState<Appointment[]>;
-let analysisQuery: QueryState<unknown>;
+let evolutionsQuery: QueryState<SessionEvolutionSummary[]>;
 let sessionsQuery: QueryState<TaskNotebookSession[]>;
 let anamneseQuery: QueryState<{ id: string; answeredAt: string }[]>;
 
@@ -25,6 +30,9 @@ vi.mock("@/features/students/useStudents", () => ({
 }));
 vi.mock("@/features/appointments/useAppointments", () => ({
   useAppointments: () => appointmentsQuery,
+}));
+vi.mock("@/features/evolution/records/useEvolutionRecords", () => ({
+  usePatientEvolutions: () => evolutionsQuery,
 }));
 vi.mock("@/features/anamnese/responses/useAnamneseResponses", () => ({
   useAnamneseResponses: () => anamneseQuery,
@@ -50,7 +58,7 @@ const { useStudentAnalysis, useStudentSessions } =
   await import("@/features/patients/detail/usePatientDetailData");
 
 vi.mock("@/features/patients/detail/usePatientDetailData", () => ({
-  useStudentAnalysis: () => analysisQuery,
+  useStudentAnalysis: () => ({ data: undefined }),
   useStudentSessions: () => sessionsQuery,
 }));
 
@@ -97,6 +105,19 @@ const sessions: TaskNotebookSession[] = [
   },
 ];
 
+const evolutions: SessionEvolutionSummary[] = [3, 2, 1].map((n) => ({
+  id: `evolution-${n}`,
+  sessionId: `session-${n}`,
+  studentId: patient.id,
+  studentName: patient.name,
+  sessionDate: `2026-10-0${n}`,
+  planTitle: `PE · Tema ${n}`,
+  criteriaCount: 4,
+  achievedCount: n,
+  excerpt: `Registro da sessão ${n}.`,
+  createdAt: `2026-10-0${n}T14:00:00.000Z`,
+}));
+
 function query<T>(data: T): QueryState<T> {
   return { data, isPending: false, isError: false, refetch: vi.fn() };
 }
@@ -104,13 +125,7 @@ function query<T>(data: T): QueryState<T> {
 function setQueries(): void {
   studentsQuery = query([patient]);
   appointmentsQuery = query([]);
-  analysisQuery = query({
-    categories: {
-      reading: { category: "reading", total: 2, correct: 1, accuracy: 0.5 },
-    },
-    total: { total: 2, correct: 1, accuracy: 0.5 },
-    sessions,
-  });
+  evolutionsQuery = query(evolutions);
   sessionsQuery = query(sessions);
   anamneseQuery = query([]);
 }
@@ -202,10 +217,8 @@ describe("PatientDetailScreen (PAC-03)", () => {
 
     expect(screen.getAllByText("Lia Monteiro")).toHaveLength(2);
     expect(screen.getByText("8 anos · Ativo")).toBeTruthy();
-    // dificuldade mapeada + rótulo traduzido da categoria "reading"
-    expect(screen.getAllByText("Leitura")).toHaveLength(2);
-    expect(screen.getByText("50% de acerto geral")).toBeTruthy();
-    expect(screen.getByLabelText("Leitura: 50%")).toBeTruthy();
+    expect(screen.getAllByText("Leitura")).toHaveLength(1);
+    expect(screen.getByText("03/10/2026")).toBeTruthy();
     expect(screen.getByText("Leitura inicial")).toBeTruthy();
 
     await fireEvent.press(
@@ -287,11 +300,7 @@ describe("PatientDetailScreen (PAC-03)", () => {
     studentsQuery = query([
       { ...patient, phonenumber: "", learningTopics: [] },
     ]);
-    analysisQuery = query({
-      categories: {},
-      total: { total: 0, correct: 0, accuracy: 0 },
-      sessions: [],
-    });
+    evolutionsQuery = query([]);
     sessionsQuery = query([]);
 
     await render(<PatientDetailScreen patientId={patient.id} />);
@@ -305,6 +314,57 @@ describe("PatientDetailScreen (PAC-03)", () => {
     expect(screen.getByText("Sem evolução registrada")).toBeTruthy();
     expect(screen.getByText("Nenhuma sessão registrada")).toBeTruthy();
     expect(screen.getByText("Nenhuma sessão agendada")).toBeTruthy();
+  });
+
+  it("AC-EVO-02-01: a seção 'Evolução recente' mostra as duas últimas evoluções, a mais recente no topo", async () => {
+    await render(<PatientDetailScreen patientId={patient.id} />);
+
+    expect(screen.getByText("03/10/2026")).toBeTruthy();
+    expect(screen.getByText("02/10/2026")).toBeTruthy();
+    expect(screen.queryByText("Registro da sessão 1.")).toBeNull();
+    expect(screen.getByText("3 de 4 critérios atingidos")).toBeTruthy();
+    expect(screen.getByText("Registro da sessão 3.")).toBeTruthy();
+    const cards = screen
+      .getAllByRole("button")
+      .filter((node) =>
+        String(node.props.accessibilityLabel).startsWith("Evolução de "),
+      );
+    expect(cards.map((card) => card.props.accessibilityLabel)).toEqual([
+      "Evolução de 03/10/2026",
+      "Evolução de 02/10/2026",
+    ]);
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Ver prontuário" }),
+    );
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/patients/[id]/records",
+      params: { id: patient.id },
+    });
+    await fireEvent.press(cards[0]!);
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/evolution/record/[id]",
+      params: { id: "evolution-3" },
+    });
+  });
+
+  it("mostra erro com nova tentativa quando as evoluções não carregam", async () => {
+    const refetch = vi.fn();
+    evolutionsQuery = {
+      data: undefined,
+      isPending: false,
+      isError: true,
+      refetch,
+    };
+    await render(<PatientDetailScreen patientId={patient.id} />);
+
+    expect(
+      screen.getByLabelText("Não foi possível carregar a evolução"),
+    ).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Tentar novamente" }),
+    );
+    expect(refetch).toHaveBeenCalled();
   });
 
   it("mostra carregamento, erro recuperável e paciente não encontrado", async () => {
