@@ -424,3 +424,47 @@ usada pela aplicação semente) tem 0-6, 7-12 e 13-18, para provar que a aplica�
   tarefa de tela que a usar.
 - **`RESPONSE_NOT_FOUND` e `STUDENT_NOT_FOUND` sem tradução** em `normalizeApiError`, porque
   testes e telas da anamnese já leem o texto cru.
+
+## Relatórios e notificações (API-05, leva 3)
+
+Contrato do backend **publicado**: segue `docs/entrega-4/BACKEND-ENTREGUE.md` §3.6, §3.7, §4 e §5.
+Tipos em `src/api/types.ts`, leituras em `src/api/endpoints/{reports,notifications}.ts` e mocks em
+`handlers/reports.ts` e `handlers/notifications.ts` (reset: `resetMockReportState()`,
+`resetMockNotificationState()`). Geração, envio, exclusão e marcar como lida **só têm mock**: as
+funções de endpoint ficam com as telas REL-\* e NOT-01. A geração usa IA e a tela deve usar
+`AI_TIMEOUT_MS` (90 s), sem reenvio. O app monta o PDF a partir do `content` (G-58).
+
+### Relatórios (`handlers/reports.ts`)
+
+- `GET /report/options` (estático: `defaultSections` = `allowedSections`; períodos `30d`/`90d`/`180d`;
+  `maxPeriodDays` 365); `POST /report/` (`201`); `GET /report/` (`studentId?`, `limit?` 1-100,
+  `ReportSummary[]` com `lastShare?` no lugar de `shares`, mais recente primeiro); `GET /report/:id`;
+  `POST /report/:id/share` (`{ channel: "SHARE" | "PRINT" }`, `200 Report`); `DELETE /report/:id` (`204`).
+- Erros: `400 Bad Request` (campos, nenhuma seção ou mais de 20), `400 INVALID_PERIOD` (`from > to` ou
+  mais de 365 dias), `400 SECTION_NOT_ALLOWED`, `400 REPORT_EMPTY_PERIOD`, `403 UNAUTHORIZED`
+  (paciente ou relatório alheio: `mock-report-foreign`), `404 STUDENT_NOT_FOUND`, `404 REPORT_NOT_FOUND`.
+- `REPORT_EMPTY_PERIOD` só quando nenhuma das seções pedidas tem dado: `PATIENT_DATA` e
+  `AI_SYNTHESIS` não contam; `ANAMNESIS_SUMMARY` vale independente do período; no mock, `student-5`
+  não tem dado e as demais seções não têm dado em período que termina antes de 2026-01-01.
+- `Report.synthesisFailed` é sempre booleano. `setMockReportSynthesisFailure(true)` faz a próxima
+  geração sair sem `synthesis` e com `synthesisFailed: true`. `sections` volta sem repetição e na
+  ordem do tipo. O `content` é congelado na geração e nunca traz telefone, endereço, documentos nem
+  responsável. `accuracy` é fração de 0 a 1.
+
+### Notificações (`handlers/notifications.ts`)
+
+- `GET /notification/` (`unreadOnly?`, `limit?` 1-50 padrão 20, `cursor?`; resposta
+  `{ items, nextCursor? }`; `400 Bad Request`, `400 INVALID_CURSOR`), `GET /notification/unread-count`
+  (`{ count }`), `POST /notification/:id/read` (`AppNotification`, idempotente;
+  `404 NOTIFICATION_NOT_FOUND`), `POST /notification/read-all` (`{ updated }`).
+- A lista já vem semeada com 5 notificações (uma de cada tipo e uma lida); não há cron. O destino
+  `AGENDA_DAY` tem como `id` a data `AAAA-MM-DD`.
+
+### Lacunas dos mocks da leva 3
+
+- **Conteúdo:** as seções vêm com valores fictícios fixos; só o nome e a idade do paciente vêm de
+  `MOCK_STUDENTS`. `schoolGrade` nunca é preenchido.
+- **RP-01:** o backend não separa as seções sensíveis nos padrões; o app as tira para FAMILY e SCHOOL.
+- **Cursor:** o mock usa o deslocamento numérico; o app deve tratá-lo como opaco e continuar até não
+  vir `nextCursor` (uma página real pode vir vazia com `nextCursor`).
+- **`STUDENT_NOT_FOUND`** segue sem tradução em `normalizeApiError`.

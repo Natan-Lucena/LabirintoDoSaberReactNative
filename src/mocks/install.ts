@@ -31,6 +31,8 @@ import "@/mocks/handlers/password";
 import "@/mocks/handlers/evolution";
 import "@/mocks/handlers/scales";
 import "@/mocks/handlers/anamnese-summary";
+import "@/mocks/handlers/reports";
+import "@/mocks/handlers/notifications";
 
 let installed = false;
 
