@@ -47,6 +47,7 @@ import {
 } from "@/utils/whatsapp";
 
 import { useStudentSessions } from "./usePatientDetailData";
+import { PatientAssessments } from "./assessments/PatientAssessments";
 import { ActivePdi, PatientPlans } from "./plans/PatientPlans";
 
 export interface PatientDetailScreenProps {
@@ -240,6 +241,7 @@ export function PatientDetailScreen({
           options={[
             { key: "overview", label: "Visão geral" },
             { key: "plans", label: "Planos" },
+            { key: "assessments", label: "Avaliações" },
           ]}
           value={activeTab}
           onChange={setActiveTab}
@@ -248,6 +250,8 @@ export function PatientDetailScreen({
 
         {activeTab === "plans" ? (
           <PatientPlans patientId={patient.id} />
+        ) : activeTab === "assessments" ? (
+          <PatientAssessments patientId={patient.id} />
         ) : (
           <>
             <ActivePdi patientId={patient.id} />
