@@ -12,13 +12,25 @@ import * as Sharing from "expo-sharing";
 export async function sharePdfFromBase64(
   base64: string,
   fileName: string,
+  options: { deleteAfterShare?: boolean } = {},
 ): Promise<void> {
   const target = new File(Paths.cache, fileName);
   target.create({ overwrite: true });
   target.write(base64, { encoding: "base64" });
 
-  await Sharing.shareAsync(target.uri, {
-    mimeType: "application/pdf",
-    UTI: "com.adobe.pdf",
-  });
+  try {
+    await Sharing.shareAsync(target.uri, {
+      mimeType: "application/pdf",
+      UTI: "com.adobe.pdf",
+    });
+  } finally {
+    // REL-02: relatório tem dados sensíveis; o arquivo temporário não fica no cache.
+    if (options.deleteAfterShare) {
+      try {
+        target.delete();
+      } catch {
+        // Limpeza best-effort: não esconde o resultado do compartilhamento.
+      }
+    }
+  }
 }
