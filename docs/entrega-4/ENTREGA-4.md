@@ -11,12 +11,12 @@
 - **Objetivo:** fechar o **ciclo clínico** do app, que antes terminava com a sessão:
   `atendimento → sessão → evolução → prontuário → avaliação → plano → relatório`. A entrega também
   corrigiu o fluxo de **senha** e acrescentou as **notificações** dentro do app.
-- **As 25 tarefas estão concluídas** (PRs #152 a #179): código integrado ao backend publicado,
+- **As 25 tarefas estão concluídas** (PRs #152 a #180): código integrado ao backend publicado,
   roteiro de testes e rodadas manuais. O CI (documentação, typecheck, lint, testes e bundle
   Android) ficou verde em todos os PRs, e cada PR passou por revisão de código antes do merge.
 - **Validação:** as rodadas manuais no emulador Android, contra o backend real, foram feitas pelo
   orquestrador e pelo colega Victor (issue #168). Os defeitos encontrados foram corrigidos (PR
-  #179 e o PR de correções dos relatórios) e reverificados. Esta entrega é apresentada como
+  #179 e #180) e reverificados. Esta entrega é apresentada como
   validada.
 - O backend publicou **as cinco levas** pedidas na
   [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md), e o app foi integrado ao contrato real.
@@ -93,7 +93,7 @@ E-10 (a contagem da Agenda exclui os cancelados) foi mantida como estava. Detalh
   erro na evolução (EVO-01.4), o teclado sobre "Aguarde N s…" (AUT-01.5), o login empilhado depois
   do logout (AUT-01.6), a mensagem de senha atual que não sumia (REC-03.2), o título do player
   colado na barra de status (FEC-05.4) e o ajuste do roteiro. Os defeitos dos relatórios achados
-  nas rodadas com o backend real foram corrigidos em PR próprio. Todos foram reverificados.
+  nas rodadas com o backend real foram corrigidos no PR #180. Todos foram reverificados.
 
 ## 6. Pontos de implementação que vale saber
 
@@ -149,7 +149,7 @@ Homologação iOS só conta com evidência em Mac ou iPhone; nada disso foi decl
 | REL-03 | #177             |
 | NOT-01 | #175             |
 | NAV-04 | #177             |
-| QA-07  | #156, #179       |
+| QA-07  | #156, #179, #180 |
 
 Documentação e decisões: #152 (G-54 a G-60), #170 e #178 (tracking), #172 (contrato entregue).
 
