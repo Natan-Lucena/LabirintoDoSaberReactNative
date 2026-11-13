@@ -443,7 +443,7 @@ describe("PatientDetailScreen: Registrar evolução (AC-EVO-05-01)", () => {
     ];
     await render(<PatientDetailScreen patientId={patient.id} />);
     await fireEvent.press(
-      screen.getByRole("button", { name: "Registrar evolução" }),
+      await screen.findByRole("button", { name: "Registrar evolução" }),
     );
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/evolution/[sessionId]",

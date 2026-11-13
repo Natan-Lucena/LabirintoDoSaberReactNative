@@ -7,6 +7,10 @@ import type { PendingEvolution } from "@/api/types";
 
 const listPending = vi.fn();
 
+vi.mock("@/config/env", () => ({
+  getRuntimeApiBaseUrl: () => "http://mock.local",
+}));
+
 vi.mock("@/api/endpoints/evolution", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/endpoints/evolution")>()),
   listPendingEvolutions: (...args: unknown[]) => listPending(...args),
