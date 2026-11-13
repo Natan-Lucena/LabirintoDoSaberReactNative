@@ -2,10 +2,10 @@
 // PROVISÓRIO copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir
 // em API-04. As outras escritas (PUT da evolução e a sugestão da IA) ficam com
 // as telas EVO-02 e EVO-04.
-import type { AxiosResponse } from "axios";
+import { AxiosError, type AxiosResponse } from "axios";
 
 import { apiClient } from "@/api/client";
-import { ApiError } from "@/api/errors";
+import { ApiError, normalizeApiError } from "@/api/errors";
 import type {
   CreateSessionEvolutionPayload,
   EvolutionContext,
@@ -122,18 +122,30 @@ export class EvolutionApiError extends ApiError {
   }
 }
 
+/**
+ * O `409` chega como resposta (ver `validateStatus`). Ele volta ao caminho
+ * normal de `normalizeApiError` (mensagem traduzida); só o
+ * `EVOLUTION_ALREADY_EXISTS` vira {@link EvolutionApiError} com o `evolutionId`.
+ */
 function throwOnConflict(response: AxiosResponse<unknown>): void {
   if (response.status !== 409) return;
-  const body = (response.data ?? {}) as {
-    message?: unknown;
-    evolutionId?: unknown;
-  };
-  const code = typeof body.message === "string" ? body.message : undefined;
+  const normalized = normalizeApiError(
+    new AxiosError(
+      `Request failed with status code ${response.status}`,
+      AxiosError.ERR_BAD_REQUEST,
+      response.config,
+      response.request,
+      response,
+    ),
+  );
+  if (normalized.code !== "EVOLUTION_ALREADY_EXISTS") throw normalized;
 
+  const body = (response.data ?? {}) as { evolutionId?: unknown };
   throw new EvolutionApiError({
-    message: code ?? "Conflict",
-    status: 409,
-    code,
+    message: normalized.message,
+    status: normalized.status,
+    code: normalized.code,
+    errors: normalized.errors,
     evolutionId:
       typeof body.evolutionId === "string" ? body.evolutionId : undefined,
   });

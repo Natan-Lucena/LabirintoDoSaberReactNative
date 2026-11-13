@@ -6,6 +6,8 @@ import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 
 const params = vi.hoisted(() => ({
   studentId: undefined as string | undefined,
+  type: undefined as string | undefined,
+  sessionDate: undefined as string | undefined,
 }));
 const generate = vi.fn();
 const create = vi.fn();
@@ -82,6 +84,8 @@ async function generateEditableDraft() {
 describe("GeneratePlanScreen (PLN-02)", () => {
   beforeEach(() => {
     params.studentId = undefined;
+    params.type = undefined;
+    params.sessionDate = undefined;
     generate.mockReset();
     create.mockReset();
     router.replace.mockReset();
@@ -190,6 +194,52 @@ describe("GeneratePlanScreen (PLN-02)", () => {
       ),
     );
     expect(generate.mock.calls[0]?.[0]).not.toHaveProperty("durationMonths");
+  });
+
+  it("EVO-01 'Criar PE': type=PE e sessionDate da rota já escolhem o PE e a data da sessão", async () => {
+    params.studentId = "student-1";
+    params.type = "PE";
+    params.sessionDate = "2026-10-27";
+    generate.mockResolvedValue({
+      type: "PE",
+      title: "PE",
+      generalObjective: "Leitura",
+      goals: [],
+      suggestedStartDate: "2026-10-27",
+      suggestedEndDate: "2026-10-27",
+    });
+    await render(<GeneratePlanScreen />);
+
+    expect(
+      screen.getByRole("radio", { name: "PE da sessão" }).props
+        .accessibilityState.selected,
+    ).toBe(true);
+    expect(screen.getByText("Data da sessão")).toBeTruthy();
+    await fireEvent.changeText(
+      screen.getByLabelText("Foco do planejamento"),
+      "Leitura",
+    );
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Gerar planejamento com IA" }),
+    );
+    await waitFor(() =>
+      expect(generate).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "PE", sessionDate: "2026-10-27" }),
+        expect.anything(),
+      ),
+    );
+  });
+
+  it("sem type na rota (ou com data inválida) continua no PDI", async () => {
+    params.studentId = "student-1";
+    params.sessionDate = "2026-02-31";
+    await render(<GeneratePlanScreen />);
+
+    expect(
+      screen.getByRole("radio", { name: "PDI" }).props.accessibilityState
+        .selected,
+    ).toBe(true);
+    expect(screen.queryByText("Data da sessão")).toBeNull();
   });
 
   it("mostra falha de IA e só tenta de novo por toque", async () => {

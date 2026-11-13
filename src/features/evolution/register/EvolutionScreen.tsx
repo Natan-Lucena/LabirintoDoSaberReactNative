@@ -11,7 +11,7 @@ import {
 } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigation, useRouter } from "expo-router";
+import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   Alert,
@@ -156,6 +156,55 @@ export function EvolutionScreen({
     queryFn: () => getEvolutionContext(sessionId),
     retry: false,
   });
+  const { refetch } = contextQuery;
+  const hasData = contextQuery.data !== undefined;
+
+  // Ao voltar de "Criar PE" (ou de outra tela), o contexto é buscado de novo
+  // para o PE recém-criado aparecer. A primeira vez é a carga normal.
+  const focusedOnceRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!focusedOnceRef.current) {
+        focusedOnceRef.current = true;
+        return;
+      }
+      void refetch();
+    }, [refetch]),
+  );
+
+  const error = contextQuery.error
+    ? normalizeApiError(contextQuery.error)
+    : null;
+  // Rede, tempo esgotado e 5xx podem dar certo depois; o resto (404, 403,
+  // 409 SESSION_NOT_FINISHED…) não muda tentando de novo.
+  const retryable =
+    error !== null &&
+    (error.isNetworkError ||
+      error.isTimeout ||
+      error.status === undefined ||
+      error.status >= 500);
+
+  function leaveFromError(): void {
+    // Sem saída possível nesta sessão: libera o fluxo para não prender o
+    // profissional num ciclo Início → encerramento → Evolução → erro.
+    if (!retryable) void releaseSessionFlow(sessionId);
+    router.replace(HOME_ROUTE);
+  }
+
+  // O Voltar do Android segue o mesmo caminho (leaveFromError) enquanto a
+  // Evolução não abriu.
+  useEffect(() => {
+    if (hasData) return;
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (!retryable) void releaseSessionFlow(sessionId);
+        router.replace(HOME_ROUTE);
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [hasData, retryable, router, sessionId]);
 
   if (contextQuery.data) {
     return (
@@ -163,41 +212,37 @@ export function EvolutionScreen({
     );
   }
 
-  const error = contextQuery.error
-    ? normalizeApiError(contextQuery.error)
-    : null;
   const message = error
     ? (sessionErrorMessage(error) ??
       (error.isNetworkError || error.isTimeout
         ? "Sem conexão para carregar a sessão. Verifique a rede e tente novamente."
-        : "Não foi possível carregar a sessão. Tente novamente."))
+        : retryable
+          ? "Não foi possível carregar a sessão. Tente novamente."
+          : "Não foi possível abrir a evolução desta sessão."))
     : null;
 
   return (
     <SafeAreaView style={styles.screen}>
-      <AppHeader
-        title="Evolução da sessão"
-        onBack={() => router.replace(HOME_ROUTE)}
-      />
+      <AppHeader title="Evolução da sessão" onBack={leaveFromError} />
       <ScrollView contentContainerStyle={styles.content}>
         {message ? (
           <View style={styles.block}>
             <Text style={styles.error} accessibilityRole="alert" accessible>
               {message}
             </Text>
-            {error && !sessionErrorMessage(error) ? (
+            {retryable ? (
               <DsButton
                 label="Tentar novamente"
                 variant="secondary"
                 fullWidth
-                onPress={() => void contextQuery.refetch()}
+                onPress={() => void refetch()}
               />
             ) : null}
             <DsButton
               label="Voltar ao início"
               variant="ghost"
               fullWidth
-              onPress={() => router.replace(HOME_ROUTE)}
+              onPress={leaveFromError}
             />
           </View>
         ) : (
@@ -239,6 +284,9 @@ function EvolutionRegister({
   const {
     control,
     handleSubmit,
+    getValues,
+    reset,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<EvolutionFormValues, unknown, EvolutionFormOutput>({
     resolver: zodResolver(evolutionFormSchema),
@@ -249,6 +297,18 @@ function EvolutionRegister({
     name: "criteria",
   });
   const criteria = useWatch({ control, name: "criteria" }) ?? [];
+
+  // Um PE criado pelo atalho "Criar PE" chega no contexto buscado de novo ao
+  // voltar à tela: os critérios passam a ser os dele; o registro escrito fica.
+  const planId = context.plan?.id;
+  const planIdRef = useRef(planId);
+  useEffect(() => {
+    if (planIdRef.current === planId) return;
+    planIdRef.current = planId;
+    const record = getValues("descriptiveRecord");
+    reset(initialEvolutionValues(context));
+    if (record) setValue("descriptiveRecord", record, { shouldDirty: true });
+  }, [context, getValues, planId, reset, setValue]);
 
   const mutation = useMutation({
     mutationFn: createSessionEvolution,
@@ -265,26 +325,42 @@ function EvolutionRegister({
     }
   }, [outcome, sessionId]);
 
-  const leave = useCallback((): void => {
-    leavingRef.current = true;
-    void releaseSessionFlow(sessionId);
-    router.replace(HOME_ROUTE);
-  }, [router, sessionId]);
+  // `proceed`: refaz a navegação original (gesto/voltar da pilha) depois de
+  // liberar o fluxo; sem ela, a saída vai para a Início.
+  const leave = useCallback(
+    (proceed?: () => void): void => {
+      leavingRef.current = true;
+      void releaseSessionFlow(sessionId);
+      if (proceed) {
+        proceed();
+      } else {
+        router.replace(HOME_ROUTE);
+      }
+    },
+    [router, sessionId],
+  );
 
-  const requestLeave = useCallback((): void => {
-    if (!hasUnsavedChanges) {
-      leave();
-      return;
-    }
-    Alert.alert(
-      "Sair sem salvar a evolução?",
-      "As alterações não salvas serão perdidas.",
-      [
-        { text: "Continuar editando", style: "cancel" },
-        { text: "Sair sem salvar", style: "destructive", onPress: leave },
-      ],
-    );
-  }, [hasUnsavedChanges, leave]);
+  const requestLeave = useCallback(
+    (proceed?: () => void): void => {
+      if (!hasUnsavedChanges) {
+        leave(proceed);
+        return;
+      }
+      Alert.alert(
+        "Sair sem salvar a evolução?",
+        "As alterações não salvas serão perdidas.",
+        [
+          { text: "Continuar editando", style: "cancel" },
+          {
+            text: "Sair sem salvar",
+            style: "destructive",
+            onPress: () => leave(proceed),
+          },
+        ],
+      );
+    },
+    [hasUnsavedChanges, leave],
+  );
 
   // AC-EVO-01-04: o Voltar do Android segue a mesma regra do botão voltar.
   useEffect(() => {
@@ -307,7 +383,7 @@ function EvolutionRegister({
     return navigation.addListener("beforeRemove", (event) => {
       if (leavingRef.current) return;
       event.preventDefault();
-      requestLeave();
+      requestLeave(() => navigation.dispatch(event.data.action));
     });
   }, [navigation, requestLeave]);
 
@@ -351,7 +427,7 @@ function EvolutionRegister({
     <AppHeader
       title="Evolução da sessão"
       subtitle={`${session.studentName} · ${sessionDate}`}
-      onBack={requestLeave}
+      onBack={() => requestLeave()}
     />
   );
 

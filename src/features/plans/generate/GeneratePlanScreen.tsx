@@ -36,23 +36,43 @@ const durationOptions = [
   { key: "6", label: "6 meses" },
 ];
 
+/** `AAAA-MM-DD` da rota → meio-dia em Brasília (o `dayKey` devolve o mesmo dia). */
+function parseDayParam(value: unknown): Date | undefined {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+  const date = new Date(`${value}T12:00:00-03:00`);
+  return Number.isNaN(date.getTime()) || dayKey(date) !== value
+    ? undefined
+    : date;
+}
+
 export function GeneratePlanScreen(): ReactElement {
   const router = useRouter();
   const navigation = useNavigation();
   const saved = useRef(false);
   const discarded = useRef(false);
-  const params = useLocalSearchParams<{ studentId?: string }>();
+  const params = useLocalSearchParams<{
+    studentId?: string;
+    type?: string;
+    sessionDate?: string;
+  }>();
   const routeStudentId =
     typeof params.studentId === "string" ? params.studentId : undefined;
+  // "Criar PE" da Evolução (EVO-01) chega com `type=PE` e a data da sessão.
+  const routeType: PlanType = params.type === "PE" ? "PE" : "PDI";
+  const routeSessionDate = parseDayParam(params.sessionDate);
   const [studentId, setStudentId] = useState(routeStudentId ?? "");
-  const [type, setType] = useState<PlanType>("PDI");
+  const [type, setType] = useState<PlanType>(routeType);
   const [focus, setFocus] = useState("");
   const [difficultySelection, setDifficultySelection] = useState<{
     studentId: string;
     values: string[];
   } | null>(null);
   const [duration, setDuration] = useState<3 | 6>(3);
-  const [sessionDate, setSessionDate] = useState(new Date());
+  const [sessionDate, setSessionDate] = useState(
+    () => routeSessionDate ?? new Date(),
+  );
   const [templateId, setTemplateId] = useState("");
   const [draft, setDraft] = useState<PlanDraft | null>(null);
   useEffect(() => {

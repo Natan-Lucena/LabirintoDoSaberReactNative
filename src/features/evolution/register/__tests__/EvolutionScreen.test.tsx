@@ -33,9 +33,14 @@ const navigation = {
   dispatch: vi.fn(),
 };
 
+const focusEffects: (() => void)[] = [];
+
 vi.mock("expo-router", () => ({
   useRouter: () => router,
   useNavigation: () => navigation,
+  useFocusEffect: (effect: () => void) => {
+    if (focusEffects.at(-1) !== effect) focusEffects.push(effect);
+  },
 }));
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
@@ -139,6 +144,7 @@ let alertSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  focusEffects.length = 0;
   router.canGoBack.mockReturnValue(true);
   navigation.addListener.mockImplementation(() => () => undefined);
   close.mockImplementation(async () => {
@@ -229,8 +235,9 @@ describe("EvolutionScreen — contexto (AC-EVO-01-01)", () => {
       404,
       "Sessão não encontrada. Ela pode ter sido removida.",
     ],
+    ["UNAUTHORIZED", 403, "Você não tem acesso a esta sessão."],
   ])(
-    "erro %s ao carregar aparece em português",
+    "erro %s ao carregar aparece em português, sem nova tentativa, e sair libera o fluxo",
     async (code, status, message) => {
       vi.mocked(getEvolutionContext).mockRejectedValue(
         new ApiError({ message: code, status, code }),
@@ -239,10 +246,91 @@ describe("EvolutionScreen — contexto (AC-EVO-01-01)", () => {
 
       expect(await screen.findByText(message)).toBeTruthy();
       expect(screen.queryByText(code)).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: "Tentar novamente" }),
+      ).toBeNull();
       await act(async () => fireEvent.press(button("Voltar ao início")));
       expect(router.replace).toHaveBeenCalledWith(HOME);
+      // Sem isso, Início → encerramento → Evolução → erro viraria um ciclo.
+      await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+      expect(useSessionFlowStore.getState().step).toBe("idle");
     },
   );
+
+  it("erro sem saída: o voltar do cabeçalho e o do Android também liberam o fluxo", async () => {
+    type BackListener = Parameters<typeof BackHandler.addEventListener>[1];
+    const handlers: BackListener[] = [];
+    const spy = vi
+      .spyOn(BackHandler, "addEventListener")
+      .mockImplementation((_event, handler) => {
+        handlers.push(handler);
+        return { remove: vi.fn() };
+      });
+    vi.mocked(getEvolutionContext).mockRejectedValue(
+      new ApiError({
+        message: "SESSION_NOT_FOUND",
+        status: 404,
+        code: "SESSION_NOT_FOUND",
+      }),
+    );
+    await render(<EvolutionScreen sessionId={SESSION_ID} />);
+    await screen.findByText(
+      "Sessão não encontrada. Ela pode ter sido removida.",
+    );
+
+    let handled: boolean | null | undefined;
+    await act(async () => {
+      handled = handlers.at(-1)!({} as Parameters<BackListener>[0]);
+    });
+    expect(handled).toBe(true);
+    expect(router.replace).toHaveBeenCalledWith(HOME);
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+    spy.mockRestore();
+  });
+
+  it.each([
+    ["rede", new ApiError({ message: "net", isNetworkError: true })],
+    ["tempo esgotado", new ApiError({ message: "timeout", isTimeout: true })],
+    [
+      "5xx",
+      new ApiError({ message: "INTERNAL", status: 500, code: "INTERNAL" }),
+    ],
+  ])(
+    "erro de %s ao carregar oferece nova tentativa e sair mantém o fluxo para retomar",
+    async (_kind, error) => {
+      vi.mocked(getEvolutionContext).mockRejectedValue(error);
+      await render(<EvolutionScreen sessionId={SESSION_ID} />);
+
+      expect(
+        await screen.findByRole("button", { name: "Tentar novamente" }),
+      ).toBeTruthy();
+      await act(async () => fireEvent.press(button("Voltar ao início")));
+
+      expect(router.replace).toHaveBeenCalledWith(HOME);
+      expect(close).not.toHaveBeenCalled();
+      expect(useSessionFlowStore.getState().step).toBe("awaitingEvolution");
+    },
+  );
+
+  it("ao voltar para a tela (ex.: depois de 'Criar PE'), busca o contexto de novo e passa a mostrar o PE, mantendo o registro", async () => {
+    await renderLoaded(withoutPlan());
+    await type("Registro descritivo", "Escrito antes do PE.");
+    vi.mocked(getEvolutionContext).mockResolvedValue(CONTEXT);
+
+    // O primeiro foco é a carga inicial; não busca duas vezes.
+    await act(async () => focusEffects.at(-1)!());
+    expect(getEvolutionContext).toHaveBeenCalledTimes(1);
+    await act(async () => focusEffects.at(-1)!());
+
+    expect(await screen.findByText("PE · Contagem até 20")).toBeTruthy();
+    expect(getEvolutionContext).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText("Sessão sem PE")).toBeNull();
+    expect(screen.getByText("Critérios da sessão")).toBeTruthy();
+    expect(screen.getByLabelText("Resultado do critério 1")).toBeTruthy();
+    expect(screen.getByLabelText("Registro descritivo").props.value).toBe(
+      "Escrito antes do PE.",
+    );
+  });
 
   it("falha de rede ao carregar oferece nova tentativa explícita", async () => {
     vi.mocked(getEvolutionContext)
@@ -477,6 +565,16 @@ describe("EvolutionScreen — sair sem salvar (AC-EVO-01-04)", () => {
       expect.any(String),
       expect.any(Array),
     );
+    expect(navigation.dispatch).not.toHaveBeenCalled();
+
+    // Confirmado, refaz a navegação original (não força a Início) e libera o fluxo.
+    const buttons = (alertSpy.mock.calls.at(-1)?.[2] ?? []) as AlertButton[];
+    await act(async () =>
+      buttons.find((item) => item.text === "Sair sem salvar")?.onPress?.(),
+    );
+    expect(navigation.dispatch).toHaveBeenCalledWith({ type: "GO_BACK" });
+    expect(router.replace).not.toHaveBeenCalled();
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
   });
 
   it("sem alteração, voltar sai direto e libera o fluxo da sessão", async () => {

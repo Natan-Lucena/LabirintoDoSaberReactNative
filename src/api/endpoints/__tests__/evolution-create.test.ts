@@ -94,8 +94,32 @@ describe("criação da evolução pelo apiClient (EVO-01)", () => {
       status: 409,
       code: "EVOLUTION_ALREADY_EXISTS",
       evolutionId: MOCK_EVOLUTION_ID,
+      message: "Esta sessão já tem evolução registrada.",
     });
     expect(mockEvolutions).toHaveLength(before);
+  });
+
+  it("outros 409 recebidos como resposta seguem normalizeApiError, com a mensagem traduzida", async () => {
+    apiClient.defaults.adapter = async (config) => ({
+      data: { message: "PLAN_NOT_EDITABLE" },
+      status: 409,
+      statusText: "Conflict",
+      headers: {},
+      config,
+    });
+
+    const error = await createSessionEvolution({
+      sessionId: MOCK_EVOLUTION_SESSION_PE,
+      criteria: [],
+      descriptiveRecord: "Plano encerrado.",
+    }).catch((caught: unknown) => caught);
+
+    expect(error).not.toBeInstanceOf(EvolutionApiError);
+    expect(error).toMatchObject({
+      status: 409,
+      code: "PLAN_NOT_EDITABLE",
+      message: "O plano já foi encerrado e não pode ser alterado.",
+    });
   });
 
   it("propaga os erros de negócio pelo code", async () => {
