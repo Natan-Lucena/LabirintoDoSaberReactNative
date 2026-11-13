@@ -1,5 +1,6 @@
 import { apiClient } from "@/api/client";
-import type { AnamneseQuestionType } from "@/api/types";
+import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
+import type { AnamneseQuestionType, AnamneseSummaryFields } from "@/api/types";
 
 export const MAX_ANAMNESE_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -12,7 +13,7 @@ export interface AnamneseAnswer {
   fileUrl?: string;
 }
 
-export interface AnamneseResponse {
+export interface AnamneseResponse extends AnamneseSummaryFields {
   id: string;
   templateId: string;
   educatorId: string;
@@ -91,4 +92,19 @@ export async function uploadAnamneseFile(
     formData,
   );
   return response.data.url;
+}
+
+/**
+ * POST /anamnese/responses/:responseId/summary — síntese por IA (AS-01).
+ * Timeout de 90 s e sem reenvio automático; devolve a resposta com `summary`.
+ */
+export async function generateAnamneseSummary(
+  responseId: string,
+): Promise<AnamneseResponse> {
+  const response = await apiClient.post<AnamneseResponse>(
+    `/anamnese/responses/${responseId}/summary`,
+    undefined,
+    { timeout: AI_TIMEOUT_MS },
+  );
+  return response.data;
 }
