@@ -27,33 +27,33 @@ Estado em 2026-11-13: **código da Entrega 4 completo e integrado ao backend pub
 
 ## 2. Tarefas
 
-| Tarefa                                    | Bloco | Onda         | Estado       | Bloqueio / próximo passo                                               | PR / evidência      |
-| ----------------------------------------- | ----- | ------------ | ------------ | ---------------------------------------------------------------------- | ------------------- |
-| API-04 Contrato no PROJECT.md             | A     | E4-0 e levas | concluída    | Todas as levas registradas no PROJECT.md                               | #153, #172, este PR |
-| API-05 Tipos, leitura e mocks             | A     | E4-1 e levas | concluída    | Tipos e leitura de todas as levas                                      | #155, #160, #171    |
-| FEC-05 Pendências da Entrega 3            | A     | E4-0         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #154                |
-| AUT-01 Recuperação de senha com código    | A     | E4-2         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #157, #173          |
-| REC-03 Trocar senha no perfil             | A     | E4-2         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #159, #173          |
-| EVO-01 Evolução da sessão                 | B     | E4-2         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #158, #173          |
-| EVO-02 Prontuário e hub de evolução       | B     | E4-3         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #161, #173          |
-| EVO-04 Sugestão para a próxima sessão     | B     | E4-7         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #165, #173          |
-| EVO-05 Entradas para registrar a evolução | B     | E4-3         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #164, #173          |
-| AVA-01 Hub de avaliações                  | C     | E4-4         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #162, #176          |
-| AVA-02 Aplicar escala                     | C     | E4-5         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #163, #176          |
-| AVA-03 Escore, insight e conclusão        | C     | E4-5         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #166, #176          |
-| AVA-04 Resultado da aplicação             | C     | E4-6         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #167, #176          |
-| AVA-05 Rascunhos                          | C     | E4-6         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #166, #176          |
-| PAC-05 Ficha: Avaliações                  | C     | E4-6         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #169, #176          |
-| PAC-09 Síntese da anamnese                | C     | E4-7         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #169, #176          |
-| REL-01 Configurar relatório               | D     | E4-8         | concluída    | Integrado ao backend publicado                                         | #174                |
-| REL-02 Prévia, PDF e envio                | D     | E4-8         | concluída    | Integrado ao backend publicado                                         | #174                |
-| REL-03 Histórico de relatórios            | D     | E4-9         | concluída    | Integrado ao backend publicado                                         | #177                |
-| NOT-01 Notificações no app                | E     | E4-9         | concluída    | Integrado ao backend publicado                                         | #175                |
-| NAV-04 Recursos e atalhos                 | E     | E4-10        | concluída    | Integrado ao backend publicado                                         | #177                |
-| QA-07 Plano de testes manuais             | F     | E4-0 / E4-11 | em andamento | Esqueleto pronto; rodada depois do código, com autorização do emulador | #156 (esqueleto)    |
-| QA-02 E2E com Maestro                     | F     | E4-11        | bloqueada    | QA-07; autorização para instalar o Maestro                             | —                   |
-| QA-03 Acessibilidade                      | F     | E4-11        | bloqueada    | NAV-04; emulador                                                       | —                   |
-| QA-04 Homologação em aparelhos            | F     | E4-12        | bloqueada    | Aparelho Android físico e Mac/iPhone                                   | —                   |
+| Tarefa                                    | Bloco | Onda         | Estado       | Bloqueio / próximo passo                                               | PR / evidência   |
+| ----------------------------------------- | ----- | ------------ | ------------ | ---------------------------------------------------------------------- | ---------------- |
+| API-04 Contrato no PROJECT.md             | A     | E4-0 e levas | concluída    | Todas as levas registradas no PROJECT.md                               | #153, #172, #178 |
+| API-05 Tipos, leitura e mocks             | A     | E4-1 e levas | concluída    | Tipos e leitura de todas as levas                                      | #155, #160, #171 |
+| FEC-05 Pendências da Entrega 3            | A     | E4-0         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #154             |
+| AUT-01 Recuperação de senha com código    | A     | E4-2         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #157, #173       |
+| REC-03 Trocar senha no perfil             | A     | E4-2         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #159, #173       |
+| EVO-01 Evolução da sessão                 | B     | E4-2         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #158, #173       |
+| EVO-02 Prontuário e hub de evolução       | B     | E4-3         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #161, #173       |
+| EVO-04 Sugestão para a próxima sessão     | B     | E4-7         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #165, #173       |
+| EVO-05 Entradas para registrar a evolução | B     | E4-3         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #164, #173       |
+| AVA-01 Hub de avaliações                  | C     | E4-4         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #162, #176       |
+| AVA-02 Aplicar escala                     | C     | E4-5         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #163, #176       |
+| AVA-03 Escore, insight e conclusão        | C     | E4-5         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #166, #176       |
+| AVA-04 Resultado da aplicação             | C     | E4-6         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #167, #176       |
+| AVA-05 Rascunhos                          | C     | E4-6         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #166, #176       |
+| PAC-05 Ficha: Avaliações                  | C     | E4-6         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #169, #176       |
+| PAC-09 Síntese da anamnese                | C     | E4-7         | concluída    | Integrado ao backend publicado; teste do colega na #168                | #169, #176       |
+| REL-01 Configurar relatório               | D     | E4-8         | concluída    | Integrado ao backend publicado                                         | #174             |
+| REL-02 Prévia, PDF e envio                | D     | E4-8         | concluída    | Integrado ao backend publicado                                         | #174             |
+| REL-03 Histórico de relatórios            | D     | E4-9         | concluída    | Integrado ao backend publicado                                         | #177             |
+| NOT-01 Notificações no app                | E     | E4-9         | concluída    | Integrado ao backend publicado                                         | #175             |
+| NAV-04 Recursos e atalhos                 | E     | E4-10        | concluída    | Integrado ao backend publicado                                         | #177             |
+| QA-07 Plano de testes manuais             | F     | E4-0 / E4-11 | em andamento | Esqueleto pronto; rodada depois do código, com autorização do emulador | #156 (esqueleto) |
+| QA-02 E2E com Maestro                     | F     | E4-11        | bloqueada    | QA-07; autorização para instalar o Maestro                             | —                |
+| QA-03 Acessibilidade                      | F     | E4-11        | bloqueada    | NAV-04; emulador                                                       | —                |
+| QA-04 Homologação em aparelhos            | F     | E4-12        | bloqueada    | Aparelho Android físico e Mac/iPhone                                   | —                |
 
 ## 3. Herdado da Entrega 3
 
