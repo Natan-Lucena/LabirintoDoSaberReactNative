@@ -336,7 +336,7 @@ describe("ApplyScaleScreen (AVA-02)", () => {
     await fireEvent.press(
       screen.getByRole("button", { name: "Gerar insight de novo" }),
     );
-    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(await screen.findByText(/Não foi possível gerar/)).toBeTruthy();
     await fireEvent.press(
       screen.getByRole("button", { name: "Concluir escala" }),
     );
