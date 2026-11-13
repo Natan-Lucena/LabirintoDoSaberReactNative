@@ -38,6 +38,7 @@ import { NEW_PLAN_ROUTE } from "@/features/plans/routes";
 import { useSessionFlowStore } from "@/stores/session-flow";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { dayKey, TIME_ZONE } from "@/utils/date";
+import { useScrollToFirstError } from "./useScrollToFirstError";
 import { EvolutionFormSections } from "./EvolutionFormSections";
 import {
   evolutionRecordRoute,
@@ -51,6 +52,9 @@ import {
   toCreatePayload,
   type EvolutionFormValues,
 } from "./schema";
+
+// O AppHeader já cuida do topo: sem a margem de cima da área segura (evita espaço duplo).
+const SCREEN_EDGES = ["left", "right", "bottom"] as const;
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   timeZone: TIME_ZONE,
@@ -223,7 +227,7 @@ export function EvolutionScreen({
     : null;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       <AppHeader title="Evolução da sessão" onBack={leaveFromError} />
       <ScrollView contentContainerStyle={styles.content}>
         {message ? (
@@ -289,6 +293,7 @@ function EvolutionRegister({
   // Saída autorizada (salvo, já existente ou descarte confirmado).
   const leavingRef = useRef(false);
 
+  const { scrollRef, setAnchor, onInvalid } = useScrollToFirstError();
   const {
     control,
     handleSubmit,
@@ -445,7 +450,7 @@ function EvolutionRegister({
     const saved = outcome.kind === "saved";
     const existingId = saved ? undefined : outcome.evolutionId;
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
         {header}
         <ScrollView contentContainerStyle={styles.content}>
           <SuccessPanel
@@ -479,9 +484,10 @@ function EvolutionRegister({
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       {header}
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -494,8 +500,8 @@ function EvolutionRegister({
         ) : (
           <InfoCard
             icon="file"
-            title="Sessão sem PE"
-            description="Os critérios da evolução vêm do PE da sessão. Crie um PE para medir critérios; por agora, registre só o descritivo."
+            title="Sessão sem plano"
+            description="Os critérios vêm do PE da sessão ou, sem PE, do PDI ativo. Crie um PE para medir critérios nesta sessão."
             action={{
               label: "Criar PE",
               onPress: () =>
@@ -512,6 +518,7 @@ function EvolutionRegister({
         )}
 
         <EvolutionFormSections
+          onAnchor={setAnchor}
           control={control}
           fields={fields}
           criteria={criteria}
@@ -534,7 +541,7 @@ function EvolutionRegister({
           fullWidth
           loading={saving}
           disabled={saving}
-          onPress={() => void handleSubmit(save)()}
+          onPress={() => void handleSubmit(save, onInvalid)()}
         />
       </ScrollView>
     </SafeAreaView>

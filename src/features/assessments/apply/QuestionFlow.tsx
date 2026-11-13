@@ -1,7 +1,8 @@
-import { useMemo, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   ScrollView,
   StyleSheet,
   Text,
@@ -296,6 +297,20 @@ export function QuestionFlow({
       onExit();
     }
   }
+
+  // O Voltar do Android segue a seta do cabeçalho (AC-AVA-02-02).
+  const goBackRef = useRef(goBack);
+  goBackRef.current = goBack;
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        goBackRef.current();
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, []);
 
   const header = (
     <AppHeader

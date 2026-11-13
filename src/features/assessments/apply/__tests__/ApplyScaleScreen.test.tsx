@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { Alert } from "react-native";
+import { Alert, BackHandler } from "react-native";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/api/client";
@@ -12,13 +12,17 @@ import {
   resetMockScaleState,
   setMockScaleAiFailure,
 } from "@/mocks/handlers/scales";
+import { act } from "@testing-library/react-native";
 import { fireEvent, render, screen, waitFor } from "@/test-utils/render";
 
 const push = vi.fn();
 const back = vi.fn();
 const replace = vi.fn();
+const dismissTo = vi.fn();
 
-vi.mock("expo-router", () => ({ useRouter: () => ({ push, back, replace }) }));
+vi.mock("expo-router", () => ({
+  useRouter: () => ({ push, back, replace, dismissTo }),
+}));
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
 }));
@@ -83,6 +87,7 @@ describe("ApplyScaleScreen (AVA-02)", () => {
     push.mockClear();
     back.mockClear();
     replace.mockClear();
+    dismissTo.mockClear();
     requests = [];
     failNextPut = false;
     incompleteItemId = null;
@@ -284,7 +289,7 @@ describe("ApplyScaleScreen (AVA-02)", () => {
     await fireEvent.press(
       screen.getByRole("button", { name: "Salvar rascunho" }),
     );
-    await waitFor(() => expect(replace).toHaveBeenCalled());
+    await waitFor(() => expect(dismissTo).toHaveBeenCalled());
   });
 
   it("concluir chama o servidor e leva ao resultado (AC-AVA-03-03)", async () => {
@@ -343,6 +348,39 @@ describe("ApplyScaleScreen (AVA-02)", () => {
     await waitFor(() => expect(replace).toHaveBeenCalled());
   });
 
+  it("o Voltar do Android volta à pergunta anterior e só sai na primeira (AVA-02.2)", async () => {
+    type BackListener = Parameters<typeof BackHandler.addEventListener>[1];
+    const handlers: BackListener[] = [];
+    const spy = vi
+      .spyOn(BackHandler, "addEventListener")
+      .mockImplementation((_event, handler) => {
+        handlers.push(handler);
+        return { remove: vi.fn() };
+      });
+    await render(
+      <ApplyScaleScreen
+        templateId={MOCK_SCALE_TEMPLATE_ID}
+        applicationId={MOCK_SCALE_APPLICATION_DRAFT_ID}
+      />,
+    );
+    await screen.findByText("4 de 6");
+    const press = async () => {
+      await act(async () => {
+        handlers.at(-1)!({} as Parameters<BackListener>[0]);
+      });
+    };
+
+    await press();
+    expect(await screen.findByText("3 de 6")).toBeTruthy();
+    expect(back).not.toHaveBeenCalled();
+    await press();
+    await press();
+    await screen.findByText("1 de 6");
+    await press();
+    expect(back).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+
   it("descartar pede confirmação e apaga o rascunho (AC-AVA-05-02)", async () => {
     const alert = vi
       .spyOn(Alert, "alert")
@@ -357,7 +395,7 @@ describe("ApplyScaleScreen (AVA-02)", () => {
     );
 
     expect(alert).toHaveBeenCalled();
-    await waitFor(() => expect(replace).toHaveBeenCalled());
+    await waitFor(() => expect(dismissTo).toHaveBeenCalled());
     expect(
       requests.some(
         (request) =>

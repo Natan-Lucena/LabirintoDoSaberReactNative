@@ -26,7 +26,7 @@ const BACK_DELAY_MS = 1200;
 export function ChangePasswordScreen(): ReactElement {
   const router = useRouter();
   const toast = useToast();
-  const { submit, failure, isBusy } = useChangePassword();
+  const { submit, failure, clearFailure, isBusy } = useChangePassword();
   const [showPasswords, setShowPasswords] = useState(false);
   const [done, setDone] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -111,7 +111,10 @@ export function ChangePasswordScreen(): ReactElement {
               <Field
                 label="Senha atual"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  clearFailure("currentPassword");
+                  onChange(text);
+                }}
                 error={currentError}
                 accessibilityLabel="Senha atual"
                 textContentType="password"

@@ -8,6 +8,7 @@ import { fireEvent, render, screen } from "@/test-utils/render";
 
 const push = vi.fn();
 const back = vi.fn();
+const replace = vi.fn();
 const refetchTemplates = vi.fn();
 const refetchApplications = vi.fn();
 const online = vi.hoisted(() => ({ value: true }));
@@ -15,7 +16,7 @@ let templates: ScaleTemplateSummary[] | undefined;
 let applications: ScaleApplicationSummary[] | undefined;
 let failed = false;
 
-vi.mock("expo-router", () => ({ useRouter: () => ({ push, back }) }));
+vi.mock("expo-router", () => ({ useRouter: () => ({ push, back, replace }) }));
 vi.mock("@/hooks/useOnline", () => ({ useOnline: () => online.value }));
 vi.mock("@/features/assessments/hub/useAssessmentsHub", () => ({
   useScaleTemplates: () => ({
@@ -155,6 +156,21 @@ describe("AssessmentsHubScreen (AVA-01)", () => {
     );
 
     expect(push).toHaveBeenCalledWith(applyRoute("t1", { studentId: "s9" }));
+  });
+
+  it("filtrado por paciente mostra o filtro e Ver todos limpa (AVA-05.2)", async () => {
+    await render(<AssessmentsHubScreen studentId="s9" />);
+
+    expect(screen.getByText(/^Mostrando só /)).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Ver todos" }));
+
+    expect(replace).toHaveBeenCalledWith("/assessments");
+  });
+
+  it("sem filtro não mostra a faixa de filtro", async () => {
+    await render(<AssessmentsHubScreen />);
+
+    expect(screen.queryByText(/^Mostrando só /)).toBeNull();
   });
 
   it("badge usa o label do servidor e marca a faixa do rascunho como parcial (AC-AVA-01-02)", async () => {

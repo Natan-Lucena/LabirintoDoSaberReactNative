@@ -195,14 +195,14 @@ describe("EvolutionScreen — contexto (AC-EVO-01-01)", () => {
     expect(
       screen.getAllByText("Associar quantidade e numeral").length,
     ).toBeGreaterThan(0);
-    expect(screen.queryByText("Sessão sem PE")).toBeNull();
+    expect(screen.queryByText("Sessão sem plano")).toBeNull();
     expect(screen.queryByRole("button", { name: "Criar PE" })).toBeNull();
   });
 
   it("sem PE: aviso com 'Criar PE' para o paciente e a data, e só o registro descritivo", async () => {
     await renderLoaded(withoutPlan());
 
-    expect(screen.getByText("Sessão sem PE")).toBeTruthy();
+    expect(screen.getByText("Sessão sem plano")).toBeTruthy();
     expect(screen.queryByText("Critérios da sessão")).toBeNull();
     expect(
       screen.queryByRole("button", { name: "Incluir critério livre" }),
@@ -332,7 +332,7 @@ describe("EvolutionScreen — contexto (AC-EVO-01-01)", () => {
 
     expect(await screen.findByText("PE · Contagem até 20")).toBeTruthy();
     expect(getEvolutionContext).toHaveBeenCalledTimes(2);
-    expect(screen.queryByText("Sessão sem PE")).toBeNull();
+    expect(screen.queryByText("Sessão sem plano")).toBeNull();
     expect(screen.getByText("Critérios da sessão")).toBeTruthy();
     expect(screen.getByLabelText("Resultado do critério 1")).toBeTruthy();
     expect(screen.getByLabelText("Registro descritivo").props.value).toBe(

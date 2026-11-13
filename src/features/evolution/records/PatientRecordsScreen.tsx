@@ -12,6 +12,9 @@ import { evolutionRecordRoute } from "../register/routes";
 import { EvolutionSummaryCard } from "./EvolutionSummaryCard";
 import { usePatientEvolutions } from "./useEvolutionRecords";
 
+// O AppHeader já cuida do topo: sem a margem de cima da área segura (evita espaço duplo).
+const SCREEN_EDGES = ["left", "right", "bottom"] as const;
+
 export interface PatientRecordsScreenProps {
   patientId: string;
 }
@@ -28,7 +31,7 @@ export function PatientRecordsScreen({
   const evolutions = evolutionsQuery.data;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       <AppHeader
         title="Prontuário"
         subtitle={patientName}

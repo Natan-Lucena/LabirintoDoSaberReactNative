@@ -8,12 +8,17 @@ import { useAuthStore } from "@/stores/auth";
 import { useSessionGuard } from "@/features/auth/useSessionGuard";
 
 const routerReplace = vi.fn();
+const routerDismissAll = vi.fn();
 let pathname = "/";
 let segments: string[] = ["(tabs)"];
 let navigationKey: string | undefined = "root";
 
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ replace: routerReplace }),
+  useRouter: () => ({
+    replace: routerReplace,
+    dismissAll: routerDismissAll,
+    canDismiss: () => true,
+  }),
   usePathname: () => pathname,
   useSegments: () => segments,
   useRootNavigationState: () => ({ key: navigationKey }),
@@ -57,6 +62,7 @@ describe("useSessionGuard (AC-402-01)", () => {
       await render(<Probe />);
     });
     expect(routerReplace).toHaveBeenCalledTimes(1);
+    expect(routerDismissAll).toHaveBeenCalledTimes(1);
     expect(routerReplace).toHaveBeenCalledWith("/(auth)/login");
   });
 
@@ -121,6 +127,7 @@ describe("useSessionGuard (AC-402-01)", () => {
         await render(<Probe />);
       });
 
+      expect(routerDismissAll).toHaveBeenCalledTimes(1);
       expect(routerReplace).toHaveBeenCalledWith("/(auth)/login");
     },
   );

@@ -1,7 +1,7 @@
 // Seções do formulário da Evolução da sessão (EVO-01), compartilhadas entre o
 // registro e a edição do prontuário (EVO-02): critérios, estado das metas e
 // registro descritivo.
-import type { ReactElement } from "react";
+import { useRef, type ReactElement } from "react";
 import {
   Controller,
   useWatch,
@@ -32,6 +32,7 @@ import {
   type EvolutionFormValues,
 } from "./schema";
 import { NextSessionSuggestionBlock } from "./NextSessionSuggestionBlock";
+import type { ErrorAnchor } from "./useScrollToFirstError";
 
 const resultOptions = CRITERION_RESULTS.map((value) => ({
   value,
@@ -60,6 +61,8 @@ export interface EvolutionFormSectionsProps {
   showGoalStatus: boolean;
   /** Sessão da evolução, usada na sugestão da IA (EVO-04). */
   sessionId: string;
+  /** Posição dos blocos no scroll, para rolar até o primeiro erro (EVO-01.4). */
+  onAnchor?: (anchor: ErrorAnchor, y: number) => void;
 }
 
 export function EvolutionFormSections({
@@ -73,17 +76,26 @@ export function EvolutionFormSections({
   showCriteria,
   showGoalStatus,
   sessionId,
+  onAnchor,
 }: EvolutionFormSectionsProps): ReactElement {
   const goalCriteria = fields
     .map((field, index) => ({ field, index }))
     .filter(({ index }) => Boolean(criteria[index]?.goalId));
+
+  const criteriaBlockY = useRef(0);
 
   const descriptiveRecord = useWatch({ control, name: "descriptiveRecord" });
 
   return (
     <>
       {showCriteria ? (
-        <View style={styles.block}>
+        <View
+          style={styles.block}
+          onLayout={(event) => {
+            criteriaBlockY.current = event.nativeEvent.layout.y;
+            onAnchor?.("criteria", event.nativeEvent.layout.y);
+          }}
+        >
           <SectionTitle title="Critérios da sessão" />
           {fields.length === 0 ? (
             <Text style={styles.hint}>
@@ -99,7 +111,16 @@ export function EvolutionFormSections({
               ? attemptsLabel(current.attempts, current.successes)
               : null;
             return (
-              <View key={field.id} style={styles.card}>
+              <View
+                key={field.id}
+                style={styles.card}
+                onLayout={(event) =>
+                  onAnchor?.(
+                    `criteria.${index}`,
+                    criteriaBlockY.current + event.nativeEvent.layout.y,
+                  )
+                }
+              >
                 {current?.goalId ? (
                   <View style={styles.cardHeader}>
                     <Text style={styles.cardTitle}>{current.description}</Text>
@@ -250,7 +271,10 @@ export function EvolutionFormSections({
         </View>
       ) : null}
 
-      <View style={styles.block}>
+      <View
+        style={styles.block}
+        onLayout={(event) => onAnchor?.("record", event.nativeEvent.layout.y)}
+      >
         <SectionTitle title="Registro descritivo" />
         <Controller
           control={control}
@@ -270,20 +294,24 @@ export function EvolutionFormSections({
         />
       </View>
 
-      <Controller
-        control={control}
-        name="nextSessionSuggestion"
-        render={({ field: input }) => (
-          <NextSessionSuggestionBlock
-            sessionId={sessionId}
-            value={input.value ?? ""}
-            onChange={input.onChange}
-            descriptiveRecord={descriptiveRecord ?? ""}
-            disabled={saving}
-            error={errors.nextSessionSuggestion?.message}
-          />
-        )}
-      />
+      <View
+        onLayout={(event) => onAnchor?.("next", event.nativeEvent.layout.y)}
+      >
+        <Controller
+          control={control}
+          name="nextSessionSuggestion"
+          render={({ field: input }) => (
+            <NextSessionSuggestionBlock
+              sessionId={sessionId}
+              value={input.value ?? ""}
+              onChange={input.onChange}
+              descriptiveRecord={descriptiveRecord ?? ""}
+              disabled={saving}
+              error={errors.nextSessionSuggestion?.message}
+            />
+          )}
+        />
+      </View>
     </>
   );
 }

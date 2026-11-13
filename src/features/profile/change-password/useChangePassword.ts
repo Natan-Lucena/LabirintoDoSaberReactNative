@@ -62,5 +62,10 @@ export function useChangePassword() {
     [mutateAsync],
   );
 
-  return { submit, failure, isBusy: mutation.isPending };
+  /** Limpa o erro de um campo quando a pessoa o edita (REC-03.2). */
+  const clearFailure = useCallback((field: ChangePasswordFailure["field"]) => {
+    setFailure((current) => (current?.field === field ? null : current));
+  }, []);
+
+  return { submit, failure, clearFailure, isBusy: mutation.isPending };
 }

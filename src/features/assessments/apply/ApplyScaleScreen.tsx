@@ -48,7 +48,7 @@ function ApplyFlow({
   });
   const template = templateQuery.data;
   const backToHub = () =>
-    router.replace({
+    router.dismissTo({
       pathname: ASSESSMENTS_ROUTE,
       params: studentId ? { studentId } : {},
     });

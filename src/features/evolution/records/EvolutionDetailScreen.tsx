@@ -18,6 +18,9 @@ import { color, fontFamilies, semanticColor, shape, typography } from "@/theme";
 import { criteriaSummary, achievedCount, formatSessionDate } from "./format";
 import { useEvolutionDetail } from "./useEvolutionRecords";
 
+// O AppHeader já cuida do topo: sem a margem de cima da área segura (evita espaço duplo).
+const SCREEN_EDGES = ["left", "right", "bottom"] as const;
+
 export interface EvolutionDetailScreenProps {
   evolutionId: string;
 }
@@ -57,7 +60,7 @@ export function EvolutionDetailScreen({
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       <AppHeader
         title="Evolução da sessão"
         subtitle={

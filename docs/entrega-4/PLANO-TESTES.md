@@ -140,13 +140,13 @@ no emulador, para as 25 fichas, na ordem do backlog. Quando o critério da ficha
 
 #### REC-03 — Trocar senha no perfil
 
-| ID       | P   | Passos                                                                  | Resultado esperado                                                                                  | Resultado |
-| -------- | --- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------- |
-| REC-03.1 | P1  | Perfil → "Trocar senha". Confira os campos e o botão de mostrar/ocultar | Senha atual, nova e confirmação (6 a 100 caracteres), cada uma com mostrar/ocultar                  |           |
-| REC-03.2 | P1  | Preencha com a senha atual **errada**                                   | O campo da senha atual é marcado com a mensagem do `INVALID_CURRENT_PASSWORD` (AC-REC-03-02)        |           |
-| REC-03.3 | P1  | Preencha a confirmação diferente da nova                                | O envio é impedido, com mensagem no campo da confirmação (AC-REC-03-03)                             |           |
-| REC-03.4 | P1  | Preencha tudo certo e envie; depois navegue por Início e Pacientes      | Confirmação de sucesso e o app **continua logado**: o token novo foi guardado (SN-08, AC-REC-03-01) |           |
-| REC-03.5 | P2  | Teste senha nova com 5 e com 101 caracteres                             | Recusada no formulário, com a regra de 6 a 100 caracteres                                           |           |
+| ID       | P   | Passos                                                                | Resultado esperado                                                                                           | Resultado |
+| -------- | --- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
+| REC-03.1 | P1  | Perfil → "Trocar senha". Confira os campos e o botão "Mostrar senhas" | Senha atual, nova e confirmação (6 a 100 caracteres); um único "Mostrar senhas" mostra/oculta os três campos |           |
+| REC-03.2 | P1  | Preencha com a senha atual **errada**                                 | O campo da senha atual é marcado com a mensagem do `INVALID_CURRENT_PASSWORD` (AC-REC-03-02)                 |           |
+| REC-03.3 | P1  | Preencha a confirmação diferente da nova                              | O envio é impedido, com mensagem no campo da confirmação (AC-REC-03-03)                                      |           |
+| REC-03.4 | P1  | Preencha tudo certo e envie; depois navegue por Início e Pacientes    | Confirmação de sucesso e o app **continua logado**: o token novo foi guardado (SN-08, AC-REC-03-01)          |           |
+| REC-03.5 | P2  | Teste senha nova com 5 e com 101 caracteres                           | Recusada no formulário, com a regra de 6 a 100 caracteres                                                    |           |
 
 ### 2.2 Bloco B — Evolução da sessão
 
@@ -234,18 +234,18 @@ O reteste do fluxo de sessão inteiro está na §3.1.
 
 #### AVA-05 — Rascunhos
 
-| ID       | P   | Passos                                                                       | Resultado esperado                                                                               | Resultado |
-| -------- | --- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | --------- |
-| AVA-05.1 | P1  | Responda 3 perguntas e toque em "Salvar rascunho"; depois "Continuar" no hub | Sai com as respostas salvas; reabrir **retoma na primeira pergunta sem resposta** (AC-AVA-05-01) |           |
-| AVA-05.2 | P1  | "Descartar rascunho" e cancele; repita e confirme                            | Pede **confirmação**; cancelar não remove; confirmar **remove da lista** (AC-AVA-05-02)          |           |
+| ID       | P   | Passos                                                                                                                                       | Resultado esperado                                                                                               | Resultado |
+| -------- | --- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------- |
+| AVA-05.1 | P1  | Responda 3 perguntas e saia pelo Voltar (o "Salvar rascunho" fica só na tela final, depois de todas as perguntas); depois "Continuar" no hub | Sair pelo Voltar mantém as respostas salvas; reabrir **retoma na primeira pergunta sem resposta** (AC-AVA-05-01) |           |
+| AVA-05.2 | P1  | "Descartar rascunho" e cancele; repita e confirme                                                                                            | Pede **confirmação**; cancelar não remove; confirmar **remove da lista** (AC-AVA-05-02)                          |           |
 
 #### PAC-05 — Ficha: Avaliações
 
-| ID       | P   | Passos                                                     | Resultado esperado                                                                                                                        | Resultado |
-| -------- | --- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| PAC-05.1 | P1  | Ficha do Paciente A → aba **Avaliações**                   | Lista as aplicações (escala, faixa, data) e o card "Anamnese" do paciente (AC-PAC-05-01)                                                  |           |
-| PAC-05.2 | P1  | Toque em "Ver resultado", "Ver síntese" e "Nova avaliação" | "Ver resultado" abre a AVA-04; "Ver síntese" abre a PAC-09; "Nova avaliação" abre a AVA-02 **com o paciente já escolhido** (AC-PAC-05-02) |           |
-| PAC-05.3 | P3  | Ficha do Paciente C                                        | Aba sem aplicações e sem anamnese: estado vazio e "Nova avaliação" disponível                                                             |           |
+| ID       | P   | Passos                                                     | Resultado esperado                                                                                                                                                                                | Resultado |
+| -------- | --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| PAC-05.1 | P1  | Ficha do Paciente A → aba **Avaliações**                   | Lista as aplicações (escala, faixa, data) e o card "Anamnese" do paciente (AC-PAC-05-01)                                                                                                          |           |
+| PAC-05.2 | P1  | Toque em "Ver resultado", "Ver síntese" e "Nova avaliação" | "Ver resultado" abre a AVA-04; "Ver síntese" abre a PAC-09; "Nova avaliação" abre o hub de avaliações **filtrado pelo paciente**, e "Aplicar escala" dali já vem com ele escolhido (AC-PAC-05-02) |           |
+| PAC-05.3 | P3  | Ficha do Paciente C                                        | Aba sem aplicações e sem anamnese: estado vazio e "Nova avaliação" disponível                                                                                                                     |           |
 
 #### PAC-09 — Síntese da anamnese (IA)
 

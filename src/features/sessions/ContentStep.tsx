@@ -39,6 +39,9 @@ import {
 } from "@/stores/session-flow";
 import { color, fontFamilies } from "@/theme";
 
+// O AppHeader já cuida do topo: sem a margem de cima da área segura (evita espaço duplo).
+const SCREEN_EDGES = ["left", "right", "bottom"] as const;
+
 /** Esconde códigos crus do backend (ex.: `NOTEBOOK_NOT_FOUND`) do educador. */
 function friendlyStartError(message: string | undefined): string {
   const fallback = "Não foi possível iniciar a sessão.";
@@ -331,7 +334,7 @@ export function ContentStep(): ReactElement {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       <AppHeader
         title="Nova sessão"
         subtitle="Nova sessão"

@@ -15,6 +15,9 @@ import {
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { usePendingEvolutions, useRecentEvolutions } from "./useEvolutionHub";
 
+// O AppHeader já cuida do topo: sem a margem de cima da área segura (evita espaço duplo).
+const SCREEN_EDGES = ["left", "right", "bottom"] as const;
+
 const FINISHED_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
   day: "2-digit",
@@ -56,7 +59,7 @@ export function EvolutionHubScreen(): ReactElement {
   const recent = recentQuery.data;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       <AppHeader title="Evolução da sessão" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.block}>

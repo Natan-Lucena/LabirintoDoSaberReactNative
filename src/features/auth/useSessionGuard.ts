@@ -36,6 +36,8 @@ export function useSessionGuard(): void {
     }
 
     if (target === "auth" && !isInAuthGroup) {
+      // Zera o histórico para o login não ficar duplicado atrás de outro.
+      if (router.canDismiss?.()) router.dismissAll();
       router.replace(AUTH_DESTINATION);
     }
   }, [target, router, navigationKey, isInAuthGroup]);

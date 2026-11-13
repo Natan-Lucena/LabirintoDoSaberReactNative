@@ -26,6 +26,7 @@ import type { GoalStatus, SessionEvolution } from "@/api/types";
 import { AppHeader, DsButton } from "@/components/ds";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { planQueryKeys } from "@/features/plans/hub/usePlans";
+import { useScrollToFirstError } from "./useScrollToFirstError";
 import { EvolutionFormSections } from "./EvolutionFormSections";
 import {
   evolutionFormSchema,
@@ -33,6 +34,9 @@ import {
   toUpdatePayload,
   type EvolutionFormValues,
 } from "./schema";
+
+// O AppHeader já cuida do topo: sem a margem de cima da área segura (evita espaço duplo).
+const SCREEN_EDGES = ["left", "right", "bottom"] as const;
 
 type EvolutionFormOutput = z.output<typeof evolutionFormSchema>;
 
@@ -82,7 +86,7 @@ export function EvolutionEditForm(props: EvolutionEditFormProps): ReactElement {
 
   if (planId && planQuery.isPending) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
         <AppHeader title="Editar evolução" onBack={props.onCancel} />
         <Text style={styles.hint} accessibilityRole="progressbar">
           Carregando o plano...
@@ -114,6 +118,7 @@ function EvolutionEditFormBody({
   const [saveError, setSaveError] = useState<string | null>(null);
   const savingRef = useRef(false);
 
+  const { scrollRef, setAnchor, onInvalid } = useScrollToFirstError();
   const {
     control,
     handleSubmit,
@@ -214,17 +219,19 @@ function EvolutionEditFormBody({
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       <AppHeader
         title="Editar evolução"
         subtitle={evolution.planTitle}
         onBack={requestCancel}
       />
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
         <EvolutionFormSections
+          onAnchor={setAnchor}
           control={control}
           fields={fields}
           criteria={criteria}
@@ -246,7 +253,7 @@ function EvolutionEditFormBody({
           fullWidth
           loading={saving}
           disabled={saving}
-          onPress={() => void handleSubmit(save)()}
+          onPress={() => void handleSubmit(save, onInvalid)()}
         />
         <DsButton
           label="Cancelar"
