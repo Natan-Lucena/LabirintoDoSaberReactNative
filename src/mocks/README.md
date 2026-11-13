@@ -407,9 +407,10 @@ usada pela aplicação semente) tem 0-6, 7-12 e 13-18, para provar que a aplica�
   outro educador), `500 AI_GENERATION_FAILED`/`AI_INVALID_OUTPUT` via
   `setMockAnamneseSummaryFailure(...)`; `resetMockAnamneseSummaryState()` limpa tudo.
 - O arquivo **envolve** os handlers existentes de `anamnese-responses.ts`:
-  `GET .../student/:studentId`, `GET .../:responseId` e `PUT .../:responseId` só ganham `summary` e
-  `summaryOutdated` quando há síntese; sem síntese o corpo é idêntico ao de antes. Editar a resposta
-  (`PUT`) depois da síntese marca `summaryOutdated: true`; gerar de novo zera. O `GET` por id de
+  `GET .../student/:studentId` e `GET .../:responseId` ganham `summary` e `summaryOutdated` quando há
+  síntese; o `PUT` só ganha `summary` (como o backend publicado, só os `GET`s trazem
+  `summaryOutdated`). Editar a resposta (`PUT`) depois da síntese a marca como desatualizada; gerar
+  de novo zera. `400 NO_ANSWERS_TO_SUMMARIZE` sem respostas. O `GET` por id de
   resposta alheia continua `401` (D4), não `403`.
 
 ### Interpretações e lacunas (mocks da leva 2)

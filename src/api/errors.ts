@@ -94,7 +94,7 @@ const API_ERROR_MESSAGES: Record<string, string> = {
     "Não foi possível gerar a sugestão agora. Tente novamente em instantes.",
   AI_INVALID_OUTPUT:
     "A resposta da IA veio inválida. Tente gerar a sugestão novamente.",
-  // Leva 2 (escalas §4 e síntese da anamnese §5), contrato PROVISÓRIO.
+  // Leva 2 (escalas e síntese da anamnese), conferida na INT-2 (BACKEND-ENTREGUE §3.3 a §3.5).
   // RESPONSE_NOT_FOUND e STUDENT_NOT_FOUND ficam SEM tradução de propósito: já
   // existem no contrato da anamnese e testes leem o código/mensagem crua.
   SCALE_NOT_FOUND: "Escala não encontrada.",
@@ -108,6 +108,12 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   APPLICATION_NOT_EDITABLE:
     "Esta aplicação já foi concluída e não pode ser alterada.",
   APPLICATION_NOT_FOUND: "Aplicação não encontrada.",
+  INVALID_APPOINTMENT:
+    "O atendimento escolhido não pertence a este paciente. Escolha outro.",
+  NO_ANSWERS_YET: "Responda ao menos um item antes de gerar a interpretação.",
+  NO_ANSWERS_TO_SUMMARIZE:
+    "A anamnese ainda não tem respostas para resumir. Preencha-a antes.",
+  TEMPLATE_NOT_FOUND: "O modelo desta anamnese não foi encontrado.",
   // Leva 3 (relatórios §6 e notificações §7), contrato PROVISÓRIO.
   // STUDENT_NOT_FOUND segue SEM tradução (ver leva 2).
   SECTION_NOT_ALLOWED:

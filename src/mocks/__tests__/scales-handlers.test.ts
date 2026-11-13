@@ -230,11 +230,20 @@ describe("mocks das escalas (API-05, leva 2)", () => {
         {
           code: "ATEN",
           name: "Subescala A (exemplo)",
+          answered: 3,
+          total: 3,
           value: 9,
           max: 9,
           band: { label: "Alto", severity: "HIGH" },
         },
-        { code: "COMP", name: "Subescala B (exemplo)", value: 0, max: 9 },
+        {
+          code: "COMP",
+          name: "Subescala B (exemplo)",
+          answered: 0,
+          total: 3,
+          value: 0,
+          max: 9,
+        },
       ]);
     });
 

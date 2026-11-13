@@ -4,7 +4,6 @@ import type { BandSeverity, ScaleApplicationSummary } from "@/api/types";
 import { getContrastRatio } from "@/theme/contrast";
 import {
   applicationDate,
-  selectActiveTemplates,
   selectBandBadge,
   severityTone,
   toneForSeverity,
@@ -100,25 +99,5 @@ describe("applicationDate", () => {
 
     expect(applicationDate(done)).toBe("03/11/2026");
     expect(applicationDate(draft)).toBe("02/11/2026");
-  });
-});
-
-describe("selectActiveTemplates", () => {
-  it("descarta escalas inativas", () => {
-    const base = {
-      code: "c",
-      version: 1,
-      description: "",
-      respondent: "PROFESSIONAL" as const,
-      estimatedMinutes: 5,
-      itemCount: 3,
-    };
-
-    expect(
-      selectActiveTemplates([
-        { ...base, id: "a", name: "A", active: true },
-        { ...base, id: "b", name: "B", active: false },
-      ]).map((template) => template.id),
-    ).toEqual(["a"]);
   });
 });

@@ -27,7 +27,10 @@ export function AnamneseSummaryScreen({
 }: AnamneseSummaryScreenProps): ReactElement {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const responsesQuery = useAnamneseResponses(patientId);
+  const responsesQuery = useAnamneseResponses(patientId, {
+    // `summaryOutdated` só vem nos GETs: ao abrir, relê depois de edições.
+    refetchOnMount: "always",
+  });
   const response: AnamneseResponse | undefined = responseId
     ? responsesQuery.data?.find((item) => item.id === responseId)
     : [...(responsesQuery.data ?? [])].sort((a, b) =>
