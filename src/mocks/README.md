@@ -424,3 +424,43 @@ usada pela aplicação semente) tem 0-6, 7-12 e 13-18, para provar que a aplica�
   tarefa de tela que a usar.
 - **`RESPONSE_NOT_FOUND` e `STUDENT_NOT_FOUND` sem tradução** em `normalizeApiError`, porque
   testes e telas da anamnese já leem o texto cru.
+
+## Relatórios e notificações (API-05, leva 3)
+
+Contrato **provisório**, copiado de `docs/entrega-4/ESPECIFICACAO-BACKEND.md` §6 e §7 e a conferir em
+API-04. Tipos em `src/api/types.ts`, leituras em `src/api/endpoints/{reports,notifications}.ts` e
+mocks em `handlers/reports.ts` e `handlers/notifications.ts` (reset: `resetMockReportState()`,
+`resetMockNotificationState()`). Geração, envio, exclusão e marcar como lida **só têm mock**: as
+funções de endpoint ficam com as telas REL-\* e NOT-01. A geração usa IA e a tela deve usar
+`AI_TIMEOUT_MS` (90 s), sem reenvio. O app monta o PDF a partir do `content` (G-58).
+
+### Relatórios (`handlers/reports.ts`)
+
+- `GET /report/options`; `POST /report/` (`201`); `GET /report/` (`studentId?`, `limit?` 1-100, sem
+  `content`, mais recente primeiro); `GET /report/:id`; `POST /report/:id/share` (`channel`
+  `SHARE`/`PRINT`); `DELETE /report/:id` (`204`).
+- Erros: `400 Validation error` (campos, `from > to`, mais de 365 dias, nenhuma seção),
+  `400 SECTION_NOT_ALLOWED`, `400 REPORT_EMPTY_PERIOD` (`student-5` ou período que termina antes de
+  2026-01-01), `403 UNAUTHORIZED` (paciente ou relatório alheio: `mock-report-foreign`),
+  `404 STUDENT_NOT_FOUND`, `404 REPORT_NOT_FOUND`.
+- `setMockReportSynthesisFailure(true)` faz a próxima geração sair sem `synthesis` e com
+  `synthesisFailed: true` (RP-06). O `content` é gravado na geração (RP-03) e nunca traz telefone,
+  endereço, documentos nem responsável (RP-01).
+
+### Notificações (`handlers/notifications.ts`)
+
+- `GET /notification/` (`unreadOnly?`, `limit?` 1-50, `cursor?`; resposta `{ items, nextCursor? }`),
+  `GET /notification/unread-count`, `POST /notification/:id/read` (`404 NOTIFICATION_NOT_FOUND`),
+  `POST /notification/read-all` (`{ updated }`).
+- A lista já vem semeada com 5 notificações (uma de cada tipo e uma lida); não há cron (NT-01).
+
+### Interpretações e lacunas (mocks da leva 3)
+
+- **RP-01:** `defaultSections` de cada tipo nunca traz `ASSESSMENTS` nem `ANAMNESIS_SUMMARY`; a
+  especificação fala em padrões por audiência, mas `options` não os varia por audiência. O mock não
+  bloqueia sensíveis marcados à mão (a tela mostra o aviso).
+- **Conteúdo:** as seções vêm com valores fictícios fixos (não derivam dos outros mocks); só o nome
+  e a idade do paciente vêm de `MOCK_STUDENTS`.
+- **`ReportSummary`:** igual a `Report` sem `content` (mantém `shares` para o "último envio").
+- **Cursor:** o cursor das notificações é o deslocamento numérico, opaco para o app.
+- **`STUDENT_NOT_FOUND`** segue sem tradução em `normalizeApiError`.

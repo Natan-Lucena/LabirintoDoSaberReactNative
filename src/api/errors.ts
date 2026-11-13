@@ -97,6 +97,14 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   APPLICATION_NOT_EDITABLE:
     "Esta aplicação já foi concluída e não pode ser alterada.",
   APPLICATION_NOT_FOUND: "Aplicação não encontrada.",
+  // Leva 3 (relatórios §6 e notificações §7), contrato PROVISÓRIO.
+  // STUDENT_NOT_FOUND segue SEM tradução (ver leva 2).
+  SECTION_NOT_ALLOWED:
+    "Uma das seções escolhidas não está disponível para este tipo de relatório.",
+  REPORT_EMPTY_PERIOD:
+    "Não há dados do paciente neste período. Escolha outro período.",
+  REPORT_NOT_FOUND: "Relatório não encontrado.",
+  NOTIFICATION_NOT_FOUND: "Notificação não encontrada.",
 };
 
 export function normalizeApiError(error: unknown): ApiError {

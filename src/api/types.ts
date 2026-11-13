@@ -619,3 +619,148 @@ export interface AnamneseSummaryFields {
   summary?: AnamneseSummary;
   summaryOutdated?: boolean;
 }
+
+// Entrega 4, leva 3 (relatórios e notificações no app). Contrato PROVISÓRIO de
+// docs/entrega-4/ESPECIFICACAO-BACKEND.md §6 e §7, a conferir em API-04.
+
+export type ReportType = "PROGRESS" | "ASSESSMENT" | "PDI_PROGRESS";
+export type ReportSection =
+  | "PATIENT_DATA"
+  | "SESSION_METRICS"
+  | "EVOLUTIONS"
+  | "PLAN_PROGRESS"
+  | "ASSESSMENTS"
+  | "ANAMNESIS_SUMMARY"
+  | "AI_SYNTHESIS";
+export type ReportAudience = "FAMILY" | "SCHOOL" | "PROFESSIONAL";
+
+export interface ReportOptions {
+  types: {
+    type: ReportType;
+    label: string;
+    description: string;
+    allowedSections: ReportSection[];
+    defaultSections: ReportSection[];
+  }[];
+  sections: { section: ReportSection; label: string; sensitive: boolean }[];
+  audiences: { audience: ReportAudience; label: string }[];
+  periods: { key: string; label: string; days: number }[];
+  /** 365. */
+  maxPeriodDays: number;
+}
+
+export interface ReportContent {
+  title: string;
+  generatedAt: string;
+  professional: { name: string; profession?: string };
+  patient?: { displayName: string; ageYears: number; schoolGrade?: string };
+  sessionMetrics?: {
+    sessions: number;
+    answered: number;
+    /** Fração de 0 a 1 (G-43). */
+    accuracy: number;
+    byCategory: { category: string; accuracy: number }[];
+  };
+  evolutions?: {
+    sessionDate: string;
+    planTitle?: string;
+    achieved: number;
+    total: number;
+    record: string;
+  }[];
+  planProgress?: {
+    title: string;
+    type: "PDI" | "PE";
+    percent: number;
+    goals: { description: string; status: string }[];
+  }[];
+  assessments?: {
+    templateName: string;
+    completedAt: string;
+    value: number;
+    max: number;
+    band?: string;
+  }[];
+  anamnesisSummary?: string;
+  /** Texto da IA em parágrafos simples (até 2500 caracteres). */
+  synthesis?: string;
+}
+
+export interface ReportShare {
+  channel: "SHARE" | "PRINT";
+  at: string;
+}
+
+export interface Report {
+  id: string;
+  studentId: string;
+  studentName: string;
+  educatorId: string;
+  type: ReportType;
+  audience: ReportAudience;
+  /** `AAAA-MM-DD`. */
+  period: { from: string; to: string };
+  sections: ReportSection[];
+  /** Retrato gravado na geração (RP-03). */
+  content: ReportContent;
+  /** `true` quando a IA falhou e o relatório foi criado sem a síntese (RP-06). */
+  synthesisFailed?: boolean;
+  createdAt: string;
+  shares: ReportShare[];
+}
+
+/** `GET /report/`: igual ao relatório, sem `content`. */
+export type ReportSummary = Omit<Report, "content">;
+
+export interface ListReportsFilters {
+  studentId?: string;
+  /** 1 a 100. */
+  limit?: number;
+}
+
+/** `POST /report/` (escrita da tela REL-01; sem função de endpoint na leva 3). */
+export interface CreateReportPayload {
+  studentId: string;
+  type: ReportType;
+  audience: ReportAudience;
+  period: { from: string; to: string };
+  sections: ReportSection[];
+}
+
+/** `POST /report/:id/share` (escrita da REL-02; sem função de endpoint na leva 3). */
+export interface ShareReportPayload {
+  channel: ReportShare["channel"];
+}
+
+export type NotificationKind =
+  | "APPOINTMENTS_TODAY"
+  | "EVOLUTION_PENDING"
+  | "PLAN_REVIEW_DUE"
+  | "SCALE_DRAFT_STALE";
+
+export interface AppNotification {
+  id: string;
+  kind: NotificationKind;
+  /** Até 80 caracteres. */
+  title: string;
+  /** Até 200 caracteres; pode ter o primeiro nome do paciente. */
+  body: string;
+  target?: {
+    type: "AGENDA_DAY" | "SESSION" | "PLAN" | "SCALE_APPLICATION";
+    id: string;
+  };
+  createdAt: string;
+  readAt?: string;
+}
+
+export interface ListNotificationsFilters {
+  unreadOnly?: boolean;
+  /** 1 a 50 (padrão do servidor: 20). */
+  limit?: number;
+  cursor?: string;
+}
+
+export interface NotificationsPage {
+  items: AppNotification[];
+  nextCursor?: string;
+}
