@@ -1,7 +1,7 @@
-// Evolução da sessão (API-05, leva 1): leituras e escritas. Contrato PROVISÓRIO
-// de docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir em API-04. Estado só
-// em memória; dados fictícios. Decisões G-56/G-57: a evolução substitui a
-// observação pós-sessão e os critérios vêm só do PE da sessão (sem PDI, EV-12).
+// Evolução da sessão (API-05, leva 1): leituras e escritas. Segue o contrato
+// publicado pelo backend (BACKEND-ENTREGUE §3.2, INT-1). Estado só em memória;
+// dados fictícios. G-56: a evolução substitui a observação pós-sessão; G-57
+// revisto: o contexto escolhe o PE da sessão e, na falta dele, o PDI ativo.
 import type { SessionReport } from "@/api/endpoints/session-report";
 import type {
   CriterionResult,
@@ -292,11 +292,10 @@ function withIds(
 
 function ownPlan(planId: string, studentId: string): Plan {
   const plan = mockPlans.find((item) => item.id === planId);
-  // EV-05 (G-57): só PE do mesmo paciente; inexistente, PDI, de outro paciente
-  // ou de outro educador é inválido.
+  // EV-05 (G-57 revisto): PE ou PDI do mesmo paciente; inexistente, de outro
+  // paciente ou de outro educador é inválido.
   if (
     !plan ||
-    plan.type !== "PE" ||
     plan.studentId !== studentId ||
     plan.educatorId !== MOCK_EDUCATOR.id
   )
@@ -304,9 +303,19 @@ function ownPlan(planId: string, studentId: string): Plan {
   return plan;
 }
 
-function assertGoalsInPlan(plan: Plan | undefined, goalIds: string[]): void {
+/**
+ * `goalUpdates` sem plano é `INVALID_PLAN`; `goalId` fora do plano (inclusive
+ * critério com meta numa evolução sem plano) é `GOAL_NOT_IN_PLAN`.
+ */
+function assertGoalsInPlan(
+  plan: Plan | undefined,
+  goalIds: string[],
+  goalUpdates: EvolutionGoalUpdate[] = [],
+): void {
+  if (!plan && goalUpdates.length > 0)
+    throw new MockApiError(400, "INVALID_PLAN");
   if (goalIds.length === 0) return;
-  if (!plan) throw validationError();
+  if (!plan) throw new MockApiError(400, "GOAL_NOT_IN_PLAN");
   if (goalIds.some((id) => !plan.goals.some((goal) => goal.id === id)))
     throw new MockApiError(400, "GOAL_NOT_IN_PLAN");
 }
@@ -341,21 +350,25 @@ function applyGoalUpdates(plan: Plan, updates: EvolutionGoalUpdate[]): void {
   plan.updatedAt = now;
 }
 
-/** EV-12 (G-57): PE ativo do atendimento; senão PE ativo da data; senão nenhum. */
+/**
+ * EV-12 (G-57 revisto): PE ativo do atendimento; senão PE ativo da data; senão
+ * PDI ativo; senão nenhum.
+ */
 function choosePlan(session: TaskNotebookSession): Plan | undefined {
-  const pes = mockPlans.filter(
+  const active = mockPlans.filter(
     (plan) =>
-      plan.type === "PE" &&
       plan.status === "ACTIVE" &&
       plan.studentId === session.studentId &&
       plan.educatorId === MOCK_EDUCATOR.id,
   );
+  const pes = active.filter((plan) => plan.type === "PE");
 
   return (
     (session.appointmentId
       ? pes.find((plan) => plan.appointmentId === session.appointmentId)
       : undefined) ??
-    pes.find((plan) => plan.sessionDate === sessionDay(session))
+    pes.find((plan) => plan.sessionDate === sessionDay(session)) ??
+    active.find((plan) => plan.type === "PDI")
   );
 }
 
@@ -504,7 +517,7 @@ registerMockHandler(
           .length,
       },
       ...(plan
-        ? { plan: { id: plan.id, type: "PE" as const, title: plan.title } }
+        ? { plan: { id: plan.id, type: plan.type, title: plan.title } }
         : {}),
       suggestedCriteria: (plan?.goals ?? [])
         .filter(
@@ -562,12 +575,19 @@ registerMockHandler(
       input.planId === undefined
         ? undefined
         : ownPlan(input.planId as string, session.studentId);
-    if (plan && plan.status !== "ACTIVE")
+    // Plano encerrado: sem `goalUpdates` é 400 INVALID_PLAN; com, 409 (§5, EV-05).
+    if (plan && plan.status !== "ACTIVE") {
+      if (goalUpdates.length === 0) throw new MockApiError(400, "INVALID_PLAN");
       throw new MockApiError(409, "PLAN_NOT_EDITABLE");
-    assertGoalsInPlan(plan, [
-      ...criteria.flatMap((c) => (c.goalId ? [c.goalId] : [])),
-      ...goalUpdates.map((update) => update.goalId),
-    ]);
+    }
+    assertGoalsInPlan(
+      plan,
+      [
+        ...criteria.flatMap((c) => (c.goalId ? [c.goalId] : [])),
+        ...goalUpdates.map((update) => update.goalId),
+      ],
+      goalUpdates,
+    );
 
     // Tudo validado: a partir daqui nada falha, então a gravação é atômica (EV-07).
     if (plan) applyGoalUpdates(plan, changedGoalUpdates(plan, goalUpdates));
@@ -584,8 +604,8 @@ registerMockHandler(
       ...(plan
         ? {
             planId: plan.id,
-            planType: "PE" as const,
-            planTitle: `PE · ${plan.title}`,
+            planType: plan.type,
+            planTitle: plan.title,
           }
         : {}),
       sessionDate: sessionDay(session),
@@ -702,7 +722,7 @@ registerMockHandler(
     const criteria =
       input.criteria === undefined ? undefined : parseCriteria(input.criteria);
     const goalUpdates = parseGoalUpdates(input.goalUpdates);
-    // O corpo do PUT não troca o plano; se `planId` vier, vale a regra do EV-05 (só PE).
+    // O corpo do PUT não troca o plano; se `planId` vier, vale a regra do EV-05.
     if (input.planId !== undefined) {
       if (typeof input.planId !== "string") throw validationError();
       ownPlan(input.planId, evolution.studentId);
@@ -711,10 +731,14 @@ registerMockHandler(
       ? mockPlans.find((item) => item.id === evolution.planId)
       : undefined;
 
-    assertGoalsInPlan(plan, [
-      ...(criteria ?? []).flatMap((c) => (c.goalId ? [c.goalId] : [])),
-      ...goalUpdates.map((update) => update.goalId),
-    ]);
+    assertGoalsInPlan(
+      plan,
+      [
+        ...(criteria ?? []).flatMap((c) => (c.goalId ? [c.goalId] : [])),
+        ...goalUpdates.map((update) => update.goalId),
+      ],
+      goalUpdates,
+    );
     // EV-09: na edição, `goalUpdates` aplica só a diferença.
     const changed = plan ? changedGoalUpdates(plan, goalUpdates) : [];
     if (plan && changed.length > 0 && plan.status !== "ACTIVE")
@@ -731,12 +755,8 @@ registerMockHandler(
         delete evolution.nextSessionSuggestion;
       }
     }
-    evolution.goalUpdates = [
-      ...evolution.goalUpdates.filter(
-        (old) => !goalUpdates.some((update) => update.goalId === old.goalId),
-      ),
-      ...goalUpdates,
-    ];
+    // `goalUpdates`, quando enviado, substitui a lista gravada (§3.2 PUT).
+    if (input.goalUpdates !== undefined) evolution.goalUpdates = goalUpdates;
     evolution.updatedAt = new Date().toISOString();
 
     return { status: 200, data: evolution };
@@ -800,6 +820,7 @@ registerMockHandler(
         data: {
           ...(result.data as SessionReport),
           observation: evolution.descriptiveRecord,
+          evolutionId: evolution.id,
         },
       };
     } catch (error) {
@@ -824,6 +845,7 @@ registerMockHandler(
         percentageByType: {},
         observation:
           evolution?.descriptiveRecord ?? session.observation ?? null,
+        ...(evolution ? { evolutionId: evolution.id } : {}),
       };
       return { status: 200, data: report };
     }

@@ -17,6 +17,7 @@ import {
 } from "@/stores/session-flow";
 import { render } from "@/test-utils/render";
 import { EvolutionScreen } from "../EvolutionScreen";
+import { evolutionRecordRoute } from "../routes";
 
 const router = {
   replace: vi.fn(),
@@ -699,7 +700,7 @@ describe("EvolutionScreen — evolução já existente (AC-EVO-01-06)", () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
-  it("contexto com existingEvolutionId não abre o formulário", async () => {
+  it("contexto com existingEvolutionId abre o registro existente, sem formulário", async () => {
     vi.mocked(getEvolutionContext).mockResolvedValue({
       ...CONTEXT,
       existingEvolutionId: "evolution-9",
@@ -712,5 +713,18 @@ describe("EvolutionScreen — evolução já existente (AC-EVO-01-06)", () => {
       screen.queryByRole("button", { name: "Salvar e atualizar prontuário" }),
     ).toBeNull();
     await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+    expect(router.replace).toHaveBeenCalledWith(
+      evolutionRecordRoute("evolution-9"),
+    );
+  });
+
+  it("mostra o PDI escolhido pelo contexto como reserva (G-57 revisto)", async () => {
+    vi.mocked(getEvolutionContext).mockResolvedValue({
+      ...CONTEXT,
+      plan: { id: "plan-pdi", type: "PDI", title: "Leitura e escrita" },
+    });
+    await render(<EvolutionScreen sessionId={SESSION_ID} />);
+
+    expect(await screen.findByText("PDI · Leitura e escrita")).toBeTruthy();
   });
 });

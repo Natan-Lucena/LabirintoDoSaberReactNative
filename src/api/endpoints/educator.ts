@@ -45,8 +45,9 @@ export async function getMe(token?: string): Promise<Educator> {
 }
 
 /**
- * PUT /educator/generate-token (contrato provisório, SN-01/SN-02).
- * A resposta é sempre a mesma, exista ou não a conta; o app a descarta.
+ * PUT /educator/generate-token (SN-01/SN-02). Corpo `{ email }`; a resposta é
+ * sempre `200 TOKEN_SENT`, exista ou não a conta, e o app a descarta.
+ * `429 TOO_MANY_REQUESTS` no 4º pedido em 15 min.
  */
 export interface GenerateTokenInput {
   email: string;
@@ -59,7 +60,11 @@ export async function generateToken(input: GenerateTokenInput): Promise<void> {
   );
 }
 
-/** POST /educator/verify-token: confere o código sem consumi-lo (SN-03). */
+/**
+ * POST /educator/verify-token: confere o código sem consumi-lo (SN-03). Cada
+ * erro conta tentativa: `400 INVALID_TOKEN`/`EXPIRED_TOKEN` e
+ * `429 TOO_MANY_ATTEMPTS` no 5º erro.
+ */
 export async function verifyToken(
   input: VerifyPasswordTokenPayload,
 ): Promise<VerifyPasswordTokenResponse> {
@@ -71,18 +76,24 @@ export async function verifyToken(
   return response.data;
 }
 
-/** POST /educator/update-password: exige o `token` (SN-04, SN-05). */
+/**
+ * POST /educator/update-password: exige o `token` (SN-04, SN-05). O sucesso é
+ * `200` com o texto "OK", sem JSON: o corpo é ignorado. Depois dele, todo JWT
+ * anterior dá 401, e o fluxo manda o usuário para o login.
+ */
 export type UpdatePasswordInput = ResetPasswordPayload;
 
 export async function updatePassword(
   input: UpdatePasswordInput,
 ): Promise<void> {
-  await apiClient.post<void>("/educator/update-password", input);
+  await apiClient.post<unknown>("/educator/update-password", input);
 }
 
 /**
  * PUT /educator/change-password (Bearer, SN-07). Devolve um token novo: o
- * anterior deixa de valer (SN-08), então o chamador precisa guardá-lo.
+ * anterior deixa de valer (SN-08), então o chamador precisa guardá-lo. Em
+ * outro aparelho, o token antigo passa a dar `401 Invalid or expired token`,
+ * tratado pelo interceptor do cliente como sessão expirada.
  */
 export type ChangePasswordInput = ChangePasswordPayload;
 

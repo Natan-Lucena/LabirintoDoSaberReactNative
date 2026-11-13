@@ -106,6 +106,33 @@ describe("EvolutionScreen — sugestão da IA (EVO-04)", () => {
     expect(await screen.findByDisplayValue("Retomar a contagem.")).toBeTruthy();
   });
 
+  it("409 SESSION_NOT_FINISHED mostra a mensagem própria e o rationale volta com a sugestão", async () => {
+    vi.mocked(generateNextSessionSuggestion)
+      .mockRejectedValueOnce(
+        new ApiError({
+          message: "SESSION_NOT_FINISHED",
+          status: 409,
+          code: "SESSION_NOT_FINISHED",
+        }),
+      )
+      .mockResolvedValueOnce({
+        suggestion: "Retomar a contagem.",
+        rationale: "Acertou 2 de 3.",
+      });
+    await renderLoaded();
+
+    await press("Gerar sugestão");
+    expect(
+      await screen.findByText(
+        "A sessão ainda não foi finalizada. Finalize-a para gerar a sugestão.",
+      ),
+    ).toBeTruthy();
+
+    await press("Tentar novamente");
+    expect(await screen.findByDisplayValue("Retomar a contagem.")).toBeTruthy();
+    expect(screen.getByText("Acertou 2 de 3.")).toBeTruthy();
+  });
+
   it("AC-EVO-04-02: o texto editado é o que vai em nextSessionSuggestion", async () => {
     vi.mocked(generateNextSessionSuggestion).mockResolvedValue({
       suggestion: "Texto da IA.",

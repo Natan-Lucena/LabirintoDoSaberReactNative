@@ -257,7 +257,8 @@ export function EvolutionScreen({
 }
 
 type Outcome =
-  { kind: "saved" } | { kind: "alreadyExists"; evolutionId?: string };
+  | { kind: "saved" }
+  | { kind: "alreadyExists"; evolutionId?: string; fromContext?: boolean };
 
 type EvolutionFormOutput = z.output<typeof evolutionFormSchema>;
 
@@ -276,7 +277,11 @@ function EvolutionRegister({
   const { session, plan } = context;
   const [outcome, setOutcome] = useState<Outcome | null>(
     context.existingEvolutionId
-      ? { kind: "alreadyExists", evolutionId: context.existingEvolutionId }
+      ? {
+          kind: "alreadyExists",
+          evolutionId: context.existingEvolutionId,
+          fromContext: true,
+        }
       : null,
   );
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -320,13 +325,15 @@ function EvolutionRegister({
   const saving = mutation.isPending;
   const hasUnsavedChanges = isDirty && outcome === null;
 
-  // A evolução já existe (no contexto ou pelo 409): nada a salvar aqui.
+  // A evolução já existe (no contexto ou pelo 409): nada a salvar aqui. Vinda
+  // do contexto (`existingEvolutionId`), a tela abre direto o registro.
   useEffect(() => {
-    if (outcome?.kind === "alreadyExists") {
-      leavingRef.current = true;
-      void releaseSessionFlow(sessionId);
-    }
-  }, [outcome, sessionId]);
+    if (outcome?.kind !== "alreadyExists") return;
+    leavingRef.current = true;
+    void releaseSessionFlow(sessionId);
+    if (outcome.fromContext && outcome.evolutionId)
+      router.replace(evolutionRecordRoute(outcome.evolutionId));
+  }, [outcome, router, sessionId]);
 
   // `proceed`: refaz a navegação original (gesto/voltar da pilha) depois de
   // liberar o fluxo; sem ela, a saída vai para a Início.
@@ -481,7 +488,7 @@ function EvolutionRegister({
         {plan ? (
           <InfoCard
             icon="clipboard"
-            title={`PE · ${plan.title}`}
+            title={`${plan.type} · ${plan.title}`}
             description={`${session.durationMinutes} min · ${criteriaCountLabel(fields.length)}`}
           />
         ) : (

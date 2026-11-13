@@ -150,18 +150,27 @@ describe("mocks da senha (API-05, leva 1)", () => {
       }),
     ).toMatchObject({ status: 400, data: { message: "PASSWORD_SAME_AS_OLD" } });
 
+    // O backend responde 200 com o texto "OK", sem JSON (§5, SN-04).
     expect(
-      (
-        await update({
-          email: EMAIL,
-          token: MOCK_PASSWORD_VALID_CODE,
-          newPassword: "novaSenha1",
-        })
-      ).status,
-    ).toBe(200);
+      await update({
+        email: EMAIL,
+        token: MOCK_PASSWORD_VALID_CODE,
+        newPassword: "novaSenha1",
+      }),
+    ).toMatchObject({ status: 200, data: "OK" });
     expect(await verify(MOCK_PASSWORD_VALID_CODE)).toMatchObject({
       status: 400,
       data: { message: "INVALID_TOKEN" },
+    });
+  });
+
+  it("verify-token também conta tentativa: o 6º pedido dá 429 TOO_MANY_ATTEMPTS", async () => {
+    await generate(EMAIL);
+    for (let attempt = 0; attempt < 5; attempt += 1) await verify("000000");
+
+    expect(await verify(MOCK_PASSWORD_VALID_CODE)).toMatchObject({
+      status: 429,
+      data: { message: "TOO_MANY_ATTEMPTS" },
     });
   });
 

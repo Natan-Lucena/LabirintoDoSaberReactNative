@@ -265,7 +265,10 @@ describe("mocks da evolução da sessão (API-05, leva 1)", () => {
       status: 400,
       data: { message: "INVALID_PLAN" },
     });
-    expect(goalWithoutPlan.status).toBe(400);
+    expect(goalWithoutPlan).toMatchObject({
+      status: 400,
+      data: { message: "GOAL_NOT_IN_PLAN" },
+    });
     expect(foreignGoal).toMatchObject({
       status: 400,
       data: { message: "GOAL_NOT_IN_PLAN" },
@@ -290,7 +293,10 @@ describe("mocks da evolução da sessão (API-05, leva 1)", () => {
     expect(created.status).toBe(201);
     expect(created.data.id).toBeTruthy();
     expect(created.data.planType).toBe("PE");
-    expect(created.data.planTitle).toMatch(/^PE · /);
+    // Retrato do título do plano, sem o tipo (o app compõe "PE · …").
+    expect(created.data.planTitle).toBe(
+      mockPlans.find((item) => item.id === "mock-plan-2")!.title,
+    );
     expect(created.data.criteria[0].id).toBeTruthy();
     expect(created.data.sessionDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(created.data.goalUpdates).toEqual([
@@ -372,6 +378,17 @@ describe("mocks da evolução da sessão (API-05, leva 1)", () => {
       status: 409,
       data: { message: "PLAN_NOT_EDITABLE" },
     });
+    // Sem `goalUpdates`, plano encerrado é 400 INVALID_PLAN (§5, EV-05).
+    const withoutUpdates = await send("post", "/session-evolution/", {
+      sessionId: MOCK_EVOLUTION_SESSION_FREE,
+      planId: closed.id,
+      criteria: [],
+      descriptiveRecord: "ok",
+    });
+    expect(withoutUpdates).toMatchObject({
+      status: 400,
+      data: { message: "INVALID_PLAN" },
+    });
     expect(closed.goals[0]!.status).toBe("ACHIEVED");
     const context = await send(
       "get",
@@ -380,7 +397,7 @@ describe("mocks da evolução da sessão (API-05, leva 1)", () => {
     expect(context.data.existingEvolutionId).toBeUndefined();
   });
 
-  it("EV-05 (G-57): planId de um PDI do mesmo paciente é recusado com 400 INVALID_PLAN, no POST e no PUT", async () => {
+  it("EV-05 (G-57 revisto): planId de um PDI do mesmo paciente é aceito e grava planType PDI", async () => {
     // mock-plan-1 é um PDI ACTIVE de student-1; mock-session-1 é de student-1.
     const created = await send("post", "/session-evolution/", {
       sessionId: "mock-session-1",
@@ -388,27 +405,35 @@ describe("mocks da evolução da sessão (API-05, leva 1)", () => {
       criteria: [],
       descriptiveRecord: "ok",
     });
-    const edited = await send(
-      "put",
-      `/session-evolution/${MOCK_EVOLUTION_ID}`,
-      {
-        planId: "mock-plan-1",
-        descriptiveRecord: "novo",
-      },
+
+    expect(created.status).toBe(201);
+    expect(created.data).toMatchObject({
+      planId: "mock-plan-1",
+      planType: "PDI",
+    });
+  });
+
+  it("goalUpdates sem plano é 400 INVALID_PLAN", async () => {
+    const reply = await send("post", "/session-evolution/", {
+      sessionId: MOCK_EVOLUTION_SESSION_FREE,
+      criteria: [],
+      descriptiveRecord: "ok",
+      goalUpdates: [{ goalId: "mock-plan-2-goal-1", status: "ACHIEVED" }],
+    });
+
+    expect(reply).toMatchObject({
+      status: 400,
+      data: { message: "INVALID_PLAN" },
+    });
+  });
+
+  it("§3.9: o relatório da sessão traz o evolutionId da evolução registrada", async () => {
+    const report = await send(
+      "get",
+      "/task-notebook-session/report/mock-session-2",
     );
 
-    for (const reply of [created, edited]) {
-      expect(reply).toMatchObject({
-        status: 400,
-        data: { message: "INVALID_PLAN" },
-      });
-    }
-    // nada foi gravado
-    const context = await send(
-      "get",
-      "/session-evolution/context/mock-session-1",
-    );
-    expect(context.data.existingEvolutionId).toBeUndefined();
+    expect(report.data.evolutionId).toBe(MOCK_EVOLUTION_ID);
   });
 
   it("sessão sem plano salva só com o registro descritivo", async () => {

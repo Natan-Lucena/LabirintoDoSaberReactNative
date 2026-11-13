@@ -16,6 +16,9 @@ function generationErrorMessage(caught: unknown): string {
   if (error.isNetworkError || error.isTimeout) {
     return "Sem resposta da IA. Verifique a conexão e tente novamente.";
   }
+  if (error.code === "SESSION_NOT_FINISHED") {
+    return "A sessão ainda não foi finalizada. Finalize-a para gerar a sugestão.";
+  }
   return "Não foi possível gerar a sugestão. Tente novamente.";
 }
 

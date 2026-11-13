@@ -1,6 +1,6 @@
-// Senha (API-05, leva 1): recuperação com código e troca logada. Contrato
-// PROVISÓRIO de docs/entrega-4/ESPECIFICACAO-BACKEND.md §2, a conferir em
-// API-04. Estado só em memória; nenhum e-mail é enviado. Dados fictícios.
+// Senha (API-05, leva 1): recuperação com código e troca logada. Segue o
+// contrato publicado pelo backend (BACKEND-ENTREGUE §3.1, INT-1). Estado só em
+// memória; nenhum e-mail é enviado. Dados fictícios.
 import type {
   ChangePasswordResponse,
   PasswordTokenSentResponse,
@@ -98,9 +98,8 @@ function checkCode(email: string, code: string): StoredToken {
 registerMockHandler(
   { method: "put", path: "/educator/generate-token" },
   ({ body }) => {
-    const input = (body ?? {}) as { email?: unknown; educatorEmail?: unknown };
-    // O contrato atual usa `educatorEmail`; a especificação nova usa `email`.
-    const email = readEmail(input.email ?? input.educatorEmail);
+    const input = (body ?? {}) as { email?: unknown };
+    const email = readEmail(input.email);
     const now = Date.now();
     const recent = (sends.get(email) ?? []).filter(
       (sentAt) => now - sentAt < TOKEN_TTL_MS,
@@ -152,7 +151,8 @@ registerMockHandler(
     tokens.delete(email);
     currentPassword = newPassword;
 
-    return { status: 200, data: { message: "PASSWORD_UPDATED" } };
+    // O backend responde 200 com o texto "OK", sem JSON (§5, SN-04).
+    return { status: 200, data: "OK" };
   },
 );
 

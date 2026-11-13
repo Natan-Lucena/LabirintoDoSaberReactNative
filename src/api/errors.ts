@@ -42,24 +42,35 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Erros de campo. O backend publicado manda
+ * `{ message: "Bad Request", errors: [{ message, field }] }` (`field` é o
+ * primeiro nível do caminho); `path` é o formato antigo, ainda aceito.
+ */
 function getFieldErrors(value: unknown): readonly ApiFieldError[] {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return value.filter(
-    (error): error is ApiFieldError =>
-      typeof error === "object" &&
-      error !== null &&
-      typeof error.path === "string" &&
-      typeof error.message === "string",
-  );
+  return value.flatMap((error: unknown): ApiFieldError[] => {
+    if (typeof error !== "object" || error === null) return [];
+    const { path, field, message } = error as Record<string, unknown>;
+    const fieldPath =
+      typeof path === "string"
+        ? path
+        : typeof field === "string"
+          ? field
+          : undefined;
+    return fieldPath !== undefined && typeof message === "string"
+      ? [{ path: fieldPath, message }]
+      : [];
+  });
 }
 
-// Códigos de erro de regra de negócio com mensagem em português. Contrato
-// PROVISÓRIO da Entrega 4, leva 1 (senha §2 e evolução §3 da
-// ESPECIFICACAO-BACKEND); conferir em API-04. O `code` continua sendo o
-// código do servidor; só a `message` é traduzida.
+// Códigos de erro de regra de negócio com mensagem em português. Leva 1
+// conferida na INT-1 contra o contrato publicado (BACKEND-ENTREGUE §3.1 e
+// §3.2). O `code` continua sendo o código do servidor; só a `message` é
+// traduzida.
 // TODO(API-04): SESSION_NOT_FOUND e SESSION_NOT_FINISHED ficam SEM tradução de
 // propósito: já existem no contrato da observação/relatório e as telas as
 // mapeiam pelo `code` (testes leem a mensagem crua). Reavaliar na API-04.

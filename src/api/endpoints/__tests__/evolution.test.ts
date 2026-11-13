@@ -73,11 +73,13 @@ describe("leitura da evolução pelo apiClient (API-05, leva 1)", () => {
       expect(context.existingEvolutionId).toBeUndefined();
     });
 
-    it("não cai no PDI: sessão só com PDI ativo vem sem plano (EV-12, G-57)", async () => {
+    it("cai no PDI ativo quando a sessão não tem PE (EV-12, G-57 revisto)", async () => {
       const context = await getEvolutionContext("mock-session-1");
 
-      expect(context.plan).toBeUndefined();
-      expect(context.suggestedCriteria).toEqual([]);
+      expect(context.plan).toMatchObject({ id: "mock-plan-1", type: "PDI" });
+      for (const criterion of context.suggestedCriteria) {
+        expect(["NOT_STARTED", "IN_PROGRESS"]).toContain(criterion.goalStatus);
+      }
     });
 
     it("informa a evolução já existente da sessão", async () => {
