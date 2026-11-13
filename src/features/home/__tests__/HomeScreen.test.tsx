@@ -202,10 +202,7 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
     });
     expect(routerPush).toHaveBeenCalledWith("/patients/new");
     expect(routerPush).toHaveBeenCalledWith("/plans/new");
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Aplicar escala" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/assessments");
     expect(routerPush).toHaveBeenCalledWith("/activities");
     expect(routerPush).toHaveBeenCalledWith("/(tabs)/agenda");
   });

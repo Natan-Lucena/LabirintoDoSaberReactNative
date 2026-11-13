@@ -12,7 +12,13 @@ type ResourceItem = {
   title: string;
   subtitle: string;
   icon: "sparkles" | "chart" | "clipboard" | "book" | "file" | "users" | "play";
-  destination?: "/activities" | "/reports" | "/anamnese/templates" | "/plans";
+  destination?:
+    | "/activities"
+    | "/reports/new"
+    | "/anamnese/templates"
+    | "/plans"
+    | "/evolution"
+    | "/assessments";
 };
 
 const featureGroups: readonly {
@@ -32,6 +38,7 @@ const featureGroups: readonly {
         title: "Evolução da sessão",
         subtitle: "Acompanhe o progresso de cada atendimento",
         icon: "chart",
+        destination: "/evolution",
       },
     ],
   },
@@ -48,6 +55,7 @@ const featureGroups: readonly {
         title: "Avaliações e escalas",
         subtitle: "Aplique instrumentos e acompanhe os resultados",
         icon: "clipboard",
+        destination: "/assessments",
       },
       {
         title: "Banco de atividades",
@@ -65,7 +73,7 @@ const featureGroups: readonly {
         title: "Relatórios",
         subtitle: "Acompanhe os resultados e a evolução",
         icon: "file",
-        destination: "/reports",
+        destination: "/reports/new",
       },
     ],
   },

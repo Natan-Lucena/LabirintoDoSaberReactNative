@@ -84,18 +84,12 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     );
 
     expect(routerPush).toHaveBeenCalledWith("/activities");
-    expect(routerPush).toHaveBeenCalledWith("/reports");
+    expect(routerPush).toHaveBeenCalledWith("/reports/new");
     expect(routerPush).toHaveBeenCalledWith("/anamnese/templates");
     expect(routerPush).toHaveBeenCalledWith("/profile");
     expect(routerPush).toHaveBeenCalledWith("/plans");
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Evolução da sessão" },
-    });
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Avaliações e escalas" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/evolution");
+    expect(routerPush).toHaveBeenCalledWith("/assessments");
     expect(routerPush).toHaveBeenCalledWith({
       pathname: "/shell/coming-soon",
       params: { title: "Equipe e convites" },

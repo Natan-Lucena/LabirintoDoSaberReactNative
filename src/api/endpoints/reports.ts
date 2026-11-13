@@ -85,3 +85,8 @@ export async function shareReport(
 
   return response.data;
 }
+
+/** DELETE /report/:id — `204`; `403 UNAUTHORIZED` ou `404 REPORT_NOT_FOUND`. */
+export async function deleteReport(id: string): Promise<void> {
+  await apiClient.delete(`/report/${id}`);
+}

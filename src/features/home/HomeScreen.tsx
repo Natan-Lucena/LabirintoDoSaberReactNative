@@ -279,9 +279,6 @@ export function HomeScreen(): ReactElement {
     },
   );
   const openAgenda = () => router.push("/(tabs)/agenda");
-  const openComingSoon = (title: string) =>
-    router.push({ pathname: "/shell/coming-soon", params: { title } });
-
   return (
     <View style={styles.screen}>
       <AppHeader
@@ -385,7 +382,7 @@ export function HomeScreen(): ReactElement {
             <QuickAccess
               label="Aplicar escala"
               icon="chart"
-              onPress={() => openComingSoon("Aplicar escala")}
+              onPress={() => router.push("/assessments")}
             />
             <QuickAccess
               label="Atividades"

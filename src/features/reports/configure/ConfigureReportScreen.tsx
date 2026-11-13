@@ -143,6 +143,18 @@ export function ConfigureReportScreen(): ReactElement {
         onBack={router.back}
       />
       <ScrollView contentContainerStyle={styles.content}>
+        <DsButton
+          label="Histórico"
+          variant="secondary"
+          icon="file"
+          onPress={() =>
+            router.push(
+              (params.studentId
+                ? `/reports/history?studentId=${params.studentId}`
+                : "/reports/history") as never,
+            )
+          }
+        />
         <PrivacyNote text="Relatórios seguros por padrão: o documento traz apenas sínteses, sem as respostas brutas." />
 
         {options.isPending ? <LoadingState label="Carregando opções" /> : null}
