@@ -48,7 +48,6 @@ function template(
     respondent: "PROFESSIONAL",
     estimatedMinutes: 8,
     itemCount: 18,
-    active: true,
     ...overrides,
   };
 }
@@ -93,7 +92,6 @@ describe("AssessmentsHubScreen (AVA-01)", () => {
     templates = [
       template({ id: "t1" }),
       template({ id: "t2", name: "Escala de humor", itemCount: 10 }),
-      template({ id: "t3", name: "Escala antiga", active: false }),
     ];
     applications = [
       application({ id: "a1" }),
@@ -127,7 +125,6 @@ describe("AssessmentsHubScreen (AVA-01)", () => {
     expect(screen.getByText("Escala de atenção")).toBeTruthy();
     expect(screen.getByText("18 itens · 8 min")).toBeTruthy();
     expect(screen.getByText("10 itens · 8 min")).toBeTruthy();
-    expect(screen.queryByText("Escala antiga")).toBeNull();
     expect(screen.getByText("Aplicações recentes")).toBeTruthy();
     expect(screen.getByText("Lia Monteiro")).toBeTruthy();
     expect(screen.getByText("Caio Mendes")).toBeTruthy();

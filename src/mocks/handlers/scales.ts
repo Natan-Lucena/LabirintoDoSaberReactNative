@@ -197,6 +197,8 @@ export function computeMockScaleScore(
       return {
         code: subscale.code,
         name: subscale.name,
+        answered: answered.length,
+        total: items.length,
         value,
         max: method === "SUM" ? items.length * optionMax : optionMax,
         ...(band ? { band } : {}),
@@ -357,13 +359,15 @@ function toTemplateSummary(template: ScaleTemplate): ScaleTemplateSummary {
     ...(template.ageRange ? { ageRange: { ...template.ageRange } } : {}),
     estimatedMinutes: template.estimatedMinutes,
     itemCount: template.items.length,
-    active: template.active,
   };
 }
 
 registerMockHandler({ method: "get", path: "/scale-template/" }, () => ({
   status: 200,
-  data: currentTemplates().map(toTemplateSummary),
+  // Só as ativas (a maior versão de cada uma), como o backend publicado.
+  data: currentTemplates()
+    .filter((template) => template.active)
+    .map(toTemplateSummary),
 }));
 
 registerMockHandler(
@@ -557,6 +561,8 @@ registerMockHandler(
   { method: "post", path: "/scale-application/:id/insight" },
   ({ params }) => {
     const application = ownApplication(params.id);
+    if (application.answers.length === 0)
+      throw new MockApiError(400, "NO_ANSWERS_YET");
     if (aiFailure) throw new MockApiError(500, aiFailure);
 
     const { score } = application;

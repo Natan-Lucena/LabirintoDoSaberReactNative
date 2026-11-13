@@ -89,7 +89,9 @@ describe("mocks da síntese da anamnese (API-05, leva 2)", () => {
       ],
     });
     expect(edited.status).toBe(200);
-    expect(edited.data.summaryOutdated).toBe(true);
+    // O PUT traz `summary`, mas não `summaryOutdated` (só os GETs).
+    expect(edited.data.summary).toBeDefined();
+    expect(edited.data).not.toHaveProperty("summaryOutdated");
     expect(
       (await send("get", "/anamnese/responses/response-1")).data
         .summaryOutdated,

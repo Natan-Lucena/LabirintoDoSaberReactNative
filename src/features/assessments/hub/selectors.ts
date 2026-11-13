@@ -78,10 +78,3 @@ export function applicationDate(application: ScaleApplicationSummary): string {
 export function templateDescription(template: ScaleTemplateSummary): string {
   return `${template.itemCount} itens · ${template.estimatedMinutes} min`;
 }
-
-/** O catálogo mostra só escalas ativas, na ordem do servidor. */
-export function selectActiveTemplates(
-  templates: ScaleTemplateSummary[],
-): ScaleTemplateSummary[] {
-  return templates.filter((template) => template.active);
-}

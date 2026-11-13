@@ -70,10 +70,15 @@ wrap("get", "/anamnese/responses/:responseId", (data) =>
 );
 wrap("put", "/anamnese/responses/:responseId", (data) => {
   // Resposta editada depois da síntese: a síntese fica desatualizada (AS-02).
+  // O PUT devolve `summary`, mas não `summaryOutdated` (só os GETs trazem).
   const response = data as AnamneseResponse;
   const stored = summaries.get(response.id);
-  if (stored) stored.outdated = true;
-  return decorate(response);
+  if (!stored) return response;
+  stored.outdated = true;
+  return {
+    ...response,
+    summary: { text: stored.text, generatedAt: stored.generatedAt },
+  };
 });
 
 function buildSummaryText(response: AnamneseResponse): string {
@@ -101,6 +106,10 @@ registerMockHandler(
     if (!response) throw new MockApiError(404, "RESPONSE_NOT_FOUND");
     if (response.educatorId !== MOCK_EDUCATOR.id)
       throw new MockApiError(403, "UNAUTHORIZED");
+    if (
+      !response.answers.some((answer) => answer.questionType !== "FileUpload")
+    )
+      throw new MockApiError(400, "NO_ANSWERS_TO_SUMMARIZE");
     if (aiFailure) throw new MockApiError(500, aiFailure);
 
     // Gerar de novo substitui a anterior e zera o `summaryOutdated`.
@@ -110,7 +119,10 @@ registerMockHandler(
       outdated: false,
     });
 
-    return { status: 200, data: decorate(structuredClone(response)) };
+    return {
+      status: 200,
+      data: { ...decorate(structuredClone(response)), summaryOutdated: false },
+    };
   },
 );
 

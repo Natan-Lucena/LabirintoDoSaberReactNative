@@ -59,9 +59,13 @@ describe("leitura das escalas pelo apiClient (API-05, leva 2)", () => {
 
     expect(templates.length).toBeGreaterThanOrEqual(1);
     const scale = templates.find((item) => item.id === MOCK_SCALE_TEMPLATE_ID)!;
-    expect(scale).toMatchObject({ itemCount: 6, active: true, version: 2 });
+    expect(scale).toMatchObject({ itemCount: 6, version: 2 });
     expect(scale).not.toHaveProperty("items");
-    expect(templates.some((item) => item.active === false)).toBe(true);
+    // Só as ativas vêm no catálogo e o resumo não traz `active`.
+    expect(scale).not.toHaveProperty("active");
+    expect(templates.some((item) => item.id === "mock-scale-inactive")).toBe(
+      false,
+    );
   });
 
   it("lê uma escala com itens, opções, faixas, aviso e referência", async () => {

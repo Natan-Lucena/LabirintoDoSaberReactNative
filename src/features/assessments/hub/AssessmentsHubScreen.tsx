@@ -24,7 +24,6 @@ import { useOnline } from "@/hooks/useOnline";
 import { color, fontFamilies, semanticColor, shape, typography } from "@/theme";
 import {
   applicationDate,
-  selectActiveTemplates,
   selectBandBadge,
   templateDescription,
   toneForSeverity,
@@ -188,7 +187,6 @@ export function AssessmentsHubScreen({
     );
   }
 
-  const activeTemplates = selectActiveTemplates(templates);
   // Atualização falhou, mas há dados antigos na tela; offline já tem o aviso próprio.
   const refreshFailed =
     isOnline && (templatesQuery.isError || applicationsQuery.isError);
@@ -224,14 +222,14 @@ export function AssessmentsHubScreen({
           onLayout={(event) => setTemplatesY(event.nativeEvent.layout.y)}
         >
           <SectionTitle title="Modelos disponíveis" />
-          {activeTemplates.length === 0 ? (
+          {templates.length === 0 ? (
             <View style={styles.state}>
               <Text style={styles.stateText}>
                 Nenhuma escala disponível no momento
               </Text>
             </View>
           ) : (
-            activeTemplates.map((template) => (
+            templates.map((template) => (
               <InfoCard
                 key={template.id}
                 icon="clipboard"

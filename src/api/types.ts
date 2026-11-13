@@ -446,8 +446,8 @@ export interface NextSessionSuggestion {
 }
 
 // Entrega 4, leva 2 (escalas, insight da escala e síntese da anamnese).
-// Contrato PROVISÓRIO, copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §4 e §5
-// (G-29: mock-first), a conferir em API-04. Campos opcionais vêm AUSENTES do JSON.
+// Conferido na INT-2 contra o contrato publicado (docs/entrega-4/BACKEND-ENTREGUE.md
+// §3.3 a §3.5). Campos opcionais vêm AUSENTES do JSON.
 // O escore, a faixa e as subescalas são sempre calculados pelo servidor (AV-05):
 // o app só os exibe.
 
@@ -506,7 +506,10 @@ export interface ScaleTemplate {
   active: boolean;
 }
 
-/** `GET /scale-template/`: sem `items`, com `itemCount`. */
+/**
+ * `GET /scale-template/`: a maior versão de cada escala ATIVA (as inativas nem
+ * vêm, por isso não há `active`), sem `items` e com `itemCount`.
+ */
 export interface ScaleTemplateSummary {
   id: string;
   code: string;
@@ -517,7 +520,6 @@ export interface ScaleTemplateSummary {
   ageRange?: { min: number; max: number };
   estimatedMinutes: number;
   itemCount: number;
-  active: boolean;
 }
 
 export interface ScaleBandResult {
@@ -528,6 +530,9 @@ export interface ScaleBandResult {
 export interface ScaleSubscaleScore {
   code: string;
   name: string;
+  /** Itens da subescala já respondidos e total de itens dela. */
+  answered: number;
+  total: number;
   value: number;
   max: number;
   band?: ScaleBandResult;
@@ -618,10 +623,10 @@ export interface AnamneseSummary {
 }
 
 /**
- * Campos novos da resposta da anamnese (AS-02), sempre opcionais: `summary` é
- * ausente se nunca gerada; `summaryOutdated` indica resposta editada depois da síntese.
- * Aplicam-se a `GET /anamnese/responses/:responseId`, à lista por aluno e ao
- * retorno de `POST /anamnese/responses/:responseId/summary`.
+ * Campos novos da resposta da anamnese (AS-02): `summary` é ausente se nunca gerada.
+ * `summaryOutdated` (resposta editada depois da síntese) só vem nos GETs (detalhe e
+ * lista) e no POST da síntese (`false`); PUT e POST de resposta NÃO o trazem, então
+ * depois de editar o app relê com GET.
  */
 export interface AnamneseSummaryFields {
   summary?: AnamneseSummary;
