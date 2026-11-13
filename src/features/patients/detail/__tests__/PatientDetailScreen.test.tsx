@@ -12,6 +12,17 @@ const routerPush = vi.fn();
 const routerBack = vi.fn();
 const openURL = vi.fn();
 
+const pendingState = vi.hoisted(() => ({
+  data: [] as {
+    sessionId: string;
+    studentId: string;
+    studentName: string;
+    sessionName: string;
+    finishedAt: string;
+    appointmentId?: string;
+  }[],
+}));
+
 let studentsQuery: QueryState<Student[]>;
 let appointmentsQuery: QueryState<Appointment[]>;
 let evolutionsQuery: QueryState<SessionEvolutionSummary[]>;
@@ -33,6 +44,15 @@ vi.mock("@/features/appointments/useAppointments", () => ({
 }));
 vi.mock("@/features/evolution/records/useEvolutionRecords", () => ({
   usePatientEvolutions: () => evolutionsQuery,
+}));
+vi.mock("@/config/env", () => ({
+  getRuntimeApiBaseUrl: () => "http://mock.local",
+}));
+vi.mock("@/features/evolution/pending/usePendingEvolutions", async (orig) => ({
+  ...(await orig<
+    typeof import("@/features/evolution/pending/usePendingEvolutions")
+  >()),
+  usePendingEvolutions: () => ({ data: pendingState.data }),
 }));
 vi.mock("@/features/anamnese/responses/useAnamneseResponses", () => ({
   useAnamneseResponses: () => anamneseQuery,
@@ -134,6 +154,7 @@ describe("PatientDetailScreen (PAC-03)", () => {
   beforeEach(() => {
     routerPush.mockClear();
     routerBack.mockClear();
+    pendingState.data = [];
     openURL.mockClear();
     openURL.mockResolvedValue(undefined);
     setQueries();
@@ -393,6 +414,41 @@ describe("PatientDetailScreen (PAC-03)", () => {
     await render(<PatientDetailScreen patientId="unknown" />);
     await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
     expect(routerBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PatientDetailScreen: Registrar evolução (AC-EVO-05-01)", () => {
+  const pending = (
+    sessionId: string,
+    finishedAt: string,
+    studentId = "student-1",
+  ) => ({
+    sessionId,
+    studentId,
+    studentName: "Lia Monteiro",
+    sessionName: "Leitura",
+    finishedAt,
+    appointmentId: `appt-${sessionId}`,
+  });
+
+  beforeEach(() => {
+    routerPush.mockClear();
+    setQueries();
+  });
+
+  it("uma sessão pendente do paciente abre a Evolução da sessão", async () => {
+    pendingState.data = [
+      pending("other", "2026-10-09T10:00:00Z", "student-2"),
+      pending("session-7", "2026-10-02T10:00:00Z"),
+    ];
+    await render(<PatientDetailScreen patientId={patient.id} />);
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Registrar evolução" }),
+    );
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/evolution/[sessionId]",
+      params: { sessionId: "session-7", from: "entry" },
+    });
   });
 });
 

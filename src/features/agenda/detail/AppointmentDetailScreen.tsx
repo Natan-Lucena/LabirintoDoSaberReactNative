@@ -22,6 +22,11 @@ import {
   useDeleteAppointmentMutation,
   useUpdateAppointmentMutation,
 } from "@/features/appointments/mutations";
+import {
+  findPendingForAppointment,
+  usePendingEvolutions,
+} from "@/features/evolution/pending/usePendingEvolutions";
+import { evolutionRoute } from "@/features/evolution/register/routes";
 import { useStudents } from "@/features/students/useStudents";
 import { color, fontFamilies, semanticColor, typography } from "@/theme";
 import { formatLongDate, formatTime } from "@/utils/date";
@@ -61,6 +66,7 @@ export function AppointmentDetailScreen({
   const studentsQuery = useStudents();
   const update = useUpdateAppointmentMutation();
   const deletion = useDeleteAppointmentMutation();
+  const pendingEvolutions = usePendingEvolutions();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [deleted, setDeleted] = useState(false);
 
@@ -126,6 +132,10 @@ export function AppointmentDetailScreen({
         }),
       )
     : null;
+  const pendingEvolution =
+    appointment.status === "COMPLETED"
+      ? findPendingForAppointment(pendingEvolutions.data, appointment.id)
+      : undefined;
   const busy = update.isPending || deletion.isPending;
   const actionError = update.error ?? deletion.error;
 
@@ -259,6 +269,16 @@ export function AppointmentDetailScreen({
               fullWidth
               disabled={busy}
               onPress={() => openForm("reactivate")}
+            />
+          ) : null}
+          {pendingEvolution ? (
+            <DsButton
+              label="Registrar evolução"
+              fullWidth
+              disabled={busy}
+              onPress={() =>
+                router.push(evolutionRoute(pendingEvolution.sessionId, "entry"))
+              }
             />
           ) : null}
           {appointment.status !== "PENDING" ? (

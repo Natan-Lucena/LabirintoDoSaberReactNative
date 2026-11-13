@@ -31,6 +31,24 @@ vi.mock("@/api/endpoints/appointment", async (importOriginal) => ({
   deleteAppointment: (...args: unknown[]) => deleteAppointment(...args),
 }));
 
+const pendingState = vi.hoisted(() => ({
+  data: [] as {
+    sessionId: string;
+    studentId: string;
+    studentName: string;
+    sessionName: string;
+    finishedAt: string;
+    appointmentId?: string;
+  }[],
+}));
+
+vi.mock("@/features/evolution/pending/usePendingEvolutions", async (orig) => ({
+  ...(await orig<
+    typeof import("@/features/evolution/pending/usePendingEvolutions")
+  >()),
+  usePendingEvolutions: () => ({ data: pendingState.data }),
+}));
+
 vi.mock("@/features/students/useStudents", () => ({
   useStudents: () => ({ data: students, isPending: false, isError: false }),
 }));
@@ -79,6 +97,7 @@ describe("AppointmentDetailScreen (AGE-03)", () => {
   beforeEach(() => {
     routerBack.mockClear();
     routerPush.mockClear();
+    pendingState.data = [];
     getAppointment.mockReset();
     updateAppointment.mockReset();
     deleteAppointment.mockReset();
@@ -352,5 +371,32 @@ describe("AppointmentDetailScreen (AGE-03)", () => {
     expect(await screen.findByText("Atendimento não encontrado")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Voltar" }));
     expect(routerBack).toHaveBeenCalledOnce();
+  });
+
+  describe("AC-EVO-05-01 Registrar evolução", () => {
+    const pending = {
+      sessionId: "session-9",
+      studentId: "student-1",
+      studentName: "Lia Monteiro",
+      sessionName: "Leitura",
+      finishedAt: "2026-04-10T18:00:00.000Z",
+      appointmentId: "appt-1",
+    };
+
+    it("COMPLETED com sessão pendente mostra o atalho e abre a Evolução da sessão certa", async () => {
+      pendingState.data = [
+        { ...pending, sessionId: "other", appointmentId: "appt-2" },
+        pending,
+      ];
+      getAppointment.mockResolvedValue(appointment({ status: "COMPLETED" }));
+      await render(<AppointmentDetailScreen appointmentId="appt-1" />);
+
+      await screen.findByText("Lia Monteiro");
+      await fireEvent.press(button("Registrar evolução")!);
+      expect(routerPush).toHaveBeenCalledWith({
+        pathname: "/evolution/[sessionId]",
+        params: { sessionId: "session-9", from: "entry" },
+      });
+    });
   });
 });
