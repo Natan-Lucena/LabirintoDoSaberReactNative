@@ -139,7 +139,6 @@ export function DsButton({
         // o rótulo ficava truncado ("Entrar ag…") depois do erro.
         key={loading ? "loading" : "idle"}
         style={[styles.label, { color: textColor }]}
-        numberOfLines={1}
       >
         {label}
       </Text>

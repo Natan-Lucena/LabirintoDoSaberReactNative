@@ -59,6 +59,8 @@ export interface EvolutionFormSectionsProps {
   showCriteria: boolean;
   /** "Atualizar prontuário": estado das metas, só no registro (EVO-01). */
   showGoalStatus: boolean;
+  /** Tipo do plano da sessão (PE/PDI), para o texto de "Atualizar prontuário". */
+  planType?: string;
   /** Sessão da evolução, usada na sugestão da IA (EVO-04). */
   sessionId: string;
   /** Posição dos blocos no scroll, para rolar até o primeiro erro (EVO-01.4). */
@@ -75,6 +77,7 @@ export function EvolutionFormSections({
   saving,
   showCriteria,
   showGoalStatus,
+  planType,
   sessionId,
   onAnchor,
 }: EvolutionFormSectionsProps): ReactElement {
@@ -247,7 +250,9 @@ export function EvolutionFormSections({
         <View style={styles.block}>
           <SectionTitle title="Atualizar prontuário" />
           <Text style={styles.caption}>
-            Ao salvar, o estado das metas do PE muda junto com a evolução.
+            Ao salvar, o estado das metas{" "}
+            {planType ? `do ${planType}` : "do plano da sessão"} muda junto com
+            a evolução.
           </Text>
           {goalCriteria.map(({ field, index }) => {
             const description = criteria[index]?.description ?? "";

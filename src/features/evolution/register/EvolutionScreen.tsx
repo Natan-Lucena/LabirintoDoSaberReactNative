@@ -529,6 +529,7 @@ function EvolutionRegister({
           showCriteria={Boolean(plan)}
           sessionId={sessionId}
           showGoalStatus
+          planType={plan?.type}
         />
 
         {saveError ? (
