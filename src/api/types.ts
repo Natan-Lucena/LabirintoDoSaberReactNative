@@ -123,6 +123,8 @@ export interface TaskNotebookSession {
   appointmentId?: string | null;
   answers: TaskNotebookSessionAnswer[];
   observation?: string | null;
+  /** Evolução da sessão (§3.9, só em `GET /task-notebook-session/student/:id`). */
+  evolutionId?: string;
 }
 
 export interface Appointment {
@@ -275,9 +277,8 @@ export interface PlanSuggestion {
 }
 
 // Entrega 4, leva 1 (senha e evolução da sessão).
-// Contrato PROVISÓRIO, copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §2 e §3
-// (G-29: mock-first). Deve ser conferido contra o contrato real publicado
-// pelo backend na tarefa API-04. Campos opcionais vêm AUSENTES do JSON.
+// Contrato PUBLICADO pelo backend (docs: BACKEND-ENTREGUE §3.1 e §3.2, conferido
+// na INT-1). Campos opcionais vêm AUSENTES do JSON.
 
 /** `PUT /educator/generate-token`: sempre a mesma resposta, exista ou não o e-mail (SN-02). */
 export interface PasswordTokenSentResponse {
@@ -330,6 +331,9 @@ export interface EvolutionCriterion {
 /** Critério enviado ao salvar: igual ao salvo, sem `id` (o servidor gera). */
 export type EvolutionCriterionInput = Omit<EvolutionCriterion, "id">;
 
+/** Tipo do plano ligado à evolução (G-57 revisto: PE ou, na falta, PDI). */
+export type EvolutionPlanType = "PDI" | "PE";
+
 export interface EvolutionGoalUpdate {
   goalId: string;
   status: GoalStatus;
@@ -343,8 +347,8 @@ export interface SessionEvolution {
   educatorId: string;
   appointmentId?: string;
   planId?: string;
-  planType?: "PE";
-  /** Ex.: "PE · {tema}". */
+  planType?: EvolutionPlanType;
+  /** Retrato do título do plano na criação (sem o tipo). */
   planTitle?: string;
   /** `AAAA-MM-DD`, do `startedAt` da sessão. */
   sessionDate: string;
@@ -394,8 +398,12 @@ export interface EvolutionContext {
     answeredCount: number;
     correctCount: number;
   };
-  /** PE `ACTIVE` escolhido pelo servidor (EV-12, G-57: sem PDI); ausente = sem plano. */
-  plan?: { id: string; type: "PE"; title: string };
+  /**
+   * Plano escolhido pelo servidor (EV-12): PE `ACTIVE` do atendimento, PE do
+   * dia da sessão e, na falta deles, o PDI `ACTIVE` (G-57 revisto). Ausente =
+   * sem plano. O POST precisa reenviar `plan.id` em `planId`.
+   */
+  plan?: { id: string; type: EvolutionPlanType; title: string };
   suggestedCriteria: {
     goalId: string;
     description: string;

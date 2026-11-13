@@ -1,6 +1,6 @@
-// Evolução da sessão: leitura (API-05, leva 1) e criação (EVO-01). Contrato
-// PROVISÓRIO copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir
-// em API-04. A edição (PUT) é da EVO-02; a sugestão da IA, da EVO-04.
+// Evolução da sessão: leitura (API-05, leva 1), criação (EVO-01), edição
+// (EVO-02) e sugestão da IA (EVO-04). Contrato publicado pelo backend
+// (BACKEND-ENTREGUE §3.2), conferido na INT-1.
 import { AxiosError, type AxiosResponse } from "axios";
 
 import { apiClient } from "@/api/client";
@@ -60,9 +60,10 @@ function withQuery(
 }
 
 /**
- * GET /session-evolution/context/:sessionId — sessão, plano PE escolhido pelo
- * servidor (G-57: sem PDI) e critérios sugeridos. `403 UNAUTHORIZED`,
- * `404 SESSION_NOT_FOUND`, `409 SESSION_NOT_FINISHED`.
+ * GET /session-evolution/context/:sessionId — sessão, plano escolhido pelo
+ * servidor (PE da sessão ou, na falta, PDI ativo; G-57 revisto), critérios
+ * sugeridos e `existingEvolutionId`. `403 UNAUTHORIZED`,
+ * `404 SESSION_NOT_FOUND`/`STUDENT_NOT_FOUND`, `409 SESSION_NOT_FINISHED`.
  */
 export async function getEvolutionContext(
   sessionId: string,
@@ -156,7 +157,9 @@ function throwOnConflict(response: AxiosResponse<unknown>): void {
 
 /**
  * POST /session-evolution/ — cria a evolução da sessão finalizada e aplica os
- * `goalUpdates` ao plano na mesma transação (EV-07). Nunca é repetida sozinha.
+ * `goalUpdates` ao plano. O servidor NÃO escolhe o plano: `planId` precisa ser
+ * o `context.plan.id`. Sem transação, mas repetir o mesmo POST é seguro (EV-07);
+ * ainda assim, nunca é repetido sozinho.
  * Erros: `400` (validação, `INVALID_PLAN`, `GOAL_NOT_IN_PLAN`,
  * `INVALID_ATTEMPTS`), `403`, `404 SESSION_NOT_FOUND`, `409`
  * (`EVOLUTION_ALREADY_EXISTS` com `evolutionId` → {@link EvolutionApiError},
@@ -201,8 +204,9 @@ export async function updateSessionEvolution(
  * POST /session-evolution/next-session-suggestion — IA (EVO-04), não persiste:
  * o texto editado vai em `nextSessionSuggestion` ao salvar a evolução. Leva
  * cerca de 30 s (timeout de 90 s) e nunca é repetida sozinha (G-46). Erros:
- * `400`, `403`, `404 SESSION_NOT_FOUND`, `500 AI_GENERATION_FAILED` e
- * `AI_INVALID_OUTPUT`.
+ * `400`, `403`, `404 SESSION_NOT_FOUND`, `409 SESSION_NOT_FINISHED`,
+ * `500 AI_GENERATION_FAILED` e `AI_INVALID_OUTPUT`. Resposta
+ * `{ suggestion, rationale? }`.
  */
 export async function generateNextSessionSuggestion(
   payload: NextSessionSuggestionPayload,

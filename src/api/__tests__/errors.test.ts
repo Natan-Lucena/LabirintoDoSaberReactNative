@@ -43,6 +43,33 @@ describe("normalizeApiError", () => {
     expect(normalized.isTimeout).toBe(false);
   });
 
+  it("reads the published validation format ({ field, message })", () => {
+    const error = new AxiosError(
+      "Request failed",
+      undefined,
+      undefined,
+      undefined,
+      {
+        config: axiosConfig,
+        data: {
+          message: "Bad Request",
+          errors: [
+            { field: "token", message: "Invalid" },
+            { field: 3, message: "ignored" },
+          ],
+        },
+        headers: {},
+        status: 400,
+        statusText: "Bad Request",
+      },
+    );
+
+    const normalized = normalizeApiError(error);
+
+    expect(normalized.code).toBe("Bad Request");
+    expect(normalized.errors).toEqual([{ path: "token", message: "Invalid" }]);
+  });
+
   it.each([
     [500, "TASK_NOT_FOUND"],
     [400, "NOT_FOUND"],

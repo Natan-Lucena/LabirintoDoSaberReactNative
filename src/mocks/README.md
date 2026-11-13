@@ -288,48 +288,56 @@ as pendentes dele. As rotas usam o import de `plans.ts` já presente em `src/moc
 
 ## Senha e evolução da sessão (API-05, leva 1)
 
-Contrato **provisório**, copiado de `docs/entrega-4/ESPECIFICACAO-BACKEND.md` §2 e §3 (G-29, mock-first)
-e a conferir em API-04. Os tipos estão em `src/api/types.ts`, as leituras em
+Segue o contrato **publicado** pelo backend (`BACKEND-ENTREGUE` §3.1 e §3.2, conferido na INT-1).
+Os tipos estão em `src/api/types.ts`, as chamadas em `src/api/endpoints/educator.ts` e
 `src/api/endpoints/evolution.ts` e os mocks em `handlers/password.ts` e `handlers/evolution.ts`.
 
 ### Senha (`handlers/password.ts`)
 
-- `PUT /educator/generate-token` (`{ email }`; `educatorEmail` também é aceito, como no contrato
-  atual) responde sempre `200 { message: "TOKEN_SENT" }`, exista ou não a conta. Só a conta fictícia
-  (`educadora.mock@labirinto.test`) recebe o código `123456`, válido por 15 min; um envio novo
-  invalida o anterior. O 4º envio em 15 min para o mesmo e-mail dá `429 TOO_MANY_REQUESTS`.
+- `PUT /educator/generate-token` (`{ email }`) responde sempre `200 { message: "TOKEN_SENT" }`,
+  exista ou não a conta. Só a conta fictícia (`educadora.mock@labirinto.test`) recebe o código
+  `123456`, válido por 15 min; um envio novo invalida o anterior. O 4º envio em 15 min para o mesmo
+  e-mail dá `429 TOO_MANY_REQUESTS`.
 - `POST /educator/verify-token` confere o código sem consumi-lo: `200 { valid: true }`,
-  `400 INVALID_TOKEN` ou `400 EXPIRED_TOKEN`. E-mail sem conta também responde `INVALID_TOKEN`.
-- `POST /educator/update-password` exige `token` (sem ele, `400 Validation error`) e senha de 6 a
-  100 caracteres. Erros: `INVALID_TOKEN`, `EXPIRED_TOKEN`, `PASSWORD_SAME_AS_OLD`; a 5ª tentativa
+  `400 INVALID_TOKEN`, `400 EXPIRED_TOKEN` ou `429 TOO_MANY_ATTEMPTS` (o erro conta tentativa). E-mail
+  sem conta também responde `INVALID_TOKEN`.
+- `POST /educator/update-password` exige `token` (sem ele, `400` de validação) e senha de 6 a 100
+  caracteres. Erros: `INVALID_TOKEN`, `EXPIRED_TOKEN`, `PASSWORD_SAME_AS_OLD`; a 5ª tentativa
   errada (somando verify e update) invalida o código e a seguinte dá `429 TOO_MANY_ATTEMPTS`.
-  Sucesso consome o código e responde `200 { message: "PASSWORD_UPDATED" }` (corpo não definido na
-  especificação).
+  Sucesso consome o código e responde `200` com o texto `"OK"`, sem JSON, como o backend.
 - `PUT /educator/change-password` (exige o login do mock; senão `401`) devolve `200 { token }` com o
-  mesmo token do mock, porque `GET /educator/me` só reconhece esse (SN-08 não é simulado).
+  mesmo token do mock, porque `GET /educator/me` só reconhece esse (o 401 dos tokens antigos não é
+  simulado; no backend ele cai no fluxo de sessão expirada do cliente).
   Erros: `INVALID_CURRENT_PASSWORD`, `PASSWORD_SAME_AS_OLD`.
+- Os erros de validação do mock continuam `400 { message: "Validation error" }`; o backend manda
+  `{ message: "Bad Request", errors: [{ message, field }] }`, que `normalizeApiError` também lê.
 - A senha vigente fica só no estado do módulo (começa em `senha123`); o `sign-in` do mock continua
   não conferindo senha. Testes usam `resetMockPasswordState()` e `expireMockPasswordToken(email)`.
 
 ### Evolução (`handlers/evolution.ts`)
 
-- `GET /session-evolution/context/:sessionId` escolhe o plano pela regra G-57 (PE ativo do mesmo
-  atendimento; senão PE ativo da data; **nunca PDI**) e devolve os critérios sugeridos (metas
-  `NOT_STARTED` e `IN_PROGRESS`). `mock-evo-session-pe` tem PE (`mock-plan-2`);
-  `mock-session-1` só tem PDI e vem sem plano.
-- `POST /session-evolution/` valida o corpo e grava de forma atômica: `404 SESSION_NOT_FOUND`,
-  `403 UNAUTHORIZED`, `409 SESSION_NOT_FINISHED` (use `mock-open-session`), `400 INVALID_PLAN` (`planId` precisa ser um PE do paciente; PDI é recusado, EV-05/G-57),
-  `GOAL_NOT_IN_PLAN`, `INVALID_ATTEMPTS`, `409 PLAN_NOT_EDITABLE` (plano encerrado do paciente).
+- `GET /session-evolution/context/:sessionId` escolhe o plano pela regra EV-12 (G-57 revisto): PE
+  ativo do mesmo atendimento; senão PE ativo da data; senão **PDI ativo**; senão nenhum. Devolve os
+  critérios sugeridos (metas `NOT_STARTED` e `IN_PROGRESS`) e `existingEvolutionId`.
+  `mock-evo-session-pe` tem PE (`mock-plan-2`); `mock-session-1` cai no PDI `mock-plan-1`.
+- `POST /session-evolution/` não escolhe o plano: grava o `planId` enviado (PE ou PDI do paciente) e,
+  com ele, `planType` e `planTitle` (só o título; o app mostra "PE · …" ou "PDI · …"). Erros:
+  `404 SESSION_NOT_FOUND`, `403 UNAUTHORIZED`, `409 SESSION_NOT_FINISHED` (use `mock-open-session`),
+  `400 INVALID_PLAN` (plano inexistente ou de outro paciente, plano encerrado sem `goalUpdates`, ou
+  `goalUpdates` sem `planId`), `400 GOAL_NOT_IN_PLAN` (inclusive meta em critério sem `planId`),
+  `INVALID_ATTEMPTS` e `409 PLAN_NOT_EDITABLE` (plano encerrado com `goalUpdates`).
   A segunda evolução da mesma sessão responde `409` com `{ message: "EVOLUTION_ALREADY_EXISTS",
 evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito de atendimentos;
   `goalUpdates` muda as metas do plano em `mockPlans` e o registro vira a observação da sessão.
 - `GET /session-evolution/` (`studentId`, `from`, `to`, `limit` 1 a 100), `GET /session-evolution/:id`,
-  `PUT /session-evolution/:id` (`goalUpdates` aplica só a diferença; nunca exclui) e
-  `GET /session-evolution/pending` (`days` 1 a 90; padrão 30). `mock-session-2` já tem a evolução
-  `mock-evolution-1`; `mock-evolution-foreign` e `mock-evo-session-foreign` simulam `403`.
-  `mock-evo-session-recent` está pendente; `mock-evo-session-old` (60 dias) só com `days` maior.
-- `POST /session-evolution/next-session-suggestion` devolve `{ suggestion, rationale }` sem persistir.
-  `[AI_GENERATION_FAILED]` ou `[AI_INVALID_OUTPUT]` no `descriptiveRecord` simulam as falhas `500`.
+  `PUT /session-evolution/:id` (`goalUpdates` substitui a lista gravada e aplica no plano só a
+  diferença; nunca exclui) e `GET /session-evolution/pending` (`days` 1 a 90; padrão 30).
+  `mock-session-2` já tem a evolução `mock-evolution-1`; `mock-evolution-foreign` e
+  `mock-evo-session-foreign` simulam `403`. `mock-evo-session-recent` está pendente;
+  `mock-evo-session-old` (60 dias) só com `days` maior.
+- `POST /session-evolution/next-session-suggestion` devolve `{ suggestion, rationale }` sem persistir;
+  sessão aberta dá `409 SESSION_NOT_FINISHED`. `[AI_GENERATION_FAILED]` ou `[AI_INVALID_OUTPUT]` no
+  `descriptiveRecord` simulam as falhas `500`.
 - As sessões vêm de `mock-session-*` (fluxo de sessão do app) mais as do próprio arquivo.
 - `resetMockEvolutionState()` (`handlers/evolution.ts`) restaura as evoluções semente, as sessões do
   arquivo e uma cópia limpa dos planos (metas, progresso; planos criados depois saem de `mockPlans`).
@@ -340,16 +348,11 @@ evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito 
   evolução (inclusive após `PUT`) e, para uma sessão finalizada criada pelo fluxo do app, o
   relatório é montado com o nome e as respostas da sessão.
 
-### Pendências e lacunas da especificação (mocks da leva 1)
+### Lacunas dos mocks da leva 1
 
-- **EV-10/EV-11 não simulados:** `evolutionId` em `GET /task-notebook-session/student/:studentId` e
-  no detalhe da sessão fica para o EVO-05.
-- **EV-05 × BE-EV-03:** EV-05 manda `INVALID_PLAN` para plano que não seja PE `ACTIVE`, mas BE-EV-03
-  pede `409 PLAN_NOT_EDITABLE` para plano encerrado. O mock segue BE-EV-03 para um PE encerrado do
-  paciente (409) e `INVALID_PLAN` para PDI, inexistente ou de outro paciente. A confirmar na API-04.
-- **`TOO_MANY_ATTEMPTS` em `verify-token` revela conta real:** só o e-mail com conta acumula
-  tentativas e chega ao `429`; e-mail sem conta responde sempre `INVALID_TOKEN`. Lacuna da
-  especificação (SN-02 quer não revelar contas); a confirmar na API-04.
+- **`evolutionId` (§3.9):** o mock o preenche em `report/:sessionId`, mas não em
+  `GET /task-notebook-session/student/:studentId`.
+- **`TOO_MANY_ATTEMPTS` em `verify-token`:** só o e-mail com conta acumula tentativas no mock.
 
 ## Escalas e síntese da anamnese (API-05, leva 2)
 

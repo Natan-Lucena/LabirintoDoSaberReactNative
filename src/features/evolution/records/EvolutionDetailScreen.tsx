@@ -111,7 +111,11 @@ function EvolutionBody({
     <>
       <View style={styles.block}>
         <Text style={styles.title}>
-          {evolution.planTitle ?? "Sessão sem PE"}
+          {evolution.planTitle
+            ? evolution.planType
+              ? `${evolution.planType} · ${evolution.planTitle}`
+              : evolution.planTitle
+            : "Sessão sem plano"}
         </Text>
         <Text style={styles.summary}>
           {criteriaSummary(
