@@ -45,6 +45,30 @@ describe("NotificationsScreen (NOT-01)", () => {
     });
   });
 
+  it("para de buscar a próxima página vazia quando ela falha e oferece tentar novamente", async () => {
+    let calls = 0;
+    apiClient.defaults.adapter = async (config) => {
+      calls += 1;
+      if (String(config.url).includes("cursor=")) {
+        return mockAdapter({ ...config, url: "/notification/?cursor=bad" });
+      }
+      return {
+        data: { items: [], nextCursor: "bad" },
+        status: 200,
+        statusText: "OK",
+        headers: {},
+        config,
+      };
+    };
+    await render(<NotificationsScreen />, { queryClient: createQueryClient() });
+
+    expect(await screen.findByText("Tentar novamente")).toBeTruthy();
+    const settled = calls;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(calls).toBe(settled);
+    expect(settled).toBe(2);
+  });
+
   it("marca todas como lidas e zera o contador (AC-NOT-01-03)", async () => {
     const queryClient = createQueryClient();
     await render(<NotificationsScreen />, { queryClient });

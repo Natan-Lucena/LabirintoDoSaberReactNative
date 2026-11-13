@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -31,17 +31,37 @@ export function NotificationsScreen(): ReactElement {
   const lastPage = list.data?.pages[list.data.pages.length - 1];
   const hasUnread = items.some((item) => !item.readAt);
 
-  // Uma página pode vir vazia com `nextCursor`: continua carregando.
+  // Uma página pode vir vazia com `nextCursor`: continua carregando, uma
+  // tentativa por cursor; em erro, para e oferece "Tentar novamente".
+  const attemptedCursor = useRef<string | undefined>(undefined);
+  const nextCursor = lastPage?.nextCursor;
+  const lastPageEmpty = lastPage !== undefined && lastPage.items.length === 0;
+  const {
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  } = list;
   useEffect(() => {
     if (
-      lastPage &&
-      lastPage.items.length === 0 &&
-      list.hasNextPage &&
-      !list.isFetchingNextPage
+      lastPageEmpty &&
+      nextCursor !== undefined &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError &&
+      attemptedCursor.current !== nextCursor
     ) {
-      void list.fetchNextPage();
+      attemptedCursor.current = nextCursor;
+      void fetchNextPage();
     }
-  }, [lastPage, list]);
+  }, [
+    lastPageEmpty,
+    nextCursor,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  ]);
 
   async function open(notification: AppNotification) {
     setNotice(null);
@@ -88,7 +108,11 @@ export function NotificationsScreen(): ReactElement {
         refreshing={list.isRefetching && !list.isFetchingNextPage}
         onRefresh={() => void list.refetch()}
         onEndReached={() => {
-          if (list.hasNextPage && !list.isFetchingNextPage) {
+          if (
+            list.hasNextPage &&
+            !list.isFetchingNextPage &&
+            !list.isFetchNextPageError
+          ) {
             void list.fetchNextPage();
           }
         }}
@@ -96,6 +120,18 @@ export function NotificationsScreen(): ReactElement {
         ListHeaderComponent={
           <View style={styles.top}>
             {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+            {isFetchNextPageError ? (
+              <View style={styles.top}>
+                <Text style={styles.notice}>
+                  Não foi possível carregar mais notificações.
+                </Text>
+                <DsButton
+                  label="Tentar novamente"
+                  variant="secondary"
+                  onPress={() => void fetchNextPage()}
+                />
+              </View>
+            ) : null}
             {hasUnread ? (
               <DsButton
                 label="Marcar todas como lidas"
