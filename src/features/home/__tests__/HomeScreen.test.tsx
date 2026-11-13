@@ -23,6 +23,25 @@ vi.mock("@/features/plans/suggestions/usePlanSuggestions", () => ({
     })),
   }),
 }));
+const pendingState = vi.hoisted(() => ({
+  data: [] as {
+    sessionId: string;
+    studentId: string;
+    studentName: string;
+    sessionName: string;
+    finishedAt: string;
+    appointmentId?: string;
+  }[],
+}));
+vi.mock("@/config/env", () => ({
+  getRuntimeApiBaseUrl: () => "http://mock.local",
+}));
+vi.mock("@/features/evolution/pending/usePendingEvolutions", async (orig) => ({
+  ...(await orig<
+    typeof import("@/features/evolution/pending/usePendingEvolutions")
+  >()),
+  usePendingEvolutions: () => ({ data: pendingState.data }),
+}));
 vi.mock("@/hooks/useOnline", () => ({ useOnline: () => onlineState.value }));
 vi.mock("expo-router", async () => {
   const { useEffect } = await import("react");
@@ -141,6 +160,7 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
     vi.setSystemTime(new Date("2026-04-02T12:00:00.000Z"));
     onlineState.value = true;
     suggestionsState.count = 0;
+    pendingState.data = [];
     routerPush.mockClear();
     openURL.mockReset().mockResolvedValue(undefined);
   });
@@ -316,5 +336,31 @@ describe("HomeScreen (AC-HOME-01-01..04)", () => {
     setHomeQuery();
     await render(<HomeScreen />);
     expect(screen.queryByText(/sugestões? da IA para revisar/)).toBeNull();
+  });
+
+  describe("AC-EVO-05-01 Registrar evolução na agenda de hoje", () => {
+    const pending = {
+      sessionId: "session-9",
+      studentId: "student-2",
+      studentName: "Davi",
+      sessionName: "Leitura",
+      finishedAt: "2026-04-02T11:50:00.000Z",
+      appointmentId: "appointment-done",
+    };
+
+    it("atendimento concluído sem evolução mostra o atalho e abre a sessão certa", async () => {
+      pendingState.data = [pending];
+      setHomeQuery();
+      await render(<HomeScreen />);
+
+      await fireEvent.press(
+        screen.getByRole("button", { name: "Registrar evolução de Davi" }),
+      );
+      expect(routerPush).toHaveBeenCalledWith({
+        pathname: "/evolution/[sessionId]",
+        params: { sessionId: "session-9", from: "entry" },
+      });
+      expect(screen.getAllByText("Registrar evolução")).toHaveLength(1);
+    });
   });
 });

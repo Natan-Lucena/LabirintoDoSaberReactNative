@@ -24,6 +24,11 @@ import {
   type TimelineItemData,
 } from "@/components/ds";
 import {
+  findPendingForAppointment,
+  usePendingEvolutions,
+} from "@/features/evolution/pending/usePendingEvolutions";
+import { evolutionRoute } from "@/features/evolution/register/routes";
+import {
   NEW_PLAN_ROUTE,
   PLAN_SUGGESTIONS_ROUTE,
 } from "@/features/plans/routes";
@@ -199,6 +204,7 @@ export function HomeScreen(): ReactElement {
   const { data, isPending, isError, refetch } = useHomeQuery();
   const toast = useToast();
   const pendingSuggestions = usePendingSuggestions().data?.length ?? 0;
+  const pendingEvolutions = usePendingEvolutions().data;
 
   if (isPending && !data) return <HomeState />;
   if (isError && !data)
@@ -225,6 +231,10 @@ export function HomeScreen(): ReactElement {
               }),
             )
           : null;
+      const pendingEvolution =
+        appointment.status === "COMPLETED"
+          ? findPendingForAppointment(pendingEvolutions, appointment.id)
+          : undefined;
       return {
         id: appointment.id,
         time: formatTime(new Date(appointment.scheduledAt)),
@@ -245,18 +255,26 @@ export function HomeScreen(): ReactElement {
             : appointment.id === nextAppointment?.id
               ? "active"
               : "default",
-        actionLabel: reminderUrl ? "Lembrete" : undefined,
-        actionAccessibilityLabel:
-          reminderUrl && student
+        actionLabel: pendingEvolution
+          ? "Registrar evolução"
+          : reminderUrl
+            ? "Lembrete"
+            : undefined,
+        actionAccessibilityLabel: pendingEvolution
+          ? `Registrar evolução de ${student?.name ?? "paciente"}`
+          : reminderUrl && student
             ? `Enviar lembrete pelo WhatsApp para ${student.name}`
             : undefined,
-        onActionPress: reminderUrl
-          ? () => {
-              void Linking.openURL(reminderUrl).catch(() =>
-                toast.show("Não foi possível abrir o WhatsApp"),
-              );
-            }
-          : undefined,
+        onActionPress: pendingEvolution
+          ? () =>
+              router.push(evolutionRoute(pendingEvolution.sessionId, "entry"))
+          : reminderUrl
+            ? () => {
+                void Linking.openURL(reminderUrl).catch(() =>
+                  toast.show("Não foi possível abrir o WhatsApp"),
+                );
+              }
+            : undefined,
       };
     },
   );
