@@ -201,7 +201,7 @@ export function EvolutionScreen({
       },
     );
     return () => subscription.remove();
-  }, [hasData, retryable, router, sessionId]);
+  }, [from, hasData, retryable, router, sessionId]);
 
   if (contextQuery.data) {
     return (
@@ -340,7 +340,7 @@ function EvolutionRegister({
         goBackOrHome(router, from);
       }
     },
-    [router, sessionId],
+    [from, router, sessionId],
   );
 
   const requestLeave = useCallback(
@@ -379,7 +379,7 @@ function EvolutionRegister({
       },
     );
     return () => subscription.remove();
-  }, [requestLeave, router]);
+  }, [from, requestLeave, router]);
 
   // Gestos e outras saídas da pilha passam pela mesma confirmação.
   useEffect(() => {
