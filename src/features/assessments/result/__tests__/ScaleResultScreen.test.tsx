@@ -5,6 +5,7 @@ import { mockAdapter } from "@/mocks/adapter";
 import "@/mocks/handlers/student";
 import {
   MOCK_SCALE_APPLICATION_COMPLETED_ID,
+  MOCK_SCALE_APPLICATION_DRAFT_ID,
   resetMockScaleState,
 } from "@/mocks/handlers/scales";
 import { fireEvent, render, screen } from "@/test-utils/render";
@@ -36,5 +37,18 @@ describe("ScaleResultScreen (AVA-04)", () => {
     );
 
     expect(await screen.findByText(/^1\. /)).toBeTruthy();
+  });
+
+  it("gera o insight quando a aplicação ainda não tem um", async () => {
+    await render(
+      <ScaleResultScreen applicationId={MOCK_SCALE_APPLICATION_DRAFT_ID} />,
+    );
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Gerar insight" }),
+    );
+
+    expect(await screen.findByText(/sem diagnóstico/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Gerar insight" })).toBeNull();
   });
 });

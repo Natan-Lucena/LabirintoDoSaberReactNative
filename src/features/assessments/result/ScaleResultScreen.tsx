@@ -22,7 +22,11 @@ import {
   toneForSeverity,
 } from "@/features/assessments/hub/selectors";
 import { color, fontFamilies, semanticColor, shape, typography } from "@/theme";
-import { useResultTemplate, useScaleApplication } from "./useScaleResult";
+import {
+  useGenerateInsight,
+  useResultTemplate,
+  useScaleApplication,
+} from "./useScaleResult";
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.background },
@@ -150,6 +154,7 @@ export function ScaleResultScreen({
   const query = useScaleApplication(applicationId);
   const application = query.data;
   const templateQuery = useResultTemplate(application?.templateId);
+  const insightMutation = useGenerateInsight(applicationId);
 
   const header = (
     <AppHeader
@@ -234,12 +239,31 @@ export function ScaleResultScreen({
             ))}
           </View>
         ) : null}
-        {application.insight ? (
-          <View style={styles.section}>
-            <SectionTitle title="Insight" />
+        <View style={styles.section}>
+          <SectionTitle title="Insight" />
+          {application.insight ? (
             <AIInsight text={application.insight.text} />
-          </View>
-        ) : null}
+          ) : (
+            <>
+              {insightMutation.isError ? (
+                <Text style={styles.stateText}>
+                  Não foi possível gerar o insight. Tente novamente.
+                </Text>
+              ) : null}
+              {insightMutation.isPending ? (
+                <Text style={styles.stateText}>Gerando insight...</Text>
+              ) : null}
+              <DsButton
+                label={
+                  insightMutation.isError ? "Tentar novamente" : "Gerar insight"
+                }
+                variant="secondary"
+                disabled={insightMutation.isPending}
+                onPress={() => insightMutation.mutate()}
+              />
+            </>
+          )}
+        </View>
         <PrivacyNote text={application.disclaimer} />
         <Answers application={application} template={templateQuery.data} />
       </ScrollView>

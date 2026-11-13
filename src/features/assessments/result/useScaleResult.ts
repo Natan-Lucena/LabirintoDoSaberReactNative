@@ -1,6 +1,13 @@
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 
 import {
+  generateScaleInsight,
   getScaleApplication,
   getScaleTemplate,
   scaleQueryKeys,
@@ -24,5 +31,23 @@ export function useResultTemplate(
     queryKey: scaleQueryKeys.template(templateId ?? ""),
     queryFn: () => getScaleTemplate(templateId as string),
     enabled: Boolean(templateId),
+  });
+}
+
+/** Insight por IA: só por toque do usuário, sem repetição automática. */
+export function useGenerateInsight(
+  applicationId: string,
+): UseMutationResult<ScaleApplication, Error, void> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => generateScaleInsight(applicationId),
+    retry: false,
+    onSuccess: (application) => {
+      queryClient.setQueryData(
+        scaleQueryKeys.application(applicationId),
+        application,
+      );
+    },
   });
 }
