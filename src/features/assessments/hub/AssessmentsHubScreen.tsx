@@ -26,8 +26,8 @@ import {
   applicationDate,
   selectActiveTemplates,
   selectBandBadge,
-  severityTone,
   templateDescription,
+  toneForSeverity,
 } from "./selectors";
 import { useRecentApplications, useScaleTemplates } from "./useAssessmentsHub";
 
@@ -81,7 +81,7 @@ function ApplicationRow({
 }): ReactElement {
   const badge = selectBandBadge(application);
   const isDraft = application.status === "DRAFT";
-  const tone = badge ? severityTone[badge.severity] : undefined;
+  const tone = badge ? toneForSeverity(badge.severity) : undefined;
   const meta = [
     application.templateName,
     applicationDate(application),
@@ -189,6 +189,9 @@ export function AssessmentsHubScreen({
   }
 
   const activeTemplates = selectActiveTemplates(templates);
+  // Atualização falhou, mas há dados antigos na tela; offline já tem o aviso próprio.
+  const refreshFailed =
+    isOnline && (templatesQuery.isError || applicationsQuery.isError);
 
   return (
     <View style={styles.screen}>
@@ -203,6 +206,9 @@ export function AssessmentsHubScreen({
       >
         {!isOnline ? (
           <PendingBanner message="Sem conexão - mostrando dados salvos" />
+        ) : null}
+        {refreshFailed ? (
+          <PendingBanner message="Não foi possível atualizar as avaliações. Mostrando dados salvos." />
         ) : null}
         <AIHero
           title="Nova aplicação"
