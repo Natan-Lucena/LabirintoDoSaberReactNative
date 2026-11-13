@@ -436,3 +436,186 @@ export interface NextSessionSuggestion {
   /** Até 500 caracteres. */
   rationale?: string;
 }
+
+// Entrega 4, leva 2 (escalas, insight da escala e síntese da anamnese).
+// Contrato PROVISÓRIO, copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §4 e §5
+// (G-29: mock-first), a conferir em API-04. Campos opcionais vêm AUSENTES do JSON.
+// O escore, a faixa e as subescalas são sempre calculados pelo servidor (AV-05):
+// o app só os exibe.
+
+export type ScaleRespondent = "PROFESSIONAL" | "GUARDIAN" | "TEACHER";
+export type BandSeverity = "LOW" | "MODERATE" | "HIGH";
+export type ScaleApplicationStatus = "DRAFT" | "COMPLETED";
+
+export interface ScaleOption {
+  value: number;
+  label: string;
+}
+
+export interface ScaleItem {
+  id: string;
+  order: number;
+  text: string;
+  subscaleCode?: string;
+}
+
+export interface ScaleSubscale {
+  code: string;
+  name: string;
+}
+
+export interface ScaleBand {
+  /** Ausente = escore total. */
+  subscaleCode?: string;
+  min: number;
+  max: number;
+  /** Ex.: "Indicativo moderado". */
+  label: string;
+  severity: BandSeverity;
+}
+
+/** Catálogo (somente leitura no app). Versão nova quando itens, opções ou faixas mudam. */
+export interface ScaleTemplate {
+  id: string;
+  /** Estável entre versões. */
+  code: string;
+  version: number;
+  name: string;
+  description: string;
+  instructions: string;
+  respondent: ScaleRespondent;
+  /** Em anos. */
+  ageRange?: { min: number; max: number };
+  estimatedMinutes: number;
+  /** 2 a 7 opções. */
+  options: ScaleOption[];
+  items: ScaleItem[];
+  subscales: ScaleSubscale[];
+  scoring: { method: "SUM" | "MEAN"; bands: ScaleBand[] };
+  disclaimer: string;
+  /** Citação da fonte. */
+  reference: string;
+  active: boolean;
+}
+
+/** `GET /scale-template/`: sem `items`, com `itemCount`. */
+export interface ScaleTemplateSummary {
+  id: string;
+  code: string;
+  version: number;
+  name: string;
+  description: string;
+  respondent: ScaleRespondent;
+  ageRange?: { min: number; max: number };
+  estimatedMinutes: number;
+  itemCount: number;
+  active: boolean;
+}
+
+export interface ScaleBandResult {
+  label: string;
+  severity: BandSeverity;
+}
+
+export interface ScaleSubscaleScore {
+  code: string;
+  name: string;
+  value: number;
+  max: number;
+  band?: ScaleBandResult;
+}
+
+export interface ScaleScore {
+  /** `true` enquanto há itens sem resposta. */
+  partial: boolean;
+  answered: number;
+  /** Itens da escala. */
+  total: number;
+  /** Soma ou média (`scoring.method`). */
+  value: number;
+  max: number;
+  /** Com `partial: true` é a faixa dos itens respondidos, mostrada como "parcial" (AV-06, G-60). */
+  band?: ScaleBandResult;
+  subscales: ScaleSubscaleScore[];
+}
+
+export interface ScaleAnswer {
+  itemId: string;
+  value: number;
+}
+
+export interface ScaleInsight {
+  /** Até 800 caracteres, sem diagnóstico (IN-04). */
+  text: string;
+  generatedAt: string;
+  /** `true` em `DRAFT`, `false` em `COMPLETED` (IN-02). */
+  preliminary: boolean;
+}
+
+export interface ScaleApplication {
+  id: string;
+  templateId: string;
+  templateCode: string;
+  /** Versão usada na aplicação; a leitura e o escore seguem sempre esta versão (AV-02). */
+  templateVersion: number;
+  templateName: string;
+  studentId: string;
+  studentName: string;
+  educatorId: string;
+  appointmentId?: string;
+  status: ScaleApplicationStatus;
+  answers: ScaleAnswer[];
+  score: ScaleScore;
+  insight?: ScaleInsight;
+  /** Em toda resposta de aplicação (AV-09). */
+  disclaimer: string;
+  startedAt: string;
+  updatedAt: string;
+  completedAt?: string;
+}
+
+/** `GET /scale-application/`: igual à aplicação, sem `answers`. */
+export type ScaleApplicationSummary = Omit<ScaleApplication, "answers">;
+
+export interface ListScaleApplicationsFilters {
+  studentId?: string;
+  status?: ScaleApplicationStatus;
+  /** 1 a 100 (padrão do servidor: 50). */
+  limit?: number;
+}
+
+/** `POST /scale-application/` (escrita da tela AVA-02; sem função de endpoint na leva 2). */
+export interface CreateScaleApplicationPayload {
+  studentId: string;
+  templateId: string;
+  appointmentId?: string;
+}
+
+/** `409 DRAFT_ALREADY_EXISTS` (AV-03): o app retoma o rascunho existente. */
+export interface ScaleDraftAlreadyExistsResponse {
+  message: "DRAFT_ALREADY_EXISTS";
+  applicationId: string;
+}
+
+/** `400 SCALE_INCOMPLETE` ao concluir (AV-07). */
+export interface ScaleIncompleteResponse {
+  message: "SCALE_INCOMPLETE";
+  missingItemIds: string[];
+}
+
+/** Síntese da anamnese gerada por IA (AS-01): até 1500 caracteres, em tópicos. */
+export interface AnamneseSummary {
+  text: string;
+  generatedAt: string;
+}
+
+/**
+ * Campos novos da resposta da anamnese (AS-02), sempre opcionais: `summary` é
+ * ausente se nunca gerada; `summaryOutdated` indica resposta editada depois da síntese.
+ * Aplicam-se a `GET /anamnese/responses/:responseId`, à lista por aluno e ao
+ * retorno de `POST /anamnese/responses/:responseId/summary`.
+ */
+export interface AnamneseSummaryFields {
+  summary?: AnamneseSummary;
+  summaryOutdated?: boolean;
+}
