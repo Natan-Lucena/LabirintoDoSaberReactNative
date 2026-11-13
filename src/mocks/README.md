@@ -350,3 +350,77 @@ evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito 
 - **`TOO_MANY_ATTEMPTS` em `verify-token` revela conta real:** só o e-mail com conta acumula
   tentativas e chega ao `429`; e-mail sem conta responde sempre `INVALID_TOKEN`. Lacuna da
   especificação (SN-02 quer não revelar contas); a confirmar na API-04.
+
+## Escalas e síntese da anamnese (API-05, leva 2)
+
+Contrato **provisório**, copiado de `docs/entrega-4/ESPECIFICACAO-BACKEND.md` §4 e §5 (G-29,
+mock-first) e a conferir em API-04. Tipos em `src/api/types.ts`, leituras em
+`src/api/endpoints/scales.ts` e mocks em `handlers/scales.ts` e `handlers/anamnese-summary.ts`.
+As escritas (iniciar, responder, concluir, insight, excluir, gerar síntese) **só têm mock**: as
+funções de endpoint ficam com as telas AVA-\* e PAC-\*.
+
+### Escala fictícia (G-55)
+
+O catálogo tem a escala `mock-scale-1` (versão 2, 6 itens "Item de exemplo N", opções Nunca, Às
+vezes, Frequentemente, Muito, soma de 0 a 18, duas subescalas de 3 itens) e `mock-scale-inactive`
+(`active: false`). **Itens, opções e faixas são inventados**: o instrumento real vem do responsável
+clínico e do seed do backend. Faixas do total (v2): 0-5 baixo, 6-11 moderado, 12-18 alto; a v1 (só
+usada pela aplicação semente) tem 0-6, 7-12 e 13-18, para provar que a aplicação lê a sua versão.
+
+### Rotas (`handlers/scales.ts`)
+
+- `GET /scale-template/` (resumo com `itemCount`, sem `items`) e `GET /scale-template/:id`
+  (`404 SCALE_NOT_FOUND`).
+- `POST /scale-application/` (`201`): `400 Validation error`, `403 UNAUTHORIZED` (paciente alheio),
+  `404 STUDENT_NOT_FOUND`/`SCALE_NOT_FOUND`, `409 SCALE_INACTIVE`. Se já existe rascunho do mesmo
+  paciente e escala, responde `409` com `{ message: "DRAFT_ALREADY_EXISTS", applicationId }` como
+  **resposta** (não erro lançado), como o `EVOLUTION_ALREADY_EXISTS` da leva 1: a tela precisa de
+  `validateStatus` que aceite 409 para ler o `applicationId`.
+- `GET /scale-application/` (`studentId`, `status` `DRAFT`/`COMPLETED`, `limit` 1 a 100, padrão 50;
+  `400` em filtro inválido, `403` em paciente alheio): só do educador, **mais recente primeiro**
+  (por `updatedAt`), sem `answers`. `GET /scale-application/:id`: `403`, `404 APPLICATION_NOT_FOUND`.
+- `PUT /scale-application/:id/answers` valida tudo antes de gravar (`400 Validation error`,
+  `ITEM_NOT_IN_SCALE`, `INVALID_ANSWER_VALUE`), faz upsert por `itemId` e recalcula o escore.
+- `POST /scale-application/:id/complete`: com itens faltando responde `400` com
+  `{ message: "SCALE_INCOMPLETE", missingItemIds }` como **resposta** (mesma razão do 409 acima:
+  a tela precisa de `validateStatus` que aceite 400); completo, vira `COMPLETED` com `completedAt`
+  e fica somente leitura.
+- `POST /scale-application/:id/insight` (texto determinístico de até 800 caracteres, sem
+  diagnóstico; `preliminary` é `true` em rascunho; gerar de novo substitui), sem atraso simulado.
+  `DELETE /scale-application/:id` (`204`, só rascunho).
+- Erros comuns: `403 UNAUTHORIZED` (aplicação de outro educador) e `404 APPLICATION_NOT_FOUND`;
+  `409 APPLICATION_NOT_EDITABLE` ao editar, concluir ou excluir uma aplicação `COMPLETED`.
+- Sementes: `mock-scale-app-completed` (`student-1`, v1, soma 12, `COMPLETED`),
+  `mock-scale-app-draft` (`student-2`, 3 de 6 itens) e `mock-scale-app-foreign` (outro educador).
+- Falha de IA simulada por `setMockScaleAiFailure("AI_GENERATION_FAILED" | "AI_INVALID_OUTPUT" | null)`;
+  `resetMockScaleState()` restaura as sementes e desliga a falha. Os testes o chamam em
+  `beforeEach` e `afterEach`.
+
+### Síntese da anamnese (`handlers/anamnese-summary.ts`)
+
+- `POST /anamnese/responses/:responseId/summary` gera uma síntese determinística (até 1500
+  caracteres, em tópicos, sem diagnóstico), persiste em memória e devolve **a resposta da anamnese**
+  com `summary` e `summaryOutdated: false`. `404 RESPONSE_NOT_FOUND`, `403 UNAUTHORIZED` (resposta de
+  outro educador), `500 AI_GENERATION_FAILED`/`AI_INVALID_OUTPUT` via
+  `setMockAnamneseSummaryFailure(...)`; `resetMockAnamneseSummaryState()` limpa tudo.
+- O arquivo **envolve** os handlers existentes de `anamnese-responses.ts`:
+  `GET .../student/:studentId`, `GET .../:responseId` e `PUT .../:responseId` só ganham `summary` e
+  `summaryOutdated` quando há síntese; sem síntese o corpo é idêntico ao de antes. Editar a resposta
+  (`PUT`) depois da síntese marca `summaryOutdated: true`; gerar de novo zera. O `GET` por id de
+  resposta alheia continua `401` (D4), não `403`.
+
+### Interpretações e lacunas (mocks da leva 2)
+
+- **AV-06 (G-60):** a faixa parcial usa a soma dos itens respondidos contra as faixas do total da
+  escala (não proporcional) e some quando nenhum item foi respondido.
+- **Ordem das validações no `PUT .../answers`:** `404`/`403`, depois `409 APPLICATION_NOT_EDITABLE`,
+  depois `400`. A especificação não fixa a ordem.
+- **Insight (IN-01 a IN-04):** permitido em `DRAFT` e `COMPLETED`, mesmo sem respostas; não envia
+  nada a provedor real. Responder de novo depois do insight não o apaga.
+- **AS-01:** a especificação não define o corpo de resposta do `POST .../summary`; o mock devolve a
+  resposta da anamnese completa.
+- **Tipo da anamnese:** `AnamneseSummaryFields` (`src/api/types.ts`) traz os campos opcionais
+  novos; a interface `AnamneseResponse` (em `endpoints/anamnese-responses.ts`) deve estendê-la na
+  tarefa de tela que a usar.
+- **`RESPONSE_NOT_FOUND` e `STUDENT_NOT_FOUND` sem tradução** em `normalizeApiError`, porque
+  testes e telas da anamnese já leem o texto cru.

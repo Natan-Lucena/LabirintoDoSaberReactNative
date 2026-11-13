@@ -83,6 +83,20 @@ const API_ERROR_MESSAGES: Record<string, string> = {
     "Não foi possível gerar a sugestão agora. Tente novamente em instantes.",
   AI_INVALID_OUTPUT:
     "A resposta da IA veio inválida. Tente gerar a sugestão novamente.",
+  // Leva 2 (escalas §4 e síntese da anamnese §5), contrato PROVISÓRIO.
+  // RESPONSE_NOT_FOUND e STUDENT_NOT_FOUND ficam SEM tradução de propósito: já
+  // existem no contrato da anamnese e testes leem o código/mensagem crua.
+  SCALE_NOT_FOUND: "Escala não encontrada.",
+  SCALE_INACTIVE: "Esta escala não está mais disponível para novas aplicações.",
+  DRAFT_ALREADY_EXISTS:
+    "Já existe um rascunho desta escala para este paciente. Retome o rascunho.",
+  ITEM_NOT_IN_SCALE: "Uma das respostas não pertence a esta escala.",
+  INVALID_ANSWER_VALUE:
+    "Uma das respostas tem um valor que a escala não aceita.",
+  SCALE_INCOMPLETE: "Responda todos os itens para concluir a escala.",
+  APPLICATION_NOT_EDITABLE:
+    "Esta aplicação já foi concluída e não pode ser alterada.",
+  APPLICATION_NOT_FOUND: "Aplicação não encontrada.",
 };
 
 export function normalizeApiError(error: unknown): ApiError {
