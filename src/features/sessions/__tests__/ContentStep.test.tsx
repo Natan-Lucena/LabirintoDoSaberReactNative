@@ -16,6 +16,9 @@ import { SessionFlowInvalidTransitionError } from "@/stores/session-flow";
 import type { TaskGroup, TaskNotebookWithGroups } from "@/api/types";
 import { ContentStep, normalizeForSearch } from "../ContentStep";
 
+vi.mock("@/config/env", () => ({
+  getRuntimeApiBaseUrl: () => "http://mock.local",
+}));
 const push = vi.fn();
 const back = vi.fn();
 const replace = vi.fn();

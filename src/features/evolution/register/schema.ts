@@ -272,13 +272,15 @@ export function toCreatePayload(
  */
 export function toUpdatePayload(
   values: EvolutionFormValues,
+  /** A evolução já tinha sugestão: esvaziar o campo a apaga (`""`). */
+  hadSuggestion = false,
 ): UpdateSessionEvolutionPayload {
   const parsed = evolutionFormSchema.parse(values);
   const goalUpdates = changedGoalUpdates(parsed.criteria);
   return {
     criteria: toCriteriaInput(parsed.criteria),
     descriptiveRecord: parsed.descriptiveRecord,
-    ...(parsed.nextSessionSuggestion
+    ...(parsed.nextSessionSuggestion || hadSuggestion
       ? { nextSessionSuggestion: parsed.nextSessionSuggestion }
       : {}),
     ...(goalUpdates.length > 0 ? { goalUpdates } : {}),

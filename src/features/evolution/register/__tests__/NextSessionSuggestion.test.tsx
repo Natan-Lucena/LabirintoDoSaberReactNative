@@ -128,8 +128,8 @@ describe("EvolutionScreen — sugestão da IA (EVO-04)", () => {
     );
     await press("Salvar e atualizar prontuário");
 
-    expect(createSessionEvolution).toHaveBeenCalledWith(
-      expect.objectContaining({ nextSessionSuggestion: "Texto editado." }),
-    );
+    expect(vi.mocked(createSessionEvolution).mock.calls[0]?.[0]).toMatchObject({
+      nextSessionSuggestion: "Texto editado.",
+    });
   });
 });

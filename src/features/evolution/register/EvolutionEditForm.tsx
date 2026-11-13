@@ -130,7 +130,10 @@ function EvolutionEditFormBody({
 
   const mutation = useMutation({
     mutationFn: (values: EvolutionFormOutput) =>
-      updateSessionEvolution(evolution.id, toUpdatePayload(values)),
+      updateSessionEvolution(
+        evolution.id,
+        toUpdatePayload(values, Boolean(evolution.nextSessionSuggestion)),
+      ),
     retry: false,
   });
   const saving = mutation.isPending;

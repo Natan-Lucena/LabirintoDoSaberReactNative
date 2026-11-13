@@ -9,6 +9,9 @@ import type { SessionEvolution, SessionEvolutionSummary } from "@/api/types";
 import { render, screen } from "@/test-utils/render";
 import { ContentStep } from "../ContentStep";
 
+vi.mock("@/config/env", () => ({
+  getRuntimeApiBaseUrl: () => "http://mock.local",
+}));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
 }));
