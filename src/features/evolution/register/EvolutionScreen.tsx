@@ -117,6 +117,18 @@ async function releaseSessionFlow(sessionId: string): Promise<void> {
   }
 }
 
+/**
+ * Sair da Evolução: volta à tela de origem (hub, ficha…) quando há histórico;
+ * sem ele (fluxo de sessão, retomada), vai para a Início.
+ */
+function goBackOrHome(router: ReturnType<typeof useRouter>): void {
+  if (router.canGoBack()) {
+    router.back();
+  } else {
+    router.replace(HOME_ROUTE);
+  }
+}
+
 export interface EvolutionScreenProps {
   sessionId: string;
 }
@@ -162,7 +174,7 @@ export function EvolutionScreen({
     // Sem saída possível nesta sessão: libera o fluxo para não prender o
     // profissional num ciclo Início → encerramento → Evolução → erro.
     if (!retryable) void releaseSessionFlow(sessionId);
-    router.replace(HOME_ROUTE);
+    goBackOrHome(router);
   }
 
   // O Voltar do Android segue o mesmo caminho (leaveFromError) enquanto a
@@ -173,7 +185,7 @@ export function EvolutionScreen({
       "hardwareBackPress",
       () => {
         if (!retryable) void releaseSessionFlow(sessionId);
-        router.replace(HOME_ROUTE);
+        goBackOrHome(router);
         return true;
       },
     );
@@ -308,7 +320,7 @@ function EvolutionRegister({
       if (proceed) {
         proceed();
       } else {
-        router.replace(HOME_ROUTE);
+        goBackOrHome(router);
       }
     },
     [router, sessionId],
@@ -342,7 +354,7 @@ function EvolutionRegister({
       "hardwareBackPress",
       () => {
         if (leavingRef.current) {
-          router.replace(HOME_ROUTE);
+          goBackOrHome(router);
           return true;
         }
         requestLeave();

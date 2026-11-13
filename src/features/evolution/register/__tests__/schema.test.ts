@@ -303,4 +303,20 @@ describe("edição da evolução (EVO-02)", () => {
     values.descriptiveRecord = "   ";
     expect(() => toUpdatePayload(values)).toThrow();
   });
+
+  it("monta goalUpdates só das metas cujo estado mudou", () => {
+    const values = evolutionToFormValues(EVOLUTION, {
+      "goal-1": "IN_PROGRESS",
+    });
+    expect(values.criteria[0]).toMatchObject({
+      initialGoalStatus: "IN_PROGRESS",
+      goalStatus: "IN_PROGRESS",
+    });
+    expect(toUpdatePayload(values)).not.toHaveProperty("goalUpdates");
+
+    values.criteria[0]!.goalStatus = "ACHIEVED";
+    expect(toUpdatePayload(values).goalUpdates).toEqual([
+      { goalId: "goal-1", status: "ACHIEVED" },
+    ]);
+  });
 });

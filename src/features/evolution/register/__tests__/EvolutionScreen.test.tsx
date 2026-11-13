@@ -151,7 +151,8 @@ let alertSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   vi.clearAllMocks();
   focusEffects.length = 0;
-  router.canGoBack.mockReturnValue(true);
+  // Padrão: sem histórico (fluxo de sessão); os testes do hub ligam o histórico.
+  router.canGoBack.mockReturnValue(false);
   navigation.addListener.mockImplementation(() => () => undefined);
   close.mockImplementation(async () => {
     useSessionFlowStore.setState({ step: "closed" });
@@ -616,6 +617,50 @@ describe("EvolutionScreen — sair sem salvar (AC-EVO-01-04)", () => {
 
     expect(alertSpy).toHaveBeenCalledTimes(1);
     expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe("EvolutionScreen — saída com histórico (aberta pelo hub)", () => {
+  beforeEach(() => {
+    router.canGoBack.mockReturnValue(true);
+  });
+
+  it("voltar sem alterações volta à tela de origem e libera o fluxo da sessão", async () => {
+    await renderLoaded();
+    await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).not.toHaveBeenCalled();
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+  });
+
+  it("descartar as alterações volta à tela de origem", async () => {
+    await renderLoaded();
+    await type("Registro descritivo", "Rascunho.");
+    await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
+    const discard = alertSpy.mock.calls[0]![2]!.find(
+      (item: AlertButton) => item.text === "Sair sem salvar",
+    );
+    await act(async () => discard?.onPress?.());
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("sair de um erro de carregamento volta à tela de origem", async () => {
+    vi.mocked(getEvolutionContext).mockRejectedValue(
+      new ApiError({ message: "x", status: 404, code: "SESSION_NOT_FOUND" }),
+    );
+    await render(<EvolutionScreen sessionId={SESSION_ID} />);
+    await act(async () =>
+      fireEvent.press(
+        await screen.findByRole("button", { name: "Voltar ao início" }),
+      ),
+    );
+
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).not.toHaveBeenCalled();
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
   });
 });
 
