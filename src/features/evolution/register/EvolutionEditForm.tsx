@@ -230,6 +230,7 @@ function EvolutionEditFormBody({
           remove={remove}
           saving={saving}
           showCriteria={Boolean(evolution.planId) || fields.length > 0}
+          sessionId={evolution.sessionId}
           showGoalStatus={Boolean(goalStatuses)}
         />
         {saveError ? (
