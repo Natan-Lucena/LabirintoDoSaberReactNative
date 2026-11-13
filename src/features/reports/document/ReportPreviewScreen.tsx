@@ -151,9 +151,9 @@ export function ReportPreviewScreen({
                   {content.evolutions.length === 0 ? (
                     <Paragraph text={EMPTY_TEXTS.evolutions} />
                   ) : null}
-                  {content.evolutions.map((item) => (
+                  {content.evolutions.map((item, index) => (
                     <InfoCard
-                      key={`${item.sessionDate}-${item.planTitle ?? ""}`}
+                      key={`${index}-${item.sessionDate}`}
                       icon="clipboard"
                       title={`${formatReportDate(item.sessionDate)} · ${item.achieved} de ${item.total} metas`}
                       description={item.record}
@@ -168,9 +168,9 @@ export function ReportPreviewScreen({
                   {content.planProgress.length === 0 ? (
                     <Paragraph text={EMPTY_TEXTS.planProgress} />
                   ) : null}
-                  {content.planProgress.map((plan) => (
+                  {content.planProgress.map((plan, index) => (
                     <InfoCard
-                      key={plan.title}
+                      key={`${index}-${plan.title}`}
                       icon="file"
                       title={`${plan.title} · ${plan.percent}%`}
                       description={plan.goals
@@ -190,9 +190,9 @@ export function ReportPreviewScreen({
                   {content.assessments.length === 0 ? (
                     <Paragraph text={EMPTY_TEXTS.assessments} />
                   ) : null}
-                  {content.assessments.map((item) => (
+                  {content.assessments.map((item, index) => (
                     <InfoCard
-                      key={`${item.templateName}-${item.completedAt}`}
+                      key={`${index}-${item.templateName}-${item.completedAt}`}
                       icon="chart"
                       title={`${item.templateName} · ${formatReportDate(item.completedAt)}`}
                       description={`${item.value} de ${item.max}${item.band ? ` · ${item.band}` : ""}`}
