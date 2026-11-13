@@ -14,7 +14,11 @@ let segments: string[] = ["(tabs)"];
 let navigationKey: string | undefined = "root";
 
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ replace: routerReplace, dismissAll: routerDismissAll }),
+  useRouter: () => ({
+    replace: routerReplace,
+    dismissAll: routerDismissAll,
+    canDismiss: () => true,
+  }),
   usePathname: () => pathname,
   useSegments: () => segments,
   useRootNavigationState: () => ({ key: navigationKey }),

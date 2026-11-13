@@ -35,6 +35,9 @@ import {
   type EvolutionFormValues,
 } from "./schema";
 
+// O AppHeader já cuida do topo: sem a margem de cima da área segura (evita espaço duplo).
+const SCREEN_EDGES = ["left", "right", "bottom"] as const;
+
 type EvolutionFormOutput = z.output<typeof evolutionFormSchema>;
 
 /** Códigos que a API traduz em `normalizeApiError` (mensagem já em português). */
@@ -83,7 +86,7 @@ export function EvolutionEditForm(props: EvolutionEditFormProps): ReactElement {
 
   if (planId && planQuery.isPending) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
         <AppHeader title="Editar evolução" onBack={props.onCancel} />
         <Text style={styles.hint} accessibilityRole="progressbar">
           Carregando o plano...
@@ -216,7 +219,7 @@ function EvolutionEditFormBody({
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       <AppHeader
         title="Editar evolução"
         subtitle={evolution.planTitle}
