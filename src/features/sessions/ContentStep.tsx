@@ -9,8 +9,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
+import {
+  evolutionQueryKeys,
+  getSessionEvolution,
+  listSessionEvolutions,
+} from "@/api/endpoints/evolution";
 import { listSessionsByStudent, startSession } from "@/api/endpoints/session";
 import { normalizeApiError } from "@/api/errors";
 import {
@@ -84,6 +90,27 @@ const NAME_MAX_LENGTH = 100;
 const isNameValid = (name: string) =>
   name.trim().length >= 1 && name.trim().length <= NAME_MAX_LENGTH;
 
+/** Quantas evoluções recentes são conferidas atrás de uma sugestão (EVO-04). */
+const SUGGESTION_LOOKUP_LIMIT = 3;
+
+/**
+ * Última sugestão para a próxima sessão do paciente: a lista vem da mais
+ * recente para a mais antiga e traz só o resumo, então o detalhe é lido até
+ * achar a primeira evolução com `nextSessionSuggestion`.
+ */
+async function findLastSuggestion(studentId: string): Promise<string | null> {
+  const summaries = await listSessionEvolutions({
+    studentId,
+    limit: SUGGESTION_LOOKUP_LIMIT,
+  });
+  for (const summary of summaries) {
+    const evolution = await getSessionEvolution(summary.id);
+    const text = evolution.nextSessionSuggestion?.trim();
+    if (text) return text;
+  }
+  return null;
+}
+
 export function ContentStep(): ReactElement {
   const router = useRouter();
   const {
@@ -121,6 +148,13 @@ export function ContentStep(): ReactElement {
   const startingRef = useRef(false);
   const mountedRef = useRef(true);
   const { items, isLoading, isError, refetch } = useContentCatalog(kind);
+  const suggestionQuery = useQuery({
+    queryKey: [...evolutionQueryKeys.all, "last-suggestion", student?.id],
+    queryFn: () => findLastSuggestion(student?.id ?? ""),
+    enabled: Boolean(student?.id),
+    retry: false,
+  });
+  const lastSuggestion = suggestionQuery.data ?? null;
   const copy = KIND_COPY[kind];
   const filtered = useMemo(
     () =>
@@ -306,6 +340,13 @@ export function ContentStep(): ReactElement {
       <View style={styles.content}>
         {student ? (
           <Text style={styles.patient}>Paciente: {student.name}</Text>
+        ) : null}
+        {lastSuggestion ? (
+          <InfoCard
+            icon="sparkles"
+            title="Sugestão da última evolução"
+            description={lastSuggestion}
+          />
         ) : null}
         <Field
           label="Nome da sessão"

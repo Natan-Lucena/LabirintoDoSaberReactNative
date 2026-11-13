@@ -168,6 +168,9 @@ describe("EvolutionDetailScreen (EVO-02)", () => {
           },
         ],
         descriptiveRecord: "Registro corrigido.",
+        // A evolução do mock já tem sugestão; o texto segue no PUT.
+        nextSessionSuggestion:
+          "Retomar a leitura de frases curtas com apoio visual.",
       },
     );
     // Volta ao detalhe, já com o registro novo.

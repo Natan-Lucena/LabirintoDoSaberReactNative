@@ -47,6 +47,7 @@ export const MAX_CRITERIA = 20;
 export const MAX_COUNT = 100;
 export const MAX_RECORD = 5000;
 export const MAX_TEXT = 500;
+export const MAX_SUGGESTION = 2000;
 
 export const ATTEMPTS_REQUIRED_MESSAGE =
   "Informe as tentativas para registrar os acertos.";
@@ -117,6 +118,11 @@ export const evolutionFormSchema = z.object({
     .trim()
     .min(1, "Escreva o registro descritivo.")
     .max(MAX_RECORD, `Use no máximo ${MAX_RECORD} caracteres.`),
+  nextSessionSuggestion: z
+    .string()
+    .trim()
+    .max(MAX_SUGGESTION, `Use no máximo ${MAX_SUGGESTION} caracteres.`)
+    .default(""),
 });
 
 export type EvolutionCriterionValues = z.input<typeof evolutionCriterionSchema>;
@@ -154,6 +160,7 @@ export function initialEvolutionValues(
         }))
       : [],
     descriptiveRecord: "",
+    nextSessionSuggestion: "",
   };
 }
 
@@ -184,6 +191,7 @@ export function evolutionToFormValues(
         : {}),
     })),
     descriptiveRecord: evolution.descriptiveRecord,
+    nextSessionSuggestion: evolution.nextSessionSuggestion ?? "",
   };
 }
 
@@ -251,6 +259,9 @@ export function toCreatePayload(
     ...(plan ? { planId: plan.id } : {}),
     criteria: toCriteriaInput(criteria),
     descriptiveRecord: parsed.descriptiveRecord,
+    ...(parsed.nextSessionSuggestion
+      ? { nextSessionSuggestion: parsed.nextSessionSuggestion }
+      : {}),
     ...(goalUpdates.length > 0 ? { goalUpdates } : {}),
   };
 }
@@ -261,12 +272,17 @@ export function toCreatePayload(
  */
 export function toUpdatePayload(
   values: EvolutionFormValues,
+  /** A evolução já tinha sugestão: esvaziar o campo a apaga (`""`). */
+  hadSuggestion = false,
 ): UpdateSessionEvolutionPayload {
   const parsed = evolutionFormSchema.parse(values);
   const goalUpdates = changedGoalUpdates(parsed.criteria);
   return {
     criteria: toCriteriaInput(parsed.criteria),
     descriptiveRecord: parsed.descriptiveRecord,
+    ...(parsed.nextSessionSuggestion || hadSuggestion
+      ? { nextSessionSuggestion: parsed.nextSessionSuggestion }
+      : {}),
     ...(goalUpdates.length > 0 ? { goalUpdates } : {}),
   };
 }

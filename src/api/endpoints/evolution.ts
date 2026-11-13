@@ -1,13 +1,16 @@
 // Evolução da sessão: leitura (API-05, leva 1) e criação (EVO-01). Contrato
 // PROVISÓRIO copiado de docs/entrega-4/ESPECIFICACAO-BACKEND.md §3, a conferir
-// em API-04. A edição (PUT) é da EVO-02; a sugestão da IA fica com a EVO-04.
+// em API-04. A edição (PUT) é da EVO-02; a sugestão da IA, da EVO-04.
 import { AxiosError, type AxiosResponse } from "axios";
 
 import { apiClient } from "@/api/client";
+import { AI_TIMEOUT_MS } from "@/api/endpoints/ai-timeout";
 import { ApiError, normalizeApiError } from "@/api/errors";
 import type {
   CreateSessionEvolutionPayload,
   EvolutionContext,
+  NextSessionSuggestion,
+  NextSessionSuggestionPayload,
   PendingEvolution,
   SessionEvolution,
   SessionEvolutionSummary,
@@ -189,6 +192,25 @@ export async function updateSessionEvolution(
   const response = await apiClient.put<SessionEvolution>(
     `/session-evolution/${id}`,
     payload,
+  );
+
+  return response.data;
+}
+
+/**
+ * POST /session-evolution/next-session-suggestion — IA (EVO-04), não persiste:
+ * o texto editado vai em `nextSessionSuggestion` ao salvar a evolução. Leva
+ * cerca de 30 s (timeout de 90 s) e nunca é repetida sozinha (G-46). Erros:
+ * `400`, `403`, `404 SESSION_NOT_FOUND`, `500 AI_GENERATION_FAILED` e
+ * `AI_INVALID_OUTPUT`.
+ */
+export async function generateNextSessionSuggestion(
+  payload: NextSessionSuggestionPayload,
+): Promise<NextSessionSuggestion> {
+  const response = await apiClient.post<NextSessionSuggestion>(
+    "/session-evolution/next-session-suggestion",
+    payload,
+    { timeout: AI_TIMEOUT_MS },
   );
 
   return response.data;
