@@ -151,8 +151,8 @@ let alertSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   vi.clearAllMocks();
   focusEffects.length = 0;
-  // Padrão: sem histórico (fluxo de sessão); os testes do hub ligam o histórico.
-  router.canGoBack.mockReturnValue(false);
+  // Há histórico (telas da sessão encerrada); sem `from`, mesmo assim vai à Início.
+  router.canGoBack.mockReturnValue(true);
   navigation.addListener.mockImplementation(() => () => undefined);
   close.mockImplementation(async () => {
     useSessionFlowStore.setState({ step: "closed" });
@@ -620,13 +620,15 @@ describe("EvolutionScreen — sair sem salvar (AC-EVO-01-04)", () => {
   });
 });
 
-describe("EvolutionScreen — saída com histórico (aberta pelo hub)", () => {
-  beforeEach(() => {
-    router.canGoBack.mockReturnValue(true);
-  });
+describe("EvolutionScreen — saída quando aberta pelo hub (from=hub)", () => {
+  const renderFromHub = async () => {
+    vi.mocked(getEvolutionContext).mockResolvedValue(CONTEXT);
+    await render(<EvolutionScreen sessionId={SESSION_ID} from="hub" />);
+    await screen.findByLabelText("Registro descritivo");
+  };
 
   it("voltar sem alterações volta à tela de origem e libera o fluxo da sessão", async () => {
-    await renderLoaded();
+    await renderFromHub();
     await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
 
     expect(router.back).toHaveBeenCalledTimes(1);
@@ -635,7 +637,7 @@ describe("EvolutionScreen — saída com histórico (aberta pelo hub)", () => {
   });
 
   it("descartar as alterações volta à tela de origem", async () => {
-    await renderLoaded();
+    await renderFromHub();
     await type("Registro descritivo", "Rascunho.");
     await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
     const discard = alertSpy.mock.calls[0]![2]!.find(
@@ -651,7 +653,7 @@ describe("EvolutionScreen — saída com histórico (aberta pelo hub)", () => {
     vi.mocked(getEvolutionContext).mockRejectedValue(
       new ApiError({ message: "x", status: 404, code: "SESSION_NOT_FOUND" }),
     );
-    await render(<EvolutionScreen sessionId={SESSION_ID} />);
+    await render(<EvolutionScreen sessionId={SESSION_ID} from="hub" />);
     await act(async () =>
       fireEvent.press(
         await screen.findByRole("button", { name: "Voltar ao início" }),
@@ -661,6 +663,15 @@ describe("EvolutionScreen — saída com histórico (aberta pelo hub)", () => {
     expect(router.back).toHaveBeenCalledTimes(1);
     expect(router.replace).not.toHaveBeenCalled();
     await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+  });
+
+  it("sem histórico, mesmo com from=hub, vai à Início", async () => {
+    router.canGoBack.mockReturnValue(false);
+    await renderFromHub();
+    await act(async () => fireEvent.press(screen.getByLabelText("Voltar")));
+
+    expect(router.replace).toHaveBeenCalledWith(HOME);
+    expect(router.back).not.toHaveBeenCalled();
   });
 });
 

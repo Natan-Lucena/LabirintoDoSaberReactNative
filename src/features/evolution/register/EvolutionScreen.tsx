@@ -39,7 +39,12 @@ import { useSessionFlowStore } from "@/stores/session-flow";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { dayKey, TIME_ZONE } from "@/utils/date";
 import { EvolutionFormSections } from "./EvolutionFormSections";
-import { evolutionRecordRoute, HOME_ROUTE, patientRecordRoute } from "./routes";
+import {
+  evolutionRecordRoute,
+  HOME_ROUTE,
+  patientRecordRoute,
+  type EvolutionOrigin,
+} from "./routes";
 import {
   evolutionFormSchema,
   initialEvolutionValues,
@@ -118,11 +123,14 @@ async function releaseSessionFlow(sessionId: string): Promise<void> {
 }
 
 /**
- * Sair da Evolução: volta à tela de origem (hub, ficha…) quando há histórico;
- * sem ele (fluxo de sessão, retomada), vai para a Início.
+ * Sair da Evolução: com `from` (aberta pelo hub) volta à tela de origem quando
+ * há histórico; sem ele (fluxo de sessão, retomada), vai para a Início.
  */
-function goBackOrHome(router: ReturnType<typeof useRouter>): void {
-  if (router.canGoBack()) {
+function goBackOrHome(
+  router: ReturnType<typeof useRouter>,
+  from: EvolutionOrigin | undefined,
+): void {
+  if (from && router.canGoBack()) {
     router.back();
   } else {
     router.replace(HOME_ROUTE);
@@ -131,10 +139,13 @@ function goBackOrHome(router: ReturnType<typeof useRouter>): void {
 
 export interface EvolutionScreenProps {
   sessionId: string;
+  /** Tela que abriu a Evolução (hub); ausente no fluxo de sessão. */
+  from?: EvolutionOrigin;
 }
 
 export function EvolutionScreen({
   sessionId,
+  from,
 }: EvolutionScreenProps): ReactElement {
   const router = useRouter();
   const contextQuery = useQuery({
@@ -174,7 +185,7 @@ export function EvolutionScreen({
     // Sem saída possível nesta sessão: libera o fluxo para não prender o
     // profissional num ciclo Início → encerramento → Evolução → erro.
     if (!retryable) void releaseSessionFlow(sessionId);
-    goBackOrHome(router);
+    goBackOrHome(router, from);
   }
 
   // O Voltar do Android segue o mesmo caminho (leaveFromError) enquanto a
@@ -185,7 +196,7 @@ export function EvolutionScreen({
       "hardwareBackPress",
       () => {
         if (!retryable) void releaseSessionFlow(sessionId);
-        goBackOrHome(router);
+        goBackOrHome(router, from);
         return true;
       },
     );
@@ -194,7 +205,11 @@ export function EvolutionScreen({
 
   if (contextQuery.data) {
     return (
-      <EvolutionRegister sessionId={sessionId} context={contextQuery.data} />
+      <EvolutionRegister
+        sessionId={sessionId}
+        context={contextQuery.data}
+        from={from}
+      />
     );
   }
 
@@ -249,9 +264,11 @@ type EvolutionFormOutput = z.output<typeof evolutionFormSchema>;
 function EvolutionRegister({
   sessionId,
   context,
+  from,
 }: {
   sessionId: string;
   context: EvolutionContext;
+  from?: EvolutionOrigin;
 }): ReactElement {
   const router = useRouter();
   const navigation = useNavigation();
@@ -320,7 +337,7 @@ function EvolutionRegister({
       if (proceed) {
         proceed();
       } else {
-        goBackOrHome(router);
+        goBackOrHome(router, from);
       }
     },
     [router, sessionId],
@@ -354,7 +371,7 @@ function EvolutionRegister({
       "hardwareBackPress",
       () => {
         if (leavingRef.current) {
-          goBackOrHome(router);
+          goBackOrHome(router, from);
           return true;
         }
         requestLeave();

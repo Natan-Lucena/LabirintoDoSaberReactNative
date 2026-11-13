@@ -4,7 +4,15 @@ import { useLocalSearchParams } from "expo-router";
 import { EvolutionScreen } from "@/features/evolution/register/EvolutionScreen";
 
 export default function EvolutionRoute(): ReactElement {
-  const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const { sessionId, from } = useLocalSearchParams<{
+    sessionId: string;
+    from?: string;
+  }>();
 
-  return <EvolutionScreen sessionId={String(sessionId)} />;
+  return (
+    <EvolutionScreen
+      sessionId={String(sessionId)}
+      from={from === "hub" ? "hub" : undefined}
+    />
+  );
 }

@@ -66,7 +66,7 @@ describe("EvolutionHubScreen (EVO-02)", () => {
     );
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/evolution/[sessionId]",
-      params: { sessionId: MOCK_EVOLUTION_SESSION_RECENT },
+      params: { sessionId: MOCK_EVOLUTION_SESSION_RECENT, from: "hub" },
     });
 
     await fireEvent.press(

@@ -78,7 +78,9 @@ export function EvolutionHubScreen(): ReactElement {
                 title={item.studentName}
                 description={`${item.sessionName} · ${FINISHED_FORMATTER.format(new Date(item.finishedAt))}`}
                 accessibilityLabel={`Registrar evolução de ${item.studentName}, ${item.sessionName}`}
-                onPress={() => router.push(evolutionRoute(item.sessionId))}
+                onPress={() =>
+                  router.push(evolutionRoute(item.sessionId, "hub"))
+                }
               />
             ))
           )}

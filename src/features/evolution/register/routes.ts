@@ -1,10 +1,18 @@
 // Destinos da Evolução da sessão (EVO-01).
 export const HOME_ROUTE = "/" as const;
 
-export const evolutionRoute = (sessionId: string) =>
+/** Telas que abrem a Evolução e para onde ela volta ao sair. */
+export type EvolutionOrigin = "hub";
+
+/**
+ * `from` só vem de quem tem uma tela para onde voltar (o hub). Sem ele — fluxo
+ * de sessão, retomada — a saída vai para a Início: a pilha abaixo pode ter
+ * telas da sessão já encerrada.
+ */
+export const evolutionRoute = (sessionId: string, from?: EvolutionOrigin) =>
   ({
     pathname: "/evolution/[sessionId]",
-    params: { sessionId },
+    params: from ? { sessionId, from } : { sessionId },
   }) as const;
 
 /** "Ver prontuário": histórico de evoluções do paciente (EVO-02). */
