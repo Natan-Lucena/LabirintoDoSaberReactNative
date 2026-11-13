@@ -222,6 +222,35 @@ describe("AssessmentsHubScreen (AVA-01)", () => {
     expect(refetchApplications).toHaveBeenCalled();
   });
 
+  it("atualização que falha com dados antigos na tela mostra aviso de erro", async () => {
+    failed = true;
+    await render(<AssessmentsHubScreen />);
+
+    expect(
+      screen.getByText(
+        "Não foi possível atualizar as avaliações. Mostrando dados salvos.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("Escala de atenção")).toBeTruthy();
+  });
+
+  it("sem falha de atualização não mostra o aviso de erro", async () => {
+    await render(<AssessmentsHubScreen />);
+
+    expect(screen.queryByText(/Não foi possível atualizar/)).toBeNull();
+  });
+
+  it("offline mostra só o aviso de conexão, mesmo com a atualização falhando", async () => {
+    failed = true;
+    online.value = false;
+    await render(<AssessmentsHubScreen />);
+
+    expect(
+      screen.getByText("Sem conexão - mostrando dados salvos"),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Não foi possível atualizar/)).toBeNull();
+  });
+
   it("mostra os vazios", async () => {
     templates = [];
     applications = [];

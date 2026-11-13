@@ -1,5 +1,5 @@
-// Destinos do módulo de avaliações. As telas de aplicar (AVA-02) e de
-// resultado (AVA-04) ainda não existem: o hub só navega para as rotas futuras.
+// Destinos do módulo de avaliações. A tela de aplicar (AVA-02) existe; a de
+// resultado (AVA-04) ainda não, então `resultRoute` segue com o cast.
 export const ASSESSMENTS_ROUTE = "/assessments" as const;
 
 interface ApplyRouteOptions {
@@ -21,7 +21,7 @@ export const applyRoute = (
       ...(studentId ? { studentId } : {}),
       ...(applicationId ? { applicationId } : {}),
     },
-  }) as never;
+  }) as const;
 
 /** `/assessments/results/[id]` (AVA-04). */
 export const resultRoute = (applicationId: string) =>

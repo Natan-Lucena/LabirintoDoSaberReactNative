@@ -24,6 +24,19 @@ export const severityTone: Record<BandSeverity, SeverityTone> = {
   },
 };
 
+/** Tom para uma `severity` que o app não conhece (servidor mais novo que o app). */
+const NEUTRAL_TONE: SeverityTone = {
+  backgroundColor: color.surfaceSoft,
+  color: color.ink[600],
+};
+
+/** Tom do badge; `severity` desconhecida cai num tom neutro em vez de quebrar. */
+export function toneForSeverity(severity: string): SeverityTone {
+  return Object.hasOwn(severityTone, severity)
+    ? severityTone[severity as BandSeverity]
+    : NEUTRAL_TONE;
+}
+
 export interface BandBadge {
   /** Texto do servidor; faixa de rascunho leva o sufixo "parcial" (G-60). */
   label: string;

@@ -7,6 +7,7 @@ import {
   selectActiveTemplates,
   selectBandBadge,
   severityTone,
+  toneForSeverity,
 } from "../selectors";
 
 function application(
@@ -68,6 +69,23 @@ describe("selectBandBadge (AC-AVA-01-02)", () => {
 
     expect(new Set(backgrounds).size).toBe(3);
     for (const tone of Object.values(severityTone)) {
+      expect(
+        getContrastRatio(tone.color, tone.backgroundColor),
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+describe("toneForSeverity", () => {
+  it("usa o tom da severity conhecida", () => {
+    expect(toneForSeverity("HIGH")).toBe(severityTone.HIGH);
+  });
+
+  it("severity desconhecida cai num tom neutro legível", () => {
+    for (const unknown of ["CRITICAL", "", "toString", "__proto__"]) {
+      const tone = toneForSeverity(unknown);
+
+      expect(Object.values(severityTone)).not.toContain(tone);
       expect(
         getContrastRatio(tone.color, tone.backgroundColor),
       ).toBeGreaterThanOrEqual(4.5);
