@@ -100,6 +100,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
 
 #### API-06 — Contrato da Entrega 5 no PROJECT.md
 
+**Refino:** [cards/API-06.md](cards/API-06.md)
+
 - **Onda:** uma vez por leva do backend · **Classe:** A (orquestrador)
 - **Dep.:** cada leva publicada pelo backend.
 - **Escopo:**
@@ -114,6 +116,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
   - AC-API-06-02 cada diferença entre a especificação e o entregue está registrada e refletida nas fichas. `REV`
 
 #### API-07 — Tipos, endpoints de leitura e mocks do contrato novo
+
+**Refino:** [cards/API-07.md](cards/API-07.md)
 
 - **Onda:** E5-1, E5-5, E5-7 e E5-9 (uma parte por leva) · **Classe:** B
 - **Dep.:** API-06 da leva. Pode começar pela especificação, com os mocks, e ser ajustada quando
@@ -138,6 +142,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
 
 #### FEC-06 — Pendências das Entregas 3 e 4
 
+**Refino:** [cards/FEC-06.md](cards/FEC-06.md)
+
 - **Onda:** E5-8 · **Classe:** B · **Dep.:** backend PP-05 (leva 3).
 - **Endpoints:** `PUT /student/update/:id`, `PUT /plan/:id`, `PUT /task/update`, com `null`
   para apagar (proposto na especificação §9).
@@ -160,6 +166,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
 ### 4.2 Bloco B — Banco de atividades
 
 #### ATV-09 — Banco com formato, habilidade e recomendação
+
+**Refino:** [cards/ATV-09.md](cards/ATV-09.md)
 
 - **Onda:** E5-2 · **Classe:** B · **Dep.:** API-07 (atividades); backend §2 (leva 1); G-64.
 - **Figma:** `ActivitiesScreen` (`activity=false`): `.search-field` "Buscar por habilidade ou
@@ -187,6 +195,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
 
 #### ATV-04a — Forme a palavra
 
+**Refino:** [cards/ATV-04a.md](cards/ATV-04a.md)
+
 - **Onda:** E5-2 · **Classe:** B · **Dep.:** API-07 (atividades); G-64.
 - **Figma:** `.game-shell`, `.game-progress` "Atividade N de M", `.game-illustration`,
   `.word-slots` / `--success`, `.letter-pool`, `.success-message` e "Tentar novamente"
@@ -208,6 +218,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
 
 #### ATV-04b — Associe as cores e Memória visual
 
+**Refino:** [cards/ATV-04b.md](cards/ATV-04b.md)
+
 - **Onda:** E5-3 · **Classe:** B · **Dep.:** ATV-04a (registro e casca do jogo); G-64.
 - **Figma:** miniaturas "Associe as cores" e "Memória visual" do `.activity-grid`; a casca
   `.game-shell` da ATV-04a. Sem desenho próprio do tabuleiro (G-18).
@@ -226,6 +238,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
   - AC-ATV-04b-03 os dois jogos são jogáveis do início ao fim no Expo Go (Android). `MAN`
 
 #### ATV-11 — Criar e editar atividades dos tipos novos
+
+**Refino:** [cards/ATV-11.md](cards/ATV-11.md)
 
 - **Onda:** E5-3 · **Classe:** B · **Dep.:** ATV-09; backend §2 (leva 1).
 - **Figma:** sem tela; mesmo padrão do formulário da ATV-06 (`.field`, `.segmented`,
@@ -250,6 +264,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
 
 #### ATV-05 — Imprimíveis
 
+**Refino:** [cards/ATV-05.md](cards/ATV-05.md)
+
 - **Onda:** E5-4 · **Classe:** B · **Dep.:** ATV-09; G-66; G-34 e G-45 (PDF no Expo Go).
 - **Figma:** miniatura "Complete a sequência · Imprimível" (`print`).
 - **Endpoint:** `GET /task/:id` (`content` do tipo `printable`).
@@ -267,6 +283,8 @@ Cada onda tem um único dono por arquivo; as tarefas seguintes partem da `main` 
   - AC-ATV-05-02 o PDF imprime e é compartilhado no Expo Go (Android). `MAN`
 
 #### EVO-03 — Atividade durante a sessão
+
+**Refino:** [cards/EVO-03.md](cards/EVO-03.md)
 
 - **Onda:** E5-4 · **Classe:** B, com revisão A do fluxo de sessão · **Dep.:** ATV-04a,
   ATV-04b; backend §3 (leva 1); G-65.
@@ -582,3 +600,6 @@ AGE-05, QA-08 (esqueleto) e BLD-01: sem dependência do backend
 ## 6. Histórico
 
 - 2026-11-24: criação no planejamento da Entrega 5, com 25 tarefas e as propostas G-61 a G-72.
+- 2026-11-24: refino detalhado dos blocos A e B em `cards/` e [plano de execução](PLANO.md); as
+  correções em relação a estas fichas estão no [PLANO §11](PLANO.md#11-ajustes-do-refino) e valem
+  sobre o texto acima.
