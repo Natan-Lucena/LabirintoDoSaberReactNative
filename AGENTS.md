@@ -34,6 +34,15 @@ Antes de qualquer dispatch, leia o [Roadmap](docs/entrega-4/ROADMAP.md), o
 G-60 foram resolvidas em 2026-11-12, pelo protótipo e pelos requisitos. O resumo do que foi
 entregue está em [ENTREGA-4](docs/entrega-4/ENTREGA-4.md).
 
+**Entrega 5 (planejada em 2026-11-24):** fecha o mapa do produto com o banco de atividades
+completo (jogos, imprimíveis e resultado do jogo na evolução), a equipe da clínica (papéis,
+convites e paciente compartilhado), o status e o arquivamento dos pacientes, a agenda mensal e
+recorrente, o push (com development build) e a central de ajuda, mais a QA pendente. Tem 25
+tarefas e depende muito do backend. Leia o [Roadmap](docs/entrega-5/ROADMAP.md), o
+[Backlog](docs/entrega-5/BACKLOG.md), o [Tracking](docs/entrega-5/TRACKING.md) e a
+[Especificação para o backend](docs/entrega-5/ESPECIFICACAO-BACKEND.md). **As decisões G-61 a
+G-72 são propostas** até o usuário confirmar; nenhum dispatch que dependa delas antes disso.
+
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
   (TanStack Query e fluxo de sessão) fica em `expo-sqlite/kv-store`, cifrado em
