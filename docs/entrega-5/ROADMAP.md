@@ -26,8 +26,9 @@ Faltam três frentes do design e dois ajustes de plataforma:
 - a **validação** que ficou pendente desde a Entrega 3 (Maestro, TalkBack e aparelhos).
 
 Proposta (G-61, a confirmar pelo usuário): entram os domínios novos do backend **Banco de
-atividades, Equipe, Status de pacientes, Recorrência, Push e Ajuda**; ficam fora o WhatsApp
-automático, a IA para gerar jogos e a escala clínica real (que é dado, não código).
+atividades, Equipe, Status de pacientes, Recorrência, Push e Ajuda**; ficam fora a integração
+com WhatsApp (decisão do usuário em 2026-11-24), a IA para gerar jogos e a escala clínica real
+(que é dado, não código).
 
 ## 2. Ponto de partida (evidência em 2026-11-24)
 
@@ -71,9 +72,9 @@ subtarefas "b" e "d" do mapa).
 
 ### 3.2 Fora (não objetivos)
 
-- **WhatsApp automático** (AGE-02 além do G-53) e **"Confirmar por WhatsApp"** por atendimento:
-  exigem a API oficial do WhatsApp Business, modelos aprovados e custo por mensagem. O lembrete
-  manual pelo `wa.me` continua.
+- **Integração com WhatsApp** (decisão do usuário em 2026-11-24): nenhuma tarefa da Entrega 5
+  envolve WhatsApp, nem envio automático (AGE-02 além do G-53), nem "Confirmar por WhatsApp" por
+  atendimento. O botão `wa.me` já entregue (G-53) não muda.
 - **IA para gerar jogos e imprimíveis:** a geração com IA (ATV-07) continua só na múltipla
   escolha.
 - **Escala clínica real** (G-55): entra como dado no backend quando o responsável clínico
@@ -105,7 +106,7 @@ O que o mapa do produto (Entrega 2) propõe, a situação depois da Entrega 4 e 
 | PAC-07 Apagar o responsável                                         | Não dá (campo vazio = não enviado)               | FEC-06                                       |
 | Agenda: visão mensal                                                | Fora nas Entregas 3 e 4                          | AGE-05                                       |
 | Agenda: recorrência                                                 | Fora nas Entregas 3 e 4                          | AGE-06                                       |
-| AGE-02 WhatsApp automático e "Confirmar por WhatsApp"               | Só `wa.me` (G-53)                                | Fora: API do WhatsApp Business               |
+| AGE-02 WhatsApp automático e "Confirmar por WhatsApp"               | Só `wa.me` (G-53)                                | Fora: decisão do usuário                     |
 | REC-01 Recursos sem "Em breve"                                      | Equipe e Ajuda em "Em breve"                     | NAV-05                                       |
 | RP-02 Nome do paciente no relatório da escola                       | Nome completo; decisão pendente                  | G-71 (backend, PP-06); o app não muda        |
 | Repetição diária das notificações                                   | Uma por dia por pendência; decisão pendente      | G-72 (backend, PP-07); o app não muda        |

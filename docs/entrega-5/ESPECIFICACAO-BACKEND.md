@@ -645,8 +645,8 @@ Critério: **BE-AJ-01** a lista vem na ordem, com no máximo um `featured`.
 
 ## 10. Fora desta entrega
 
-Para o backend não antecipar: **envio automático de WhatsApp** (exige a API oficial do WhatsApp
-Business, modelos aprovados e custo por mensagem; G-53 continua com o `wa.me`), **IA para gerar
+Para o backend não antecipar: **integração com WhatsApp** (fora por decisão do usuário em
+2026-11-24; o app mantém só o botão `wa.me` do G-53), **IA para gerar
 os tipos jogáveis** (a IA continua só na múltipla escolha), **escalas criadas pelo educador**
 (G-55), **gestão financeira ou de cobrança**, **relatórios da clínica** (por equipe) e **acesso
 do ADMIN a todos os pacientes** (G-62).
