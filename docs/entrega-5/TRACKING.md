@@ -4,6 +4,8 @@
 > plano e as decisões no [ROADMAP](ROADMAP.md). Atualize este arquivo a cada transição de
 > tarefa (AGENTS §2). O histórico da Entrega 4 fica no
 > [TRACKING da Entrega 4](../entrega-4/TRACKING.md).
+>
+> Plano de execução: [PLANO](PLANO.md); detalhe de cada tarefa em `cards/<ID>.md`.
 
 ## 0. Próximo passo global
 
@@ -68,6 +70,7 @@ propostas e a especificação ainda não foi enviada ao backend.
 
 ## 4. Histórico
 
-| Data       | Itens        | Registro                                                                                                                                           |
-| ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-24 | Planejamento | Roadmap, backlog (25 tarefas), especificação para o backend, pedidos e tracking da Entrega 5; G-61 a G-72 propostos no GATES, aguardando o usuário |
+| Data       | Itens        | Registro                                                                                                                                                                                                                                             |
+| ---------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-24 | Planejamento | Roadmap, backlog (25 tarefas), especificação para o backend, pedidos e tracking da Entrega 5; G-61 a G-72 propostos no GATES, aguardando o usuário                                                                                                   |
+| 2026-11-24 | Refino A e B | Cards detalhados de API-06, API-07, FEC-06, ATV-09, ATV-04a, ATV-04b, ATV-11, ATV-05 e EVO-03 em `cards/`, e o [PLANO](PLANO.md) de execução (ondas, paralelismo, estimativas, marcos, política de merge e ajustes do refino); nenhuma implementação |

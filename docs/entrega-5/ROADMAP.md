@@ -9,6 +9,10 @@
 > construir na [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md) (resumo em
 > [PEDIDOS-BACKEND](PEDIDOS-BACKEND.md)). Este documento não marca nenhuma implementação como
 > pronta. **As decisões G-61 a G-72 são propostas até o usuário confirmar.**
+>
+> **Refino (2026-11-24):** o [PLANO](PLANO.md) traz a sequência, o paralelismo, as estimativas,
+> os marcos e a política de merge; o detalhe de cada tarefa está em `cards/<ID>.md` (por exemplo,
+> [ATV-09](cards/ATV-09.md) e [EVO-03](cards/EVO-03.md)).
 
 ## 1. Objetivo
 
@@ -159,6 +163,9 @@ tarefa só é concluída depois de testada contra o backend real.
 | E5-10 | NAV-05                                      | —                                                 | Por último: liga Recursos aos domínios entregues e remove "Em breve" |
 | E5-11 | QA-08 (rodada), QA-03, QA-02                | —                                                 | Emulador só com autorização do usuário no momento                    |
 | E5-12 | QA-04                                       | —                                                 | Android físico com o development build; iOS só com Mac ou iPhone     |
+
+A sequência detalhada, o que pode ir para a `main` antes de cada leva e as estimativas estão no
+[PLANO §2 a §5](PLANO.md#2-ondas-e-sequência).
 
 Regras de execução que continuam valendo (pedidos do usuário):
 
