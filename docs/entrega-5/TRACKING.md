@@ -9,12 +9,14 @@
 
 ## 0. Próximo passo global
 
-Estado em 2026-11-24: **planejamento escrito; nada implementado.** As decisões G-61 a G-72 são
-propostas e a especificação ainda não foi enviada ao backend.
+Estado em 2026-11-25: **G-61 a G-72 resolvidos** pelo usuário (aceitou as propostas); refino
+(#186, #187) na `main`. A especificação ainda não foi enviada ao backend. Divisão do dia com o
+colega: Victor faz API-07 L1 → ATV-04a → ATV-04b (→ EVO-03); o colega faz AGE-05, QA-08
+(esqueleto) e ATV-09 (rascunho) → ATV-05.
 
 | #   | Ação                                                                                                       | Responsável            | Condição de conclusão                     |
 | --- | ---------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------- |
-| 1   | Decidir G-61 a G-72 ([ROADMAP §5](ROADMAP.md#5-decisões-propostas))                                        | Usuário                | Decisões registradas no GATES             |
+| 1   | ~~Decidir G-61 a G-72~~ — resolvido em 2026-11-25 (GATES)                                                  | Usuário                | Decisões registradas no GATES             |
 | 2   | Enviar a especificação ao backend ([PEDIDOS-BACKEND §3](PEDIDOS-BACKEND.md#3-mensagem-pronta-para-enviar)) | Usuário                | Resposta registrada no PEDIDOS-BACKEND §4 |
 | 3   | Autorizar o development build (BLD-01) e informar a conta Expo                                             | Usuário                | Autorização registrada no histórico       |
 | 4   | Onda E5-0: AGE-05 e o esqueleto da QA-08 (não dependem do backend nem dos gates de domínio)                | Orquestrador → workers | PRs mergeados com CI verde                |
@@ -28,33 +30,33 @@ propostas e a especificação ainda não foi enviada ao backend.
 
 ## 2. Tarefas
 
-| Tarefa                                    | Bloco | Onda         | Estado    | Bloqueio / próximo passo                                           | PR / evidência |
-| ----------------------------------------- | ----- | ------------ | --------- | ------------------------------------------------------------------ | -------------- |
-| API-06 Contrato no PROJECT.md             | A     | levas        | bloqueada | Nenhuma leva publicada pelo backend                                | —              |
-| API-07 Tipos, leitura e mocks             | A     | E5-1/5/7/9   | bloqueada | G-61; pode começar pela especificação depois da decisão            | —              |
-| FEC-06 Pendências das Entregas 3 e 4      | A     | E5-8         | bloqueada | Backend PP-05 (leva 3)                                             | —              |
-| ATV-09 Banco com formato e recomendação   | B     | E5-2         | bloqueada | G-61, G-64; API-07 (atividades)                                    | —              |
-| ATV-04a Forme a palavra                   | B     | E5-2         | bloqueada | G-64; API-07 (atividades)                                          | —              |
-| ATV-04b Associe as cores e Memória visual | B     | E5-3         | bloqueada | ATV-04a                                                            | —              |
-| ATV-11 Criar e editar os tipos novos      | B     | E5-3         | bloqueada | ATV-09; backend leva 1                                             | —              |
-| ATV-05 Imprimíveis                        | B     | E5-4         | bloqueada | G-66; ATV-09                                                       | —              |
-| EVO-03 Atividade durante a sessão         | B     | E5-4         | bloqueada | G-65; ATV-04b; backend leva 1                                      | —              |
-| EQP-01 Equipe e convites                  | C     | E5-5         | bloqueada | G-62, G-63; backend leva 2                                         | —              |
-| EQP-02 Permissões por papel               | C     | E5-6         | bloqueada | EQP-01                                                             | —              |
-| EQP-03 Criar conta e entrar pelo convite  | C     | E5-5         | bloqueada | G-63; backend leva 2                                               | —              |
-| EQP-04 Paciente compartilhado             | C     | E5-6         | bloqueada | G-62; EQP-01                                                       | —              |
-| PAC-10 Status e pendências                | D     | E5-7         | bloqueada | G-70; backend leva 3                                               | —              |
-| PAC-11 Arquivar e reativar                | D     | E5-8         | bloqueada | PAC-10                                                             | —              |
-| AGE-05 Visão mensal da agenda             | D     | E5-0         | pronta    | Não depende do backend; usa `GET /appointment?from&to`             | —              |
-| AGE-06 Atendimentos recorrentes           | D     | E5-7         | bloqueada | G-68; AGE-05; backend leva 3                                       | —              |
-| BLD-01 Development build Android          | E     | E5-0         | bloqueada | G-67; autorização do usuário para build nativo; conta Expo         | —              |
-| NOT-02 Push e preferências                | E     | E5-9         | bloqueada | BLD-01; backend leva 4                                             | —              |
-| AJD-01 Central de ajuda                   | E     | E5-9         | bloqueada | G-69; backend leva 4; conteúdo (vídeos)                            | —              |
-| NAV-05 App sem "Em breve"                 | E     | E5-10        | bloqueada | EQP-01, AJD-01, PAC-10                                             | —              |
-| QA-08 Plano de testes manuais             | F     | E5-0 / E5-11 | pronta    | Esqueleto já; rodada depois do código, com autorização do emulador | —              |
-| QA-02 E2E com Maestro                     | F     | E5-11        | bloqueada | QA-08; autorização para instalar o Maestro                         | —              |
-| QA-03 Acessibilidade                      | F     | E5-11        | bloqueada | NAV-05; emulador                                                   | —              |
-| QA-04 Homologação em aparelhos            | F     | E5-12        | bloqueada | BLD-01; aparelho Android físico e Mac/iPhone                       | —              |
+| Tarefa                                    | Bloco | Onda         | Estado       | Bloqueio / próximo passo                                           | PR / evidência |
+| ----------------------------------------- | ----- | ------------ | ------------ | ------------------------------------------------------------------ | -------------- |
+| API-06 Contrato no PROJECT.md             | A     | levas        | bloqueada    | Nenhuma leva publicada pelo backend                                | —              |
+| API-07 Tipos, leitura e mocks             | A     | E5-1/5/7/9   | em andamento | Leva 1 (mock-first) com Victor, worker Sonnet, desde 2026-11-25    | —              |
+| FEC-06 Pendências das Entregas 3 e 4      | A     | E5-8         | bloqueada    | Backend PP-05 (leva 3)                                             | —              |
+| ATV-09 Banco com formato e recomendação   | B     | E5-2         | bloqueada    | API-07 L1 na `main` (colega; PR de rascunho)                       | —              |
+| ATV-04a Forme a palavra                   | B     | E5-2         | bloqueada    | API-07 L1 na `main` (Victor)                                       | —              |
+| ATV-04b Associe as cores e Memória visual | B     | E5-3         | bloqueada    | ATV-04a                                                            | —              |
+| ATV-11 Criar e editar os tipos novos      | B     | E5-3         | bloqueada    | ATV-09; backend leva 1                                             | —              |
+| ATV-05 Imprimíveis                        | B     | E5-4         | bloqueada    | ATV-09 (colega)                                                    | —              |
+| EVO-03 Atividade durante a sessão         | B     | E5-4         | bloqueada    | ATV-04b (Victor)                                                   | —              |
+| EQP-01 Equipe e convites                  | C     | E5-5         | bloqueada    | G-62, G-63; backend leva 2                                         | —              |
+| EQP-02 Permissões por papel               | C     | E5-6         | bloqueada    | EQP-01                                                             | —              |
+| EQP-03 Criar conta e entrar pelo convite  | C     | E5-5         | bloqueada    | G-63; backend leva 2                                               | —              |
+| EQP-04 Paciente compartilhado             | C     | E5-6         | bloqueada    | G-62; EQP-01                                                       | —              |
+| PAC-10 Status e pendências                | D     | E5-7         | bloqueada    | G-70; backend leva 3                                               | —              |
+| PAC-11 Arquivar e reativar                | D     | E5-8         | bloqueada    | PAC-10                                                             | —              |
+| AGE-05 Visão mensal da agenda             | D     | E5-0         | pronta       | Colega; não depende do backend (`GET /appointment?from&to`)        | —              |
+| AGE-06 Atendimentos recorrentes           | D     | E5-7         | bloqueada    | G-68; AGE-05; backend leva 3                                       | —              |
+| BLD-01 Development build Android          | E     | E5-0         | bloqueada    | G-67; autorização do usuário para build nativo; conta Expo         | —              |
+| NOT-02 Push e preferências                | E     | E5-9         | bloqueada    | BLD-01; backend leva 4                                             | —              |
+| AJD-01 Central de ajuda                   | E     | E5-9         | bloqueada    | G-69; backend leva 4; conteúdo (vídeos)                            | —              |
+| NAV-05 App sem "Em breve"                 | E     | E5-10        | bloqueada    | EQP-01, AJD-01, PAC-10                                             | —              |
+| QA-08 Plano de testes manuais             | F     | E5-0 / E5-11 | pronta       | Esqueleto já; rodada depois do código, com autorização do emulador | —              |
+| QA-02 E2E com Maestro                     | F     | E5-11        | bloqueada    | QA-08; autorização para instalar o Maestro                         | —              |
+| QA-03 Acessibilidade                      | F     | E5-11        | bloqueada    | NAV-05; emulador                                                   | —              |
+| QA-04 Homologação em aparelhos            | F     | E5-12        | bloqueada    | BLD-01; aparelho Android físico e Mac/iPhone                       | —              |
 
 ## 3. Herdado da Entrega 4
 
@@ -70,7 +72,8 @@ propostas e a especificação ainda não foi enviada ao backend.
 
 ## 4. Histórico
 
-| Data       | Itens        | Registro                                                                                                                                                                                                                                             |
-| ---------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-24 | Planejamento | Roadmap, backlog (25 tarefas), especificação para o backend, pedidos e tracking da Entrega 5; G-61 a G-72 propostos no GATES, aguardando o usuário                                                                                                   |
-| 2026-11-24 | Refino A e B | Cards detalhados de API-06, API-07, FEC-06, ATV-09, ATV-04a, ATV-04b, ATV-11, ATV-05 e EVO-03 em `cards/`, e o [PLANO](PLANO.md) de execução (ondas, paralelismo, estimativas, marcos, política de merge e ajustes do refino); nenhuma implementação |
+| Data       | Itens           | Registro                                                                                                                                                                                                                                             |
+| ---------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-24 | Planejamento    | Roadmap, backlog (25 tarefas), especificação para o backend, pedidos e tracking da Entrega 5; G-61 a G-72 propostos no GATES, aguardando o usuário                                                                                                   |
+| 2026-11-24 | Refino A e B    | Cards detalhados de API-06, API-07, FEC-06, ATV-09, ATV-04a, ATV-04b, ATV-11, ATV-05 e EVO-03 em `cards/`, e o [PLANO](PLANO.md) de execução (ondas, paralelismo, estimativas, marcos, política de merge e ajustes do refino); nenhuma implementação |
+| 2026-11-25 | Gates e divisão | G-61 a G-72 resolvidos pelo usuário (propostas aceitas); PRs #186 e #187 mergeados; divisão do dia entre Victor (API-07 L1, ATV-04a, ATV-04b, EVO-03) e o colega (AGE-05, QA-08, ATV-09, ATV-05); API-07 L1 em andamento                             |
