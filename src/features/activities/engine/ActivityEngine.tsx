@@ -6,7 +6,7 @@ import type { Task } from "@/api/types";
 import { DsButton, ProgressBar, SuccessPanel } from "@/components/ds";
 import { color, fontFamilies } from "@/theme";
 import { isActivityTypePlayable, renderActivity } from "./registry";
-import type { ActivityAttempt } from "./types";
+import type { ActivityAttempt, GameResult } from "./types";
 
 export interface ActivityEngineProps {
   tasks: Task[];
@@ -16,12 +16,15 @@ export interface ActivityEngineProps {
    * endpoint de resultado fora da sessão).
    */
   onResult?: (task: Task, attempt: ActivityAttempt) => void;
+  /** Resultado de um jogo (ATV-04a), enviado uma única vez por tarefa. */
+  onGameResult?: (task: Task, result: GameResult) => void;
   onFinish: () => void;
 }
 
 export function ActivityEngine({
   tasks,
   onResult,
+  onGameResult,
   onFinish,
 }: ActivityEngineProps): ReactElement {
   const [index, setIndex] = useState(0);
@@ -59,6 +62,7 @@ export function ActivityEngine({
     task,
     onAttempt: handleAttempt,
     onSolved: () => setSolved(true),
+    onGameResult: handleGameResult,
   });
 
   function advance() {
@@ -79,6 +83,17 @@ export function ActivityEngine({
       setFirstTryCorrect((value) => value + 1);
     }
     onResult?.(task, attempt);
+  }
+
+  function handleGameResult(result: GameResult) {
+    if (recorded.has(task.id)) {
+      return;
+    }
+    setRecorded((current) => new Set(current).add(task.id));
+    if (result.correct) {
+      setFirstTryCorrect((value) => value + 1);
+    }
+    onGameResult?.(task, result);
   }
 
   const progress = ((index + 1) / tasks.length) * 100;

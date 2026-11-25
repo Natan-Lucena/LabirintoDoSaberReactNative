@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { QuizActivity } from "../QuizActivity";
+import { WordBuilderActivity } from "../word-builder/WordBuilderActivity";
 import { getActivityComponent, isActivityTypePlayable } from "../registry";
 
 vi.mock("@/components/media/AudioPlayer", () => ({ AudioPlayer: () => null }));
@@ -10,6 +11,11 @@ describe("registro de tipos de atividade", () => {
     expect(getActivityComponent("multipleChoice")).toBe(QuizActivity);
     expect(getActivityComponent("multipleChoiceWithMedia")).toBe(QuizActivity);
     expect(isActivityTypePlayable("multipleChoice")).toBe(true);
+  });
+
+  it("AC-ATV-04a: mapeia wordBuilder para o jogo Forme a palavra", () => {
+    expect(getActivityComponent("wordBuilder")).toBe(WordBuilderActivity);
+    expect(isActivityTypePlayable("wordBuilder")).toBe(true);
   });
 
   it("AC-ATV-03-01: tipo desconhecido não tem componente", () => {
