@@ -1,5 +1,6 @@
 import type { Task, TaskGroup } from "@/api/types";
 import { MOCK_EDUCATOR, MOCK_TASK_NOTEBOOKS } from "@/mocks/fixtures";
+import { MOCK_EDUCATOR_NEW_TASKS } from "@/mocks/fixtures-task-catalog";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
@@ -95,6 +96,8 @@ export const MOCK_TASKS: Task[] = [
     ],
     createdAt: "2026-01-01T12:00:00.000Z",
   },
+  // Entrega 5 (API-07, leva 1): uma de cada tipo novo, com os campos novos (AT-11).
+  ...structuredClone(MOCK_EDUCATOR_NEW_TASKS),
 ];
 
 registerMockHandler(

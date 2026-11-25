@@ -10,6 +10,10 @@ const categoryLabels: Record<string, string> = {
 const typeLabels: Record<string, string> = {
   multipleChoice: "Múltipla escolha",
   multipleChoiceWithMedia: "Múltipla escolha com mídia",
+  wordBuilder: "Forme a palavra",
+  colorMatch: "Associe as cores",
+  memoryGame: "Memória visual",
+  printable: "Imprimível",
 };
 
 /** G-07: `totalTimeSession` vem em segundos (confirmado no backend). */

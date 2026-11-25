@@ -124,8 +124,25 @@ const API_ERROR_MESSAGES: Record<string, string> = {
     "Não há dados do paciente neste período. Escolha outro período.",
   REPORT_NOT_FOUND: "Relatório não encontrado.",
   NOTIFICATION_NOT_FOUND: "Notificação não encontrada.",
-  INVALID_CURSOR:
-    "Não foi possível carregar mais notificações. Atualize a lista.",
+  INVALID_CURSOR: "Não foi possível carregar mais itens. Atualize a lista.",
+  // Entrega 5, banco de atividades (API-07, leva 1), contrato PROPOSTO.
+  // TASK_NOT_FOUND, STUDENT_NOT_FOUND e SESSION_NOT_FOUND seguem SEM tradução.
+  INVALID_CONTENT:
+    "O conteúdo da atividade é inválido. Revise os campos marcados.",
+  ALTERNATIVES_NOT_ALLOWED: "Este tipo de atividade não usa alternativas.",
+  INVALID_MEDIA_URL:
+    "Uma imagem ou um áudio não foi enviado pelo app. Escolha o arquivo de novo.",
+  INVALID_SKILL:
+    "Uma das habilidades escolhidas não existe mais. Atualize a lista.",
+  LIBRARY_TASK_READ_ONLY:
+    'Atividades prontas não podem ser alteradas. Use "Duplicar para editar".',
+  TYPE_CHANGE_NOT_ALLOWED: "O tipo da atividade não pode ser alterado.",
+  PRINTABLE_NOT_PLAYABLE:
+    "Atividades imprimíveis não entram em cadernos, grupos ou sessões.",
+  USE_ANSWER_ROUTE: "Esta atividade não pode ser registrada como jogo.",
+  RESULT_ALREADY_EXISTS: "O resultado desta atividade já foi registrado.",
+  SESSION_ALREADY_FINISHED:
+    "A sessão já foi encerrada; o resultado não foi registrado.",
 };
 
 export function normalizeApiError(error: unknown): ApiError {

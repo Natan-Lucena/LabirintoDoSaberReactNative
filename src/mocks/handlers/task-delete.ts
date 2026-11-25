@@ -1,10 +1,14 @@
+import { MOCK_LIBRARY_TASKS } from "@/mocks/fixtures-task-catalog";
 import { MOCK_TASKS } from "@/mocks/handlers/content";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
 // GET /task/:id (D-02): não havia handler registrado para busca por id.
 registerMockHandler({ method: "get", path: "/task/:id" }, ({ params }) => {
-  const task = MOCK_TASKS.find(({ id }) => id === params.id);
+  // Entrega 5: a biblioteca também responde por id (leitura, com `content`).
+  const task = [...MOCK_TASKS, ...MOCK_LIBRARY_TASKS].find(
+    ({ id }) => id === params.id,
+  );
   if (!task) {
     throw new MockApiError(500, "TASK_NOT_FOUND");
   }

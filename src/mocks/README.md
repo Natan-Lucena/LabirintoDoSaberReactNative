@@ -472,3 +472,39 @@ funções de endpoint ficam com as telas REL-\* e NOT-01. A geração usa IA e a
 - **Cursor:** o mock usa o deslocamento numérico; o app deve tratá-lo como opaco e continuar até não
   vir `nextCursor` (uma página real pode vir vazia com `nextCursor`).
 - **`STUDENT_NOT_FOUND`** segue sem tradução em `normalizeApiError`.
+
+## Banco de atividades (API-07, leva 1)
+
+Contrato **proposto** (`docs/entrega-5/ESPECIFICACAO-BACKEND.md` §2 e §3), mock-first: o backend real
+ainda não o publica. Só leituras; dados em `src/mocks/fixtures-task-catalog.ts`, handlers em
+`handlers/task-catalog.ts`.
+
+### Rotas
+
+- `GET /task/catalog` (`search?`, `format?`, `type?`, `skill?`, `category?`, `source?`, `limit?` 1-50
+  padrão 20, `cursor?`; resposta `{ items: TaskSummary[], nextCursor? }`; `400 Bad Request`,
+  `400 INVALID_CURSOR`). Biblioteca primeiro, depois as do educador. `search` ignora acento e
+  maiúscula e olha `prompt`, `theme`, título e rótulo da habilidade.
+- `GET /task/skills`: 6 habilidades (`code`, `label`, `learningTopics`).
+- `GET /task/recommended?studentId=`: até 6 atividades interativas com `reason`
+  ("{habilidade} · dificuldade mapeada"), pelas `learningTopics` do paciente; `[]` sem tópicos;
+  `404 STUDENT_NOT_FOUND`; `400` sem `studentId`.
+- `GET /task/:id` (em `task-delete.ts`) encontra também a biblioteca, com `content`;
+  `GET /task/` devolve, além das três antigas, uma atividade do educador de cada tipo novo (AT-11).
+- `GET /session-evolution/context/:sessionId` e `GET /task-notebook-session/report/:sessionId`:
+  só `mock-session-2` traz `activityResults` (dois) e, no relatório, `activitySummary`.
+
+### Cenários
+
+- Biblioteca: 3 `wordBuilder` (BOLA, PÃO, GATO), 3 `colorMatch`, 3 `memoryGame` (2, 3 e 4 cartas),
+  5 `printable` (LIST, GRID e SEQUENCE; um com imagem) e 2 múltiplas escolhas, todas `LIBRARY`.
+- Todos os pacientes fictícios têm `learningTopics: ["leitura"]`, então todos têm recomendação; para
+  testar o caso vazio, zere `learningTopics` do paciente no teste.
+
+### Lacunas
+
+- Sem escritas (`duplicate`, `create`/`update` de tipos novos, `activity-result`); entram com as telas.
+- `Task` não tem `educatorId`; a biblioteca é distinguida só por `source: "LIBRARY"`.
+- `TaskNotebookSession.activityResults` (RS-07) está só no tipo; as listas de sessão dos mocks não o enviam.
+- `GET /task/:id` desconhecido segue `500 TASK_NOT_FOUND` (comportamento atual; o contrato proposto pede `404`).
+- A recomendação não olha sessões recentes (AT-08): é só por `learningTopics`.

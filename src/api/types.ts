@@ -9,7 +9,117 @@ export type Gender = "male" | "female";
 export type TaskCategory =
   "reading" | "writing" | "vocabulary" | "comprehension";
 
-export type TaskType = "multipleChoice" | "multipleChoiceWithMedia";
+export type TaskType =
+  | "multipleChoice"
+  | "multipleChoiceWithMedia"
+  | "wordBuilder"
+  | "colorMatch"
+  | "memoryGame"
+  | "printable";
+
+/** Derivado do tipo pelo servidor (AT-03). */
+export type TaskFormat = "INTERACTIVE" | "PRINTABLE";
+
+/** `LIBRARY` = atividade pronta da plataforma, somente leitura (AT-06). */
+export type TaskSource = "EDUCATOR" | "LIBRARY";
+
+/** Cor da miniatura. */
+export type TaskTone = "mint" | "peach" | "lavender" | "yellow";
+
+export interface WordBuilderContent {
+  kind: "wordBuilder";
+  /** 2 a 12 letras maiúsculas, com acento permitido. */
+  word: string;
+  /** 0 a 6 letras extras no banco de letras. */
+  distractors?: string[];
+  hintImageUrl?: string;
+  hintAudioUrl?: string;
+}
+
+export interface ColorMatchContent {
+  kind: "colorMatch";
+  /** 2 a 6 pares; `word` de 1 a 20; `colorHex` "#RRGGBB". */
+  pairs: { id: string; word: string; colorHex: string }[];
+}
+
+export interface MemoryGameContent {
+  kind: "memoryGame";
+  /** 2 a 8 cartas; cada uma vira um par. */
+  cards: { id: string; label?: string; imageUrl?: string }[];
+}
+
+export interface PrintableContent {
+  kind: "printable";
+  title: string;
+  instructions: string;
+  layout: "LIST" | "GRID" | "SEQUENCE";
+  /** 1 a 20 itens, cada um com `text` ou `imageUrl`. */
+  items: {
+    id: string;
+    text?: string;
+    imageUrl?: string;
+    /** 0 a 5 linhas para a criança escrever. */
+    answerLines?: number;
+  }[];
+}
+
+export type TaskContent =
+  WordBuilderContent | ColorMatchContent | MemoryGameContent | PrintableContent;
+
+/** `GET /task/skills` (catálogo fixo por seed, AT-12). */
+export interface TaskSkill {
+  code: string;
+  label: string;
+  /** Dificuldades do paciente ligadas a esta habilidade (AT-08). */
+  learningTopics: string[];
+}
+
+/** Item de `GET /task/catalog`. */
+export interface TaskSummary {
+  id: string;
+  type: TaskType;
+  format: TaskFormat;
+  source: TaskSource;
+  category: TaskCategory;
+  title: string;
+  skills: { code: string; label: string }[];
+  theme?: string;
+  tone: TaskTone;
+  thumbnailUrl?: string;
+}
+
+/** Item de `GET /task/recommended`. */
+export interface RecommendedTask extends TaskSummary {
+  /** Até 120 caracteres: "Consciência fonológica · dificuldade mapeada". */
+  reason: string;
+}
+
+/** `GET /task/catalog` (paginação por cursor). */
+export interface TaskCatalogPage {
+  items: TaskSummary[];
+  nextCursor?: string;
+}
+
+/** Resultado de um jogo na sessão (RS-*), exposto em relatório e evolução. */
+export interface ActivityResult {
+  id: string;
+  sessionId: string;
+  taskId: string;
+  taskType: TaskType;
+  completed: boolean;
+  correct: boolean;
+  attempts: number;
+  errors: number;
+  durationMs: number;
+  recordedAt: string;
+}
+
+/** `activitySummary` do relatório da sessão (RS-05). */
+export interface ActivitySummary {
+  total: number;
+  completed: number;
+  correct: number;
+}
 
 // Padrão: 'PENDING'
 export type AppointmentStatus = "PENDING" | "COMPLETED" | "CANCELLED";
@@ -82,6 +192,14 @@ export interface Task {
   createdAt: string;
   imageFile?: string;
   audioFile?: string;
+  // Entrega 5 (API-07, leva 1, mock-first): opcionais enquanto o backend real
+  // não os envia. Ver taskFormat/taskSource em endpoints/task-catalog.ts.
+  format?: TaskFormat;
+  source?: TaskSource;
+  skills?: string[];
+  theme?: string;
+  tone?: TaskTone;
+  content?: TaskContent;
 }
 
 export interface TaskGroup {
@@ -125,6 +243,8 @@ export interface TaskNotebookSession {
   observation?: string | null;
   /** Evolução da sessão (§3.9, só em `GET /task-notebook-session/student/:id`). */
   evolutionId?: string;
+  /** Resultados dos jogos da sessão (RS-07; Entrega 5, mock-first). */
+  activityResults?: ActivityResult[];
 }
 
 export interface Appointment {
@@ -411,6 +531,16 @@ export interface EvolutionContext {
     goalStatus: GoalStatus;
   }[];
   existingEvolutionId?: string;
+  /** Jogos da sessão (RS-06; Entrega 5, mock-first). */
+  activityResults?: {
+    taskId: string;
+    title: string;
+    taskType: TaskType;
+    completed: boolean;
+    correct: boolean;
+    attempts: number;
+    errors: number;
+  }[];
 }
 
 /** `POST /session-evolution/` (EVO-01). */

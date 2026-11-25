@@ -64,9 +64,10 @@ describe("handlers de encerramento e observação da sessão", () => {
     });
     await finishSession({ sessionId: session.id });
 
-    await expect(finishSession({ sessionId: session.id })).rejects.toThrow(
-      "SESSION_ALREADY_FINISHED",
-    );
+    // API-07: a mensagem agora é traduzida; o código continua o do servidor.
+    await expect(
+      finishSession({ sessionId: session.id }),
+    ).rejects.toMatchObject({ code: "SESSION_ALREADY_FINISHED" });
   });
 
   it("valida o corpo da observação e a sessão inexistente", async () => {
