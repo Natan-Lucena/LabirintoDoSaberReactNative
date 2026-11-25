@@ -17,6 +17,7 @@ import { color, getContentPadding, shape, typography } from "@/theme";
 
 import { printSessionReport, shareSessionReport } from "./pdf";
 import {
+  formatActivitySummary,
   formatMetric,
   formatAnswerDuration,
   formatSessionDuration,
@@ -175,6 +176,16 @@ function ReportContent({
           values={report.percentageByType}
           labelFor={getTypeLabel}
         />
+        {report.activitySummary && report.activitySummary.total > 0 ? (
+          <View style={styles.section}>
+            <SectionTitle title="Atividades jogadas" />
+            <View style={styles.card}>
+              <Text style={styles.observation}>
+                {formatActivitySummary(report.activitySummary)}
+              </Text>
+            </View>
+          </View>
+        ) : null}
         <View style={styles.section}>
           <SectionTitle title="Observação" />
           <View style={styles.card}>

@@ -5,6 +5,7 @@ import {
   listTaskNotebooks,
   listTasks,
 } from "@/api/endpoints/content";
+import { taskFormat } from "@/api/endpoints/task-catalog";
 import type { TaskCategory } from "@/api/types";
 import { getActiveEducatorId } from "@/storage/mmkv";
 import type { SessionFlowContentKind } from "@/stores/session-flow";
@@ -73,7 +74,10 @@ export function useContentCatalog(
           ],
         }));
       }
-      const tasks = await listTasks();
+      // AT-10: imprimível não entra em sessão (fica fora das atividades avulsas).
+      const tasks = (await listTasks()).filter(
+        (task) => taskFormat(task) !== "PRINTABLE" && task.type !== "printable",
+      );
       return tasks.map((task) => ({
         kind: "task" as const,
         id: task.id,

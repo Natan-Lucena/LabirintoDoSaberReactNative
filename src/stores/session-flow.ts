@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import type { SubmitActivityResultInput } from "@/api/endpoints/session";
 import type {
   Student,
   TaskNotebookSession,
@@ -46,6 +47,10 @@ export type SessionFlowData = {
   confirmedAnswers: TaskNotebookSessionAnswer[];
   pendingAnswers: TaskNotebookSessionAnswer[];
   conflictedAnswers: TaskNotebookSessionAnswer[];
+  /** Ids das tarefas de jogo com resultado confirmado no servidor (EVO-03). */
+  confirmedActivityResults: string[];
+  /** Resultados de jogo ainda não confirmados; reenvio só manual (G-08). */
+  pendingActivityResults: SubmitActivityResultInput[];
   errorReason: string | null;
 };
 
@@ -72,6 +77,14 @@ export type SessionFlowState = SessionFlowData & {
   confirmAnswer: (answer: TaskNotebookSessionAnswer) => Promise<void>;
   markAnswerPending: (answer: TaskNotebookSessionAnswer) => Promise<void>;
   markAnswerConflict: (answer: TaskNotebookSessionAnswer) => Promise<void>;
+  /** Resultado de jogo confirmado (ou `RESULT_ALREADY_EXISTS`): sai da pendência e avança o índice. */
+  confirmActivityResult: (taskId: string) => Promise<void>;
+  /** Guarda o corpo do resultado de jogo não confirmado, uma pendência por tarefa. */
+  markActivityResultPending: (
+    input: SubmitActivityResultInput,
+  ) => Promise<void>;
+  /** Descarta a pendência de uma tarefa cujo resultado o servidor recusou de vez. */
+  clearActivityResultPending: (taskId: string) => Promise<void>;
   finish: () => Promise<void>;
   awaitEvolution: () => Promise<void>;
   close: () => Promise<void>;
@@ -118,6 +131,8 @@ export const initialSessionFlowData: SessionFlowData = {
   confirmedAnswers: [],
   pendingAnswers: [],
   conflictedAnswers: [],
+  confirmedActivityResults: [],
+  pendingActivityResults: [],
   errorReason: null,
 };
 
@@ -217,6 +232,10 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       );
     }
 
+    // RS-07: os jogos já registrados vêm na sessão; sem o campo (backend
+    // antigo), a retomada usa só o estado local deste aparelho.
+    const confirmedActivityResults =
+      session.activityResults?.map((result) => result.taskId) ?? [];
     const next: SessionFlowData = {
       ...initialSessionFlowData,
       step: "running",
@@ -227,7 +246,8 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
       sessionId: session.id,
       appointmentId: session.appointmentId ?? null,
       confirmedAnswers: session.answers,
-      activityIndex: session.answers.length,
+      confirmedActivityResults,
+      activityIndex: session.answers.length + confirmedActivityResults.length,
     };
     set(next);
     await persist(next);
@@ -345,6 +365,70 @@ export const useSessionFlowStore = create<SessionFlowState>((set, get) => ({
         (a) => a.taskId !== answer.taskId,
       ),
       conflictedAnswers: [...state.conflictedAnswers, answer],
+    };
+    set(next);
+    await persist(next);
+  },
+
+  confirmActivityResult: async (taskId) => {
+    const state = get();
+    requireStep("confirmActivityResult", state.step, ["running"]);
+    if (!state.sessionId) {
+      throw new SessionFlowInvalidTransitionError(
+        "confirmActivityResult",
+        state.step,
+      );
+    }
+
+    const alreadyConfirmed = state.confirmedActivityResults.includes(taskId);
+    const next: SessionFlowData = {
+      ...state,
+      confirmedActivityResults: alreadyConfirmed
+        ? state.confirmedActivityResults
+        : [...state.confirmedActivityResults, taskId],
+      pendingActivityResults: state.pendingActivityResults.filter(
+        (input) => input.taskId !== taskId,
+      ),
+      activityIndex: alreadyConfirmed
+        ? state.activityIndex
+        : state.activityIndex + 1,
+    };
+    set(next);
+    await persist(next);
+  },
+
+  markActivityResultPending: async (input) => {
+    const state = get();
+    requireStep("markActivityResultPending", state.step, ["running"]);
+    if (!state.sessionId) {
+      throw new SessionFlowInvalidTransitionError(
+        "markActivityResultPending",
+        state.step,
+      );
+    }
+
+    const next: SessionFlowData = {
+      ...state,
+      pendingActivityResults: [
+        ...state.pendingActivityResults.filter(
+          (item) => item.taskId !== input.taskId,
+        ),
+        input,
+      ],
+    };
+    set(next);
+    await persist(next);
+  },
+
+  clearActivityResultPending: async (taskId) => {
+    const state = get();
+    requireStep("clearActivityResultPending", state.step, ["running"]);
+
+    const next: SessionFlowData = {
+      ...state,
+      pendingActivityResults: state.pendingActivityResults.filter(
+        (item) => item.taskId !== taskId,
+      ),
     };
     set(next);
     await persist(next);

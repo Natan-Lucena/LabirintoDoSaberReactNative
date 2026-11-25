@@ -503,8 +503,33 @@ ainda não o publica. Só leituras; dados em `src/mocks/fixtures-task-catalog.ts
 
 ### Lacunas
 
-- Sem escritas (`duplicate`, `create`/`update` de tipos novos, `activity-result`); entram com as telas.
+- Sem escritas (`duplicate`, `create`/`update` de tipos novos); entram com as telas. O `activity-result` entrou na EVO-03 (seção abaixo).
 - `Task` não tem `educatorId`; a biblioteca é distinguida só por `source: "LIBRARY"`.
-- `TaskNotebookSession.activityResults` (RS-07) está só no tipo; as listas de sessão dos mocks não o enviam.
+- `TaskNotebookSession.activityResults` (RS-07): só as sessões que receberam `activity-result` na execução atual o enviam (EVO-03); as sessões fixas (`mock-session-1`, `mock-session-2`) não.
 - `GET /task/:id` desconhecido segue `500 TASK_NOT_FOUND` (comportamento atual; o contrato proposto pede `404`).
 - A recomendação não olha sessões recentes (AT-08): é só por `learningTopics`.
+
+## Resultado de jogo na sessão (EVO-03)
+
+Contrato **proposto** (`docs/entrega-5/ESPECIFICACAO-BACKEND.md` §3), mock-first; handler em
+`handlers/session-analysis.ts`, ao lado do `answer`.
+
+- `POST /task-notebook-session/activity-result` (`sessionId`, `taskId`, `completed`, `correct`,
+  `attempts` 1-50, `errors` 0-50, `durationMs` 0-3 600 000): `201 ActivityResult` e o resultado passa a
+  vir em `activityResults` na listagem de sessões do paciente (RS-07).
+- Erros, na ordem das checagens: `400 Validation error`; `404 SESSION_NOT_FOUND`;
+  `409 SESSION_ALREADY_FINISHED` (sessão com `finishedAt`); `400 TASK_NOT_IN_NOTEBOOK` (só sessão com
+  caderno); `404 TASK_NOT_FOUND`; `400 USE_ANSWER_ROUTE` (múltipla escolha);
+  `400 PRINTABLE_NOT_PLAYABLE`; `409 RESULT_ALREADY_EXISTS` (um por tarefa e sessão).
+- Cenário manual: `setMockActivityResultScenario("network-error")` (de
+  `src/mocks/handlers/session-analysis`) simula falha sem resposta; volte para `"success"`.
+- G-65 / RS-05: o resultado não entra no `accuracy` das análises (`analysisFor` só soma `answers`).
+
+### Lacunas
+
+- O `409 RESULT_ALREADY_EXISTS` não leva o `resultId` (o adaptador só repassa `{ message }`); o app não o usa.
+- `GET /session-evolution/context/:sessionId` e o relatório só mostram jogos em `mock-session-2`
+  (fixos em `handlers/evolution.ts` e `handlers/session-report.ts`); sessões novas dos mocks ficam sem a
+  seção "Atividades da sessão" e sem o resumo "Atividades jogadas".
+- Nenhum caderno dos mocks contém um jogo; para jogar numa sessão pelos mocks, escolha a atividade avulsa
+  ("Forme a palavra" do educador).

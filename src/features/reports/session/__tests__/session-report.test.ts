@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { SessionReport } from "@/api/endpoints/session-report";
 import {
   buildSessionReportHtml,
+  formatActivitySummary,
   formatAnswerDuration,
   formatSessionDuration,
 } from "@/features/reports/session/sessionReport";
@@ -46,5 +47,52 @@ describe("buildSessionReportHtml", () => {
     expect(html).toContain("31,0 s");
     expect(html).toContain("20,0 s");
     expect(html).toContain("—");
+  });
+});
+
+describe("formatActivitySummary (EVO-03)", () => {
+  it("monta '{total} jogos · {completed} concluídos · {correct} sem erro'", () => {
+    expect(formatActivitySummary({ total: 3, completed: 2, correct: 1 })).toBe(
+      "3 jogos · 2 concluídos · 1 sem erro",
+    );
+  });
+
+  it("usa o singular com um jogo e um concluído", () => {
+    expect(formatActivitySummary({ total: 1, completed: 1, correct: 0 })).toBe(
+      "1 jogo · 1 concluído · 0 sem erro",
+    );
+  });
+});
+
+describe("buildSessionReportHtml: atividades jogadas (EVO-03)", () => {
+  it("inclui o bloco 'Atividades jogadas' quando há jogos", () => {
+    const html = buildSessionReportHtml({
+      ...report,
+      activitySummary: { total: 2, completed: 2, correct: 1 },
+    });
+
+    expect(html).toContain("Atividades jogadas");
+    expect(html).toContain("2 jogos · 2 concluídos · 1 sem erro");
+  });
+
+  it.each([
+    ["sem o campo (backend antigo)", undefined],
+    ["com total zero", { total: 0, completed: 0, correct: 0 }],
+  ])("omite o bloco %s", (_name, activitySummary) => {
+    const html = buildSessionReportHtml({ ...report, activitySummary });
+
+    expect(html).not.toContain("Atividades jogadas");
+  });
+
+  it("G-65: o bloco não altera os percentuais já calculados", () => {
+    const without = buildSessionReportHtml(report);
+    const withGames = buildSessionReportHtml({
+      ...report,
+      activitySummary: { total: 2, completed: 2, correct: 2 },
+    });
+
+    expect(withGames).toContain("<td>Leitura</td><td>75%</td>");
+    expect(without).toContain("<td>Leitura</td><td>75%</td>");
+    expect(withGames).toContain("Total de questões:</strong> 4");
   });
 });

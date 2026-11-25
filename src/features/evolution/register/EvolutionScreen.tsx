@@ -40,6 +40,7 @@ import { color, fontFamilies, semanticColor } from "@/theme";
 import { dayKey, TIME_ZONE } from "@/utils/date";
 import { useScrollToFirstError } from "./useScrollToFirstError";
 import { EvolutionFormSections } from "./EvolutionFormSections";
+import { SessionActivitiesBlock } from "./SessionActivitiesBlock";
 import {
   evolutionRecordRoute,
   HOME_ROUTE,
@@ -516,6 +517,8 @@ function EvolutionRegister({
             }}
           />
         )}
+
+        <SessionActivitiesBlock results={context.activityResults} />
 
         <EvolutionFormSections
           onAnchor={setAnchor}
