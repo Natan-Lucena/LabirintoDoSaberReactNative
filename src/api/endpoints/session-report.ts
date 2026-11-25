@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/client";
+import type { ActivityResult, ActivitySummary } from "@/api/types";
 
 export interface SessionReport {
   sessionName: string;
@@ -12,6 +13,9 @@ export interface SessionReport {
   observation: string | null;
   /** Evolução registrada para a sessão (§3.9); ausente = ainda não registrada. */
   evolutionId?: string;
+  /** Jogos da sessão (RS-05/RS-07; Entrega 5, mock-first). */
+  activitySummary?: ActivitySummary;
+  activityResults?: ActivityResult[];
 }
 
 /** GET /task-notebook-session/report/:sessionId */

@@ -20,7 +20,10 @@ import type {
 import { MOCK_EDUCATOR, MOCK_STUDENTS } from "@/mocks/fixtures";
 import { dayKey } from "@/utils/date";
 import "./session-analysis";
-import "./session-report";
+import {
+  MOCK_ACTIVITY_SESSION_ID,
+  MOCK_SESSION_ACTIVITY_RESULTS,
+} from "./session-report";
 import {
   computeMockProgress,
   MOCK_FOREIGN_STUDENT_ID,
@@ -533,6 +536,21 @@ registerMockHandler(
           goalStatus: goal.status,
         })),
       ...(existing ? { existingEvolutionId: existing.id } : {}),
+      // API-07, leva 1 (RS-06): só uma sessão fictícia tem jogos.
+      ...(session.id === MOCK_ACTIVITY_SESSION_ID
+        ? {
+            activityResults: MOCK_SESSION_ACTIVITY_RESULTS.map((result) => ({
+              taskId: result.taskId,
+              title:
+                result.taskId === "lib-word-bola" ? "BOLA" : "Memória visual",
+              taskType: result.taskType,
+              completed: result.completed,
+              correct: result.correct,
+              attempts: result.attempts,
+              errors: result.errors,
+            })),
+          }
+        : {}),
     };
 
     return { status: 200, data: context };

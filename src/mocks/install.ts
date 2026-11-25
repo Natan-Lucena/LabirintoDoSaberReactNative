@@ -33,6 +33,7 @@ import "@/mocks/handlers/scales";
 import "@/mocks/handlers/anamnese-summary";
 import "@/mocks/handlers/reports";
 import "@/mocks/handlers/notifications";
+import "@/mocks/handlers/task-catalog";
 
 let installed = false;
 
