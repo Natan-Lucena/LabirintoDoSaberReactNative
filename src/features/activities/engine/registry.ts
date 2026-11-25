@@ -1,6 +1,8 @@
 import { createElement, type ReactElement } from "react";
 
 import { QuizActivity } from "./QuizActivity";
+import { ColorMatchActivity } from "./color-match/ColorMatchActivity";
+import { MemoryGameActivity } from "./memory-game/MemoryGameActivity";
 import { WordBuilderActivity } from "./word-builder/WordBuilderActivity";
 import type { ActivityComponent, ActivityComponentProps } from "./types";
 
@@ -14,6 +16,8 @@ const ACTIVITY_TYPE_REGISTRY: Record<string, ActivityComponent> = {
   multipleChoice: QuizActivity,
   multipleChoiceWithMedia: QuizActivity,
   wordBuilder: WordBuilderActivity,
+  colorMatch: ColorMatchActivity,
+  memoryGame: MemoryGameActivity,
 };
 
 export function getActivityComponent(type: string): ActivityComponent | null {

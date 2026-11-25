@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { QuizActivity } from "../QuizActivity";
+import { ColorMatchActivity } from "../color-match/ColorMatchActivity";
+import { MemoryGameActivity } from "../memory-game/MemoryGameActivity";
 import { WordBuilderActivity } from "../word-builder/WordBuilderActivity";
 import { getActivityComponent, isActivityTypePlayable } from "../registry";
 
@@ -16,6 +18,13 @@ describe("registro de tipos de atividade", () => {
   it("AC-ATV-04a: mapeia wordBuilder para o jogo Forme a palavra", () => {
     expect(getActivityComponent("wordBuilder")).toBe(WordBuilderActivity);
     expect(isActivityTypePlayable("wordBuilder")).toBe(true);
+  });
+
+  it("AC-ATV-04b: mapeia colorMatch e memoryGame para os jogos", () => {
+    expect(getActivityComponent("colorMatch")).toBe(ColorMatchActivity);
+    expect(getActivityComponent("memoryGame")).toBe(MemoryGameActivity);
+    expect(isActivityTypePlayable("colorMatch")).toBe(true);
+    expect(isActivityTypePlayable("memoryGame")).toBe(true);
   });
 
   it("AC-ATV-03-01: tipo desconhecido não tem componente", () => {
