@@ -26,6 +26,7 @@ const TASKS = [task("t1", "Primeira pergunta"), task("t2", "Segunda pergunta")];
 
 const onResult = vi.fn();
 const onFinish = vi.fn();
+const onGameResult = vi.fn();
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -127,6 +128,74 @@ describe("ActivityEngine", () => {
     await render(<ActivityEngine tasks={[]} onFinish={onFinish} />);
 
     expect(screen.getByText("Nenhuma atividade para jogar.")).toBeTruthy();
+  });
+
+  describe("jogos (ATV-04a)", () => {
+    function wordTask(id: string, word: string): Task {
+      return task(id, "Forme a palavra", {
+        type: "wordBuilder",
+        alternatives: [],
+        content: { kind: "wordBuilder", word },
+      });
+    }
+
+    async function spell(letters: string[]) {
+      for (const l of letters) {
+        await press(`Letra ${l}`);
+      }
+    }
+
+    it("AC-ATV-04a-05: registra o resultado do jogo uma vez e soma os acertos", async () => {
+      await render(
+        <ActivityEngine
+          tasks={[wordTask("g1", "SOL"), TASKS[0]!]}
+          onResult={onResult}
+          onGameResult={onGameResult}
+          onFinish={onFinish}
+        />,
+      );
+
+      await spell(["S", "O", "L"]);
+      expect(onGameResult).toHaveBeenCalledTimes(1);
+      expect(onGameResult).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "g1" }),
+        expect.objectContaining({ correct: true, attempts: 1, errors: 0 }),
+      );
+      expect(onResult).not.toHaveBeenCalled();
+
+      await press("Próxima");
+      await press("Certa t1");
+      await press("Concluir");
+
+      expect(onGameResult).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/2 de 2/)).toBeTruthy();
+    });
+
+    it("jogo com erro não soma como acerto de primeira", async () => {
+      await render(
+        <ActivityEngine
+          tasks={[wordTask("g1", "SOL")]}
+          onGameResult={onGameResult}
+          onFinish={onFinish}
+        />,
+      );
+
+      await spell(["S", "L", "O"]);
+      await press("Tentar novamente");
+      await spell(["S", "O", "L"]);
+      await press("Concluir");
+
+      expect(onGameResult).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/0 de 1/)).toBeTruthy();
+    });
+
+    it("sem onGameResult o jogo roda sem registro", async () => {
+      await render(
+        <ActivityEngine tasks={[wordTask("g1", "SOL")]} onFinish={onFinish} />,
+      );
+      await spell(["S", "O", "L"]);
+      expect(screen.getByRole("button", { name: "Concluir" })).toBeTruthy();
+    });
   });
 
   it("mostra a imagem da tarefa quando existe", async () => {
