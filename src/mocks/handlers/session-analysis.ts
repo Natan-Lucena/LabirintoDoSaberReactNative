@@ -1,4 +1,4 @@
-import type { TaskNotebookSession } from "@/api/types";
+import type { ActivityResult, TaskNotebookSession } from "@/api/types";
 import type {
   StudentAnalysis,
   StudentAnalysisReport,
@@ -8,7 +8,9 @@ import {
   MOCK_STUDENTS,
   MOCK_TASK_NOTEBOOKS,
 } from "@/mocks/fixtures";
+import { MOCK_LIBRARY_TASKS } from "@/mocks/fixtures-task-catalog";
 import { completeMockAppointment, mockAppointmentExists } from "./appointment";
+import { MOCK_TASKS } from "./content";
 import { registerMockHandler } from "./registry";
 import { MockApiError, MockNetworkError } from "./types";
 
@@ -84,6 +86,17 @@ export function setMockSessionAnswerScenario(
   scenario: MockSessionAnswerScenario,
 ): void {
   answerScenario = scenario;
+}
+
+export type MockActivityResultScenario = "success" | "network-error";
+
+let activityResultScenario: MockActivityResultScenario = "success";
+
+/** Cenário manual do resultado de jogo (EVO-03); só vale com EXPO_PUBLIC_USE_MOCKS=true. */
+export function setMockActivityResultScenario(
+  scenario: MockActivityResultScenario,
+): void {
+  activityResultScenario = scenario;
 }
 
 function sessionsForStudent(studentId: string): TaskNotebookSession[] {
@@ -194,6 +207,98 @@ registerMockHandler(
         ],
       } satisfies TaskNotebookSession,
     };
+  },
+);
+
+function isIntegerInRange(value: unknown, min: number, max: number): boolean {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= min &&
+    value <= max
+  );
+}
+
+let activityResultSequence = 0;
+
+// RS-01 a RS-04 (ESPECIFICACAO-BACKEND §3, proposta; a API-06 confirma). A ordem
+// das checagens é a da especificação; o corpo de erro é só `{ message: code }`
+// (o `resultId` do 409 não é reproduzido pelo adaptador dos mocks).
+registerMockHandler(
+  { method: "post", path: "/task-notebook-session/activity-result" },
+  ({ body }) => {
+    if (activityResultScenario === "network-error") {
+      throw new MockNetworkError();
+    }
+
+    const input = (body ?? {}) as Record<string, unknown>;
+    if (
+      typeof input.sessionId !== "string" ||
+      typeof input.taskId !== "string" ||
+      typeof input.completed !== "boolean" ||
+      typeof input.correct !== "boolean" ||
+      !isIntegerInRange(input.attempts, 1, 50) ||
+      !isIntegerInRange(input.errors, 0, 50) ||
+      !isIntegerInRange(input.durationMs, 0, 3_600_000)
+    ) {
+      throw new MockApiError(400, "Validation error", "Validation error");
+    }
+
+    const session = analysisSessions.find(
+      (item) => item.id === input.sessionId,
+    );
+    if (!session) throw new MockApiError(404, "SESSION_NOT_FOUND");
+    if (session.finishedAt) {
+      throw new MockApiError(409, "SESSION_ALREADY_FINISHED");
+    }
+
+    if (session.taskNotebookId) {
+      const notebook = MOCK_TASK_NOTEBOOKS.find(
+        (item) => item.notebook.id === session.taskNotebookId,
+      );
+      const allowed = new Set([
+        ...(notebook?.notebook.tasks ?? []),
+        ...(notebook?.taskGroups.flatMap((group) => group.tasksIds) ?? []),
+      ]);
+      if (!allowed.has(input.taskId)) {
+        throw new MockApiError(400, "TASK_NOT_IN_NOTEBOOK");
+      }
+    }
+
+    const task = [...MOCK_TASKS, ...MOCK_LIBRARY_TASKS].find(
+      (item) => item.id === input.taskId,
+    );
+    if (!task) throw new MockApiError(404, "TASK_NOT_FOUND");
+    if (
+      task.type === "multipleChoice" ||
+      task.type === "multipleChoiceWithMedia"
+    ) {
+      throw new MockApiError(400, "USE_ANSWER_ROUTE");
+    }
+    if (task.type === "printable") {
+      throw new MockApiError(400, "PRINTABLE_NOT_PLAYABLE");
+    }
+
+    const results = (session.activityResults ??= []);
+    if (results.some((item) => item.taskId === input.taskId)) {
+      throw new MockApiError(409, "RESULT_ALREADY_EXISTS");
+    }
+
+    activityResultSequence += 1;
+    const result: ActivityResult = {
+      id: `mock-activity-result-${activityResultSequence}`,
+      sessionId: session.id,
+      taskId: task.id,
+      taskType: task.type,
+      completed: input.completed,
+      correct: input.correct,
+      attempts: input.attempts as number,
+      errors: input.errors as number,
+      durationMs: input.durationMs as number,
+      recordedAt: new Date().toISOString(),
+    };
+    results.push(result);
+    return { status: 201, data: result };
   },
 );
 

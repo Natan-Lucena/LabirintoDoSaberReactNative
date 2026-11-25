@@ -94,6 +94,36 @@ describe("SessionReportScreen (REL-04)", () => {
     expect(screen.getByLabelText("Leitura: 75%")).toBeTruthy();
   });
 
+  it("AC-EVO-03-02: mostra 'Atividades jogadas' quando há jogos e leva o resumo ao PDF", async () => {
+    query = {
+      ...query,
+      data: {
+        ...report,
+        activitySummary: { total: 3, completed: 2, correct: 1 },
+      },
+    };
+    await render(<SessionReportScreen sessionId="mock-session-2" />);
+
+    expect(screen.getByText("Atividades jogadas")).toBeTruthy();
+    expect(
+      screen.getByText("3 jogos · 2 concluídos · 1 sem erro"),
+    ).toBeTruthy();
+    // G-65: o resumo dos jogos não muda o total de questões.
+    expect(screen.getByText("4 questões respondidas")).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Imprimir" }));
+    expect(printAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        html: expect.stringContaining("3 jogos · 2 concluídos · 1 sem erro"),
+      }),
+    );
+  });
+
+  it("não mostra 'Atividades jogadas' sem jogos ou sem o campo", async () => {
+    await render(<SessionReportScreen sessionId="mock-session-1" />);
+    expect(screen.queryByText("Atividades jogadas")).toBeNull();
+  });
+
   it("imprime e compartilha o PDF a partir do mesmo relatório", async () => {
     await render(<SessionReportScreen sessionId="mock-session-1" />);
 

@@ -728,3 +728,39 @@ describe("EvolutionScreen — evolução já existente (AC-EVO-01-06)", () => {
     expect(await screen.findByText("PDI · Leitura e escrita")).toBeTruthy();
   });
 });
+
+describe("EvolutionScreen — atividades da sessão (EVO-03)", () => {
+  const GAMES: NonNullable<EvolutionContext["activityResults"]> = [
+    {
+      taskId: "task-word-1",
+      title: "BOLA",
+      taskType: "wordBuilder",
+      completed: true,
+      correct: false,
+      attempts: 2,
+      errors: 1,
+    },
+  ];
+
+  it("AC-EVO-03-02: mostra os jogos do contexto acima dos critérios", async () => {
+    await renderLoaded({ ...CONTEXT, activityResults: GAMES });
+
+    expect(screen.getByText("Atividades da sessão")).toBeTruthy();
+    expect(screen.getByText("BOLA")).toBeTruthy();
+    expect(
+      screen.getByText("Forme a palavra · Concluída · 2 tentativas · 1 erro"),
+    ).toBeTruthy();
+    // G-65: só leitura; os critérios continuam vindo do PE.
+    expect(screen.getByText("Critérios da sessão")).toBeTruthy();
+  });
+
+  it("AC-EVO-03-02: sem jogos ou sem o campo, a seção não aparece", async () => {
+    await renderLoaded({ ...CONTEXT, activityResults: [] });
+    expect(screen.queryByText("Atividades da sessão")).toBeNull();
+  });
+
+  it("AC-EVO-03-02: contexto de backend antigo (sem activityResults) não mostra a seção", async () => {
+    await renderLoaded();
+    expect(screen.queryByText("Atividades da sessão")).toBeNull();
+  });
+});
