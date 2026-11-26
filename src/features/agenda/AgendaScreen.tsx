@@ -318,7 +318,7 @@ export function AgendaScreen(): ReactElement {
                 <StaticPressable
                   key={appointment.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`${formatTime(new Date(appointment.scheduledAt))}, ${name}, ${details}${completed ? ", Concluído" : cancelled ? ", Cancelado" : ""}`}
+                  accessibilityLabel={`${formatTime(new Date(appointment.scheduledAt))}, ${name}, ${details}${appointment.seriesId ? ", repete" : ""}${completed ? ", Concluído" : cancelled ? ", Cancelado" : ""}`}
                   onPress={() =>
                     router.push({
                       pathname: "/agenda/[id]",
@@ -349,6 +349,9 @@ export function AgendaScreen(): ReactElement {
                       {name}
                     </Text>
                     <Text style={styles.status}>{details}</Text>
+                    {appointment.seriesId ? (
+                      <Text style={styles.status}>Repete</Text>
+                    ) : null}
                     {completed ? (
                       <View style={styles.complete}>
                         <FigmaIcon

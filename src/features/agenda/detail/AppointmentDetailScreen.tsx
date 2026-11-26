@@ -19,6 +19,13 @@ import {
   isAppointmentNotFound,
 } from "@/features/agenda/errors";
 import {
+  FREQUENCY_LABEL,
+  formatShortDate,
+} from "@/features/agenda/series/preview";
+import { SeriesScopeDialog } from "@/features/agenda/series/SeriesScopeDialog";
+import { useAppointmentSeries } from "@/features/agenda/series/useAppointmentSeries";
+import {
+  useCancelSeriesMutation,
   useDeleteAppointmentMutation,
   useUpdateAppointmentMutation,
 } from "@/features/appointments/mutations";
@@ -40,7 +47,7 @@ export interface AppointmentDetailScreenProps {
   appointmentId: string;
 }
 
-type Dialog = "cancel" | "delete" | null;
+type Dialog = "cancel" | "delete" | "scope-edit" | "scope-cancel" | null;
 
 const statusLabel: Record<AppointmentStatus, string> = {
   PENDING: "Pendente",
@@ -67,6 +74,9 @@ export function AppointmentDetailScreen({
   const studentsQuery = useStudents({ status: "ALL" });
   const update = useUpdateAppointmentMutation();
   const deletion = useDeleteAppointmentMutation();
+  const cancelSeries = useCancelSeriesMutation();
+  const seriesQuery = useAppointmentSeries(query.data?.seriesId);
+  const [editMode, setEditMode] = useState("edit");
   const pendingEvolutions = usePendingEvolutions();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [deleted, setDeleted] = useState(false);
@@ -138,14 +148,66 @@ export function AppointmentDetailScreen({
     appointment.status === "COMPLETED"
       ? findPendingForAppointment(pendingEvolutions.data, appointment.id)
       : undefined;
-  const busy = update.isPending || deletion.isPending;
-  const actionError = update.error ?? deletion.error;
+  const busy = update.isPending || deletion.isPending || cancelSeries.isPending;
+  const actionError = update.error ?? deletion.error ?? cancelSeries.error;
 
-  function openForm(mode: string) {
+  // Série: 404 volta ao atendimento comum; carregando, as ações esperam (AGE-06).
+  const series = seriesQuery.data;
+  const seriesLoading = Boolean(appointment.seriesId) && seriesQuery.isPending;
+  const seriesActive =
+    appointment.status === "PENDING" && Boolean(series) && !series?.endedAt;
+  const orderedOccurrences = [...(series?.appointments ?? [])].sort(
+    (a, b) =>
+      new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+  );
+  const position =
+    orderedOccurrences.findIndex(({ id }) => id === appointment.id) + 1;
+  const pendingFromHere = orderedOccurrences.filter(
+    (item) =>
+      item.status === "PENDING" &&
+      new Date(item.scheduledAt).getTime() >= scheduledAt.getTime(),
+  ).length;
+  const repetitionValue = !appointment.seriesId
+    ? null
+    : seriesQuery.isPending
+      ? "carregando…"
+      : series
+        ? series.endedAt
+          ? `${FREQUENCY_LABEL[series.frequency]} · série encerrada`
+          : position > 0
+            ? `${FREQUENCY_LABEL[series.frequency]} · ${position} de ${orderedOccurrences.length}`
+            : FREQUENCY_LABEL[series.frequency]
+        : null;
+  const followingNote =
+    pendingFromHere === 1
+      ? `O atendimento pendente de ${formatShortDate(scheduledAt)} será cancelado e a série termina.`
+      : `Os ${pendingFromHere} atendimentos pendentes a partir de ${formatShortDate(scheduledAt)} serão cancelados e a série termina.`;
+
+  function openForm(mode: string, scope?: string) {
     router.push({
       pathname: "/agenda/[id]/edit",
-      params: { id: appointment.id, mode },
+      params: { id: appointment.id, mode, ...(scope ? { scope } : {}) },
     });
+  }
+
+  function askEdit(mode: string) {
+    if (seriesActive) {
+      setEditMode(mode);
+      setDialog("scope-edit");
+      return;
+    }
+    openForm(mode);
+  }
+
+  function cancelFollowing() {
+    setDialog(null);
+    if (!appointment.seriesId) {
+      return;
+    }
+    cancelSeries.mutate(
+      { seriesId: appointment.seriesId, fromAppointmentId: appointment.id },
+      { onSuccess: () => toast.show("Atendimentos cancelados") },
+    );
   }
 
   function setStatus(status: AppointmentStatus) {
@@ -193,6 +255,9 @@ export function AppointmentDetailScreen({
           <Row label="Horário" value={formatTime(scheduledAt)} />
           <Row label="Tipo" value={appointment.type || "Não informado"} />
           <Row label="Duração" value={`${appointment.durationMinutes} min`} />
+          {repetitionValue ? (
+            <Row label="Repetição" value={repetitionValue} />
+          ) : null}
           <Row
             label="Observação"
             value={appointment.observation || "Sem observação"}
@@ -251,22 +316,24 @@ export function AppointmentDetailScreen({
                 label="Remarcar"
                 variant="secondary"
                 fullWidth
-                disabled={busy}
-                onPress={() => openForm("reschedule")}
+                disabled={busy || seriesLoading}
+                onPress={() => askEdit("reschedule")}
               />
               <DsButton
                 label="Editar"
                 variant="secondary"
                 fullWidth
-                disabled={busy}
-                onPress={() => openForm("edit")}
+                disabled={busy || seriesLoading}
+                onPress={() => askEdit("edit")}
               />
               <DsButton
                 label="Cancelar atendimento"
                 variant="ghost"
                 fullWidth
-                disabled={busy}
-                onPress={() => setDialog("cancel")}
+                disabled={busy || seriesLoading}
+                onPress={() =>
+                  setDialog(seriesActive ? "scope-cancel" : "cancel")
+                }
               />
             </>
           ) : null}
@@ -309,9 +376,32 @@ export function AppointmentDetailScreen({
         </View>
       </ScrollView>
 
+      <SeriesScopeDialog
+        visible={dialog === "scope-edit" || dialog === "scope-cancel"}
+        action={dialog === "scope-cancel" ? "cancel" : "edit"}
+        followingNote={followingNote}
+        onBack={() => setDialog(null)}
+        onThis={() => {
+          const kind = dialog;
+          setDialog(null);
+          if (kind === "scope-cancel") {
+            setStatus("CANCELLED");
+          } else {
+            openForm(editMode);
+          }
+        }}
+        onFollowing={() => {
+          if (dialog === "scope-cancel") {
+            cancelFollowing();
+            return;
+          }
+          setDialog(null);
+          openForm(editMode, "following");
+        }}
+      />
       <Modal
         transparent
-        visible={dialog !== null}
+        visible={dialog === "cancel" || dialog === "delete"}
         onRequestClose={() => setDialog(null)}
       >
         <View style={styles.backdrop}>

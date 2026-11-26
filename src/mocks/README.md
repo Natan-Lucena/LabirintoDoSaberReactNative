@@ -563,6 +563,11 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
   `GET /student/overview?status=` (um item por paciente da lista, na mesma ordem, sem nome; handlers em
   `handlers/student.ts` e `handlers/student-status.ts`).
 - `GET /appointment/series/:id` (`AppointmentSeriesDetail` com todas as ocorrências).
+- Escritas de série (AGE-06, em memória): `POST /appointment/series` (2 a 26 ocorrências, quinzenal até 13;
+  conflito pula a ocorrência e a lista em `skipped`; todas em conflito → `409 APPOINTMENT_CONFLICT`;
+  paciente arquivado → `409 STUDENT_ARCHIVED`), `PUT /appointment/series/:id` (só a hora vale; `fromAppointmentId`)
+  e `POST /appointment/series/:id/cancel`. As séries criadas aparecem em `GET /appointment/` com `seriesId`
+  (e na visão mensal); as séries das fixtures continuam só de leitura.
 - `GET /notification/preferences` e `GET /help/tutorials`.
 
 ### Cenários
@@ -610,7 +615,7 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
 ### Lacunas
 
 - Sem escritas (exceto as da equipe e do compartilhamento, acima): nada muda depois de uma chamada; o estado vem só dos cenários.
-- As ocorrências da série não entram em `GET /appointment/` e os atendimentos dos mocks não têm `seriesId`.
+- As ocorrências das séries das fixtures (`mock-series-*`) não entram em `GET /appointment/`; só as séries criadas pelo app (AGE-06) entram.
 - Os pacientes compartilhado e arquivado não têm sessões, planos nem evoluções nos mocks.
 - `authorName` (EQ-12) existe nos tipos, mas nenhum mock o preenche ainda.
 - `TOO_MANY_REQUESTS` reaproveita o texto do código de senha ("Muitas solicitações de código…").

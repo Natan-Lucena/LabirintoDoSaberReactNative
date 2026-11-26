@@ -54,6 +54,27 @@ export function cancelFutureMockAppointments(studentId: string): void {
   );
 }
 
+/** Estado em memória exposto ao mock da série (AGE-06): lista viva de atendimentos. */
+export function getMockAppointments(): Appointment[] {
+  return appointments;
+}
+
+export function addMockAppointments(list: Appointment[]): void {
+  appointments = [...appointments, ...list];
+}
+
+/** Atendimento `PENDING` que ocupa o intervalo (ignora `ignoreId`). */
+export function findMockConflict(
+  candidate: Pick<Appointment, "scheduledAt" | "durationMinutes">,
+  ignoreId?: string,
+): Appointment | undefined {
+  return findConflict(candidate, ignoreId);
+}
+
+export function nextMockAppointmentId(): string {
+  return `mock-appointment-${nextAppointmentId++}`;
+}
+
 registerMockHandler({ method: "get", path: "/appointment/" }, () => {
   return {
     status: 200,
