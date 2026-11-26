@@ -17,6 +17,7 @@ import {
   acknowledgePasswordChanged,
   wasPasswordChanged,
 } from "@/features/auth/password-reset/notice";
+import { consumeLoginInviteNotice } from "@/features/auth/invite/notice";
 import { useSignIn } from "@/features/auth/useSignIn";
 import { APP_DESTINATION } from "@/features/auth/routes";
 
@@ -55,6 +56,7 @@ export function LoginForm(): ReactElement {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordChangedNotice, setShowPasswordChangedNotice] =
     useState(false);
+  const [inviteNotice, setInviteNotice] = useState<string | null>(null);
 
   // O login continua montado por baixo da tela de recuperação: o aviso é
   // consumido a cada foco, não só na montagem.
@@ -64,6 +66,8 @@ export function LoginForm(): ReactElement {
         acknowledgePasswordChanged();
         setShowPasswordChangedNotice(true);
       }
+      const invite = consumeLoginInviteNotice();
+      if (invite) setInviteNotice(invite);
     }, []),
   );
 
@@ -99,6 +103,10 @@ export function LoginForm(): ReactElement {
     router.push("/(auth)/forgot-password");
   }
 
+  function handleInvite() {
+    router.push("/(auth)/invite");
+  }
+
   function handleRetry() {
     handleSubmit(onSubmit)();
   }
@@ -108,6 +116,12 @@ export function LoginForm(): ReactElement {
       {showPasswordChangedNotice ? (
         <Text style={styles.notice} accessibilityRole="alert">
           {PASSWORD_CHANGED_NOTICE}
+        </Text>
+      ) : null}
+
+      {inviteNotice ? (
+        <Text style={styles.notice} accessibilityRole="alert">
+          {inviteNotice}
         </Text>
       ) : null}
 
@@ -178,6 +192,16 @@ export function LoginForm(): ReactElement {
         hitSlop={8}
       >
         <Text style={styles.forgotPassword}>Esqueci minha senha</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.forgotPasswordButton}
+        onPress={handleInvite}
+        accessibilityRole="link"
+        accessibilityLabel="Tenho um convite"
+        hitSlop={8}
+      >
+        <Text style={styles.forgotPassword}>Tenho um convite</Text>
       </Pressable>
 
       {formError ? (

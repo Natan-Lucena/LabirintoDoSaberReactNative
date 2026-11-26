@@ -260,6 +260,14 @@ function ProfileContents({ onLoggedOut }: { onLoggedOut: () => void }) {
             fullWidth
             onPress={() => router.push("/profile/change-password")}
           />
+          {!educator.clinic ? (
+            <DsButton
+              label="Entrar numa equipe"
+              variant="secondary"
+              fullWidth
+              onPress={() => router.push("/profile/join-team")}
+            />
+          ) : null}
           <DsButton
             label="Sair"
             variant="ghost"

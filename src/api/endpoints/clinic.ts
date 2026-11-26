@@ -112,3 +112,27 @@ export async function createClinicInvite(
     throw normalizeApiError(error);
   }
 }
+
+export interface AcceptClinicInviteInput {
+  code: string;
+}
+
+/**
+ * POST /clinic/invites/accept — educador sem clínica entra pelo código (EQP-03).
+ * `404 INVITE_INVALID`, `409 ALREADY_IN_CLINIC`. Devolve a `ClinicView`.
+ */
+export async function acceptClinicInvite(
+  input: AcceptClinicInviteInput,
+): Promise<ClinicView> {
+  try {
+    const response = await apiClient.post<ClinicView>(
+      "/clinic/invites/accept",
+      {
+        code: normalizeInviteCode(input.code),
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}
