@@ -103,7 +103,7 @@ export function PlanDetailScreen(): ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const students = useStudents();
+  const students = useStudents({ status: "ALL" });
   const [mode, setMode] = useState<"view" | "edit" | "review" | "close">(
     "view",
   );

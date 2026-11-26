@@ -358,20 +358,25 @@ function AppointmentForm({
     }
     if (following && appointment.seriesId) {
       // RC-05: a rota da série usa só a hora; sem campo para limpar a observação.
+      const seriesChanges = {
+        ...(input.scheduledAt === undefined
+          ? {}
+          : { scheduledAt: input.scheduledAt }),
+        ...(input.type === undefined ? {} : { type: input.type }),
+        ...(input.durationMinutes === undefined
+          ? {}
+          : { durationMinutes: input.durationMinutes }),
+        ...(input.observation ? { observation: input.observation } : {}),
+      };
+      // Só apagou a observação: o PUT da série exige ao menos um campo (400).
+      if (Object.keys(seriesChanges).length === 0) {
+        toast.show("Para apagar a observação, use Só este.");
+        return;
+      }
       updateSeries.mutate(
         {
           seriesId: appointment.seriesId,
-          input: {
-            fromAppointmentId: appointment.id,
-            ...(input.scheduledAt === undefined
-              ? {}
-              : { scheduledAt: input.scheduledAt }),
-            ...(input.type === undefined ? {} : { type: input.type }),
-            ...(input.durationMinutes === undefined
-              ? {}
-              : { durationMinutes: input.durationMinutes }),
-            ...(input.observation ? { observation: input.observation } : {}),
-          },
+          input: { fromAppointmentId: appointment.id, ...seriesChanges },
         },
         { onSuccess: onSeriesSaved("alterados") },
       );

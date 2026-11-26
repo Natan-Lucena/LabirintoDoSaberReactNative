@@ -28,6 +28,10 @@ export function archiveErrorMessage(error: unknown): string {
     if (error.code === "STUDENT_NOT_FOUND") {
       return "Paciente não encontrado";
     }
+    // Backend sem a rota PUT /student/:id/status (404 sem code).
+    if (error.status === 404 && !error.code) {
+      return "Não foi possível arquivar agora.";
+    }
     return error.message;
   }
   return "Não foi possível concluir. Tente novamente.";

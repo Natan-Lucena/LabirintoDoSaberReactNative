@@ -36,6 +36,14 @@ export function useStudentShares(
         return await listStudentShares(studentId);
       } catch (error) {
         if (error instanceof ApiError && error.status === 403) return null;
+        // Backend sem a rota (404 sem STUDENT_NOT_FOUND): ninguém compartilhado.
+        if (
+          error instanceof ApiError &&
+          error.status === 404 &&
+          error.code !== "STUDENT_NOT_FOUND"
+        ) {
+          return [];
+        }
         throw error;
       }
     },

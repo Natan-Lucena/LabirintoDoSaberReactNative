@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { studentStatus } from "@/api/endpoints/student-status";
 import type { Appointment, PatientOverview, Student } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
 import {
@@ -161,7 +162,9 @@ export function PatientsListScreen(): ReactElement {
   );
 
   const activePatients = activeQuery.data ?? [];
-  const patients = archivedMode ? (archivedQuery.data ?? []) : activePatients;
+  const patients = archivedMode
+    ? (archivedQuery.data ?? []).filter((p) => studentStatus(p) === "ARCHIVED")
+    : activePatients;
   const appointments = appointmentsQuery.data ?? [];
   const isInitialLoading =
     (activeQuery.isPending && !activeQuery.data) ||

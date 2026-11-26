@@ -47,7 +47,7 @@ import { useArchivePatient } from "@/features/patients/archive/useArchivePatient
 import { isPatientOwner } from "@/features/patients/shares/access";
 import { WhoFollowsSection } from "@/features/patients/shares/WhoFollowsSection";
 import { useStudents } from "@/features/students/useStudents";
-import { studentStatus } from "@/api/endpoints/student-status";
+import { isSharedStudent, studentStatus } from "@/api/endpoints/student-status";
 import { color, getContentPadding, shape, typography } from "@/theme";
 import { formatTime } from "@/utils/date";
 import {
@@ -164,7 +164,11 @@ export function PatientDetailScreen({
   const lostAccess =
     isForbidden(sessionsQuery.error) ||
     isForbidden(evolutionsQuery.error) ||
-    (seenPatient && !patient && !studentsQuery.isPending);
+    (seenPatient && !patient && !studentsQuery.isPending) ||
+    // Paciente da colega arquivado pelo dono (PAC-11 §6.6).
+    (patient !== undefined &&
+      isSharedStudent(patient) &&
+      studentStatus(patient) === "ARCHIVED");
   if (lostAccess) {
     return (
       <StatePanel
