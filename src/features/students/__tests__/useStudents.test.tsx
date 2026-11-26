@@ -4,11 +4,16 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createQueryClient } from "@/api/query-client";
 import { listStudents } from "@/api/endpoints/student";
+import { listStudentsByStatus } from "@/api/endpoints/student-status";
 import type { Student } from "@/api/types";
 import { useStudents } from "../useStudents";
 
 vi.mock("@/api/endpoints/student", () => ({
   listStudents: vi.fn(),
+}));
+
+vi.mock("@/api/endpoints/student-status", () => ({
+  listStudentsByStatus: vi.fn(),
 }));
 
 const STUDENT: Student = {
@@ -51,5 +56,19 @@ describe("useStudents", () => {
     const { result } = await renderHook(() => useStudents(), { wrapper });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+
+  it("com status (PAC-11) usa listStudentsByStatus e não toca na lista ativa", async () => {
+    vi.mocked(listStudents).mockClear();
+    vi.mocked(listStudentsByStatus).mockResolvedValue([STUDENT]);
+
+    const { result } = await renderHook(
+      () => useStudents({ status: "ARCHIVED" }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(listStudentsByStatus).toHaveBeenCalledWith("ARCHIVED");
+    expect(listStudents).not.toHaveBeenCalled();
   });
 });

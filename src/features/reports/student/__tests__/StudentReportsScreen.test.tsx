@@ -21,6 +21,9 @@ import { printStudentReport, shareStudentReport } from "../pdf";
 
 vi.mock("expo-router", () => ({ useRouter: () => ({ back: vi.fn() }) }));
 vi.mock("@/api/endpoints/student", () => ({ listStudents: vi.fn() }));
+vi.mock("@/api/endpoints/student-status", () => ({
+  listStudentsByStatus: vi.fn(),
+}));
 vi.mock("@/api/endpoints/session-analysis", () => ({
   getStudentAnalysis: vi.fn(),
   getStudentAiAnalysis: vi.fn(),

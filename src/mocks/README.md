@@ -355,6 +355,13 @@ evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito 
   `403 UNAUTHORIZED` se a colega tentar escrever. Remover "Profissional Teste Dois" em Equipe (como `admin`) faz o
   compartilhado sumir da lista e a ficha mostrar "Você não acompanha mais este paciente.".
 
+- **Arquivar e reativar (PAC-11)**, com estado em memória (`mock-student-status-state.ts`,
+  `handlers/student-status.ts`): `PUT /student/:id/status { status, cancelFutureAppointments? }` (só o dono;
+  `403` para o compartilhado). Arquivar com atendimento `PENDING` futuro (crie um pelo app) e sem a opção dá
+  `409 { message: "HAS_FUTURE_APPOINTMENTS", count }`; com `cancelFutureAppointments: true` cancela os futuros
+  (reativar não os devolve). O arquivado sai de `GET /student/` e do overview e entra em `?status=ARCHIVED`;
+  `POST /appointment/` para arquivado dá `409 STUDENT_ARCHIVED`. "Paciente Teste Arquivado" pode ser reativado.
+
 ### Lacunas dos mocks da leva 1
 
 - **`evolutionId` (§3.9):** o mock o preenche em `report/:sessionId`, mas não em

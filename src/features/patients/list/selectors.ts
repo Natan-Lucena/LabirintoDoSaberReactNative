@@ -2,7 +2,7 @@ import type { Appointment, PatientOverview, Student } from "@/api/types";
 import type { AvatarTone } from "@/components/ds";
 import { dayKey, getTodayKey } from "@/utils/date";
 
-export type PatientFilter = "all" | "today" | "pendings";
+export type PatientFilter = "all" | "today" | "pendings" | "archived";
 
 const AVATAR_TONES: AvatarTone[] = ["mint", "peach", "lavender"];
 

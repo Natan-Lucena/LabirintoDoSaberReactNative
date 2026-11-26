@@ -6,6 +6,10 @@ import {
 } from "@/mocks/fixtures-e5";
 import { MOCK_STUDENTS } from "@/mocks/fixtures";
 import { isMockMemberRemoved } from "@/mocks/mock-share-state";
+import {
+  applyMockStudentStatus,
+  isMockStudentArchived,
+} from "@/mocks/mock-student-status-state";
 import { getMockTeamScenario } from "@/mocks/mock-team-state";
 import { MOCK_FOREIGN_STUDENT_ID } from "./plans";
 import { registerMockHandler } from "./registry";
@@ -31,8 +35,14 @@ function sharedWithMe(): Student[] {
  * depois dos próprios). O compartilhado só existe com o cenário de equipe ligado.
  */
 export function listMockStudents(status: StudentStatusFilter): Student[] {
-  const active: Student[] = [...MOCK_STUDENTS.map(decorate), ...sharedWithMe()];
-  const archived = [MOCK_ARCHIVED_STUDENT];
+  // Arquivar/reativar no mock (PAC-11) move o paciente entre as duas listas.
+  const all: Student[] = [
+    ...MOCK_STUDENTS.map(decorate),
+    ...sharedWithMe(),
+    MOCK_ARCHIVED_STUDENT,
+  ].map(applyMockStudentStatus);
+  const active = all.filter((student) => student.status !== "ARCHIVED");
+  const archived = all.filter((student) => student.status === "ARCHIVED");
 
   if (status === "ARCHIVED") return archived;
   if (status === "ALL") return [...active, ...archived];
@@ -54,7 +64,9 @@ registerMockHandler({ method: "get", path: "/student/" }, ({ params }) => {
   if (params.status === undefined) {
     return {
       status: 200,
-      data: [...MOCK_STUDENTS, ...sharedWithMe()],
+      data: [...MOCK_STUDENTS, ...sharedWithMe()].filter(
+        (student) => !isMockStudentArchived(student),
+      ),
     };
   }
   return {

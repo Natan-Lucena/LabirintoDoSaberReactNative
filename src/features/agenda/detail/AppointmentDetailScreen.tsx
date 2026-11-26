@@ -63,7 +63,8 @@ export function AppointmentDetailScreen({
   const router = useRouter();
   const toast = useToast();
   const query = useAppointment(appointmentId);
-  const studentsQuery = useStudents();
+  // `ALL`: o paciente arquivado continua com nome no atendimento (PAC-11).
+  const studentsQuery = useStudents({ status: "ALL" });
   const update = useUpdateAppointmentMutation();
   const deletion = useDeleteAppointmentMutation();
   const pendingEvolutions = usePendingEvolutions();
@@ -122,6 +123,7 @@ export function AppointmentDetailScreen({
     ({ id }) => id === appointment.studentId,
   );
   const studentName = student?.name ?? "Paciente não encontrado";
+  const studentArchived = student?.status === "ARCHIVED";
   const reminderUrl = student
     ? buildWhatsAppUrl(
         pickContactPhone(student),
@@ -182,6 +184,11 @@ export function AppointmentDetailScreen({
           >
             <Text style={styles.patientName}>{studentName}</Text>
           </StaticPressable>
+          {studentArchived ? (
+            <Text style={styles.archivedNotice}>
+              Paciente arquivado. Reative-o na ficha para agendar de novo.
+            </Text>
+          ) : null}
           <Row label="Data" value={formatLongDate(scheduledAt)} />
           <Row label="Horário" value={formatTime(scheduledAt)} />
           <Row label="Tipo" value={appointment.type || "Não informado"} />
@@ -354,6 +361,7 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: "row" },
   patient: { minHeight: 44, justifyContent: "center" },
   patientName: { ...typography.screenTitle, color: color.brand[700] },
+  archivedNotice: { ...typography.small, color: color.textSecondary },
   row: { gap: 2 },
   rowLabel: { ...typography.tag, color: color.textSecondary },
   rowValue: { ...typography.body, color: color.text },

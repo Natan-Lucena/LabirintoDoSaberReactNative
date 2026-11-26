@@ -11,10 +11,20 @@ import {
   MOCK_ARCHIVED_STUDENT_ID,
   MOCK_SHARED_STUDENT_ID,
 } from "@/mocks/fixtures-e5";
+import { setMockStudentStatus } from "@/mocks/mock-student-status-state";
+import {
+  cancelFutureMockAppointments,
+  countFutureMockAppointments,
+} from "./appointment";
 import { mockPlans } from "./plans";
 import { MOCK_SCALE_APPLICATION_DRAFT_ID } from "./scales";
 import { registerMockHandler } from "./registry";
-import { listMockStudents, parseStatusFilter } from "./student";
+import {
+  findMockAccessibleStudent,
+  listMockStudents,
+  parseStatusFilter,
+} from "./student";
+import { MockApiError } from "./types";
 
 interface PendingSeed {
   kind: PatientPendingKind;
@@ -126,6 +136,44 @@ registerMockHandler(
         buildMockOverview(student.id),
       ),
     };
+  },
+);
+
+/**
+ * PUT /student/:id/status (PAC-11; CONTRATOS-BACKEND §5.3). Só o dono (`403`);
+ * arquivar com atendimento futuro e sem `cancelFutureAppointments` dá
+ * `409 HAS_FUTURE_APPOINTMENTS` com `count` (PA-10). O estado fica em memória.
+ */
+registerMockHandler(
+  { method: "put", path: "/student/:id/status" },
+  ({ params, body }) => {
+    const student = findMockAccessibleStudent(params.id);
+    if (student.access === "SHARED") {
+      throw new MockApiError(403, "UNAUTHORIZED");
+    }
+    const input = (body ?? {}) as {
+      status?: unknown;
+      cancelFutureAppointments?: unknown;
+    };
+    if (input.status !== "ACTIVE" && input.status !== "ARCHIVED") {
+      throw new MockApiError(400, "Bad Request");
+    }
+    if (input.status === "ARCHIVED" && student.status !== "ARCHIVED") {
+      const count = countFutureMockAppointments(student.id);
+      if (count > 0) {
+        if (input.cancelFutureAppointments !== true) {
+          return {
+            status: 409,
+            data: { message: "HAS_FUTURE_APPOINTMENTS", count },
+          };
+        }
+        cancelFutureMockAppointments(student.id);
+      }
+    }
+    if (input.status !== (student.status ?? "ACTIVE")) {
+      setMockStudentStatus(student.id, input.status);
+    }
+    return { status: 200, data: findMockAccessibleStudent(student.id) };
   },
 );
 

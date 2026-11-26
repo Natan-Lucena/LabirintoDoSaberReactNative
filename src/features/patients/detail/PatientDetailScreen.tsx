@@ -41,9 +41,13 @@ import {
 } from "@/features/evolution/register/routes";
 import { PendingsSection } from "@/features/patients/overview/PendingsSection";
 import { usePatientOverview } from "@/features/patients/overview/usePatientOverview";
+import { ArchiveDialog } from "@/features/patients/archive/ArchiveDialog";
+import { ArchivedBanner } from "@/features/patients/archive/ArchivedBanner";
+import { useArchivePatient } from "@/features/patients/archive/useArchivePatient";
 import { isPatientOwner } from "@/features/patients/shares/access";
 import { WhoFollowsSection } from "@/features/patients/shares/WhoFollowsSection";
 import { useStudents } from "@/features/students/useStudents";
+import { studentStatus } from "@/api/endpoints/student-status";
 import { color, getContentPadding, shape, typography } from "@/theme";
 import { formatTime } from "@/utils/date";
 import {
@@ -128,7 +132,13 @@ export function PatientDetailScreen({
   const toast = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const { educator } = useHomeData();
-  const studentsQuery = useStudents();
+  // `ALL`: a ficha também abre o paciente arquivado (PAC-11).
+  const studentsQuery = useStudents({ status: "ALL" });
+  const archive = useArchivePatient({
+    studentId: patientId,
+    onToast: toast.show,
+    onNotFound: () => router.replace("/(tabs)/patients"),
+  });
   const appointmentsQuery = useAppointments();
   const evolutionsQuery = usePatientEvolutions(patientId);
   const pendingQuery = usePendingEvolutions();
@@ -203,6 +213,7 @@ export function PatientDetailScreen({
   }
 
   const owner = isPatientOwner(patient);
+  const archived = studentStatus(patient) === "ARCHIVED";
   // Reserva (§6 item 5): sem overview o bloco "Registrar evolução" continua.
   const overview = overviewById.get(patient.id);
   const useFallback = !overview && !overviewQuery.isPending;
@@ -244,10 +255,17 @@ export function PatientDetailScreen({
     <View style={styles.screen}>
       <AppHeader
         title={patient.name}
-        subtitle={`${patient.age} anos · Ativo`}
+        subtitle={`${patient.age} anos · ${archived ? "Arquivado" : "Ativo"}`}
         onBack={router.back}
       />
       <ScrollView contentContainerStyle={styles.content}>
+        {archived ? (
+          <ArchivedBanner
+            archivedAt={patient.archivedAt}
+            onReactivate={owner ? archive.reactivate : undefined}
+            loading={archive.loading}
+          />
+        ) : null}
         <View style={styles.patientSummary}>
           <Avatar name={patient.name} size={58} photoUrl={patient.photoUrl} />
           <View style={styles.summaryCopy}>
@@ -299,14 +317,14 @@ export function PatientDetailScreen({
         />
 
         {activeTab === "plans" ? (
-          <PatientPlans patientId={patient.id} />
+          <PatientPlans patientId={patient.id} archived={archived} />
         ) : activeTab === "assessments" ? (
-          <PatientAssessments patientId={patient.id} />
+          <PatientAssessments patientId={patient.id} archived={archived} />
         ) : (
           <>
             <WhoFollowsSection patient={patient} onToast={toast.show} />
 
-            <ActivePdi patientId={patient.id} />
+            <ActivePdi patientId={patient.id} archived={archived} />
 
             <View style={styles.section}>
               <SectionTitle title="Próxima sessão" />
@@ -481,20 +499,40 @@ export function PatientDetailScreen({
               }
             />
 
-            <DsButton
-              label="Iniciar sessão"
-              icon="play"
-              fullWidth
-              onPress={() =>
-                router.push({
-                  pathname: "/session/student",
-                  params: { studentId: patient.id },
-                })
-              }
-            />
+            {archived ? null : (
+              <DsButton
+                label="Iniciar sessão"
+                icon="play"
+                fullWidth
+                onPress={() =>
+                  router.push({
+                    pathname: "/session/student",
+                    params: { studentId: patient.id },
+                  })
+                }
+              />
+            )}
+
+            {owner && !archived ? (
+              <DsButton
+                label="Arquivar paciente"
+                variant="ghost"
+                fullWidth
+                onPress={archive.open}
+              />
+            ) : null}
           </>
         )}
       </ScrollView>
+      <ArchiveDialog
+        step={archive.step}
+        patientName={patient.name}
+        loading={archive.loading}
+        error={archive.error}
+        onKeep={archive.keep}
+        onArchive={archive.archive}
+        onArchiveAndCancel={archive.archiveAndCancel}
+      />
       <Toast message={toast.message} onHide={toast.hide} />
     </View>
   );

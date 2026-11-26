@@ -16,6 +16,7 @@ import {
   SearchField,
 } from "@/components/ds";
 import { useAppointments } from "@/features/appointments/useAppointments";
+import { formatArchivedShortDate } from "@/features/patients/archive/ArchivedBanner";
 import { primaryStatusLabel } from "@/features/patients/overview/labels";
 import { usePatientOverview } from "@/features/patients/overview/usePatientOverview";
 import { isPatientOwner } from "@/features/patients/shares/access";
@@ -36,6 +37,7 @@ const filterOptions = [
   { key: "all", label: "Todos" },
   { key: "today", label: "Com sessão hoje" },
   { key: "pendings", label: "Pendências" },
+  { key: "archived", label: "Arquivados" },
 ];
 
 function navigate(
@@ -55,11 +57,14 @@ function PatientCard({
   patient,
   appointment,
   overview,
+  archived = false,
   onPress,
 }: {
   patient: Student;
   appointment: Appointment | undefined;
   overview: PatientOverview | undefined;
+  /** Cartão da lista "Arquivados": sem status nem próximo atendimento (PAC-11). */
+  archived?: boolean;
   onPress: () => void;
 }): ReactElement {
   return (
@@ -92,9 +97,13 @@ function PatientCard({
         ) : null}
         <Text style={styles.patientMeta} numberOfLines={1}>
           {patient.age} anos ·{" "}
-          {primaryStatusLabel(overview) ?? learningTopicsSummary(patient)}
+          {archived
+            ? patient.archivedAt
+              ? `Arquivado em ${formatArchivedShortDate(patient.archivedAt)}`
+              : "Arquivado"
+            : (primaryStatusLabel(overview) ?? learningTopicsSummary(patient))}
         </Text>
-        {appointment ? (
+        {appointment && !archived ? (
           <View style={styles.appointmentLine}>
             <FigmaIcon name="clock" size={15} color={color.ink[500]} />
             <Text style={styles.appointmentText} numberOfLines={1}>
@@ -132,10 +141,15 @@ function StatePanel({
 export function PatientsListScreen(): ReactElement {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const studentsQuery = useStudents();
+  const activeQuery = useStudents();
   const appointmentsQuery = useAppointments();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<PatientFilter>("all");
+  const archivedMode = filter === "archived";
+  const archivedQuery = useStudents({
+    status: "ARCHIVED",
+    enabled: archivedMode,
+  });
 
   const { query: overviewQuery, byId: overviewById } = usePatientOverview();
   const { refetch: refetchOverview } = overviewQuery;
@@ -146,20 +160,21 @@ export function PatientsListScreen(): ReactElement {
     }, [refetchOverview]),
   );
 
-  const patients = studentsQuery.data ?? [];
+  const activePatients = activeQuery.data ?? [];
+  const patients = archivedMode ? (archivedQuery.data ?? []) : activePatients;
   const appointments = appointmentsQuery.data ?? [];
   const isInitialLoading =
-    (studentsQuery.isPending && !studentsQuery.data) ||
+    (activeQuery.isPending && !activeQuery.data) ||
     (appointmentsQuery.isPending && !appointmentsQuery.data);
   const isInitialError =
-    (!studentsQuery.data && studentsQuery.isError) ||
+    (!activeQuery.data && activeQuery.isError) ||
     (!appointmentsQuery.data && appointmentsQuery.isError);
   const visiblePatients = sortPatientsByName(
     filterPatients(
       patients,
       appointments,
       search,
-      filter,
+      archivedMode ? "all" : filter,
       new Date(),
       overviewById,
     ),
@@ -187,7 +202,7 @@ export function PatientsListScreen(): ReactElement {
           title="Não foi possível carregar os pacientes"
           message="Tente novamente em instantes."
           retry={() => {
-            void studentsQuery.refetch();
+            void activeQuery.refetch();
             void appointmentsQuery.refetch();
           }}
         />
@@ -199,9 +214,9 @@ export function PatientsListScreen(): ReactElement {
     <View style={styles.screen}>
       <View style={[styles.controls, { paddingTop: 20 + insets.top }]}>
         <Text style={styles.eyebrow}>
-          {patients.length === 1
+          {activePatients.length === 1
             ? "1 paciente ativo"
-            : `${patients.length} pacientes ativos`}
+            : `${activePatients.length} pacientes ativos`}
         </Text>
         <Text style={styles.title} accessibilityRole="header">
           Pacientes
@@ -220,7 +235,19 @@ export function PatientsListScreen(): ReactElement {
           />
         </View>
       </View>
-      {pendingsUnavailable ? (
+      {archivedMode && !archivedQuery.data && archivedQuery.isError ? (
+        <View style={styles.emptyList}>
+          <StatePanel
+            title="Não foi possível carregar os arquivados."
+            message="Tente novamente em instantes."
+            retry={() => void archivedQuery.refetch()}
+          />
+        </View>
+      ) : archivedMode && !archivedQuery.data ? (
+        <View style={styles.emptyList}>
+          <Text style={styles.stateMessage}>Carregando arquivados</Text>
+        </View>
+      ) : pendingsUnavailable ? (
         <View style={styles.emptyList}>
           <StatePanel
             title="Não foi possível carregar as pendências."
@@ -236,16 +263,20 @@ export function PatientsListScreen(): ReactElement {
         <View style={styles.emptyList}>
           <StatePanel
             title={
-              filter === "pendings"
-                ? "Nenhum paciente com pendência"
-                : "Nenhum paciente encontrado"
+              archivedMode && !search
+                ? "Nenhum paciente arquivado"
+                : filter === "pendings"
+                  ? "Nenhum paciente com pendência"
+                  : "Nenhum paciente encontrado"
             }
             message={
               search
                 ? "Ajuste a busca para encontrar outro paciente."
-                : filter === "pendings"
-                  ? "Nada precisa de atenção agora."
-                  : "Cadastre um paciente para começar."
+                : archivedMode
+                  ? "Quem você arquivar aparece aqui e pode ser reativado."
+                  : filter === "pendings"
+                    ? "Nada precisa de atenção agora."
+                    : "Cadastre um paciente para começar."
             }
           />
         </View>
@@ -258,6 +289,7 @@ export function PatientsListScreen(): ReactElement {
               patient={item}
               appointment={appointmentsByPatient.get(item.id)}
               overview={overviewById.get(item.id)}
+              archived={archivedMode}
               onPress={() => navigate(router, `/patients/${item.id}`)}
             />
           )}
