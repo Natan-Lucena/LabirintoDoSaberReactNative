@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 
 import { notificationQueryKeys } from "@/api/endpoints/notifications";
+import { useAuthStore } from "@/stores/auth";
 import { openPushData } from "./openPush";
 import { getPushPermission, registerForPush } from "./registerForPush";
 import { loadNotifications } from "./support";
@@ -31,8 +32,12 @@ export function usePushRegistration(): PushRegistration {
   const client = useQueryClient();
   const [promptVisible, setPromptVisible] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Na abertura a frio o educador só é ativado depois (ResumeSessionPrompt):
+  // sem ele o armazenamento do push não grava o token.
+  const educatorId = useAuthStore((state) => state.educatorId);
 
   useEffect(() => {
+    if (!educatorId) return;
     const Notifications = loadNotifications();
     if (!Notifications) return;
     let active = true;
@@ -86,7 +91,10 @@ export function usePushRegistration(): PushRegistration {
     });
     const responded = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        void onResponse(response).catch(() => undefined);
+        void onResponse(response)
+          .catch(() => undefined)
+          .then(() => Notifications.clearLastNotificationResponseAsync())
+          .catch(() => undefined);
       },
     );
     const tokenChanged = Notifications.addPushTokenListener(() => {
@@ -100,7 +108,7 @@ export function usePushRegistration(): PushRegistration {
       responded.remove();
       tokenChanged.remove();
     };
-  }, [client, router]);
+  }, [client, router, educatorId]);
 
   const accept = useCallback(() => {
     setPromptVisible(false);

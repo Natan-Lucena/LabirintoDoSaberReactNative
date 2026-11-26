@@ -12,7 +12,7 @@ pnpm start
 
 Escaneie o QR Code exibido com o Expo Go (Android: pelo app; iOS: pela câmera).
 `pnpm run android` / `pnpm run ios` abrem o Metro já direcionado para cada
-plataforma (`expo start --android` / `--ios`), mas ainda pelo Expo Go — não é
+plataforma (`expo start --go --android` / `--go --ios`), mas ainda pelo Expo Go — não é
 preciso development build nem Android Studio/Xcode para isso (G-41/EXPO-01).
 
 Outros comandos:
