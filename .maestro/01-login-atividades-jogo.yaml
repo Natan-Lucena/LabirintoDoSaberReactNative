@@ -1,8 +1,10 @@
 # Fluxo 1 (Entrega 5, ATV-04a): login -> Recursos -> Banco de atividades -> "Forme a palavra" -> "Muito bem!".
-# Variáveis: EMAIL, SENHA e as letras da palavra na ordem (modo mock: BOLA).
-#   maestro test -e EMAIL=... -e SENHA=... -e L1=B -e L2=O -e L3=L -e L4=A .maestro/01-login-atividades-jogo.yaml
+# Variáveis: EMAIL, SENHA, CARD_ID (id da atividade no catálogo; mock: lib-word-bola) e as letras
+# da palavra na ordem (modo mock: BOLA).
+#   maestro test -e EMAIL=... -e SENHA=... -e CARD_ID=... -e L1=B -e L2=O -e L3=L -e L4=A .maestro/01-login-atividades-jogo.yaml
 appId: host.exp.exponent
 env:
+  CARD_ID: lib-word-bola
   L1: B
   L2: O
   L3: L
@@ -14,7 +16,8 @@ env:
 - tapOn: "Banco de atividades"
 - assertVisible: "Atividades prontas"
 - tapOn: "Interativas"
-- tapOn: ".*Forme a palavra.*"
+- tapOn:
+    id: "activity-card-${CARD_ID}"
 - tapOn: "Jogar"
 - tapOn: "Letra ${L1}"
 - tapOn: "Letra ${L2}"

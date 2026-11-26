@@ -22,6 +22,7 @@ export interface FieldProps {
   maxLength?: number;
   disabled?: boolean;
   accessibilityLabel?: string;
+  testID?: string;
   keyboardType?: TextInputProps["keyboardType"];
   autoCapitalize?: TextInputProps["autoCapitalize"];
   autoCorrect?: TextInputProps["autoCorrect"];
@@ -108,6 +109,7 @@ export function Field({
   maxLength,
   disabled,
   accessibilityLabel,
+  testID,
   keyboardType,
   autoCapitalize,
   autoCorrect,
@@ -152,6 +154,7 @@ export function Field({
             autoComplete={autoComplete}
             textContentType={textContentType}
             secureTextEntry={secureTextEntry}
+            testID={testID}
             accessibilityLabel={accessibilityLabel ?? label}
             accessibilityHint={error}
             nativeID={errorId}

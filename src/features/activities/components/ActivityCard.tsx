@@ -80,6 +80,7 @@ export function ActivityCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={item.title}
+      accessibilityHint={`${CATEGORY_LABELS[item.category]} · ${item.secondary}`}
       style={styles.card}
     >
       <View

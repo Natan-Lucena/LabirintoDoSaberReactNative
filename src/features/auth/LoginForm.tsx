@@ -123,6 +123,7 @@ export function LoginForm(): ReactElement {
         render={({ field: { onChange, value } }) => (
           <Field
             label="Email"
+            testID="login-email"
             value={value}
             onChangeText={(text) => {
               const email = text.trim();
@@ -147,6 +148,7 @@ export function LoginForm(): ReactElement {
         render={({ field: { onChange, value } }) => (
           <Field
             label="Senha"
+            testID="login-password"
             value={value}
             onChangeText={onChange}
             error={errors.password?.message}
@@ -200,6 +202,7 @@ export function LoginForm(): ReactElement {
 
       <DsButton
         label="Entrar agora"
+        testID="login-submit"
         onPress={handleSubmit(onSubmit)}
         loading={isSubmitting}
         disabled={isSubmitting}

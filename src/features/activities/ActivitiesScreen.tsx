@@ -335,6 +335,7 @@ export function ActivitiesScreen({
               <>
                 <Pressable
                   onPress={clearContext}
+                  hitSlop={{ top: 4, bottom: 4 }}
                   accessibilityRole="button"
                   accessibilityLabel={`Para: ${context.firstName}. Remover paciente`}
                   style={styles.contextChip}
