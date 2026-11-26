@@ -1,10 +1,11 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -210,6 +211,32 @@ export function PatientFormScreen({
     setCustomDifficulty("");
   }
 
+  const [guardianName, guardianPhone, guardianRelationship] = useWatch({
+    control,
+    name: ["guardianName", "guardianPhone", "guardianRelationship"],
+  });
+
+  function clearGuardian() {
+    for (const name of [
+      "guardianName",
+      "guardianPhone",
+      "guardianRelationship",
+    ] as const) {
+      setValue(name, "", { shouldValidate: true, shouldDirty: true });
+    }
+  }
+
+  function confirmClearGuardian() {
+    Alert.alert(
+      "Remover responsável?",
+      "Remover o responsável deste paciente? Nome, telefone e parentesco serão apagados.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Remover", style: "destructive", onPress: clearGuardian },
+      ],
+    );
+  }
+
   function submit(values: FormValues) {
     const patch: UpdateStudentInput = {};
     if (dirtyFields.name) patch.name = values.name.trim();
@@ -222,12 +249,14 @@ export function PatientFormScreen({
       patch.phonenumber = values.phonenumber.replace(/\D/g, "");
     if (dirtyFields.learningTopics)
       patch.learningTopics = values.learningTopics;
+    // Campo apagado que tinha valor vai como `null` ("apagar", PP-05); o que
+    // já estava vazio não é enviado.
     if (dirtyFields.guardianName)
-      patch.guardianName = values.guardianName.trim();
+      patch.guardianName = values.guardianName.trim() || null;
     if (dirtyFields.guardianPhone)
-      patch.guardianPhone = values.guardianPhone.replace(/\D/g, "");
+      patch.guardianPhone = values.guardianPhone.replace(/\D/g, "") || null;
     if (dirtyFields.guardianRelationship)
-      patch.guardianRelationship = values.guardianRelationship.trim();
+      patch.guardianRelationship = values.guardianRelationship.trim() || null;
     mutation.mutate({ values, patch });
   }
 
@@ -371,6 +400,13 @@ export function PatientFormScreen({
             />
           )}
         />
+        {patient && (guardianName || guardianPhone || guardianRelationship) ? (
+          <DsButton
+            label="Remover responsável"
+            variant="ghost"
+            onPress={confirmClearGuardian}
+          />
+        ) : null}
 
         <Text style={styles.sectionTitle}>Endereço</Text>
         <FieldGrid>

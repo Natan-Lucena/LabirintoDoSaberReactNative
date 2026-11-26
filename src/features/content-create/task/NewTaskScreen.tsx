@@ -96,6 +96,8 @@ export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
   const [imageFile, setImageFile] = useState<TaskMediaFile | null>(null);
   const [audioFile, setAudioFile] = useState<TaskMediaFile | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [removeAudio, setRemoveAudio] = useState(false);
   const [initialTask, setInitialTask] = useState<Task | null>(null);
   const {
     control,
@@ -157,8 +159,20 @@ export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
         input.alternatives = submittedAlternatives;
       }
       if (imageUrl) input.imageFile = imageUrl;
+      else if (removeImage && initialTask.imageFile) input.imageFile = null;
       if (audioUrl) input.audioFile = audioUrl;
+      else if (removeAudio && initialTask.audioFile) input.audioFile = null;
+      const keepsImage =
+        Boolean(imageUrl) || (!removeImage && Boolean(initialTask.imageFile));
+      const keepsAudio =
+        Boolean(audioUrl) || (!removeAudio && Boolean(initialTask.audioFile));
       if (imageUrl || audioUrl) input.type = "multipleChoiceWithMedia";
+      else if (
+        !keepsImage &&
+        !keepsAudio &&
+        (input.imageFile === null || input.audioFile === null)
+      )
+        input.type = "multipleChoice";
       return withOfflineGuard(updateTask)(input);
     },
     retry: false,
@@ -317,11 +331,31 @@ export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
         <View style={styles.section}>
           <Text style={styles.heading}>Mídia de apoio</Text>
           {initialTask?.imageFile ? (
-            <Image
-              source={{ uri: initialTask.imageFile }}
-              style={styles.imagePreview}
-              accessibilityLabel="Imagem atual"
-            />
+            removeImage ? (
+              <DsButton
+                label="Desfazer remoção da imagem"
+                variant="ghost"
+                onPress={() => setRemoveImage(false)}
+                disabled={mutation.isPending}
+              />
+            ) : (
+              <>
+                <Image
+                  source={{ uri: initialTask.imageFile }}
+                  style={styles.imagePreview}
+                  accessibilityLabel="Imagem atual"
+                />
+                <DsButton
+                  label="Remover imagem"
+                  variant="ghost"
+                  onPress={() => {
+                    setRemoveImage(true);
+                    setImageFile(null);
+                  }}
+                  disabled={mutation.isPending}
+                />
+              </>
+            )
           ) : null}
           <ImagePickerField
             value={imageFile}
@@ -329,7 +363,27 @@ export function NewTaskScreen({ taskId }: { taskId?: string }): ReactElement {
             loading={mutation.isPending}
           />
           {initialTask?.audioFile ? (
-            <AudioPlayer url={initialTask.audioFile} />
+            removeAudio ? (
+              <DsButton
+                label="Desfazer remoção do áudio"
+                variant="ghost"
+                onPress={() => setRemoveAudio(false)}
+                disabled={mutation.isPending}
+              />
+            ) : (
+              <>
+                <AudioPlayer url={initialTask.audioFile} />
+                <DsButton
+                  label="Remover áudio"
+                  variant="ghost"
+                  onPress={() => {
+                    setRemoveAudio(true);
+                    setAudioFile(null);
+                  }}
+                  disabled={mutation.isPending}
+                />
+              </>
+            )
           ) : null}
           <AudioPickerField
             value={audioFile}

@@ -17,8 +17,10 @@ export interface UpdateTaskInput {
   type?: TaskType;
   prompt?: string;
   alternatives?: UpdateTaskAlternativeInput[];
-  imageFile?: string;
-  audioFile?: string;
+  /** `null` apaga a mídia (PP-05). */
+  imageFile?: string | null;
+  /** `null` apaga a mídia (PP-05). */
+  audioFile?: string | null;
   /** Tipos novos (ATV-11): lista completa, ids dos itens preservados. */
   content?: TaskContent;
   skills?: string[];

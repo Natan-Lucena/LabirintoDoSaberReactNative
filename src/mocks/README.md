@@ -551,3 +551,12 @@ Contrato **proposto** (`docs/entrega-5/ESPECIFICACAO-BACKEND.md` §3), mock-firs
   seção "Atividades da sessão" e sem o resumo "Atividades jogadas".
 - Nenhum caderno dos mocks contém um jogo; para jogar numa sessão pelos mocks, escolha a atividade avulsa
   ("Forme a palavra" do educador).
+
+## Apagar campos (FEC-06, PP-05)
+
+- `PUT /plan/:id`: `nextReviewDate: null` e `professionalNotes: null` apagam o campo, que some da resposta.
+- `PUT /student/update/:id` (multipart): string vazia `""` em `guardianName`, `guardianPhone` ou
+  `guardianRelationship` apaga o campo (Q8); o app envia `""` quando o valor vira `null` no cliente.
+- `PUT /task/update`: `imageFile: null` e `audioFile: null` apagam a mídia; sem mídia restante o app envia
+  também `type: "multipleChoice"`. O mock recusa `multipleChoiceWithMedia` sem mídia
+  (`MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO`) e `multipleChoice` com mídia (`TEXT_TASK_CANNOT_HAVE_MEDIA`).

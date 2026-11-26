@@ -37,6 +37,7 @@ registerMockHandler(
       ]),
     );
     const patch: Partial<Student> = {};
+    const cleared: string[] = [];
     for (const key of [
       "name",
       "zipcode",
@@ -94,7 +95,13 @@ registerMockHandler(
       "guardianRelationship",
     ] as const) {
       const value = input[key];
-      if (value == null || value === "") continue;
+      if (value == null) continue;
+      if (value === "") {
+        // PP-05 (Q8): string vazia no multipart apaga o campo.
+        delete patch[key];
+        cleared.push(key);
+        continue;
+      }
       const max =
         key === "guardianName" ? 100 : key === "guardianRelationship" ? 50 : 15;
       const min = key === "guardianPhone" ? 7 : 1;
@@ -108,6 +115,8 @@ registerMockHandler(
       patch[key] = value.trim();
     }
     Object.assign(student, patch);
+    for (const key of cleared)
+      delete (student as unknown as Record<string, unknown>)[key];
     return { status: 200, data: student };
   },
 );

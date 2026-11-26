@@ -55,6 +55,25 @@ registerMockHandler({ method: "put", path: "/task/update" }, ({ body }) => {
   ) {
     throw new MockApiError(400, "TYPE_CHANGE_NOT_ALLOWED");
   }
+  const nextType = typeof input.type === "string" ? input.type : task.type;
+  const nextImage =
+    input.imageFile === null
+      ? undefined
+      : typeof input.imageFile === "string"
+        ? input.imageFile
+        : task.imageFile;
+  const nextAudio =
+    input.audioFile === null
+      ? undefined
+      : typeof input.audioFile === "string"
+        ? input.audioFile
+        : task.audioFile;
+  if (nextType === "multipleChoiceWithMedia" && !nextImage && !nextAudio) {
+    throw new MockApiError(400, "MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO");
+  }
+  if (nextType === "multipleChoice" && (nextImage || nextAudio)) {
+    throw new MockApiError(400, "TEXT_TASK_CANNOT_HAVE_MEDIA");
+  }
   if (typeof input.prompt === "string") task.prompt = input.prompt;
   if (typeof input.category === "string") {
     task.category = input.category as TaskCategory;
@@ -65,6 +84,10 @@ registerMockHandler({ method: "put", path: "/task/update" }, ({ body }) => {
   }
   if (typeof input.imageFile === "string") task.imageFile = input.imageFile;
   if (typeof input.audioFile === "string") task.audioFile = input.audioFile;
+  // PP-05: `null` apaga a mídia; sem mídia a atividade vira múltipla escolha.
+  if (input.imageFile === null) delete task.imageFile;
+  if (input.audioFile === null) delete task.audioFile;
+
   if (isNewType) {
     if (input.content !== undefined) {
       task.content = input.content as Task["content"];

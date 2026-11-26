@@ -129,9 +129,11 @@ export async function getPlan(id: string): Promise<Plan> {
 export interface UpdatePlanInput {
   title?: string;
   generalObjective?: string;
-  professionalNotes?: string;
+  /** `null` apaga o campo (PP-05). */
+  professionalNotes?: string | null;
   endDate?: string;
-  nextReviewDate?: string;
+  /** `null` apaga o campo (PP-05). */
+  nextReviewDate?: string | null;
   goals?: { id?: string; description: string; successCriterion?: string }[];
 }
 
