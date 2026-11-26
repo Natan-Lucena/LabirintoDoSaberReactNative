@@ -1,0 +1,6 @@
+# Configuração dos fluxos E2E do Labirinto do Saber (QA-02, Entrega 5).
+# Rode a pasta toda ou um fluxo: ver .maestro/README.md. Dados por variável (-e), nunca aqui.
+flows:
+  - "0*.yaml"
+excludeTags:
+  - manual

@@ -1,0 +1,361 @@
+# Plano de testes manuais — Entrega 5
+
+Roteiro da rodada manual da Entrega 5 (QA-08), no emulador Android com o Expo Go, no
+development build (push) e, por leva, contra o backend real. Complementa os testes automatizados
+(Vitest), os fluxos E2E ([QA-02, Maestro](testes/07-maestro.md)), o checklist de acessibilidade
+(QA-03) e a [homologação em aparelhos (QA-04)](testes/09-aparelhos.md). O formato segue o
+[plano da Entrega 4](../entrega-4/PLANO-TESTES.md).
+
+> **Escrito em 2026-11-26, antes da rodada.** Nenhum caso foi executado e nada foi observado em
+> emulador ou aparelho. A coluna "Resultado" fica vazia até a rodada. Os passos vêm dos cards
+> (`cards/`) e do "Como testar" dos PRs abertos (#195 a #203); quando uma tarefa entrar na `main`,
+> o caso dela é conferido contra a tela entregue (rótulos e mensagens do código) antes da rodada.
+> Casos de levas do backend ainda não publicadas ficam **N/A** com o motivo, nunca **OK** com
+> mock.
+
+Legenda de prioridade: **P1** bloqueia a entrega, **P2** é importante, **P3** é refinamento.
+Legenda do resultado: **OK**, **FALHA** (com o ID do caso e a captura), **N/A** (com o motivo)
+ou **BLOQ** (bloqueado por outro caso).
+
+Decisões que os casos respeitam (G-61 a G-72, em [GATES](../entrega-1/GATES.md)): o catálogo e os
+imprimíveis são do backend (o PDF é gerado no app); o nome da criança no imprimível não é salvo;
+o resultado do jogo na sessão é enviado uma vez, sem reenvio automático; a equipe tem papéis
+`ADMIN` e `PROFESSIONAL`, e o paciente compartilhado só é editado pelo dono; o app não calcula
+status de paciente (vem do servidor); o push só existe no development build (no Expo Go, o sino
+continua sendo o único canal).
+
+## 1. Ambiente e preparação
+
+### 1.1 Modos de execução
+
+Cada caso diz em que modo roda (coluna "Modo"):
+
+| Modo | Como ligar                                                                                    | Para quê                                                   |
+| ---- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| M    | `EXPO_PUBLIC_USE_MOCKS=true pnpm start --clear` (login do mock no CONTEXTO-SESSAO §5)         | Conferir telas e regras antes de o backend publicar a leva |
+| MT   | Como M, com `EXPO_PUBLIC_MOCK_TEAM=none`, `admin` ou `professional` (reiniciar ao trocar)     | Equipe e convites (EQP-01 a EQP-04) sem duas contas        |
+| R1   | Backend real com a **leva 1** (atividades e resultado de jogo): `EXPO_PUBLIC_USE_MOCKS=false` | ATV-\*, EVO-03 (ACs `MAN` e conferências BE-AT e BE-RS)    |
+| R2   | Backend real com a **leva 2** (equipe, convites, paciente compartilhado)                      | EQP-\*                                                     |
+| R3   | Backend real com a **leva 3** (status, arquivar, recorrência)                                 | PAC-10, PAC-11, AGE-06, FEC-06                             |
+| R4   | Backend real com a **leva 4** (push e ajuda)                                                  | NOT-02, AJD-01                                             |
+| DB   | **Development build** (APK da BLD-01) num AVD com Google Play ou num Android físico           | BLD-01, NOT-02                                             |
+
+O modo M vale como ensaio e para os ACs `CT`; o resultado oficial de cada `MAN` é o do modo real
+(R1 a R4). Registre a leva e a data da última conferência do contrato (API-06) em cada rodada.
+
+### 1.2 Ambiente
+
+- **Plataforma:** emulador Android `Pixel_3a_API_34` (anote o AVD e a versão do Android) com o
+  **Expo Go**. Push: development build. iOS e aparelho físico: QA-04.
+- **Antes de abrir o emulador:** máquina só com o Android Studio aberto e **autorização do
+  usuário no momento** (AGENTS §7). Sem ela, a rodada não começa.
+- **`.env`** na raiz, para os modos reais:
+
+  ```text
+  EXPO_PUBLIC_API_BASE_URL=https://labirinto-do-saber.vercel.app
+  EXPO_PUBLIC_USE_MOCKS=false
+  ```
+
+- **Metro:** `pnpm start --clear` depois de qualquer mudança no `.env`. Registre a branch e o
+  hash do commit testados e guarde o log do Metro desde a abertura.
+- **Mocks desligados de verdade:** com `USE_MOCKS=false`, o login fictício do mock deve ser
+  **recusado**. Se entrar, a variável não foi lida: refaça o `pnpm start --clear`.
+- **Contas:** duas contas de teste (**A** e **B**) combinadas com o orquestrador e, para a
+  EQP-03, um **e-mail de teste novo**. **Nenhuma credencial, token, e-mail ou código de convite
+  vai ao repositório, às capturas ou ao relato.**
+- **IA e rede:** a primeira chamada ao backend pode demorar (partida a frio). O timeout da IA é
+  de 90 s (G-46); em erro, "Tentar novamente", sem reenvio automático.
+
+### 1.3 Dados de teste a criar
+
+Todos fictícios, criados antes da rodada. Nomes sempre "Paciente Teste …".
+
+| Dado                                                                                                                      | Para                             |
+| ------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Conta A com a equipe "Clínica Teste" (ADMIN)                                                                              | EQP-01, EQP-02, EQP-04           |
+| Conta B sem equipe (entra pela EQP-03 com e-mail novo)                                                                    | EQP-02, EQP-03, EQP-04           |
+| Paciente Teste Um: PDI ativo, dificuldades mapeadas, responsável, caderno com uma múltipla escolha e um "Forme a palavra" | ATV, SES, FEC-06, PAC-10, EQP-04 |
+| Paciente Teste Dois: sem anamnese e com sessão finalizada sem evolução                                                    | PAC-10                           |
+| Paciente Teste Arquivo: com um atendimento futuro (semana que vem)                                                        | PAC-11                           |
+| Atendimento avulso do Paciente Teste Um numa terça às 14:00, daqui a duas semanas                                         | AGE-06 (conflito)                |
+| Meses com e sem atendimento (inclusive virada dez/jan)                                                                    | AGE-05                           |
+| Dois imprimíveis (um por `layout`) e as atividades prontas da biblioteca                                                  | ATV-05, ATV-09                   |
+| Um tutorial de ajuda com vídeo e outro sem vídeo                                                                          | AJD-01                           |
+
+### 1.4 Como registrar a evidência
+
+- **Uma captura por caso P1 e por falha.** Nome: `E5-<ID do caso>.png` (por exemplo,
+  `E5-ATV-04.png`), guardada **fora do repositório**. O relatório cita o nome do arquivo.
+- **Sem dados pessoais:** só os dados fictícios do §1.3. Confira o enquadramento (barra de
+  notificações, teclado com sugestões, foto de perfil). O texto de evolução e o conteúdo dos
+  relatórios não vão ao log nem ao relato.
+- Para as conferências do backend (§4), anote **método, rota e status HTTP**; nunca o corpo da
+  resposta.
+- Em FALHA, junte o trecho do log do Metro (sem token nem corpo de resposta). Cada FALHA vira
+  issue com o ID do caso e a captura; o relato vai na issue de testes que o orquestrador indicar
+  (na Entrega 4 foi a #168), no mesmo formato.
+- O relatório final segue o modelo do [QA-05](../entrega-2/QA-05-RELATORIO.md), com data,
+  plataforma, commit testado, leva do backend e as rotas exercitadas.
+
+## 2. Casos por tarefa
+
+Um caso por critério `MAN` das fichas, mais os `CT` que só se confirmam na tela, na ordem do
+[BACKLOG](BACKLOG.md). ID `E5-<ÁREA>-NN`. Quando o AC da ficha é `UT`, `CT`, `REV` ou `CMD`, o
+caso é a confirmação **na tela real**; ele não substitui o teste automatizado.
+
+### 2.1 Bloco A — Base
+
+| ID        | Tarefa / AC     | P   | Modo  | Passos                                                                                                                            | Resultado esperado                                                                                                     | Resultado |
+| --------- | --------------- | --- | ----- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------- |
+| E5-API-01 | API-06 / 01, 02 | P2  | R1-4  | Antes da rodada, liste as rotas dos casos desta seção e confira cada uma no `PROJECT.md` (Parte II) e no Swagger                  | Toda rota usada está documentada com corpo, resposta e erros; as diferenças da especificação estão registradas         |           |
+| E5-API-02 | API-07 / 01, 05 | P2  | M, R  | Abra uma tela de cada domínio novo (banco, equipe, pacientes, agenda) em M e depois no backend real                               | Mesma estrutura de campos nos dois modos; campo opcional ausente no backend não quebra a tela                          |           |
+| E5-API-03 | API-07 / 03     | P3  | R     | Provoque um erro de cada domínio novo (código de convite errado, conteúdo inválido de atividade)                                  | A mensagem aparece em português, sem o código técnico                                                                  |           |
+| E5-FEC-01 | FEC-06 / 01, 04 | P2  | M, R3 | Pacientes → Paciente Teste Um → "Editar" → "Remover responsável" → "Remover" → "Salvar"                                           | Os campos esvaziam e a ficha fica sem responsável; com os campos vazios o botão não aparece; campo vazio não é enviado |           |
+| E5-FEC-02 | FEC-06 / 02     | P2  | M, R3 | Planos → plano com próxima revisão e notas → "Editar" → apague a data e as notas → "Salvar alterações"                            | Salva sem erro; o detalhe mostra "Próxima revisão: —" e esconde as notas                                               |           |
+| E5-FEC-03 | FEC-06 / 03     | P2  | M, R3 | Atividades → múltipla escolha com mídia → "Editar Atividade" → "Remover imagem" (ou "Remover áudio") → observe "Desfazer" → salve | O detalhe fica sem a mídia removida; sem nenhuma mídia, o tipo vira "Múltipla escolha"                                 |           |
+| E5-FEC-04 | FEC-06 (erro)   | P3  | M     | Repita E5-FEC-02 sem rede                                                                                                         | A mensagem offline padrão da tela aparece e nada muda                                                                  |           |
+
+### 2.2 Bloco B — Atividades e sessão
+
+| ID        | Tarefa / AC      | P   | Modo  | Passos                                                                                                                                                             | Resultado esperado                                                                                                                                                                    | Resultado |
+| --------- | ---------------- | --- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| E5-ATV-01 | ATV-09 / 01      | P1  | M, R1 | Aba Atividades. Toque "Imprimíveis" e depois "Interativas"                                                                                                         | Aparecem "Atividades prontas" (até 4 cartões) e "Minhas atividades"; os cartões mostram "{habilidade} · Interativa" ou "Imprimível"; o chip filtra a lista                            |           |
+| E5-ATV-02 | ATV-09 / 01      | P2  | M, R1 | Busque "silaba" (sem acento) e "bola"; busque 1 letra; escolha uma Habilidade e uma Categoria; provoque um filtro sem resultado                                    | A lista muda depois de cerca de 300 ms; com 1 letra nada é pedido; sem resultado, "Nenhuma atividade encontrada"                                                                      |           |
+| E5-ATV-03 | ATV-09 / 04      | P2  | M, R1 | "Ver todas" em "Atividades prontas"; role até o fim; com a rede desligada, toque "Carregar mais"                                                                   | A lista completa abre com os filtros aplicados; "Carregar mais" some no fim; offline, "Sem conexão"                                                                                   |           |
+| E5-ATV-04 | ATV-09 / 03      | P1  | M, R1 | Abra uma atividade pronta; toque "Duplicar para editar"                                                                                                            | Sem "Editar" nem "Excluir" na pronta; a cópia abre com o toast "Cópia criada. Agora você pode editá-la." e tem "Excluir" (e "Editar" na múltipla escolha)                             |           |
+| E5-ATV-05 | ATV-09 / 02      | P1  | M, R1 | Pacientes → Paciente Teste Um → "Atividades para {nome}"; toque "Iniciar atividade"; volte e toque "Para: {nome} ✕"; repita com paciente sem dificuldades mapeadas | "Recomendado para {nome}" mostra o motivo do servidor; o ✕ remove o destaque; sem dificuldades, "Ainda não há recomendação para {nome}."                                              |           |
+| E5-ATV-06 | ATV-09 / 02, 05  | P2  | M, R1 | Abra Atividades sem vir pelo paciente e sem atendimento pendente hoje; use os chips "Cadernos" e "Grupos"                                                          | Sem destaque de recomendação; cadernos e grupos navegam como antes                                                                                                                    |           |
+| E5-ATV-07 | ATV-09 (erro)    | P3  | M     | Falhe o catálogo (backend fora do ar ou M sem rede)                                                                                                                | "Não foi possível carregar as atividades." com "Tentar novamente"                                                                                                                     |           |
+| E5-ATV-08 | ATV-04a / 01, 02 | P1  | M, R1 | Atividades → "Forme a palavra" (mock: BOLA) → "Jogar". Toque as letras fora de ordem; "Tentar novamente"; toque B, O, L e depois o segundo espaço                  | "Ainda não. Tente de novo." e os espaços limpam; o toque no espaço devolve "O" e "L" ao banco                                                                                         |           |
+| E5-ATV-09 | ATV-04a / 01, 04 | P1  | M, R1 | Complete "BOLA" depois de um erro; "Concluir". Repita sem errar. Com "PÃO", tente a letra "A" no lugar de "Ã"                                                      | Espaços verdes e "Muito bem!"; "Você acertou 0 de 1 na primeira tentativa" (e "1 de 1" sem erro); "A" não serve no lugar de "Ã"                                                       |           |
+| E5-ATV-10 | ATV-04a / 03     | P2  | M     | Com o TalkBack, percorra as letras e os espaços                                                                                                                    | "Letra B", "Espaço 2 de 4, vazio"; alvos fáceis de tocar                                                                                                                              |           |
+| E5-ATV-11 | ATV-04b / 01, 03 | P1  | M, R1 | Atividades → "Associe as cores" → "Jogar". Toque uma amostra sem palavra; "Azul" e uma cor errada; depois a certa; complete                                        | Sem palavra, nada acontece; "Não é essa cor."; o par certo fica marcado; "Muito bem!" e "Concluir" com o resumo (erro conta)                                                          |           |
+| E5-ATV-12 | ATV-04b / 02, 03 | P1  | M, R1 | "Memória visual": vire duas cartas diferentes; toque rápido numa terceira; encontre todos os pares                                                                 | As diferentes voltam depois de um instante; o toque rápido não faz nada; ao achar todos, "Muito bem!"                                                                                 |           |
+| E5-ATV-13 | ATV-04b / 04     | P3  | M     | Com o TalkBack, percorra as amostras e as cartas                                                                                                                   | Cada amostra é lida com o nome da cor; cartas e amostras têm alvo confortável                                                                                                         |           |
+| E5-ATV-14 | ATV-11 / 04      | P2  | M     | Atividades → "+" → "Atividade"                                                                                                                                     | Aparece "Que tipo de atividade?"; "Múltipla escolha" abre o formulário de antes                                                                                                       |           |
+| E5-ATV-15 | ATV-11 / 01, 05  | P1  | M, R1 | "Forme a palavra": instrução, categoria "Escrita", palavra "gato" (vira GATO), letras extras "e i"; salve e toque "Jogar". Digite "GAT0"                           | Salva e abre o detalhe; o jogo funciona com GATO; com "GAT0" o botão não habilita e aparece "Use apenas letras, sem números ou espaços"                                               |           |
+| E5-ATV-16 | ATV-11 / 01, 05  | P1  | M, R1 | "Associe as cores" com 1 par, depois 3 pares; "Memória visual" com 2 cartas de texto e 1 com imagem; um par sem cor; carta vazia                                   | 1 par não salva; 3 salvam; "Escolha uma cor" no par sem cor; erro na carta vazia; cada tipo criado abre e joga                                                                        |           |
+| E5-ATV-17 | ATV-11 / 05      | P1  | M, R1 | "Imprimível": título, instruções, disposição "Sequência", 3 itens, linhas de resposta 2                                                                            | Salva; o detalhe mostra o formato imprimível                                                                                                                                          |           |
+| E5-ATV-18 | ATV-11 / 02      | P2  | R1    | Provoque `INVALID_CONTENT` (por exemplo, imagem de dica sem URL http(s))                                                                                           | O campo certo fica marcado com "Revise os campos marcados."; erro só em `content`: "Revise o conteúdo da atividade."                                                                  |           |
+| E5-ATV-19 | ATV-11 / 03      | P2  | M, R1 | Detalhe de um "Forme a palavra" criado → "Editar Atividade" → troque só o tema → salve                                                                             | Volta ao detalhe com a palavra igual e o tema novo; itens existentes mantêm os ids                                                                                                    |           |
+| E5-ATV-20 | ATV-05 / 04      | P1  | M, R1 | Atividades → "Imprimíveis" → "Complete a sequência"                                                                                                                | Abre a prévia (não o jogo), com "Nome:" em branco                                                                                                                                     |           |
+| E5-ATV-21 | ATV-05 / 03      | P1  | M, R1 | Digite "Criança Teste" na prévia; saia e entre de novo                                                                                                             | A prévia mostra o nome; ao reentrar o nome está em branco (não é salvo)                                                                                                               |           |
+| E5-ATV-22 | ATV-05 / 02      | P1  | M, R1 | "Imprimir" e depois "Compartilhar PDF"                                                                                                                             | Diálogo de impressão do Android ("Salvar como PDF" disponível); folha de compartilhamento abre com `atividade-imprimivel.pdf`, com nome e itens no layout                             |           |
+| E5-ATV-23 | ATV-05 (erros)   | P3  | M     | Rota com id inexistente; tarefa interativa em `/activities/print/<id>`; cancele o diálogo do sistema; imprimível com imagens                                       | "Atividade não encontrada."; "Esta atividade não é imprimível."; cancelar não é erro; as imagens aparecem no PDF (risco do card)                                                      |           |
+| E5-ATV-24 | Revisão #202     | P1  | M     | Imprimíveis → atividade pronta → role até "Detalhes da atividade"; "Imprimir" no detalhe; crie um imprimível e abra-o em "Minhas atividades"                       | O detalhe tem "Imprimir" e "Duplicar para editar"; a prévia aberta pelo detalhe não repete "Detalhes da atividade"; o imprimível próprio tem "Editar Atividade" e "Excluir Atividade" |           |
+| E5-ATV-25 | Revisão #202     | P2  | M     | Com atendimento `PENDING` de hoje com outro paciente: Pacientes → outro paciente → "Atividades para {nome}" → "Para: {nome} ✕"                                     | O chip e o destaque somem e o paciente do atendimento **não** aparece; tocar de novo em "Atividades para…" religa o contexto                                                          |           |
+| E5-SES-01 | EVO-03 / 01, 03  | P1  | M, R1 | Início → "Iniciar sessão" → Paciente Teste Um → o caderno. Responda a múltipla escolha; no "Forme a palavra" erre uma vez e acerte                                 | Aparece "Resultado registrado" → "Próxima"                                                                                                                                            |           |
+| E5-SES-02 | EVO-03 / 01      | P1  | R1    | Ative o modo avião antes de terminar o jogo; desligue-o e toque "Tentar reenviar"                                                                                  | "Não foi possível confirmar o resultado…", sem reenvio automático; depois do reenvio, "Resultado registrado"                                                                          |           |
+| E5-SES-03 | EVO-03 / 04      | P1  | R1    | Feche o app no meio do caderno e reabra                                                                                                                            | A sessão retoma na atividade seguinte, sem pedir o jogo confirmado; um pendente aparece como terminado, com "Tentar reenviar"                                                         |           |
+| E5-SES-04 | EVO-03 / 02, 03  | P1  | R1    | Encerre a sessão e veja a Evolução; depois o relatório da sessão                                                                                                   | "Atividades da sessão" mostra o jogo com "2 tentativas · 1 erro"; o relatório mostra "Atividades jogadas" na tela e no PDF; sem resultados, a seção não aparece                       |           |
+| E5-SES-05 | EVO-03 / 05      | P2  | R1    | Reenvie um resultado já registrado (duas vezes seguidas)                                                                                                           | `RESULT_ALREADY_EXISTS` é tratado como registrado, sem erro na tela                                                                                                                   |           |
+| E5-SES-06 | EVO-03           | P2  | M, R1 | "Iniciar sessão" → aba de atividades avulsas                                                                                                                       | Nenhum imprimível na lista                                                                                                                                                            |           |
+
+### 2.3 Bloco C — Equipe
+
+| ID        | Tarefa / AC     | P   | Modo                | Passos                                                                                                                          | Resultado esperado                                                                                                                                                                                                       | Resultado |
+| --------- | --------------- | --- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| E5-EQP-01 | EQP-01 / 02, 05 | P1  | MT none, R2         | Recursos → "Equipe e convites"; toque "Criar" vazio; depois "Criar equipe" com "Clínica Teste"                                  | "Você ainda não faz parte de uma equipe." e "Criar equipe"; vazio mostra "Informe entre 2 e 80 caracteres."; toast "Equipe criada" e "Profissionais ativos · 1", você como "(você)" e "Administrador(a)"                 |           |
+| E5-EQP-02 | EQP-01 / 01     | P1  | MT admin, R2        | Escolha o papel e toque "Compartilhar convite"; feche; "Compartilhar de novo"; "Novo convite"                                   | Compartilhamento com "Use o código XXXXXXXX para entrar na equipe… Vale até dd/mm."; código e validade ficam no cartão; "Novo convite" volta ao início                                                                   |           |
+| E5-EQP-03 | EQP-01 / 03     | P1  | MT professional     | Abra "Equipe e convites"                                                                                                        | A lista aparece e o cartão de convite não                                                                                                                                                                                |           |
+| E5-EQP-04 | EQP-01 (erros)  | P3  | MT admin            | Offline + "Compartilhar convite"; crie convites até 20 ativos                                                                   | "Sem conexão com a internet. Verifique a rede e tente novamente."; "A equipe já tem 20 convites ativos…"                                                                                                                 |           |
+| E5-EQP-05 | EQP-02 / 04     | P1  | MT, R2              | Com A (ADMIN) e depois com B (Profissional), veja o banner de Recursos e o perfil; saia da equipe e veja de novo                | "{profissão} · Administrador(a)" ou "· Profissional" com equipe; o texto antigo sem equipe                                                                                                                               |           |
+| E5-EQP-06 | EQP-02 / 01     | P1  | MT professional, R2 | Com B (Profissional): tela da equipe                                                                                            | Sem convite, "Renomear", "Convites ativos" nem "Gerenciar"; só "Sair da equipe", que volta ao estado sem equipe                                                                                                          |           |
+| E5-EQP-07 | EQP-02          | P2  | R2                  | Com A: renomeie a equipe para "Clínica Teste 2"; veja "Convites ativos" e revogue um; "Gerenciar" B → "Tornar administrador(a)" | O nome muda; o convite some da lista; B aparece como Administrador(a)                                                                                                                                                    |           |
+| E5-EQP-08 | EQP-02 / 03     | P1  | MT admin, R2        | Com A, único ADMIN: tente "Tornar profissional" em si mesmo ou sair da equipe                                                   | Mensagem de "pelo menos um administrador(a)" (`409 LAST_ADMIN`); a lista continua igual                                                                                                                                  |           |
+| E5-EQP-09 | EQP-03 / 03, 01 | P1  | M, R2               | Sair da conta → login → "Tenho um convite"; digite `ab3k-7mpq`; "Continuar"                                                     | O campo vira `AB3K7MPQ`; "Você foi convidada(o) para a equipe … como Profissional. Vale até dd/mm."                                                                                                                      |           |
+| E5-EQP-10 | EQP-03 / 01     | P1  | M, R2               | "Criar minha conta" com nome, e-mail novo e senha fictícia (primeiro com confirmação diferente)                                 | "As senhas não conferem."; ao criar, entra direto na Início e na equipe                                                                                                                                                  |           |
+| E5-EQP-11 | EQP-03 / 02     | P1  | M, R2               | Repita o mesmo código; use código com 0, O, 1 ou I; e-mail já cadastrado; "Já tenho conta"                                      | "Convite inválido ou vencido…" (uso único); "O código tem 8 letras e números (sem 0, O, 1 e I)." sem chamada; "Já existe uma conta com este e-mail…" e "Ir para o login"; o login explica "Entrar numa equipe" no perfil |           |
+| E5-EQP-12 | EQP-03          | P2  | M, R2               | Conta existente → Perfil → "Entrar numa equipe" → código → "Entrar na equipe"                                                   | Abre a equipe; com equipe o botão não aparece (e forçado, "Você já faz parte de uma equipe. Saia dela antes de entrar em outra.")                                                                                        |           |
+| E5-EQP-13 | EQP-03 / 04     | P2  | R2                  | Durante os casos acima, observe o log do Metro                                                                                  | Nenhuma senha, código ou corpo de resposta no log                                                                                                                                                                        |           |
+| E5-EQP-14 | EQP-04 / 01, 02 | P1  | MT, R2              | Com A: ficha do Paciente Teste Um → "Quem acompanha" → "Compartilhar" → B. Com B: lista e ficha                                 | B vê "Compartilhado por {A}" na lista e na ficha, sem "Editar" e sem "Compartilhar"; só A vê "Compartilhar" e "Remover acesso"                                                                                           |           |
+| E5-EQP-15 | EQP-04 / 04     | P1  | R2                  | Com B: inicie sessão, finalize e registre a evolução do paciente compartilhado. Com A: ficha                                    | A evolução aparece para A com "por {B}"                                                                                                                                                                                  |           |
+| E5-EQP-16 | EQP-04 / 03     | P1  | R2                  | Com A: "Remover acesso" de B. Com B: puxe a lista; se estava na ficha, atualize                                                 | O paciente some da lista de B; na ficha, "Você não acompanha mais este paciente."                                                                                                                                        |           |
+
+### 2.4 Bloco D — Pacientes e agenda
+
+| ID        | Tarefa / AC     | P   | Modo   | Passos                                                                                                                   | Resultado esperado                                                                                                                                               | Resultado |
+| --------- | --------------- | --- | ------ | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| E5-PAC-01 | PAC-10 / 01     | P1  | R3     | Aba Pacientes: confira os cartões                                                                                        | Cada cartão mostra "N anos · {status}" coerente com o paciente (os quatro status e o desconhecido); o app não calcula                                            |           |
+| E5-PAC-02 | PAC-10 / 02     | P1  | R3     | Toque "Pendências"; busque um nome dentro do filtro                                                                      | Só aparecem pacientes com algo a fazer; a busca funciona dentro do filtro                                                                                        |           |
+| E5-PAC-03 | PAC-10 / 03     | P1  | R3     | Ficha do paciente com sessão sem evolução: seção "Pendências" → toque em "Evolução pendente"                             | Abre a evolução daquela sessão                                                                                                                                   |           |
+| E5-PAC-04 | PAC-10 / 03     | P2  | R3     | Registre a evolução, volte à lista e puxe para atualizar; repita com "Anamnese não preenchida"                           | O paciente sai do filtro; "Anamnese não preenchida" abre a anamnese do paciente                                                                                  |           |
+| E5-PAC-05 | PAC-10 / 04     | P3  | R3     | Percorra os filtros de Pacientes                                                                                         | Nenhum "Em breve"                                                                                                                                                |           |
+| E5-PAC-06 | PAC-11 / 01     | P1  | R3     | Paciente Teste Arquivo (com atendimento futuro): "Arquivar paciente" → "Arquivar"; na segunda confirmação toque "Manter" | Segunda confirmação com "1 atendimento futuro"; "Manter" não muda nada                                                                                           |           |
+| E5-PAC-07 | PAC-11 / 02     | P1  | R3     | Repita e confirme "Cancelar atendimentos e arquivar"; veja a lista, a contagem e a Agenda                                | O paciente sai da lista e da contagem; a Agenda mostra o atendimento cancelado com o nome do paciente                                                            |           |
+| E5-PAC-08 | PAC-11 / 03     | P1  | R3     | Filtro "Arquivados" → abra o paciente                                                                                    | "{idade} anos · Arquivado", faixa "Arquivado em dd/mm/aaaa"; sem "Iniciar sessão", "Criar novo plano" nem "Nova avaliação"                                       |           |
+| E5-PAC-09 | PAC-11 / 02     | P1  | R3     | "Reativar paciente"; volte à lista                                                                                       | Toast "Paciente reativado"; o paciente reaparece; o atendimento cancelado continua cancelado                                                                     |           |
+| E5-PAC-10 | PAC-11 / 04     | P2  | R2, R3 | Com B (paciente `SHARED`): ficha                                                                                         | Sem "Arquivar paciente"                                                                                                                                          |           |
+| E5-PAC-11 | PAC-11 (erros)  | P3  | R3     | Lista "Arquivados" com erro; agendar para paciente arquivado                                                             | "Não foi possível carregar os arquivados." e "Tentar novamente"; "Este paciente está arquivado. Reative-o na ficha para agendar."                                |           |
+| E5-AGE-01 | AGE-05 / 02, 03 | P1  | M, R   | Agenda → "Mês"; toque num dia; volte a "Semana"                                                                          | Calendário com ponto nos dias com atendimento (pendente ou concluído), semana a começar na segunda; o toque muda a lista abaixo; "Semana" mostra a semana do dia |           |
+| E5-AGE-02 | AGE-05 / 02     | P1  | M, R   | Cancele o único atendimento de um dia                                                                                    | O ponto some no mês e na faixa da semana                                                                                                                         |           |
+| E5-AGE-03 | AGE-05 / 01     | P2  | M, R   | ‹ › para trocar o mês, inclusive dez/jan; mês sem atendimento; dia vazio                                                 | O dia selecionado vai para o dia 1 (ou hoje, no mês atual); sem pontos; "Nenhum atendimento neste dia"; datas no fuso de São Paulo                               |           |
+| E5-AGE-04 | AGE-06 / 01, 02 | P1  | R3     | Novo atendimento (mesmo paciente) na terça às 14:00 desta semana → "Semanal", 8 vezes                                    | Prévia: "8 atendimentos, toda terça às 14:00, até dd/mm"                                                                                                         |           |
+| E5-AGE-05 | AGE-06 / 02     | P1  | R3     | Agende com o avulso em conflito                                                                                          | Aviso com 7 agendados e 1 pulado (data e hora); o formulário não fecha sozinho; "Ver atendimento" abre o avulso                                                  |           |
+| E5-AGE-06 | AGE-06 / 04     | P1  | R3     | No mês, abra a 3ª ocorrência                                                                                             | "Semanal · 3 de 8"; as terças têm ponto                                                                                                                          |           |
+| E5-AGE-07 | AGE-06 / 03     | P1  | R3     | "Editar" → "Este e os seguintes" → 15:00; depois "Só este" em outra                                                      | As seguintes passam a 15:00 e as anteriores ficam às 14:00; "Só este" muda só aquela                                                                             |           |
+| E5-AGE-08 | AGE-06 / 03     | P1  | R3     | Na 5ª ocorrência, "Cancelar atendimento" → "Este e os seguintes"                                                         | Da 5ª em diante ficam canceladas, as anteriores seguem; a linha mostra "série encerrada"                                                                         |           |
+
+### 2.5 Bloco E — Push, ajuda e navegação
+
+| ID        | Tarefa / AC     | P   | Modo    | Passos                                                                                                                                          | Resultado esperado                                                                                             | Resultado |
+| --------- | --------------- | --- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------- |
+| E5-BLD-01 | BLD-01 / 02     | P1  | Expo Go | Depois da BLD-01: `pnpm start` e leia o QR no Expo Go                                                                                           | O app continua abrindo no Expo Go                                                                              |           |
+| E5-BLD-02 | BLD-01 / 03     | P1  | DB      | Instale o APK no AVD com Google Play; abra "Labirinto do Saber" (não o Expo Go); `pnpm run start:dev`; escolha o servidor; login                | O app pede o servidor de desenvolvimento e a Início abre normalmente contra o backend real                     |           |
+| E5-BLD-03 | BLD-01 / 04     | P2  | —       | Revisão do diff                                                                                                                                 | Nenhuma chave FCM, `google-services.json` nem token do EAS no repositório                                      |           |
+| E5-PSH-01 | NOT-02 / 01     | P1  | DB, R4  | Abra o APK e faça login                                                                                                                         | Aparece "Receber lembretes no celular?"; "Ativar" e permitir registram o token                                 |           |
+| E5-PSH-02 | NOT-02          | P2  | DB, R4  | Perfil → Notificações; desligue "Atendimentos de hoje"; feche e abra a tela                                                                     | "Permitidas" e todos os tipos ligados; o desligado continua desligado                                          |           |
+| E5-PSH-03 | NOT-02 / 04     | P1  | DB, R4  | Peça ao orquestrador um push de teste; toque nele (app aberto, em segundo plano e fechado)                                                      | O aviso chega sem nome de paciente; o toque abre o destino ou a lista, igual ao toque na lista de notificações |           |
+| E5-PSH-04 | NOT-02 / 02     | P1  | DB, R4  | Saia da conta; dispare o job do backend                                                                                                         | O aparelho não recebe push; o logout não trava mesmo se o servidor falhar                                      |           |
+| E5-PSH-05 | NOT-02 / 01     | P1  | Expo Go | Faça login no Expo Go                                                                                                                           | Nenhum pedido de permissão; o sino funciona                                                                    |           |
+| E5-AJD-01 | AJD-01 / 02     | P1  | R4      | Recursos → "Central de ajuda"                                                                                                                   | Abre `/help` com o destaque "COMECE POR AQUI · N MIN" e a lista numerada                                       |           |
+| E5-AJD-02 | AJD-01 / 03     | P1  | R4      | Toque no destaque; play; tela cheia; gire o aparelho; volte                                                                                     | O vídeo toca e entra em tela cheia no Expo Go; ao voltar, o som para                                           |           |
+| E5-AJD-03 | AJD-01 / 01     | P2  | R4      | Tutorial sem vídeo; depois internet desligada                                                                                                   | Passos numerados; a lista aparece (salva) e o vídeo mostra "Não foi possível tocar o vídeo agora."             |           |
+| E5-NAV-01 | NAV-05 / 02     | P1  | M, R    | Recursos: toque nos 9 itens (`/plans`, `/evolution`, `/anamnese/templates`, `/assessments`, `/activities` ×2, `/reports/new`, `/team`, `/help`) | Todos abrem uma tela de verdade e voltam                                                                       |           |
+| E5-NAV-02 | NAV-05 / 01, 03 | P2  | —       | `git grep -i "em breve\|coming-soon\|ComingSoon" -- src app`; `pnpm run typecheck`; `pnpm run lint`; `npx expo export --platform android`       | Sem ocorrências; comandos com código 0                                                                         |           |
+
+### 2.6 Bloco F — Qualidade
+
+| ID       | Tarefa / AC | P   | Modo     | Passos                                                                           | Resultado esperado                                                     | Resultado |
+| -------- | ----------- | --- | -------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------- |
+| E5-QA-01 | QA-02 / 01  | P2  | AVD      | Rodar os fluxos Maestro ([07-maestro](testes/07-maestro.md)) duas vezes seguidas | Fluxos passam sem intervenção; gravações guardadas fora do repositório |           |
+| E5-QA-02 | QA-03 / 01  | P2  | AVD      | Checklist de acessibilidade (jogos incluídos)                                    | Sem bloqueio                                                           |           |
+| E5-QA-03 | QA-04 / 01  | P2  | Aparelho | Matriz do [09-aparelhos](testes/09-aparelhos.md)                                 | Linhas preenchidas (OK, FALHA, N/A com motivo, BLOQ)                   |           |
+
+## 3. Fluxos entre telas (P1)
+
+| ID        | Fluxo                                                                                                                | Resultado esperado                                                        | Modo   | Resultado |
+| --------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------ | --------- |
+| E5-FLX-01 | Banco → "Forme a palavra" → "Jogar" → "Muito bem!" → "Concluir"                                                      | Resumo "Você acertou…"; nenhuma tela de erro; o resultado não pede sessão | M, R1  |           |
+| E5-FLX-02 | Início → "Iniciar sessão" → caderno com múltipla escolha e jogo → finalizar → Evolução                               | "Atividades da sessão" na Evolução; relatório com "Atividades jogadas"    | R1     |           |
+| E5-FLX-03 | Imprimível → prévia (nome) → "Compartilhar PDF"                                                                      | PDF compartilhado e arquivo temporário apagado                            | M, R1  |           |
+| E5-FLX-04 | A cria convite → B cadastra pelo código (e-mail novo) → B aparece na equipe de A                                     | B listado como "Profissional" em A; o código não funciona de novo         | R2     |           |
+| E5-FLX-05 | A compartilha o Paciente Teste Um com B → B registra evolução → A vê "por {B}" → A remove o acesso → B perde a ficha | Cada etapa como em E5-EQP-14 a E5-EQP-16                                  | R2     |           |
+| E5-FLX-06 | Série semanal de 8 com uma ocorrência em conflito → "Este e os seguintes" (horário) → cancelar os seguintes          | Como em E5-AGE-04 a E5-AGE-08                                             | R3     |           |
+| E5-FLX-07 | Arquivar com atendimento futuro → Agenda mostra cancelado com o nome → reativar                                      | Como em E5-PAC-06 a E5-PAC-09                                             | R3     |           |
+| E5-FLX-08 | Push (development build) → tocar → destino                                                                           | Como em E5-PSH-03                                                         | DB, R4 |           |
+
+## 4. Conferências do backend
+
+Para cada critério, anote **método, rota e status** observados (Swagger em `/api-docs/` ou log do
+app em desenvolvimento) e o que se vê no app. Critérios das levas ainda não publicadas ficam
+**N/A** com o motivo. Fonte: [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md) (§2.5, §3.5, §4.7,
+§5.5, §6.5, §7.5, §8.3).
+
+| ID       | Critério (resumo)                                                                                        | Onde observar no app / caso       | Leva | Resultado |
+| -------- | -------------------------------------------------------------------------------------------------------- | --------------------------------- | ---- | --------- |
+| BE-AT-01 | `wordBuilder` sem `content.word` → `400 INVALID_CONTENT` com `field: "content.word"`                     | E5-ATV-18 (campo marcado)         | 1    |           |
+| BE-AT-02 | `GET /task/catalog?format=PRINTABLE` só devolve `printable`; `source=LIBRARY` só a biblioteca            | E5-ATV-01, E5-ATV-02              | 1    |           |
+| BE-AT-03 | Editar atividade da biblioteca → `403 LIBRARY_TASK_READ_ONLY`; duplicar devolve cópia editável           | E5-ATV-04                         | 1    |           |
+| BE-AT-04 | `GET /task/recommended` de paciente de outro educador → 403; sem sessões, recomenda por `learningTopics` | E5-ATV-05                         | 1    |           |
+| BE-AT-05 | Imprimível num caderno → `400 PRINTABLE_NOT_PLAYABLE`                                                    | E5-SES-06 (não aparece na sessão) | 1    |           |
+| BE-AT-06 | `GET /task/` de cliente antigo continua funcionando com os campos novos a mais                           | E5-API-02                         | 1    |           |
+| BE-RS-01 | Mesmo resultado duas vezes → `409 RESULT_ALREADY_EXISTS` com `resultId`                                  | E5-SES-05                         | 1    |           |
+| BE-RS-02 | Envio depois do `finish` → `409 SESSION_ALREADY_FINISHED`                                                | Provocar com sessão encerrada     | 1    |           |
+| BE-RS-03 | O contexto da evolução traz os resultados; o `accuracy` da análise do aluno não muda                     | E5-SES-04                         | 1    |           |
+| BE-EQ-01 | `PROFESSIONAL` que cria convite → `403 FORBIDDEN_ROLE`                                                   | E5-EQP-06                         | 2    |           |
+| BE-EQ-02 | Código usado, vencido ou revogado → o mesmo `404 INVITE_INVALID`                                         | E5-EQP-11                         | 2    |           |
+| BE-EQ-03 | `register` com `inviteCode` válido cria conta e membro; inválido não cria a conta                        | E5-EQP-10, E5-EQP-11              | 2    |           |
+| BE-EQ-04 | O último `ADMIN` não sai nem é rebaixado (`409 LAST_ADMIN`)                                              | E5-EQP-08                         | 2    |           |
+| BE-EQ-05 | Compartilhado: o colega lê e cria evolução; ao desfazer, recebe 403                                      | E5-EQP-15, E5-EQP-16              | 2    |           |
+| BE-EQ-06 | O `ADMIN` não vê, em `GET /student/`, paciente de outro membro não compartilhado                         | Lista de Pacientes de A           | 2    |           |
+| BE-EQ-07 | Remover membro desfaz os compartilhamentos dele; os pacientes dele continuam com ele                     | Conta A após remover B            | 2    |           |
+| BE-PA-01 | Arquivar com atendimento futuro sem a opção → `409 HAS_FUTURE_APPOINTMENTS` com a contagem               | E5-PAC-06                         | 3    |           |
+| BE-PA-02 | Arquivado fora de `GET /student/`; `POST /appointment/` → `409 STUDENT_ARCHIVED`                         | E5-PAC-07, E5-PAC-11              | 3    |           |
+| BE-PA-03 | Sessão finalizada sem evolução aparece como `EVOLUTION_PENDING` no overview na hora                      | E5-PAC-03                         | 3    |           |
+| BE-RC-01 | Série semanal de 8 com uma em conflito cria 7 e lista 1 em `skipped`                                     | E5-AGE-05                         | 3    |           |
+| BE-RC-02 | Cancelar a partir da 4ª deixa as 3 primeiras e encerra a série                                           | E5-AGE-08                         | 3    |           |
+| BE-RC-03 | Todas as ocorrências às 14:00 de São Paulo, quaisquer que sejam as datas (inclui mudança de mês/ano)     | E5-AGE-03, E5-AGE-04              | 3    |           |
+| BE-PU-01 | Rodar o job duas vezes no mesmo dia não manda dois pushes                                                | E5-PSH-03                         | 4    |           |
+| BE-PU-02 | O texto do push não contém nome de paciente                                                              | E5-PSH-03                         | 4    |           |
+| BE-PU-03 | Com `pushEnabled: false` nada é enviado, e a lista do app continua recebendo                             | E5-PSH-02                         | 4    |           |
+| BE-PU-04 | Token inválido no recibo é apagado                                                                       | Conferência do backend (sem tela) | 4    |           |
+| BE-AJ-01 | A lista de ajuda vem na ordem, com no máximo um `featured`                                               | E5-AJD-01                         | 4    |           |
+
+## 5. Matriz tarefa × plataforma
+
+Preencha com **OK**, **FALHA**, **N/A** (com o motivo) ou **BLOQ**. "Expo Go" é o emulador
+`Pixel_3a_API_34`. "Dev build" é o APK da BLD-01. **iOS fica N/A (pendente) até haver iPhone e
+Mac**; nunca OK sem observação. O aparelho físico é tratado no [roteiro da QA-04](testes/09-aparelhos.md).
+
+| Tarefa  | Expo Go Android (mock)    | Expo Go Android (backend real) | Dev build Android | Aparelho físico | iOS      |
+| ------- | ------------------------- | ------------------------------ | ----------------- | --------------- | -------- |
+| API-06  | —                         | REV                            | —                 | —               | —        |
+| API-07  |                           |                                | —                 | —               | pendente |
+| FEC-06  |                           |                                | —                 | —               | pendente |
+| ATV-09  |                           |                                | —                 | —               | pendente |
+| ATV-04a |                           |                                | —                 |                 | pendente |
+| ATV-04b |                           |                                | —                 |                 | pendente |
+| ATV-11  |                           |                                | —                 | —               | pendente |
+| ATV-05  |                           |                                | —                 |                 | pendente |
+| EVO-03  |                           |                                | —                 | —               | pendente |
+| EQP-01  |                           |                                | —                 |                 | pendente |
+| EQP-02  |                           |                                | —                 | —               | pendente |
+| EQP-03  |                           |                                | —                 |                 | pendente |
+| EQP-04  |                           |                                | —                 | —               | pendente |
+| PAC-10  |                           |                                | —                 | —               | pendente |
+| PAC-11  |                           |                                | —                 | —               | pendente |
+| AGE-05  |                           |                                | —                 |                 | pendente |
+| AGE-06  |                           |                                | —                 | —               | pendente |
+| BLD-01  | —                         | —                              |                   |                 | pendente |
+| NOT-02  | N/A (sem push no Expo Go) | N/A                            |                   |                 | pendente |
+| AJD-01  |                           |                                | —                 |                 | pendente |
+| NAV-05  |                           |                                | —                 | —               | pendente |
+| QA-08   |                           |                                |                   | —               | —        |
+| QA-02   | —                         | Maestro                        | —                 | —               | —        |
+| QA-03   |                           |                                | —                 |                 | pendente |
+| QA-04   | —                         | —                              |                   |                 | pendente |
+
+## 6. Evidências esperadas por fluxo
+
+Capturas em `E5-<ID>.png`, fora do repositório, sem dado pessoal:
+
+| Fluxo / caso              | Capturas esperadas                                                                                          |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| E5-FLX-01 (jogo)          | Jogo com letras no banco; espaços verdes com "Muito bem!"; resumo "Você acertou…"                           |
+| E5-FLX-02 (sessão + jogo) | "Resultado registrado"; Evolução com "Atividades da sessão"; relatório com "Atividades jogadas"             |
+| E5-FLX-03 (imprimível)    | Prévia com o nome; folha de compartilhamento do Android com `atividade-imprimivel.pdf`                      |
+| E5-FLX-04 (convite)       | Compartilhamento com o código mascarado; prévia "Você foi convidada(o)…"; equipe de A com B listado         |
+| E5-FLX-05 (compartilhado) | "Compartilhado por {A}" na lista de B; "por {B}" na evolução de A; "Você não acompanha mais este paciente." |
+| E5-FLX-06 (série)         | Prévia da série; aviso com o pulado; "Semanal · 3 de 8"; "série encerrada"                                  |
+| E5-FLX-07 (arquivar)      | Segunda confirmação com a contagem; Agenda com o cancelado; ficha arquivada com "Reativar paciente"         |
+| E5-FLX-08 (push)          | Aviso no aparelho (sem nome de paciente) e a tela aberta pelo toque                                         |
+| Agenda mensal             | Mês com pontos; dia selecionado com a lista; mês vazio                                                      |
+| Ajuda                     | Central com o destaque; vídeo em tela cheia                                                                 |
+
+## 7. Quem testa
+
+- **Escrita e manutenção do plano:** worker (QA-08), conferido pelo orquestrador.
+- **Rodada (E5-11):** **outro desenvolvedor da equipe, que não escreveu a tarefa testada**, com o
+  orquestrador consolidando; os fluxos 4 e 5 exigem as duas contas (A e B). Apoio de Haiku para
+  logs e comandos.
+- **Autorização:** o usuário libera o emulador e o development build no momento da rodada.
+- **Aparelho físico e iOS:** quem tiver o aparelho (QA-04); sem iPhone, iOS fica pendente.
+- **Maestro (QA-02):** o worker escreve e roda; quem testa confere a gravação de cada fluxo.
+
+## 8. Critérios de saída (AC-QA-08-01 e 02)
+
+- **Todos os P1 OK** no Android (emulador, backend real) (AC-QA-08-01); casos de leva não
+  publicada ficam N/A com o motivo.
+- P2 com FALHA só com issue aberta e decisão do usuário de seguir.
+- Fluxo E5-FLX-08 (push) OK no development build, ou registrado como pendência da BLD-01 e da
+  NOT-02 com o motivo.
+- Todo AC `MAN` das fichas tem um caso neste plano (AC-QA-08-02): ATV-04b-03 (E5-ATV-11, 12),
+  ATV-05-02 (E5-ATV-22), ATV-11-05 (E5-ATV-15 a 17), EVO-03-03 (E5-SES-01 a 04), EQP-04-04
+  (E5-EQP-15), AJD-01-03 (E5-AJD-02), BLD-01-02 e 03 (E5-BLD-01, 02), NOT-02-04 (E5-PSH-03),
+  FEC-06-03 (E5-FEC-03), QA-03-01 e QA-04-01 (§2.6).
+- Nenhum dado real em capturas ou relatos.
+
+## 9. Resultados da rodada (a preencher)
+
+| Campo                                    | Valor |
+| ---------------------------------------- | ----- |
+| Data e quem testou                       |       |
+| Branch e hash do commit                  |       |
+| AVD e versão do Android; Expo Go / build |       |
+| Leva do backend e data da conferência    |       |
+| P1 OK / total                            |       |
+| P2 OK / total                            |       |
+| FALHA e BLOQ (IDs e issues)              |       |
+| Fluxo de push                            |       |
+| Pendências e N/A com motivo              |       |

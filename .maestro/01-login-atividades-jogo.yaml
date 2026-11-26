@@ -1,0 +1,25 @@
+# Fluxo 1 (Entrega 5, ATV-04a): login -> Recursos -> Banco de atividades -> "Forme a palavra" -> "Muito bem!".
+# Variáveis: EMAIL, SENHA e as letras da palavra na ordem (modo mock: BOLA).
+#   maestro test -e EMAIL=... -e SENHA=... -e L1=B -e L2=O -e L3=L -e L4=A .maestro/01-login-atividades-jogo.yaml
+appId: host.exp.exponent
+env:
+  L1: B
+  L2: O
+  L3: L
+  L4: A
+---
+- runFlow: subflows/abrir-app.yaml
+- runFlow: subflows/login.yaml
+- tapOn: "Recursos"
+- tapOn: "Banco de atividades"
+- assertVisible: "Atividades prontas"
+- tapOn: "Interativas"
+- tapOn: ".*Forme a palavra.*"
+- tapOn: "Jogar"
+- tapOn: "Letra ${L1}"
+- tapOn: "Letra ${L2}"
+- tapOn: "Letra ${L3}"
+- tapOn: "Letra ${L4}"
+- assertVisible: "Muito bem!"
+- tapOn: "Concluir"
+- assertVisible: "Você acertou.*"
