@@ -2,13 +2,15 @@ import type { ReactElement } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import type { ClinicMember } from "@/api/types";
-import { Avatar, Badge } from "@/components/ds";
+import { Avatar, Badge, DsButton } from "@/components/ds";
 import { teamRoleLabel } from "@/features/team/roles";
 import { color, fontFamilies } from "@/theme";
 
 export interface MemberRowProps {
   member: ClinicMember;
   isMe: boolean;
+  /** Só para quem pode gerir a equipe, e nunca no próprio item. */
+  onManage?: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -33,7 +35,11 @@ const styles = StyleSheet.create({
   },
 });
 
-export function MemberRow({ member, isMe }: MemberRowProps): ReactElement {
+export function MemberRow({
+  member,
+  isMe,
+  onManage,
+}: MemberRowProps): ReactElement {
   const role = teamRoleLabel(member.role);
   const detail = member.profession ? `${member.profession} · ${role}` : role;
   return (
@@ -45,7 +51,16 @@ export function MemberRow({ member, isMe }: MemberRowProps): ReactElement {
         </Text>
         <Text style={styles.detail}>{detail}</Text>
       </View>
-      <Badge label="Ativo" />
+      {onManage ? (
+        <DsButton
+          label="Gerenciar"
+          variant="ghost"
+          accessibilityLabel={`Gerenciar ${member.name}`}
+          onPress={onManage}
+        />
+      ) : (
+        <Badge label="Ativo" />
+      )}
     </View>
   );
 }
