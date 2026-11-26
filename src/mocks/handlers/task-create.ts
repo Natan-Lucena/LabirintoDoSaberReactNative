@@ -411,13 +411,13 @@ registerMockHandler({ method: "post", path: "/task/create" }, ({ body }) => {
     (alt) => alt.isCorrect === true,
   );
   if (!hasCorrectAlternative) {
-    throw new MockApiError(500, "AT_LEAST_ONE_ALTERNATIVE_MUST_BE_CORRECT");
+    throw new MockApiError(400, "AT_LEAST_ONE_ALTERNATIVE_MUST_BE_CORRECT");
   }
   if (type === "multipleChoice" && hasMedia) {
-    throw new MockApiError(500, "TEXT_TASK_CANNOT_HAVE_MEDIA");
+    throw new MockApiError(400, "TEXT_TASK_CANNOT_HAVE_MEDIA");
   }
   if (type === "multipleChoiceWithMedia" && !hasMedia) {
-    throw new MockApiError(500, "MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO");
+    throw new MockApiError(400, "MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO");
   }
 
   const task: Task = {
@@ -436,7 +436,7 @@ registerMockHandler({ method: "post", path: "/task/create" }, ({ body }) => {
   };
   MOCK_TASKS.push(task);
 
-  return { status: 201, data: undefined };
+  return { status: 201, data: task };
 });
 
 export const taskCreateMockHandlersRegistered = true;

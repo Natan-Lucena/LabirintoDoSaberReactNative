@@ -114,10 +114,75 @@ describe("validateActivity", () => {
     ).toBeDefined();
     const errors = validateActivity(
       "colorMatch",
-      base({ pairs: [pair("Sol", "#FACC15"), pair("", "#123456")] }),
+      base({ pairs: [pair("Sol", "#FACC15"), pair("", "azul")] }),
     );
     expect(errors["pairs.1.word"]).toBe("Informe a palavra");
     expect(errors["pairs.1.colorHex"]).toBe("Escolha uma cor");
+  });
+
+  it("D-16: aceita #RRGGBB fora da paleta e rótulo de carta com 40 caracteres", () => {
+    const pair = (word: string, colorHex: string) => ({
+      ...emptyPair(),
+      word,
+      colorHex,
+    });
+    expect(
+      validateActivity(
+        "colorMatch",
+        base({ pairs: [pair("Sol", "#123456"), pair("Mar", "#abcdef")] }),
+      ),
+    ).toEqual({});
+    const card = (label: string) => ({
+      key: label,
+      id: "",
+      label,
+      image: { url: undefined, file: null },
+    });
+    expect(
+      validateActivity(
+        "memoryGame",
+        base({ cards: [card("a".repeat(40)), card("b")] }),
+      ),
+    ).toEqual({});
+    expect(
+      validateActivity(
+        "memoryGame",
+        base({ cards: [card("a".repeat(41)), card("b")] }),
+      )["cards.0.label"],
+    ).toBe("Use até 40 caracteres");
+  });
+
+  it("D-16: edição de imprimível preserva answerLines diferentes por item", () => {
+    const task = {
+      id: "t1",
+      category: "writing",
+      type: "printable",
+      prompt: "Folha",
+      alternatives: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      content: {
+        kind: "printable",
+        title: "Folha",
+        instructions: "Escreva",
+        layout: "LIST",
+        items: [
+          { id: "i1", text: "A", answerLines: 1 },
+          { id: "i2", text: "B", answerLines: 4 },
+          { id: "i3", text: "C" },
+        ],
+      },
+    } as unknown as Task;
+    const content = buildContent("printable", contentToFormValues(task));
+    expect(content).toMatchObject({
+      items: [
+        { id: "i1", answerLines: 1 },
+        { id: "i2", answerLines: 4 },
+        { id: "i3" },
+      ],
+    });
+    expect(
+      (content as { items: { answerLines?: number }[] }).items[2].answerLines,
+    ).toBeUndefined();
   });
 
   it("carta precisa de texto ou imagem", () => {

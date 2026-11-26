@@ -124,4 +124,39 @@ describe("createActivity / updateTask com mockAdapter (ATV-11)", () => {
       code: "LIBRARY_TASK_READ_ONLY",
     });
   });
+
+  it("M-01: DELETE e GET de tarefa inexistente respondem 404", async () => {
+    await expect(
+      apiClient.delete("/task/delete/nao-existe"),
+    ).rejects.toMatchObject({ status: 404 });
+    await expect(apiClient.get("/task/nao-existe")).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+
+  it("M-02: POST /task/create responde 201 com a Task e 400 sem alternativa correta", async () => {
+    const build = (prompt: string, correct: boolean) => {
+      const form = new FormData();
+      form.append("category", "reading");
+      form.append("type", "multipleChoice");
+      form.append("prompt", prompt);
+      form.append(
+        "alternatives",
+        JSON.stringify([
+          { text: "A", isCorrect: correct },
+          { text: "B", isCorrect: false },
+        ]),
+      );
+      return form;
+    };
+    const created = await apiClient.post(
+      "/task/create",
+      build("Enunciado", true),
+    );
+    expect(created.status).toBe(201);
+    expect(created.data).toMatchObject({ prompt: "Enunciado" });
+    await expect(
+      apiClient.post("/task/create", build("Sem correta", false)),
+    ).rejects.toMatchObject({ status: 400 });
+  });
 });

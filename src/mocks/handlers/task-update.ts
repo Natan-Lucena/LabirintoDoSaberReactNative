@@ -30,7 +30,7 @@ registerMockHandler({ method: "put", path: "/task/update" }, ({ body }) => {
   }
   const task = MOCK_TASKS.find((item) => item.id === input.id);
   if (!task) {
-    throw new MockApiError(500, "TASK_NOT_FOUND");
+    throw new MockApiError(404, "TASK_NOT_FOUND");
   }
   const isNewType = (NEW_ACTIVITY_TYPES as readonly string[]).includes(
     task.type,

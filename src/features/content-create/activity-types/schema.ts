@@ -11,7 +11,6 @@ import type {
   TaskContent,
   TaskTone,
 } from "@/api/types";
-import { COLOR_PALETTE } from "@/features/activities/engine/color-match/colorNames";
 
 export type ActivityType =
   "wordBuilder" | "colorMatch" | "memoryGame" | "printable";
@@ -67,6 +66,8 @@ export interface ItemRow {
   id: string;
   text: string;
   image: MediaValue;
+  /** Valor próprio vindo do servidor (D-16); vence o campo geral. */
+  answerLines?: number;
 }
 
 export type PrintableLayout = PrintableContent["layout"];
@@ -157,8 +158,6 @@ function parseAnswerLines(raw: string): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-const palette = COLOR_PALETTE.map((entry) => entry.hex);
-
 const commonShape = {
   prompt: z
     .string()
@@ -220,7 +219,7 @@ const schemas: Record<ActivityType, z.ZodType> = {
             .max(20, "Use até 20 caracteres"),
           colorHex: z
             .string()
-            .refine((hex) => palette.includes(hex), "Escolha uma cor"),
+            .refine((hex) => /^#[0-9A-Fa-f]{6}$/.test(hex), "Escolha uma cor"),
         }),
       )
       .min(2, "Use de 2 a 6 pares")
@@ -232,7 +231,7 @@ const schemas: Record<ActivityType, z.ZodType> = {
       .array(
         z
           .object({
-            label: z.string().trim().max(20, "Use até 20 caracteres"),
+            label: z.string().trim().max(40, "Use até 40 caracteres"),
             image: mediaSchema,
           })
           .refine((card) => card.label.length > 0 || hasMedia(card.image), {
@@ -327,7 +326,7 @@ export function buildContent(
         pairs: assignIds(values.pairs, "p").map((pair) => ({
           id: pair.id,
           word: pair.word.trim(),
-          colorHex: pair.colorHex,
+          colorHex: pair.colorHex.toUpperCase(),
         })),
       };
     case "memoryGame":
@@ -350,7 +349,9 @@ export function buildContent(
           id: item.id,
           ...(item.text.trim() ? { text: item.text.trim() } : {}),
           ...(item.image.url ? { imageUrl: item.image.url } : {}),
-          ...(answerLines > 0 ? { answerLines } : {}),
+          ...((item.answerLines ?? answerLines) > 0
+            ? { answerLines: item.answerLines ?? answerLines }
+            : {}),
         })),
       };
     }
@@ -421,7 +422,12 @@ export function contentToFormValues(task: Task): ActivityFormValues {
           image: { url: card.imageUrl, file: null },
         })),
       };
-    case "printable":
+    case "printable": {
+      // D-16: valores diferentes por item não podem ser achatados ao editar.
+      const first = content.items[0]?.answerLines ?? 0;
+      const differs = content.items.some(
+        (item) => (item.answerLines ?? 0) !== first,
+      );
       return {
         ...base,
         title: content.title,
@@ -433,8 +439,10 @@ export function contentToFormValues(task: Task): ActivityFormValues {
           id: item.id,
           text: item.text ?? "",
           image: { url: item.imageUrl, file: null },
+          ...(differs ? { answerLines: item.answerLines ?? 0 } : {}),
         })),
       };
+    }
   }
 }
 

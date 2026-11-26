@@ -6,7 +6,7 @@ type GuardianField = "guardianName" | "guardianPhone" | "guardianRelationship";
 
 /**
  * `null` nos campos do responsável apaga o valor (PP-05): no multipart vai
- * como string vazia, que o backend entende como "apagar" (Q8).
+ * como o texto "null", que o backend publicado entende como "apagar" (D-01).
  */
 export type UpdateStudentInput = Partial<
   Omit<CreateStudentInput, GuardianField>
@@ -31,7 +31,8 @@ export async function updateStudent(
   }
   for (const key of ["guardianName", "guardianRelationship"] as const) {
     const value = input[key];
-    if (value !== undefined) formData.append(key, value?.trim() ?? "");
+    if (value !== undefined)
+      formData.append(key, value === null ? "null" : value.trim());
   }
   if (input.age !== undefined) formData.append("age", String(input.age));
   if (input.learningTopics !== undefined)
@@ -39,7 +40,9 @@ export async function updateStudent(
   if (input.guardianPhone !== undefined)
     formData.append(
       "guardianPhone",
-      input.guardianPhone?.replace(/\D/g, "") ?? "",
+      input.guardianPhone === null
+        ? "null"
+        : input.guardianPhone.replace(/\D/g, ""),
     );
 
   const response = await apiClient.put<Student & { educators?: unknown }>(
