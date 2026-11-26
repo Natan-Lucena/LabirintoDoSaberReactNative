@@ -41,7 +41,9 @@ export function ShareWithDialog({
         <View style={dialogStyles.dialog}>
           {selected ? (
             <>
-              <Text style={dialogStyles.title}>Compartilhar paciente</Text>
+              <Text style={dialogStyles.title} accessibilityRole="header">
+                Compartilhar paciente
+              </Text>
               <Text style={dialogStyles.message}>
                 {`Compartilhar ${patientName} com ${selected.name}? Ela(e) poderá ver e registrar sessões, evoluções, planos, avaliações e relatórios.`}
               </Text>
@@ -66,7 +68,9 @@ export function ShareWithDialog({
             </>
           ) : (
             <>
-              <Text style={dialogStyles.title}>Compartilhar com…</Text>
+              <Text style={dialogStyles.title} accessibilityRole="header">
+                Compartilhar com…
+              </Text>
               {candidates.length === 0 ? (
                 <Text style={dialogStyles.message}>
                   Ninguém mais na equipe. Convide em Recursos → Equipe e

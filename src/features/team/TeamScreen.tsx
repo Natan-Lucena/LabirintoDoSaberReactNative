@@ -224,6 +224,7 @@ export function TeamScreen(): ReactElement {
           />
         ) : (
           <DsButton
+            testID="team-create"
             label="Criar equipe"
             onPress={() => setCreating(true)}
             fullWidth

@@ -25,7 +25,9 @@ export function ManageMemberDialog({
     <Modal transparent visible={member !== null} onRequestClose={onClose}>
       <View style={dialogStyles.backdrop}>
         <View style={dialogStyles.dialog}>
-          <Text style={dialogStyles.title}>{member?.name ?? ""}</Text>
+          <Text style={dialogStyles.title} accessibilityRole="header">
+            {member?.name ?? ""}
+          </Text>
           {member ? (
             <>
               <DsButton

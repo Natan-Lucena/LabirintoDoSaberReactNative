@@ -204,7 +204,7 @@ describe("AppointmentFormScreen — repetir (AGE-06)", () => {
     expect(routerBack).not.toHaveBeenCalled();
 
     await fireEvent.press(
-      screen.getByRole("button", { name: "Ver atendimento" }),
+      screen.getByRole("button", { name: /^Ver atendimento/ }),
     );
     expect(routerPush).toHaveBeenCalledWith("/agenda/appt-9");
     await fireEvent.press(screen.getByRole("button", { name: "Concluir" }));

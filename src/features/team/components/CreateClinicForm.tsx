@@ -46,6 +46,7 @@ export function CreateClinicForm({
   return (
     <View style={styles.form}>
       <Field
+        testID="team-name"
         label="Nome da clínica"
         value={name}
         onChangeText={(value) => {
@@ -57,6 +58,7 @@ export function CreateClinicForm({
         disabled={create.isPending}
       />
       <DsButton
+        testID="team-create-submit"
         label="Criar"
         onPress={submit}
         loading={create.isPending}

@@ -30,7 +30,7 @@ export function SeriesScopeDialog({
     <Modal transparent visible={visible} onRequestClose={onBack}>
       <View style={styles.backdrop}>
         <View style={styles.dialog}>
-          <Text style={styles.title}>
+          <Text style={styles.title} accessibilityRole="header">
             {edit
               ? "Alterar só este atendimento ou este e os seguintes?"
               : "Cancelar só este atendimento ou este e os seguintes?"}
