@@ -24,8 +24,18 @@ export default ({ config }: ConfigContext) => {
   // rejeita "true" em produção.
   const useMocks = process.env.EXPO_PUBLIC_USE_MOCKS ?? "";
 
+  // BLD-01: o EAS preenche GOOGLE_SERVICES_JSON (variável do tipo arquivo);
+  // localmente vale ./google-services.json (fora do Git). Sem o arquivo, o
+  // Expo Go e o export continuam funcionando.
+  const googleServicesFile =
+    process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json";
+
   return {
     ...config,
+    android: {
+      ...config.android,
+      googleServicesFile,
+    },
     extra: {
       ...config.extra,
       appEnvironment,
