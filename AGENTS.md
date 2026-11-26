@@ -40,8 +40,13 @@ convites e paciente compartilhado), o status e o arquivamento dos pacientes, a a
 recorrente, o push (com development build) e a central de ajuda, mais a QA pendente. Tem 25
 tarefas e depende muito do backend. Leia o [Roadmap](docs/entrega-5/ROADMAP.md), o
 [Backlog](docs/entrega-5/BACKLOG.md), o [Tracking](docs/entrega-5/TRACKING.md) e a
-[Especificação para o backend](docs/entrega-5/ESPECIFICACAO-BACKEND.md). **As decisões G-61 a
-G-72 são propostas** até o usuário confirmar; nenhum dispatch que dependa delas antes disso.
+[Especificação para o backend](docs/entrega-5/ESPECIFICACAO-BACKEND.md). As decisões G-61 a
+G-72 foram resolvidas em 2026-11-25. Em 2026-11-26 o código das 25 tarefas está escrito
+(mock-first): API-07 leva 1, ATV-04a, ATV-04b e EVO-03 na `main`, e o resto **em revisão em duas
+pilhas de PRs empilhados** (atividades e principal), que só entram na `main` quando o backend
+publicar cada leva do [contrato](docs/entrega-5/CONTRATOS-BACKEND.md). Ordem de revisão e de
+merge, conflitos e o PR de integração em [PILHAS](docs/entrega-5/PILHAS.md); resumo em
+[ENTREGA-5](docs/entrega-5/ENTREGA-5.md).
 
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
