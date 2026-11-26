@@ -489,6 +489,8 @@ ainda não o publica. Só leituras; dados em `src/mocks/fixtures-task-catalog.ts
 - `GET /task/recommended?studentId=`: até 6 atividades interativas com `reason`
   ("{habilidade} · dificuldade mapeada"), pelas `learningTopics` do paciente; `[]` sem tópicos;
   `404 STUDENT_NOT_FOUND`; `400` sem `studentId`.
+- `POST /task/:id/duplicate` (ATV-09): `201` com a cópia (`source: EDUCATOR`, novo id, entra em
+  `MOCK_TASKS`); `404 TASK_NOT_FOUND` para id desconhecido.
 - `GET /task/:id` (em `task-delete.ts`) encontra também a biblioteca, com `content`;
   `GET /task/` devolve, além das três antigas, uma atividade do educador de cada tipo novo (AT-11).
 - `GET /session-evolution/context/:sessionId` e `GET /task-notebook-session/report/:sessionId`:

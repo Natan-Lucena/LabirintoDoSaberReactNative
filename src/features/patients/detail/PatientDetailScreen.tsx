@@ -428,6 +428,17 @@ export function PatientDetailScreen({
                 })
               }
             />
+            <DsButton
+              label={`Atividades para ${patient.name.trim().split(/\s+/)[0]}`}
+              variant="secondary"
+              fullWidth
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/activities",
+                  params: { studentId: patient.id },
+                })
+              }
+            />
           </>
         )}
       </ScrollView>
