@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from "react";
+import { useCallback, useState, type ReactElement } from "react";
 import {
   Linking,
   Pressable,
@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { ApiError } from "@/api/errors";
 import type { Appointment } from "@/api/types";
@@ -39,6 +39,8 @@ import {
   evolutionRoute,
   patientRecordRoute,
 } from "@/features/evolution/register/routes";
+import { PendingsSection } from "@/features/patients/overview/PendingsSection";
+import { usePatientOverview } from "@/features/patients/overview/usePatientOverview";
 import { isPatientOwner } from "@/features/patients/shares/access";
 import { WhoFollowsSection } from "@/features/patients/shares/WhoFollowsSection";
 import { useStudents } from "@/features/students/useStudents";
@@ -130,6 +132,14 @@ export function PatientDetailScreen({
   const appointmentsQuery = useAppointments();
   const evolutionsQuery = usePatientEvolutions(patientId);
   const pendingQuery = usePendingEvolutions();
+  const { query: overviewQuery, byId: overviewById } = usePatientOverview();
+  const { refetch: refetchOverview } = overviewQuery;
+  // As pendências mudam ao registrar evolução, concluir escala etc.: refaz ao voltar à ficha.
+  useFocusEffect(
+    useCallback(() => {
+      void refetchOverview();
+    }, [refetchOverview]),
+  );
   const sessionsQuery = useStudentSessions(patientId);
   const anamneseQuery = useAnamneseResponses(patientId);
   const patient = studentsQuery.data?.find(
@@ -193,6 +203,9 @@ export function PatientDetailScreen({
   }
 
   const owner = isPatientOwner(patient);
+  // Reserva (§6 item 5): sem overview o bloco "Registrar evolução" continua.
+  const overview = overviewById.get(patient.id);
+  const useFallback = !overview && !overviewQuery.isPending;
   const nextAppointment = findNextAppointment(
     appointmentsQuery.data ?? [],
     patient.id,
@@ -351,7 +364,16 @@ export function PatientDetailScreen({
               )}
             </View>
 
-            {pendingEvolutions[0] ? (
+            {overview ? (
+              <PendingsSection
+                studentId={patient.id}
+                overview={overview}
+                onSelectTab={setActiveTab}
+                onToast={toast.show}
+              />
+            ) : null}
+
+            {useFallback && pendingEvolutions[0] ? (
               <View style={styles.section}>
                 {pendingEvolutions.length > 1 ? (
                   <Text style={styles.emptyText}>

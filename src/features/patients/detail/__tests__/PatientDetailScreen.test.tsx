@@ -12,6 +12,15 @@ const routerPush = vi.fn();
 const routerBack = vi.fn();
 const openURL = vi.fn();
 
+const overviewState = vi.hoisted(() => ({
+  query: {
+    data: undefined as import("@/api/types").PatientOverview[] | undefined,
+    isPending: false,
+    isError: true,
+    refetch: () => undefined,
+  },
+}));
+
 const pendingState = vi.hoisted(() => ({
   data: [] as {
     sessionId: string;
@@ -66,6 +75,15 @@ vi.mock("@/features/patients/detail/plans/usePatientPlans", () => ({
 }));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: routerPush, back: routerBack }),
+  useFocusEffect: () => undefined,
+}));
+vi.mock("@/features/patients/overview/usePatientOverview", () => ({
+  usePatientOverview: () => ({
+    query: overviewState.query,
+    byId: new Map(
+      overviewState.query.data?.map((item) => [item.studentId, item]),
+    ),
+  }),
 }));
 vi.mock("react-native", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-native")>()),

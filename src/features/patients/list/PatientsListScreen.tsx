@@ -1,22 +1,23 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { Appointment, Student } from "@/api/types";
+import type { Appointment, PatientOverview, Student } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
 import {
   Avatar,
   Badge,
   DsButton,
   Fab,
-  FilterChip,
   FilterRow,
   SearchField,
 } from "@/components/ds";
 import { useAppointments } from "@/features/appointments/useAppointments";
+import { primaryStatusLabel } from "@/features/patients/overview/labels";
+import { usePatientOverview } from "@/features/patients/overview/usePatientOverview";
 import { isPatientOwner } from "@/features/patients/shares/access";
 import { useStudents } from "@/features/students/useStudents";
 import { color, getContentPadding, shape, typography } from "@/theme";
@@ -34,6 +35,7 @@ import { StaticPressable } from "@/components/ds/StaticPressable";
 const filterOptions = [
   { key: "all", label: "Todos" },
   { key: "today", label: "Com sessão hoje" },
+  { key: "pendings", label: "Pendências" },
 ];
 
 function navigate(
@@ -52,10 +54,12 @@ function learningTopicsSummary(patient: Student): string {
 function PatientCard({
   patient,
   appointment,
+  overview,
   onPress,
 }: {
   patient: Student;
   appointment: Appointment | undefined;
+  overview: PatientOverview | undefined;
   onPress: () => void;
 }): ReactElement {
   return (
@@ -87,7 +91,8 @@ function PatientCard({
           />
         ) : null}
         <Text style={styles.patientMeta} numberOfLines={1}>
-          {patient.age} anos · {learningTopicsSummary(patient)}
+          {patient.age} anos ·{" "}
+          {primaryStatusLabel(overview) ?? learningTopicsSummary(patient)}
         </Text>
         {appointment ? (
           <View style={styles.appointmentLine}>
@@ -132,6 +137,15 @@ export function PatientsListScreen(): ReactElement {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<PatientFilter>("all");
 
+  const { query: overviewQuery, byId: overviewById } = usePatientOverview();
+  const { refetch: refetchOverview } = overviewQuery;
+  // O overview muda ao registrar evolução, salvar plano etc.: refaz ao voltar à aba.
+  useFocusEffect(
+    useCallback(() => {
+      void refetchOverview();
+    }, [refetchOverview]),
+  );
+
   const patients = studentsQuery.data ?? [];
   const appointments = appointmentsQuery.data ?? [];
   const isInitialLoading =
@@ -141,9 +155,21 @@ export function PatientsListScreen(): ReactElement {
     (!studentsQuery.data && studentsQuery.isError) ||
     (!appointmentsQuery.data && appointmentsQuery.isError);
   const visiblePatients = sortPatientsByName(
-    filterPatients(patients, appointments, search, filter),
+    filterPatients(
+      patients,
+      appointments,
+      search,
+      filter,
+      new Date(),
+      overviewById,
+    ),
   );
   const appointmentsByPatient = nextAppointmentByStudentId(appointments);
+
+  const pendingsUnavailable =
+    filter === "pendings" && !overviewQuery.data && overviewQuery.isError;
+  const pendingsLoading =
+    filter === "pendings" && !overviewQuery.data && !overviewQuery.isError;
 
   if (isInitialLoading) {
     return (
@@ -172,7 +198,11 @@ export function PatientsListScreen(): ReactElement {
   return (
     <View style={styles.screen}>
       <View style={[styles.controls, { paddingTop: 20 + insets.top }]}>
-        <Text style={styles.eyebrow}>{patients.length} pacientes ativos</Text>
+        <Text style={styles.eyebrow}>
+          {patients.length === 1
+            ? "1 paciente ativo"
+            : `${patients.length} pacientes ativos`}
+        </Text>
         <Text style={styles.title} accessibilityRole="header">
           Pacientes
         </Text>
@@ -188,21 +218,34 @@ export function PatientsListScreen(): ReactElement {
             value={filter}
             onChange={(value) => setFilter(value as PatientFilter)}
           />
-          <FilterChip
-            label="Pendências · Em breve"
-            onPress={() => undefined}
-            disabled
-          />
         </View>
       </View>
-      {visiblePatients.length === 0 ? (
+      {pendingsUnavailable ? (
         <View style={styles.emptyList}>
           <StatePanel
-            title="Nenhum paciente encontrado"
+            title="Não foi possível carregar as pendências."
+            message="Tente novamente em instantes."
+            retry={() => void refetchOverview()}
+          />
+        </View>
+      ) : pendingsLoading ? (
+        <View style={styles.emptyList}>
+          <Text style={styles.stateMessage}>Carregando pendências</Text>
+        </View>
+      ) : visiblePatients.length === 0 ? (
+        <View style={styles.emptyList}>
+          <StatePanel
+            title={
+              filter === "pendings"
+                ? "Nenhum paciente com pendência"
+                : "Nenhum paciente encontrado"
+            }
             message={
               search
                 ? "Ajuste a busca para encontrar outro paciente."
-                : "Cadastre um paciente para começar."
+                : filter === "pendings"
+                  ? "Nada precisa de atenção agora."
+                  : "Cadastre um paciente para começar."
             }
           />
         </View>
@@ -214,6 +257,7 @@ export function PatientsListScreen(): ReactElement {
             <PatientCard
               patient={item}
               appointment={appointmentsByPatient.get(item.id)}
+              overview={overviewById.get(item.id)}
               onPress={() => navigate(router, `/patients/${item.id}`)}
             />
           )}
