@@ -40,6 +40,7 @@ import "@/mocks/handlers/notifications";
 import "@/mocks/handlers/task-catalog";
 import "@/mocks/handlers/clinic";
 import "@/mocks/handlers/student-status";
+import "@/mocks/handlers/student-shares";
 import "@/mocks/handlers/appointment-series";
 import "@/mocks/handlers/push";
 import "@/mocks/handlers/help";

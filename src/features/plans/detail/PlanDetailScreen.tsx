@@ -380,6 +380,9 @@ export function PlanDetailScreen(): ReactElement {
               Próxima revisão: {displayDate(plan.nextReviewDate)}
             </Text>
           ) : null}
+          {plan.authorName ? (
+            <Text style={styles.body}>por {plan.authorName}</Text>
+          ) : null}
           <SectionTitle title="Objetivo geral" />
           <Text style={styles.body}>{plan.generalObjective}</Text>
           {plan.professionalNotes ? (

@@ -132,7 +132,9 @@ export function ReportHistoryScreen(): ReactElement {
               {formatDay(item.period.from)} a {formatDay(item.period.to)}
             </Text>
             <Text style={styles.body}>
-              Criado em {formatDay(item.createdAt)} · {lastShareText(item)}
+              Criado em {formatDay(item.createdAt)}
+              {item.authorName ? ` por ${item.authorName}` : ""} ·{" "}
+              {lastShareText(item)}
             </Text>
             <View style={styles.actions}>
               <DsButton

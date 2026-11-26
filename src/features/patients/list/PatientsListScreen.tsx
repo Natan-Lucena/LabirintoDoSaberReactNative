@@ -9,6 +9,7 @@ import type { Appointment, Student } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
 import {
   Avatar,
+  Badge,
   DsButton,
   Fab,
   FilterChip,
@@ -16,6 +17,7 @@ import {
   SearchField,
 } from "@/components/ds";
 import { useAppointments } from "@/features/appointments/useAppointments";
+import { isPatientOwner } from "@/features/patients/shares/access";
 import { useStudents } from "@/features/students/useStudents";
 import { color, getContentPadding, shape, typography } from "@/theme";
 
@@ -75,6 +77,15 @@ function PatientCard({
         <Text style={styles.patientName} numberOfLines={1}>
           {patient.name}
         </Text>
+        {!isPatientOwner(patient) ? (
+          <Badge
+            label={
+              patient.ownerName
+                ? `Compartilhado por ${patient.ownerName}`
+                : "Compartilhado"
+            }
+          />
+        ) : null}
         <Text style={styles.patientMeta} numberOfLines={1}>
           {patient.age} anos · {learningTopicsSummary(patient)}
         </Text>

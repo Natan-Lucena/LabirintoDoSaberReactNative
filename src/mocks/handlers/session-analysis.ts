@@ -8,6 +8,7 @@ import {
   MOCK_STUDENTS,
   MOCK_TASK_NOTEBOOKS,
 } from "@/mocks/fixtures";
+import { MOCK_SHARED_STUDENT_ID } from "@/mocks/fixtures-e5";
 import { MOCK_LIBRARY_TASKS } from "@/mocks/fixtures-task-catalog";
 import { completeMockAppointment, mockAppointmentExists } from "./appointment";
 import { MOCK_TASKS } from "./content";
@@ -147,7 +148,11 @@ function analysisFor(
 registerMockHandler(
   { method: "get", path: "/task-notebook-session/student/:studentId" },
   ({ params }) => {
-    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+    // O paciente compartilhado (EQP-04) também tem acesso, sem sessões próprias.
+    if (
+      params.studentId !== MOCK_SHARED_STUDENT_ID &&
+      !MOCK_STUDENTS.some((student) => student.id === params.studentId)
+    ) {
       throw new MockApiError(400, "INVALID_STUDENT_ID");
     }
     return { status: 200, data: sessionsForStudent(params.studentId) };

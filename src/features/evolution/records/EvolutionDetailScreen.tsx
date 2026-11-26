@@ -126,6 +126,9 @@ function EvolutionBody({
             evolution.criteria.length,
           )}
         </Text>
+        {evolution.authorName ? (
+          <Text style={styles.caption}>por {evolution.authorName}</Text>
+        ) : null}
       </View>
 
       {evolution.criteria.length > 0 ? (
