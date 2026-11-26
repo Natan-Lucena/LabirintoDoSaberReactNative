@@ -558,6 +558,13 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
   lista de pacientes não muda. Com `"admin"` ou `"professional"`, `/educator/me` traz `clinic` e
   `GET /student/` inclui "Paciente Teste Compartilhado" (`access: "SHARED"`, `ownerName`). Como
   `professional`, `GET /clinic/invites` responde `403 FORBIDDEN_ROLE`.
+  **Uso manual:** `EXPO_PUBLIC_MOCK_TEAM=admin pnpm start` (com `EXPO_PUBLIC_USE_MOCKS=true`) escolhe o
+  cenário inicial sem tocar no código (`none`, `admin` ou `professional`).
+- **Escritas da equipe (EQP-01)**, com estado em memória em `handlers/clinic.ts`: `POST /clinic/` (nome 2–80;
+  `409 ALREADY_IN_CLINIC` se o cenário não for `none`) cria a clínica com o educador como único `ADMIN` e liga o
+  cenário `admin`; `POST /clinic/invites` (só `ADMIN`, `403` no `professional`) devolve um convite novo com código
+  de 8 caracteres e `shareMessage` do formato EQ-05, que passa a aparecer em `GET /clinic/invites`; a partir de 20
+  convites ativos, `409 TOO_MANY_INVITES`. `resetMockClinicState()` limpa esse estado (testes).
 - **Prévia do convite:** `AB3K7MPQ` (profissional) e `KM4W9RTD` (administrador) valem; qualquer outro
   código, `404 INVITE_INVALID`; `LIMITE22` responde `429 TOO_MANY_REQUESTS`.
 - **Status:** `GET /student/` sem `status` devolve só os 5 pacientes de sempre, sem os campos novos
@@ -576,7 +583,7 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
 
 ### Lacunas
 
-- Sem escritas: nada muda depois de uma chamada; o estado vem só dos cenários acima.
+- Sem escritas (exceto as da equipe, acima): nada muda depois de uma chamada; o estado vem só dos cenários.
 - As ocorrências da série não entram em `GET /appointment/` e os atendimentos dos mocks não têm `seriesId`.
 - Os pacientes compartilhado e arquivado não têm sessões, planos nem evoluções nos mocks.
 - `authorName` (EQ-12) existe nos tipos, mas nenhum mock o preenche ainda.
