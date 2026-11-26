@@ -148,6 +148,11 @@ describe("AgendaScreen (AGE-01)", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Próximo mês" }));
     expect(screen.getByText("maio de 2026")).toBeTruthy();
     expect(screen.getByText("Nenhum atendimento neste dia")).toBeTruthy();
+    // A grade acompanha o título: maio tem 31 dias e abril some.
+    expect(screen.getByRole("button", { name: "31 de maio" })).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "2 de abril, 2 agendamentos" }),
+    ).toBeNull();
 
     await fireEvent.press(screen.getByRole("radio", { name: "Semana" }));
     expect(

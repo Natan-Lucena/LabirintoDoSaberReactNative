@@ -6,11 +6,12 @@ import { useRouter } from "expo-router";
 
 import { acceptClinicInvite, clinicQueryKeys } from "@/api/endpoints/clinic";
 import type { InvitePreview } from "@/api/types";
-import { AppHeader, DsButton, Toast, useToast } from "@/components/ds";
+import { AppHeader, DsButton } from "@/components/ds";
 import { InviteCodeStep } from "@/features/auth/invite/InviteCodeStep";
 import { InvitePreviewCard } from "@/features/auth/invite/InvitePreviewCard";
 import { inviteErrorMessage } from "@/features/auth/invite/messages";
 import { homeQueryKeys } from "@/features/home/useHomeData";
+import { setTeamNotice } from "@/features/team/notice";
 import { color, semanticColor, typography } from "@/theme";
 
 const styles = StyleSheet.create({
@@ -29,7 +30,6 @@ interface Confirmed {
 export function JoinTeamScreen(): ReactElement {
   const router = useRouter();
   const client = useQueryClient();
-  const toast = useToast();
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export function JoinTeamScreen(): ReactElement {
         client.invalidateQueries({ queryKey: homeQueryKeys.educator }),
         client.invalidateQueries({ queryKey: ["student"] }),
       ]);
-      toast.show(`Você entrou na equipe ${view.clinic.name}`);
+      setTeamNotice(`Você entrou na equipe ${view.clinic.name}`);
       router.replace("/team");
     } catch (caught) {
       setError(inviteErrorMessage(caught));
@@ -96,7 +96,6 @@ export function JoinTeamScreen(): ReactElement {
           </View>
         )}
       </ScrollView>
-      <Toast message={toast.message} onHide={toast.hide} />
     </SafeAreaView>
   );
 }
