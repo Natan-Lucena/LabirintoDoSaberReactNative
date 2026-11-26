@@ -101,6 +101,12 @@ export function TaskDetailScreen({
   function goToPlay() {
     router.push({ pathname: "/activities/[id]", params: { id: taskId } });
   }
+  function goToPrint() {
+    router.push({
+      pathname: "/activities/print/[id]",
+      params: { id: taskId },
+    });
+  }
   function goToEdit() {
     router.push({
       pathname: "/content/task/[id]/edit",
@@ -249,7 +255,14 @@ export function TaskDetailScreen({
           </Text>
         ) : null}
         <View style={styles.actions}>
-          {isActivityTypePlayable(task.type) ? (
+          {task.type === "printable" ? (
+            <DsButton
+              label="Imprimir"
+              icon="print"
+              onPress={goToPrint}
+              fullWidth
+            />
+          ) : isActivityTypePlayable(task.type) ? (
             <DsButton label="Jogar" icon="play" onPress={goToPlay} fullWidth />
           ) : null}
           {isLibrary ? (
