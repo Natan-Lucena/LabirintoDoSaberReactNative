@@ -275,14 +275,12 @@ export function TaskDetailScreen({
             />
           ) : (
             <>
-              {isMultipleChoice(task.type) ? (
-                <DsButton
-                  label="Editar Atividade"
-                  onPress={goToEdit}
-                  variant="secondary"
-                  fullWidth
-                />
-              ) : null}
+              <DsButton
+                label="Editar Atividade"
+                onPress={goToEdit}
+                variant="secondary"
+                fullWidth
+              />
               <DsButton
                 label="Excluir Atividade"
                 onPress={() => setConfirmOpen(true)}

@@ -25,8 +25,13 @@ function buildApiErrorAxiosError(
   status: number,
   code: string,
   message: string,
+  errors: readonly { field: string; message: string }[] = [],
 ): AxiosError {
-  const response = buildResponse(config, status, { message: code });
+  const response = buildResponse(
+    config,
+    status,
+    errors.length > 0 ? { message: code, errors } : { message: code },
+  );
   const error = new AxiosError(message, String(status), config, {}, response);
 
   return error;
@@ -94,6 +99,7 @@ export async function mockAdapter(
         error.status,
         error.code,
         error.message,
+        error.errors,
       );
     }
 

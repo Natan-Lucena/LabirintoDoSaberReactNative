@@ -1,5 +1,10 @@
 import { apiClient } from "@/api/client";
-import type { TaskCategory, TaskType } from "@/api/types";
+import type {
+  TaskCategory,
+  TaskContent,
+  TaskTone,
+  TaskType,
+} from "@/api/types";
 
 export interface UpdateTaskAlternativeInput {
   text: string;
@@ -14,6 +19,11 @@ export interface UpdateTaskInput {
   alternatives?: UpdateTaskAlternativeInput[];
   imageFile?: string;
   audioFile?: string;
+  /** Tipos novos (ATV-11): lista completa, ids dos itens preservados. */
+  content?: TaskContent;
+  skills?: string[];
+  theme?: string;
+  tone?: TaskTone;
 }
 
 /** PUT /task/update — envia somente os campos modificados. */

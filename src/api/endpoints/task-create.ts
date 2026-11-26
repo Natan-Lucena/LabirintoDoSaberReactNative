@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import type { TaskCategory } from "@/api/types";
+import type { Task, TaskCategory, TaskContent, TaskTone } from "@/api/types";
 import type { TaskMediaFile } from "./task-upload-media";
 
 export interface CreateTaskAlternativeInput {
@@ -42,4 +42,42 @@ export async function createTask(input: CreateTaskInput): Promise<void> {
   }
 
   await apiClient.post("/task/create", formData);
+}
+
+export interface CreateActivityInput {
+  category: TaskCategory;
+  /** Sempre igual a `content.kind`. */
+  type: TaskContent["kind"];
+  prompt: string;
+  content: TaskContent;
+  skills?: string[];
+  theme?: string;
+  tone?: TaskTone;
+}
+
+/**
+ * POST /task/create (multipart) para os tipos novos (ATV-11): `content` e
+ * `skills` vão como strings JSON; sem `alternatives`. Resposta `201 Task`; o
+ * contrato antigo (`201` vazio) devolve `null`.
+ */
+export async function createActivity(
+  input: CreateActivityInput,
+): Promise<Task | null> {
+  const formData = new FormData();
+  formData.append("category", input.category);
+  formData.append("type", input.type);
+  formData.append("prompt", input.prompt);
+  formData.append("content", JSON.stringify(input.content));
+  if (input.skills && input.skills.length > 0) {
+    formData.append("skills", JSON.stringify(input.skills));
+  }
+  if (input.theme) formData.append("theme", input.theme);
+  if (input.tone) formData.append("tone", input.tone);
+
+  const response = await apiClient.post<Task | "" | undefined>(
+    "/task/create",
+    formData,
+  );
+  const data = response.data;
+  return data && typeof data === "object" && "id" in data ? data : null;
 }
