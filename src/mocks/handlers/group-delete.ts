@@ -9,7 +9,7 @@ registerMockHandler(
       (group) => group.id === params.taskGroupId,
     );
     if (index === -1) {
-      throw new MockApiError(500, "TASK_GROUP_NOT_FOUND");
+      throw new MockApiError(404, "TASK_GROUP_NOT_FOUND");
     }
     MOCK_TASK_GROUPS.splice(index, 1);
 

@@ -236,6 +236,8 @@ export interface TaskNotebookSessionAnswer {
   isCorrect: boolean;
   // Unidade não documentada na Parte I; preservada como número puro.
   timeToAnswer: number;
+  /** Tempo de resposta em ms (PP-08, BACKEND-ENTREGUE §3.2): usar sempre este. Opcional no tipo: respostas guardadas offline por versões antigas do app não o têm. */
+  timeToAnswerMs?: number;
   answeredAt: string;
 }
 
@@ -552,7 +554,8 @@ export interface EvolutionContext {
   /** Jogos da sessão (RS-06; Entrega 5, mock-first). */
   activityResults?: {
     taskId: string;
-    title: string;
+    /** Pode faltar (BACKEND-ENTREGUE §3.2): a tela usa o rótulo do tipo. */
+    title?: string;
     taskType: TaskType;
     completed: boolean;
     correct: boolean;
@@ -773,8 +776,8 @@ export interface AnamneseSummary {
 /**
  * Campos novos da resposta da anamnese (AS-02): `summary` é ausente se nunca gerada.
  * `summaryOutdated` (resposta editada depois da síntese) só vem nos GETs (detalhe e
- * lista) e no POST da síntese (`false`); PUT e POST de resposta NÃO o trazem, então
- * depois de editar o app relê com GET.
+ * lista), no POST da síntese (`false`) e, desde o backend publicado (PP-11,
+ * BACKEND-ENTREGUE §3.8), também no POST e no PUT da resposta: não precisa reler.
  */
 export interface AnamneseSummaryFields {
   summary?: AnamneseSummary;
@@ -997,7 +1000,8 @@ export interface InvitePreview {
 export interface StudentShare {
   educatorId: string;
   name: string;
-  role: TeamRole;
+  /** Pode faltar no backend publicado (BACKEND-ENTREGUE §3.3). */
+  role?: TeamRole;
   sharedAt: string;
 }
 
@@ -1061,6 +1065,8 @@ export interface SeriesResult {
   series: AppointmentSeries;
   created: Appointment[];
   skipped: {
+    /** Só no PUT da série (BACKEND-ENTREGUE §3.5). */
+    appointmentId?: string;
     scheduledAt: string;
     reason: "CONFLICT";
     conflictingAppointmentId: string;

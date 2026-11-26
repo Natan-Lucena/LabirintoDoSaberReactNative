@@ -1,5 +1,5 @@
-// Paciente compartilhado (EQP-04). Contrato PROPOSTO em
-// docs/entrega-5/CONTRATOS-BACKEND.md §4.15 a §4.17 (mock-first). A leitura
+// Paciente compartilhado (EQP-04). Contrato publicado em
+// 2026-11-26 (BACKEND-ENTREGUE-E5 §3.3; CONTRATOS-BACKEND §4.15 a §4.17). A leitura
 // (`listStudentShares`) nasceu na API-07 e fica em `clinic.ts`.
 import { apiClient } from "@/api/client";
 import { normalizeApiError } from "@/api/errors";

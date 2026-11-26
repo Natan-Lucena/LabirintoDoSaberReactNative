@@ -24,6 +24,7 @@ import {
   CheckList,
   DateField,
   DsButton,
+  InfoCard,
   PrivacyNote,
   SectionTitle,
   SelectField,
@@ -262,6 +263,14 @@ export function ConfigureReportScreen(): ReactElement {
               <Text style={styles.warning} accessibilityRole="alert" accessible>
                 {`Atenção: ${sensitive.join(", ")} traz informação sensível e vai para ${audience === "FAMILY" ? "a família" : "a escola"}.`}
               </Text>
+            ) : null}
+
+            {audience === "SCHOOL" ? (
+              <InfoCard
+                icon="file"
+                title="Relatório para a escola"
+                description="Textos livres (evoluções, observações) vão como foram escritos; revise antes de enviar."
+              />
             ) : null}
 
             {generation.isPending ? (

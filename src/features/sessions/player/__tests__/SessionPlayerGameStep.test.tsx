@@ -397,6 +397,29 @@ describe("SessionPlayerScreen: jogo na sessão (EVO-03)", () => {
     },
   );
 
+  it.each([
+    [403, "UNAUTHORIZED", "Você não tem acesso a este item."],
+    [404, "TASK_NOT_FOUND", "Esta atividade não está mais disponível."],
+    [404, "STUDENT_NOT_FOUND", "Esta atividade não está mais disponível."],
+  ])(
+    "%i %s é definitivo: sem pendência persistida e libera a Próxima",
+    async (status, code, message) => {
+      vi.mocked(submitActivityResult).mockRejectedValueOnce(
+        apiFailure(status, code),
+      );
+      await openGame();
+
+      await playWordCorrectly();
+
+      await waitFor(() => expect(screen.getByText(message)).toBeTruthy());
+      expect(markActivityResultPending).not.toHaveBeenCalled();
+      expect(
+        screen.queryByRole("button", { name: "Tentar reenviar" }),
+      ).toBeNull();
+      expect(screen.getByRole("button", { name: "Próxima" })).toBeTruthy();
+    },
+  );
+
   it("SESSION_ALREADY_FINISHED leva ao encerramento sem registrar", async () => {
     vi.mocked(submitActivityResult).mockRejectedValueOnce(
       apiFailure(409, "SESSION_ALREADY_FINISHED"),

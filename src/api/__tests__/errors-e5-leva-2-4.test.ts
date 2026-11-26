@@ -63,6 +63,49 @@ const NEW_CODES: [number, string, string][] = [
   ],
 ];
 
+// Backend publicado em 2026-11-26 (BACKEND-ENTREGUE-E5): D-13.
+const PUBLISHED_CODES: [number, string, string][] = [
+  [403, "UNAUTHORIZED", "Você não tem acesso a este item."],
+  [
+    400,
+    "SERIES_TOO_LONG",
+    "A série passa de 6 meses. Reduza o número de atendimentos ou a frequência.",
+  ],
+  [
+    400,
+    "APPOINTMENT_NOT_IN_SERIES",
+    "Este atendimento não faz parte desta série.",
+  ],
+  [
+    400,
+    "USE_ACTIVITY_RESULT_ROUTE",
+    "Este jogo registra o resultado da atividade, não uma resposta.",
+  ],
+  [
+    400,
+    "STUDENT_NOT_ASSIGNED_TO_CURRENT_EDUCATOR",
+    "Este paciente não está sob os seus cuidados.",
+  ],
+  [404, "NEW_EDUCATOR_NOT_FOUND", "O novo responsável não foi encontrado."],
+  [
+    400,
+    "TASK_NOT_IN_NOTEBOOK",
+    "Esta atividade não faz parte do caderno da sessão.",
+  ],
+];
+
+describe("mensagens dos erros do backend publicado (D-13)", () => {
+  it.each(PUBLISHED_CODES)(
+    "%i %s tem mensagem em português",
+    (status, code, text) => {
+      const error = normalizeApiError(failure(status, code));
+
+      expect(error.message).toBe(text);
+      expect(error.code).toBe(code);
+    },
+  );
+});
+
 describe("mensagens dos erros da Entrega 5, levas 2 a 4", () => {
   it.each(NEW_CODES)(
     "%i %s tem mensagem em português",

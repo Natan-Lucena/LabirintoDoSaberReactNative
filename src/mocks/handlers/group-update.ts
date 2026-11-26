@@ -13,7 +13,7 @@ registerMockHandler(
       tasksIds?: unknown;
     };
     const group = MOCK_TASK_GROUPS.find((item) => item.id === input.id);
-    if (!group) throw new MockApiError(500, "TASK_GROUP_NOT_FOUND");
+    if (!group) throw new MockApiError(404, "TASK_GROUP_NOT_FOUND");
     if (typeof input.name === "string") group.name = input.name;
     if (typeof input.category === "string")
       group.category = input.category as TaskCategory;

@@ -1,5 +1,5 @@
-// Recorrência da agenda: leitura (API-07, leva 3) e escritas (AGE-06). Contrato PROPOSTO em
-// docs/entrega-5/CONTRATOS-BACKEND.md §2.5 e §5.7 (mock-first). Criar, alterar e
+// Recorrência da agenda: leitura (API-07, leva 3) e escritas (AGE-06). Contrato publicado em
+// 2026-11-26 (BACKEND-ENTREGUE-E5 §3.5; CONTRATOS-BACKEND §2.5 e §5.7). Criar, alterar e
 // cancelar série "este e os seguintes".
 import { apiClient } from "@/api/client";
 import { acceptConflict, throwOnConflict } from "@/api/endpoints/appointment";

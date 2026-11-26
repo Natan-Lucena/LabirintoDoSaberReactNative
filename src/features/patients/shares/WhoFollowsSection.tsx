@@ -157,7 +157,11 @@ export function WhoFollowsSection({
               <PersonRow
                 key={item.educatorId}
                 name={mine ? "Você" : item.name}
-                detail={`${teamRoleLabel(item.role)} · ${sinceLabel(item.sharedAt)}`}
+                detail={
+                  item.role
+                    ? `${teamRoleLabel(item.role)} · ${sinceLabel(item.sharedAt)}`
+                    : sinceLabel(item.sharedAt)
+                }
                 action={
                   owner ? (
                     <DsButton

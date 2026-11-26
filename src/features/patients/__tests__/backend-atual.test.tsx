@@ -3,12 +3,10 @@ import { renderHook, waitFor } from "@testing-library/react-native";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getClinic } from "@/api/endpoints/clinic";
-import { listStudents } from "@/api/endpoints/student";
 import { listStudentShares } from "@/api/endpoints/student-shares";
 import { listStudentsByStatus } from "@/api/endpoints/student-status";
 import { ApiError } from "@/api/errors";
 import { createQueryClient } from "@/api/query-client";
-import type { Student } from "@/api/types";
 import { archiveErrorMessage } from "@/features/patients/archive/useArchivePatient";
 import { useStudentShares } from "@/features/patients/shares/useStudentShares";
 import { useClinic } from "@/features/team/useClinic";
@@ -33,48 +31,55 @@ function wrapper({ children }: { children: React.ReactNode }) {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
-const STUDENT = { id: "s1", name: "Paciente Teste" } as Student;
-
-// Backend de hoje: sem /clinic/*, /student/:id/shares, PUT status nem ?status.
-describe("compatibilidade com o backend atual", () => {
+// Backend publicado em 2026-11-26 (BACKEND-ENTREGUE-E5): os fallbacks para a
+// ausência das rotas novas foram removidos, então um 404 genérico é erro.
+describe("sem fallback para rotas ainda não publicadas", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("GET /student/:id/shares 404 sem STUDENT_NOT_FOUND vira lista vazia", async () => {
+  it("GET /student/:id/shares 404 genérico é erro, 403 segue null", async () => {
     vi.mocked(listStudentShares).mockRejectedValue(
       new ApiError({ message: "Not Found", status: 404 }),
     );
-    const { result } = await renderHook(() => useStudentShares("s1"), {
+    const failing = await renderHook(() => useStudentShares("s1"), { wrapper });
+    await waitFor(() => expect(failing.result.current.isError).toBe(true));
+
+    vi.mocked(listStudentShares).mockRejectedValue(
+      new ApiError({ message: "UNAUTHORIZED", status: 403 }),
+    );
+    const forbidden = await renderHook(() => useStudentShares("s2"), {
       wrapper,
     });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual([]);
+    await waitFor(() => expect(forbidden.result.current.isSuccess).toBe(true));
+    expect(forbidden.result.current.data).toBeNull();
   });
 
-  it("GET /clinic/ 404 sem code vira sem equipe (null)", async () => {
+  it("GET /clinic/ 404 genérico é erro, NOT_IN_CLINIC vira sem equipe", async () => {
     vi.mocked(getClinic).mockRejectedValue(
       new ApiError({ message: "Not Found", status: 404 }),
     );
-    const { result } = await renderHook(() => useClinic(), { wrapper });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toBeNull();
+    const failing = await renderHook(() => useClinic(), { wrapper });
+    await waitFor(() => expect(failing.result.current.isError).toBe(true));
+
+    vi.mocked(getClinic).mockRejectedValue(
+      new ApiError({ message: "x", status: 404, code: "NOT_IN_CLINIC" }),
+    );
+    const none = await renderHook(() => useClinic(), { wrapper });
+    await waitFor(() => expect(none.result.current.isSuccess).toBe(true));
+    expect(none.result.current.data).toBeNull();
   });
 
-  it("?status=ALL rejeitado com 400 cai para a lista sem query", async () => {
+  it("?status= rejeitado com 400 não cai mais para a lista sem query", async () => {
     get.mockRejectedValue({
       isAxiosError: true,
       message: "Bad Request",
       response: { status: 400, data: { message: "invalid" } },
     });
-    vi.mocked(listStudents).mockResolvedValue([STUDENT]);
-    await expect(listStudentsByStatus("ALL")).resolves.toEqual([STUDENT]);
-    await expect(listStudentsByStatus("ARCHIVED")).rejects.toBeInstanceOf(
-      ApiError,
-    );
+    await expect(listStudentsByStatus("ALL")).rejects.toBeInstanceOf(ApiError);
   });
 
-  it("arquivar com 404 sem code mostra mensagem amigável", () => {
+  it("arquivar com 404 genérico mostra a mensagem do servidor", () => {
     expect(
       archiveErrorMessage(new ApiError({ message: "Not Found", status: 404 })),
-    ).toBe("Não foi possível arquivar agora.");
+    ).toBe("Not Found");
   });
 });

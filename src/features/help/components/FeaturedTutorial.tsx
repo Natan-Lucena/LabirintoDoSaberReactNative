@@ -67,7 +67,9 @@ export function FeaturedTutorial({
             accessibilityElementsHidden
           />
         ) : null}
-        <FigmaIcon name="play" size={36} color={color.surface} />
+        {tutorial.videoUrl ? (
+          <FigmaIcon name="play" size={36} color={color.surface} />
+        ) : null}
       </View>
       <View style={styles.body}>
         <Text style={styles.eyebrow}>

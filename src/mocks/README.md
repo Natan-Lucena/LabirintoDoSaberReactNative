@@ -520,7 +520,7 @@ ainda não o publica. Só leituras; dados em `src/mocks/fixtures-task-catalog.ts
 - Sem escritas (`duplicate`, `create`/`update` de tipos novos); entram com as telas. O `activity-result` entrou na EVO-03 (seção abaixo).
 - `Task` não tem `educatorId`; a biblioteca é distinguida só por `source: "LIBRARY"`.
 - `TaskNotebookSession.activityResults` (RS-07): só as sessões que receberam `activity-result` na execução atual o enviam (EVO-03); as sessões fixas (`mock-session-1`, `mock-session-2`) não.
-- `GET /task/:id` desconhecido segue `500 TASK_NOT_FOUND` (comportamento atual; o contrato proposto pede `404`).
+- `GET /task/:id`, `PUT /task/update`, `DELETE /task/delete/:id` e as rotas de grupo e caderno com id desconhecido (ou que não é UUID) respondem `404` com o código do recurso (`TASK_NOT_FOUND`, `TASK_GROUP_NOT_FOUND`, `TASK_NOTEBOOK_NOT_FOUND`), como o backend publicado em 2026-11-26.
 - A recomendação não olha sessões recentes (AT-08): é só por `learningTopics`.
 
 ## Resultado de jogo na sessão (EVO-03)
