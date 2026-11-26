@@ -63,7 +63,8 @@ export interface UpdateAppointmentSeriesInput {
   scheduledAt?: string;
   durationMinutes?: number;
   type?: string;
-  observation?: string;
+  /** `null` apaga a observação das ocorrências alteradas (BACKEND-ENTREGUE-E5 §3.5). */
+  observation?: string | null;
 }
 
 export async function updateAppointmentSeries(

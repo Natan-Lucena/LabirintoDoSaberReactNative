@@ -76,6 +76,14 @@ describe("WhoFollowsSection (EQP-04)", () => {
     expect(onToast).toHaveBeenCalledWith("Acesso removido");
   });
 
+  it("D-02 compartilhamento sem role mostra só a data", async () => {
+    const patient: Student = { ...MOCK_STUDENTS[2], access: "OWNER" };
+    await render(<WhoFollowsSection patient={patient} onToast={vi.fn()} />);
+
+    expect(await screen.findByText("desde 02/11")).toBeTruthy();
+    expect(screen.queryByText(/Profissional ·/)).toBeNull();
+  });
+
   it("a colega vê o dono e a lista, sem ações (AC-EQP-04-01)", async () => {
     await render(
       <WhoFollowsSection patient={MOCK_SHARED_STUDENT} onToast={vi.fn()} />,

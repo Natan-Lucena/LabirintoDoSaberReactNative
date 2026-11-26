@@ -24,6 +24,8 @@ import {
   addMockAppointments,
   findMockConflict,
   getMockAppointments,
+  MOCK_FOREIGN_CONFLICT_ID,
+  MOCK_FOREIGN_CONFLICT_TYPE,
   nextMockAppointmentId,
 } from "./appointment";
 import { registerMockHandler } from "./registry";
@@ -88,7 +90,8 @@ function requireFrom(seriesId: string, body: unknown): Appointment {
   }
   const from = occurrencesOf(seriesId).find(({ id }) => id === fromId);
   if (!from) {
-    throw new MockApiError(404, "APPOINTMENT_NOT_FOUND");
+    // §3.5: ocorrência fora da série → 400 (não 404).
+    throw new MockApiError(400, "APPOINTMENT_NOT_IN_SERIES");
   }
   return from;
 }
@@ -115,9 +118,13 @@ registerMockHandler(
     if (
       !Number.isInteger(occurrences) ||
       occurrences! < 2 ||
-      occurrences! > maxOccurrences(input.frequency)
+      occurrences! > 26
     ) {
       badRequest("occurrences");
+    }
+    // §3.5: quinzenal acima de 13 ou além de 6 meses → 400 SERIES_TOO_LONG.
+    if (occurrences! > maxOccurrences(input.frequency)) {
+      throw new MockApiError(400, "SERIES_TOO_LONG");
     }
     findMockAccessibleStudent(input.studentId);
     if (isMockStudentIdArchived(input.studentId)) {
@@ -135,6 +142,19 @@ registerMockHandler(
     )) {
       const scheduledAt = date.toISOString();
       const conflicting = findMockConflict({ scheduledAt, durationMinutes });
+      if (
+        input.type === MOCK_FOREIGN_CONFLICT_TYPE &&
+        created.length === 0 &&
+        skipped.length === 0
+      ) {
+        // Conflito com atendimento de outro educador: o id não está na agenda (D-03).
+        skipped.push({
+          scheduledAt,
+          reason: "CONFLICT",
+          conflictingAppointmentId: MOCK_FOREIGN_CONFLICT_ID,
+        });
+        continue;
+      }
       if (conflicting) {
         skipped.push({
           scheduledAt,
@@ -217,7 +237,7 @@ registerMockHandler(
       scheduledAt?: string;
       durationMinutes?: number;
       type?: string;
-      observation?: string;
+      observation?: string | null;
     };
     const from = requireFrom(series.id, body);
     if (
@@ -270,6 +290,7 @@ registerMockHandler(
       );
       if (conflicting) {
         skipped.push({
+          appointmentId: target.id,
           scheduledAt,
           reason: "CONFLICT",
           conflictingAppointmentId: conflicting.id,

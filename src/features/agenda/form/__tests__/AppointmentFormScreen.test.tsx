@@ -11,6 +11,7 @@ const routerPush = vi.fn();
 const createAppointment = vi.fn();
 const updateAppointment = vi.fn();
 const getAppointment = vi.fn();
+let ownAppointments: { id: string }[] = [{ id: "appt-9" }, { id: "appt-7" }];
 
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
@@ -25,6 +26,13 @@ vi.mock("@/api/endpoints/appointment", async (importOriginal) => ({
   createAppointment: (...args: unknown[]) => createAppointment(...args),
   updateAppointment: (...args: unknown[]) => updateAppointment(...args),
   getAppointment: (...args: unknown[]) => getAppointment(...args),
+}));
+
+vi.mock("@/features/appointments/useAppointments", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@/features/appointments/useAppointments")
+  >()),
+  useAppointments: () => ({ data: ownAppointments }),
 }));
 
 vi.mock("@/features/students/useStudents", () => ({
@@ -435,6 +443,27 @@ describe("AppointmentFormScreen — editar, remarcar e reativar (AGE-03)", () =>
     );
   });
 
+  it("D-03 conflito simples com id alheio não mostra o link", async () => {
+    ownAppointments = [];
+    createAppointment.mockRejectedValue(conflict("appt-alheio"));
+    await render(
+      <AppointmentFormScreen studentId="student-1" date="2026-04-10" />,
+    );
+    await fireEvent.press(screen.getByLabelText("Horário"));
+    await fireEvent.press(screen.getByLabelText("seletor-time"));
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Agendar atendimento" }),
+    );
+
+    expect(
+      await screen.findByText("Já existe um atendimento nesse horário"),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Ver atendimento" }),
+    ).toBeNull();
+    ownAppointments = [{ id: "appt-9" }, { id: "appt-7" }];
+  });
+
   it("AC-AGE-03-05 conflito ao remarcar aparece no horário", async () => {
     getAppointment.mockResolvedValue(appointment());
     updateAppointment.mockRejectedValue(conflict("appt-7"));
@@ -478,7 +507,7 @@ describe("AppointmentFormScreen — editar, remarcar e reativar (AGE-03)", () =>
 
     expect(
       await screen.findByText(
-        "Este atendimento não permite alterar horário, tipo ou duração.",
+        "Este atendimento não permite alterar horário, tipo ou duração, ou o novo horário já passou.",
       ),
     ).toBeTruthy();
     expect(updateAppointment).toHaveBeenCalledOnce();

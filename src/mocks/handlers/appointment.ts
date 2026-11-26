@@ -71,14 +71,22 @@ export function findMockConflict(
   return findConflict(candidate, ignoreId);
 }
 
+/** Atendimento de outro educador que ocupa o horário: não está em `GET /appointment/` (D-03). */
+export const MOCK_FOREIGN_CONFLICT_ID = "mock-appointment-alheio";
+/** `type` que, no mock, provoca conflito com o atendimento alheio. */
+export const MOCK_FOREIGN_CONFLICT_TYPE = "Conflito alheio";
+
 export function nextMockAppointmentId(): string {
   return `mock-appointment-${nextAppointmentId++}`;
 }
 
-registerMockHandler({ method: "get", path: "/appointment/" }, () => {
+registerMockHandler({ method: "get", path: "/appointment/" }, ({ params }) => {
+  const list = getMockHomeScenario() === "no-appointments" ? [] : appointments;
   return {
     status: 200,
-    data: getMockHomeScenario() === "no-appointments" ? [] : appointments,
+    data: params.studentId
+      ? list.filter(({ studentId }) => studentId === params.studentId)
+      : list,
   };
 });
 
@@ -152,6 +160,9 @@ registerMockHandler({ method: "post", path: "/appointment/" }, ({ body }) => {
     return { status: 409, data: { message: "STUDENT_ARCHIVED" } };
   }
   const durationMinutes = input.durationMinutes ?? 50;
+  if (input.type === MOCK_FOREIGN_CONFLICT_TYPE) {
+    return conflictResponse("APPOINTMENT_CONFLICT", MOCK_FOREIGN_CONFLICT_ID);
+  }
   const conflicting = findConflict({
     scheduledAt: input.scheduledAt,
     durationMinutes,

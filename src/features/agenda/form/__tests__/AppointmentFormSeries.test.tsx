@@ -11,6 +11,7 @@ const createAppointmentSeries = vi.fn();
 const updateAppointmentSeries = vi.fn();
 const updateAppointment = vi.fn();
 const getAppointment = vi.fn();
+let ownAppointments: { id: string }[] = [{ id: "appt-9" }, { id: "appt-7" }];
 
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
@@ -34,6 +35,13 @@ vi.mock("@/api/endpoints/appointment-series", async (importOriginal) => ({
     createAppointmentSeries(...args),
   updateAppointmentSeries: (...args: unknown[]) =>
     updateAppointmentSeries(...args),
+}));
+
+vi.mock("@/features/appointments/useAppointments", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@/features/appointments/useAppointments")
+  >()),
+  useAppointments: () => ({ data: ownAppointments }),
 }));
 
 vi.mock("@/features/students/useStudents", () => ({
@@ -211,6 +219,32 @@ describe("AppointmentFormScreen — repetir (AGE-06)", () => {
     expect(routerBack).toHaveBeenCalled();
   });
 
+  it("D-03 conflito com atendimento alheio mostra Horário ocupado, sem link", async () => {
+    createAppointmentSeries.mockResolvedValue(
+      result(
+        [appointment()],
+        [
+          {
+            scheduledAt: "2026-04-18T18:30:00.000Z",
+            reason: "CONFLICT",
+            conflictingAppointmentId: "appt-alheio",
+          },
+        ],
+      ),
+    );
+    await render(<AppointmentFormScreen />);
+    await fillNewAppointment();
+    await fireEvent.press(screen.getByLabelText("Semanal"));
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Agendar 8 atendimentos" }),
+    );
+
+    expect(await screen.findByText("Horário ocupado")).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: /^Ver atendimento/ }),
+    ).toBeNull();
+  });
+
   it("todas em conflito mostra a frase da série", async () => {
     const { AppointmentApiError } = await import("@/api/endpoints/appointment");
     createAppointmentSeries.mockRejectedValue(
@@ -276,7 +310,8 @@ describe("AppointmentFormScreen — este e os seguintes (AGE-06)", () => {
     expect(updateAppointment).not.toHaveBeenCalled();
   });
 
-  it("só apagar a observação não envia a série e mostra a dica", async () => {
+  it("D-04 apagar a observação envia observation: null na série", async () => {
+    updateAppointmentSeries.mockResolvedValue(result([appointment()]));
     await render(
       <AppointmentFormScreen
         appointmentId="appt-3"
@@ -290,10 +325,13 @@ describe("AppointmentFormScreen — este e os seguintes (AGE-06)", () => {
       screen.getByRole("button", { name: "Salvar alterações" }),
     );
 
-    expect(
-      await screen.findByText("Para apagar a observação, use Só este."),
-    ).toBeTruthy();
-    expect(updateAppointmentSeries).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(updateAppointmentSeries).toHaveBeenCalledWith("series-1", {
+        fromAppointmentId: "appt-3",
+        observation: null,
+      }),
+    );
+    expect(screen.queryByText(/use Só este/)).toBeNull();
   });
 
   it("AC-AGE-06-03 sem scope usa PUT /appointment/:id (só este)", async () => {
