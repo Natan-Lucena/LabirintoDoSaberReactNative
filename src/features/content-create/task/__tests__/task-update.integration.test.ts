@@ -57,11 +57,11 @@ describe("updateTask com mockAdapter", () => {
     });
   });
 
-  it("rejeita com 500 TASK_NOT_FOUND quando o id não existe", async () => {
+  it("rejeita com 404 TASK_NOT_FOUND quando o id não existe", async () => {
     await expect(
       updateTask({ id: "task-inexistente", prompt: "Novo enunciado" }),
     ).rejects.toMatchObject({
-      status: 500,
+      status: 404,
       code: "TASK_NOT_FOUND",
     });
   });

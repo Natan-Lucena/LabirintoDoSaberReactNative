@@ -34,9 +34,9 @@ describe("deleteTaskNotebook com mockAdapter", () => {
     );
   });
 
-  it("id inexistente devolve 500 com TASK_NOTEBOOK_NOT_FOUND", async () => {
+  it("id inexistente devolve 404 com TASK_NOTEBOOK_NOT_FOUND", async () => {
     await expect(
       deleteTaskNotebook("notebook-inexistente"),
-    ).rejects.toMatchObject({ status: 500, code: "TASK_NOTEBOOK_NOT_FOUND" });
+    ).rejects.toMatchObject({ status: 404, code: "TASK_NOTEBOOK_NOT_FOUND" });
   });
 });
