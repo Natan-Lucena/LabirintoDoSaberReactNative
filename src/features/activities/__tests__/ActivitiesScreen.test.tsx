@@ -19,13 +19,17 @@ let activitiesQuery: UseActivitiesQueryResult;
 vi.mock("@/features/activities/useActivitiesData", () => ({
   useActivitiesQuery: () => activitiesQuery,
 }));
+let appointmentsData: unknown[] = [];
 vi.mock("@/features/students/useStudents", () => ({
   useStudents: () => ({
-    data: [{ id: "student-a", name: "Paciente Teste A" }],
+    data: [
+      { id: "student-a", name: "Paciente Teste A" },
+      { id: "student-b", name: "Outra Paciente Teste" },
+    ],
   }),
 }));
 vi.mock("@/features/appointments/useAppointments", () => ({
-  useAppointments: () => ({ data: [] }),
+  useAppointments: () => ({ data: appointmentsData }),
 }));
 vi.mock("expo-router", () => ({
   useRouter: () => ({
@@ -235,6 +239,35 @@ describe("ActivitiesScreen (ATV-09)", () => {
     await fireEvent.press(screen.getByText("Para: Paciente ✕"));
     expect(routerSetParams).toHaveBeenCalledWith({ studentId: undefined });
     expect(screen.queryByText(/Recomendado para/)).toBeNull();
+  });
+
+  it("revisão: limpar o paciente da rota não troca pelo atendimento de hoje", async () => {
+    // Atendimento PENDING de hoje com outro paciente (contexto automático).
+    appointmentsData = [
+      {
+        id: "appt-b",
+        studentId: "student-b",
+        status: "PENDING",
+        scheduledAt: new Date(Date.now() + 60_000).toISOString(),
+        durationMinutes: 60,
+      },
+    ];
+    try {
+      const view = await render(<ActivitiesScreen studentId="student-a" />, {
+        queryClient: noRetryClient(),
+      });
+      expect(await screen.findByText("Para: Paciente ✕")).toBeTruthy();
+
+      await fireEvent.press(screen.getByText("Para: Paciente ✕"));
+      // A rota real perde o `studentId` com o `setParams`.
+      await view.rerender(<ActivitiesScreen studentId={undefined} />);
+
+      await screen.findByText("BOLA");
+      expect(screen.queryByText(/Para: /)).toBeNull();
+      expect(screen.queryByText(/Recomendado para/)).toBeNull();
+    } finally {
+      appointmentsData = [];
+    }
   });
 
   it("paciente inexistente (404) esconde o contexto", async () => {

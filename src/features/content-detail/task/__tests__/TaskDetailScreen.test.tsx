@@ -153,6 +153,70 @@ describe("TaskDetailScreen (UX5-A)", () => {
     });
   });
 
+  it("revisão: tipo desconhecido não oferece Editar (sem editor), mas permite excluir", async () => {
+    registerMockHandler({ method: "get", path: "/task/tipo-futuro" }, () => ({
+      status: 200,
+      data: {
+        id: "tipo-futuro",
+        category: "reading" as const,
+        type: "tipoFuturo",
+        prompt: "Atividade de um tipo novo",
+        alternatives: [],
+        createdAt: "2026-01-01T12:00:00.000Z",
+        source: "EDUCATOR",
+      },
+    }));
+
+    await render(<TaskDetailScreen taskId="tipo-futuro" />, {
+      queryClient: noRetryClient(),
+    });
+
+    expect(
+      await screen.findByRole("button", { name: "Excluir Atividade" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Editar Atividade" }),
+    ).toBeNull();
+  });
+
+  it("revisão: Imprimir abre a impressão marcando a origem no detalhe", async () => {
+    registerMockHandler({ method: "get", path: "/task/imprimivel-1" }, () => ({
+      status: 200,
+      data: {
+        id: "imprimivel-1",
+        category: "writing" as const,
+        type: "printable",
+        format: "PRINTABLE",
+        source: "EDUCATOR",
+        prompt: "Complete a folha",
+        alternatives: [],
+        createdAt: "2026-01-01T12:00:00.000Z",
+        content: {
+          kind: "printable",
+          title: "Folha Teste",
+          instructions: "Complete",
+          layout: "LIST",
+          items: [{ id: "i1", text: "A, B, __" }],
+        },
+      },
+    }));
+
+    await render(<TaskDetailScreen taskId="imprimivel-1" />, {
+      queryClient: noRetryClient(),
+    });
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Imprimir" }),
+    );
+    expect(routerPush).toHaveBeenCalledWith({
+      pathname: "/activities/print/[id]",
+      params: { id: "imprimivel-1", from: "detail" },
+    });
+    expect(
+      screen.getByRole("button", { name: "Editar Atividade" }),
+    ).toBeTruthy();
+  });
+
   it("ATV-02: o botão Jogar abre o player da atividade", async () => {
     await render(<TaskDetailScreen taskId="task-1" />, {
       queryClient: noRetryClient(),
