@@ -295,10 +295,6 @@ export function PlanDetailScreen(): ReactElement {
   };
   function submitEdit(values: PlanFormValues): void {
     if (!plan) return;
-    if (plan.professionalNotes && !values.professionalNotes.trim()) {
-      setLocalError("Informe as notas já registradas.");
-      return;
-    }
     const endDate = plan.type === "PDI" ? formEndDate : plan.endDate;
     if (
       plan.type === "PDI" &&
@@ -313,18 +309,20 @@ export function PlanDetailScreen(): ReactElement {
       );
       return;
     }
-    if (plan.nextReviewDate && !formDate) {
-      setLocalError("Informe a próxima revisão já definida.");
-      return;
-    }
     editMutation.mutate({
       title: values.title.trim(),
       generalObjective: values.generalObjective.trim(),
       ...(values.professionalNotes.trim()
         ? { professionalNotes: values.professionalNotes.trim() }
-        : {}),
+        : plan.professionalNotes
+          ? { professionalNotes: null }
+          : {}),
       ...(plan.type === "PDI" ? { endDate } : {}),
-      ...(formDate ? { nextReviewDate: formDate } : {}),
+      ...(formDate
+        ? { nextReviewDate: formDate }
+        : plan.nextReviewDate
+          ? { nextReviewDate: null }
+          : {}),
       goals: toPlanFormGoals(values.goals),
     });
   }

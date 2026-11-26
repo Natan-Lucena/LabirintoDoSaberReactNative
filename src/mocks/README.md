@@ -503,6 +503,8 @@ ainda não o publica. Só leituras; dados em `src/mocks/fixtures-task-catalog.ts
 - `GET /task/recommended?studentId=`: até 6 atividades interativas com `reason`
   ("{habilidade} · dificuldade mapeada"), pelas `learningTopics` do paciente; `[]` sem tópicos;
   `404 STUDENT_NOT_FOUND`; `400` sem `studentId`.
+- `POST /task/:id/duplicate` (ATV-09): `201` com a cópia (`source: EDUCATOR`, novo id, entra em
+  `MOCK_TASKS`); `404 TASK_NOT_FOUND` para id desconhecido.
 - `GET /task/:id` (em `task-delete.ts`) encontra também a biblioteca, com `content`;
   `GET /task/` devolve, além das três antigas, uma atividade do educador de cada tipo novo (AT-11).
 - `GET /session-evolution/context/:sessionId` e `GET /task-notebook-session/report/:sessionId`:
@@ -517,11 +519,27 @@ ainda não o publica. Só leituras; dados em `src/mocks/fixtures-task-catalog.ts
 
 ### Lacunas
 
-- Sem escritas (`duplicate`, `create`/`update` de tipos novos); entram com as telas. O `activity-result` entrou na EVO-03 (seção abaixo).
+- O `duplicate` entrou na ATV-09, o `create`/`update` dos tipos novos na ATV-11 (seção abaixo) e o `activity-result` na EVO-03.
 - `Task` não tem `educatorId`; a biblioteca é distinguida só por `source: "LIBRARY"`.
 - `TaskNotebookSession.activityResults` (RS-07): só as sessões que receberam `activity-result` na execução atual o enviam (EVO-03); as sessões fixas (`mock-session-1`, `mock-session-2`) não.
 - `GET /task/:id` desconhecido segue `500 TASK_NOT_FOUND` (comportamento atual; o contrato proposto pede `404`).
 - A recomendação não olha sessões recentes (AT-08): é só por `learningTopics`.
+
+## Criar e editar atividades dos tipos novos (ATV-11)
+
+- `POST /task/create` com `type` em `wordBuilder`, `colorMatch`, `memoryGame` ou `printable`
+  (multipart; `content` e `skills` são strings JSON): `201` com a `Task` (`format`, `source:
+EDUCATOR`, `skills`, `tone` padrão `mint`), que entra em `MOCK_TASKS` e aparece em `GET /task/:id`,
+  no catálogo e no jogo. Valida os limites do §2.1 do contrato (palavra 2 a 12 letras maiúsculas,
+  extras 0 a 6, pares 2 a 6, cartas 2 a 8, itens 1 a 20...).
+- Erros: `400 INVALID_CONTENT` com `errors[].field` no caminho completo (`content.pairs.1.word`; só
+  `content` quando o objeto inteiro é inválido), `400 Bad Request` com `errors` (categoria, `prompt` de
+  1 a 300, tema, cor), `400 ALTERNATIVES_NOT_ALLOWED`, `400 INVALID_SKILL` (fora do catálogo ou mais de 5).
+- `PUT /task/update` de tipo novo aceita `content`, `skills`, `theme`, `tone` (mesmas validações);
+  `type` diferente do atual: `400 TYPE_CHANGE_NOT_ALLOWED`; id da biblioteca: `403 LIBRARY_TASK_READ_ONLY`.
+  Responde `200` vazio.
+- `MockApiError` ganhou o quarto argumento `errors` (`{ field, message }[]`), repassado pelo adaptador.
+- Lacuna: `INVALID_MEDIA_URL` só confere que a URL é `http(s)`; o mock não rastreia o que veio do upload.
 
 ## Resultado de jogo na sessão (EVO-03)
 
@@ -619,3 +637,12 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
 - Os pacientes compartilhado e arquivado não têm sessões, planos nem evoluções nos mocks.
 - `authorName` (EQ-12) existe nos tipos, mas nenhum mock o preenche ainda.
 - `TOO_MANY_REQUESTS` reaproveita o texto do código de senha ("Muitas solicitações de código…").
+
+## Apagar campos (FEC-06, PP-05)
+
+- `PUT /plan/:id`: `nextReviewDate: null` e `professionalNotes: null` apagam o campo, que some da resposta.
+- `PUT /student/update/:id` (multipart): string vazia `""` em `guardianName`, `guardianPhone` ou
+  `guardianRelationship` apaga o campo (Q8); o app envia `""` quando o valor vira `null` no cliente.
+- `PUT /task/update`: `imageFile: null` e `audioFile: null` apagam a mídia; sem mídia restante o app envia
+  também `type: "multipleChoice"`. O mock recusa `multipleChoiceWithMedia` sem mídia
+  (`MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO`) e `multipleChoice` com mídia (`TEXT_TASK_CANNOT_HAVE_MEDIA`).

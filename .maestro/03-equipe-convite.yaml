@@ -1,0 +1,29 @@
+# Fluxo 3 (EQP-01): Recursos -> Equipe e convites -> criar equipe (se não houver) -> compartilhar convite.
+# Conta sem equipe cria a "Clínica Teste E2E"; conta ADMIN com equipe vai direto ao convite.
+# Com o mock: EXPO_PUBLIC_MOCK_TEAM=none (login do mock). A folha de compartilhamento do Android é fechada com "back".
+#   maestro test -e EMAIL=... -e SENHA=... -e EQUIPE="Clínica Teste E2E" .maestro/03-equipe-convite.yaml
+appId: host.exp.exponent
+env:
+  EQUIPE: "Clínica Teste E2E"
+---
+- runFlow: subflows/abrir-app.yaml
+- runFlow: subflows/login.yaml
+- tapOn: "Recursos"
+- tapOn: "Equipe e convites"
+- runFlow:
+    when:
+      visible: "Criar equipe"
+    commands:
+      - tapOn: "Criar equipe"
+      - tapOn: "Nome da clínica"
+      - inputText: ${EQUIPE}
+      - hideKeyboard
+      - tapOn: "Criar"
+      - assertVisible: "Profissionais ativos.*"
+- assertVisible: "Compartilhar convite"
+- tapOn: "Compartilhar convite"
+- extendedWaitUntil:
+    visible: "Compartilhar de novo" # o código e a validade ficam no cartão
+    timeout: 20000
+- pressKey: back # fecha a folha de compartilhamento do Android, se ainda aberta
+- assertVisible: "Novo convite"

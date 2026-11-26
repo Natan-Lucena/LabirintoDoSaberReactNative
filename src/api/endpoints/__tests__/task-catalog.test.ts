@@ -6,6 +6,7 @@ import {
   listRecommendedTasks,
   listTaskCatalog,
   listTaskSkills,
+  duplicateTask,
   taskCatalogQueryKeys,
   taskFormat,
   taskSource,
@@ -265,6 +266,22 @@ describe("banco de atividades pelo apiClient (API-07, leva 1)", () => {
         expect(task?.content?.kind).toBe(type);
       }
       expect(data.every((t) => t.source !== "LIBRARY")).toBe(true);
+    });
+  });
+
+  describe("POST /task/:id/duplicate (ATV-09)", () => {
+    it("cria uma cópia do educador com novo id", async () => {
+      const copy = await duplicateTask(MOCK_LIBRARY_TASKS[0]!.id);
+
+      expect(copy.id).not.toBe(MOCK_LIBRARY_TASKS[0]!.id);
+      expect(copy.source).toBe("EDUCATOR");
+      expect(copy.type).toBe(MOCK_LIBRARY_TASKS[0]!.type);
+    });
+
+    it("404 TASK_NOT_FOUND para id desconhecido", async () => {
+      await expect(duplicateTask("nao-existe")).rejects.toMatchObject({
+        code: "TASK_NOT_FOUND",
+      });
     });
   });
 

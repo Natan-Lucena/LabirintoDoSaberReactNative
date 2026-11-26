@@ -19,6 +19,41 @@ describe("PUT /student/update/:id pelo apiClient", () => {
     apiClient.defaults.adapter = originalAdapter;
   });
 
+  it("apaga os dados do responsável com string vazia no multipart (FEC-06)", async () => {
+    const student = MOCK_STUDENTS[0];
+    const original = { ...student };
+    try {
+      Object.assign(student, {
+        guardianName: "Responsável Teste",
+        guardianPhone: "11988887777",
+        guardianRelationship: "Mãe",
+      });
+      apiClient.defaults.adapter = (config) => {
+        const data = config.data as FormData;
+        expect(data.get("guardianName")).toBe("");
+        expect(data.get("guardianPhone")).toBe("");
+        expect(data.get("guardianRelationship")).toBe("");
+        return mockAdapter(config);
+      };
+      const updated = await updateStudent(student.id, {
+        guardianName: null,
+        guardianPhone: null,
+        guardianRelationship: null,
+      });
+      expect(updated).not.toHaveProperty("guardianName");
+      expect(updated).not.toHaveProperty("guardianPhone");
+      expect(updated).not.toHaveProperty("guardianRelationship");
+    } finally {
+      for (const key of [
+        "guardianName",
+        "guardianPhone",
+        "guardianRelationship",
+      ] as const)
+        delete student[key];
+      Object.assign(student, original);
+    }
+  });
+
   it("envia apenas os campos informados como multipart e atualiza a lista", async () => {
     const student = MOCK_STUDENTS[0];
     const original = { ...student };

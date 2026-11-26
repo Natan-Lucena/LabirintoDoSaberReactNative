@@ -517,6 +517,20 @@ export function PatientDetailScreen({
               />
             )}
 
+            {archived ? null : (
+              <DsButton
+                label={`Atividades para ${patient.name.trim().split(/\s+/)[0]}`}
+                variant="secondary"
+                fullWidth
+                onPress={() =>
+                  router.push({
+                    pathname: "/(tabs)/activities",
+                    params: { studentId: patient.id },
+                  })
+                }
+              />
+            )}
+
             {owner && !archived ? (
               <DsButton
                 testID="patient-archive"

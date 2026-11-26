@@ -108,3 +108,13 @@ export async function listRecommendedTasks(
     throw normalizeApiError(error);
   }
 }
+
+/** POST /task/:id/duplicate (ATV-09): cópia editável (`source: EDUCATOR`) de uma atividade pronta. */
+export async function duplicateTask(id: string): Promise<Task> {
+  try {
+    const response = await apiClient.post<Task>(`/task/${id}/duplicate`);
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}

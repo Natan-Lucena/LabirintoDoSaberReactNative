@@ -139,6 +139,7 @@ function WordBuilderBoard({
           return (
             <StaticPressable
               key={index}
+              testID={`word-slot-${index}`}
               accessibilityRole="button"
               accessibilityLabel={`Espaço ${index + 1} de ${total}, ${
                 tileId ? `letra ${letter}` : "vazio"
@@ -159,12 +160,13 @@ function WordBuilderBoard({
       </View>
 
       <View style={styles.row}>
-        {state.tiles.map((tile) =>
+        {state.tiles.map((tile, tileIndex) =>
           state.slots.includes(tile.id) ? (
             <View key={tile.id} style={styles.tilePlaceholder} />
           ) : (
             <StaticPressable
               key={tile.id}
+              testID={`word-tile-${tileIndex}`}
               accessibilityRole="button"
               accessibilityLabel={`Letra ${tile.letter}`}
               accessibilityState={{ disabled: locked }}

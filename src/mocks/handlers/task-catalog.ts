@@ -196,4 +196,23 @@ registerMockHandler(
   },
 );
 
+// POST /task/:id/duplicate (ATV-09): cópia do educador, com novo id.
+registerMockHandler(
+  { method: "post", path: "/task/:id/duplicate" },
+  ({ params }) => {
+    const original = allCatalogTasks().find(({ id }) => id === params.id);
+    if (!original) throw new MockApiError(404, "TASK_NOT_FOUND");
+
+    const copy: Task = {
+      ...structuredClone(original),
+      id: `copy-${Date.now().toString(36)}-${MOCK_TASKS.length}`,
+      source: "EDUCATOR",
+      createdAt: new Date().toISOString(),
+    };
+    MOCK_TASKS.push(copy);
+
+    return { status: 201, data: copy };
+  },
+);
+
 export const taskCatalogMockHandlersRegistered = true;

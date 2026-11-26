@@ -391,12 +391,15 @@ registerMockHandler(
       (input.generalObjective !== undefined &&
         (!input.generalObjective.trim() ||
           input.generalObjective.length > 2000)) ||
-      (input.professionalNotes !== undefined &&
+      (typeof input.professionalNotes === "string" &&
         input.professionalNotes.length > 2000)
     )
       throw new MockApiError(400, "Bad Request");
     const endDate = input.endDate ?? plan.endDate;
-    const reviewDate = input.nextReviewDate ?? plan.nextReviewDate;
+    const reviewDate =
+      input.nextReviewDate === null
+        ? undefined
+        : (input.nextReviewDate ?? plan.nextReviewDate);
     if (
       (input.endDate !== undefined && plan.type === "PE") ||
       !validDay(endDate) ||
@@ -461,17 +464,22 @@ registerMockHandler(
       ...(input.generalObjective?.trim()
         ? { generalObjective: input.generalObjective.trim() }
         : {}),
-      ...(input.professionalNotes?.trim()
+      ...(typeof input.professionalNotes === "string" &&
+      input.professionalNotes.trim()
         ? { professionalNotes: input.professionalNotes.trim() }
         : {}),
       endDate,
-      ...(input.nextReviewDate?.trim()
+      ...(typeof input.nextReviewDate === "string" &&
+      input.nextReviewDate.trim()
         ? { nextReviewDate: input.nextReviewDate }
         : {}),
       goals,
       progress: computeMockProgress(goals),
       updatedAt: now,
     };
+    // PP-05: `null` apaga o campo, que some da resposta.
+    if (input.professionalNotes === null) delete updated.professionalNotes;
+    if (input.nextReviewDate === null) delete updated.nextReviewDate;
     return { status: 200, data: saveMockPlan(updated) };
   },
 );

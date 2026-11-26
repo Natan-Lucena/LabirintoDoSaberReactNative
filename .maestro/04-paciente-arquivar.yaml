@@ -1,0 +1,30 @@
+# Fluxo 4 (PAC-11): ficha do paciente -> arquivar -> reativar. Exige a leva 3 do backend.
+# O paciente fictício precisa existir e ter um atendimento futuro (aparece a segunda confirmação).
+#   maestro test -e EMAIL=... -e SENHA=... -e PACIENTE="Paciente Teste Arquivo" .maestro/04-paciente-arquivar.yaml
+appId: host.exp.exponent
+env:
+  PACIENTE: "Paciente Teste Arquivo"
+---
+- runFlow: subflows/abrir-app.yaml
+- runFlow: subflows/login.yaml
+- tapOn: "Pacientes"
+- tapOn: "Buscar paciente"
+- inputText: ${PACIENTE}
+- tapOn: "Abrir ficha de ${PACIENTE}"
+- scrollUntilVisible:
+    element: "Arquivar paciente"
+- tapOn: "Arquivar paciente"
+- tapOn: "Arquivar"
+- runFlow:
+    when:
+      visible: "Cancelar atendimentos e arquivar"
+    commands:
+      - tapOn: "Cancelar atendimentos e arquivar"
+- extendedWaitUntil:
+    visible: "Reativar paciente"
+    timeout: 20000
+- assertNotVisible: "Iniciar sessão"
+- tapOn: "Reativar paciente"
+- extendedWaitUntil:
+    notVisible: "Reativar paciente" # voltou a ativo
+    timeout: 20000
