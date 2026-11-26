@@ -2,16 +2,13 @@ import { useEffect, useRef, useState, type ReactElement } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getScaleApplication } from "@/api/endpoints/scales";
 import { ApiError } from "@/api/errors";
 import type { AppNotification } from "@/api/types";
 import { AppHeader } from "@/components/ds/AppHeader";
 import { DsButton } from "@/components/ds";
 import { StaticPressable } from "@/components/ds/StaticPressable";
-import { applyRoute, resultRoute } from "@/features/assessments/routes";
-import { evolutionRoute } from "@/features/evolution/register/routes";
-import { planDetailRoute } from "@/features/plans/routes";
 import { color, semanticColor, typography } from "@/theme";
+import { openNotificationTarget } from "./openTarget";
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -68,34 +65,14 @@ export function NotificationsScreen(): ReactElement {
     if (!notification.readAt) markRead.mutate(notification.id);
     const target = notification.target;
     if (!target) return;
-    switch (target.type) {
-      case "AGENDA_DAY":
-        router.push("/(tabs)/agenda");
-        return;
-      case "SESSION":
-        router.push(evolutionRoute(target.id, "entry"));
-        return;
-      case "PLAN":
-        router.push(planDetailRoute(target.id));
-        return;
-      case "SCALE_APPLICATION":
-        try {
-          const application = await getScaleApplication(target.id);
-          router.push(
-            application.status === "DRAFT"
-              ? applyRoute(application.templateId, {
-                  studentId: application.studentId,
-                  applicationId: application.id,
-                })
-              : resultRoute(application.id),
-          );
-        } catch (error) {
-          setNotice(
-            error instanceof ApiError && error.status === 404
-              ? UNAVAILABLE
-              : "Não foi possível abrir agora. Tente de novo.",
-          );
-        }
+    try {
+      await openNotificationTarget(router, target);
+    } catch (error) {
+      setNotice(
+        error instanceof ApiError && error.status === 404
+          ? UNAVAILABLE
+          : "Não foi possível abrir agora. Tente de novo.",
+      );
     }
   }
 
