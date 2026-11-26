@@ -91,10 +91,7 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     expect(routerPush).toHaveBeenCalledWith("/evolution");
     expect(routerPush).toHaveBeenCalledWith("/assessments");
     expect(routerPush).toHaveBeenCalledWith("/team");
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Central de ajuda" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/help");
   });
 
   it("mostra profissão e foto quando disponíveis no banner", async () => {
