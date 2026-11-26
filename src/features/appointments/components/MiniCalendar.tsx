@@ -171,6 +171,7 @@ export function MiniCalendar({
       </View>
       <Calendar
         current={toDayKey(year, month)}
+        firstDay={1}
         hideArrows
         renderHeader={() => null}
         dayComponent={DayCell}

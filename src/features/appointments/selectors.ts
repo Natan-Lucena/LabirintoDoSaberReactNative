@@ -26,6 +26,25 @@ export function selectAppointmentDayKeys(
   ].sort();
 }
 
+/**
+ * Conta atendimentos PENDING e COMPLETED por dia de São Paulo, de `from` a `to`
+ * (chaves "AAAA-MM-DD", inclusivas). Cancelados não contam.
+ */
+export function selectAppointmentCountsByDay(
+  appointments: Appointment[],
+  from: string,
+  to: string,
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const { scheduledAt, status } of appointments) {
+    if (status === "CANCELLED") continue;
+    const key = dayKey(new Date(scheduledAt));
+    if (key < from || key > to) continue;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export function selectAppointmentsForDay(
   appointments: Appointment[],
   key: string,
