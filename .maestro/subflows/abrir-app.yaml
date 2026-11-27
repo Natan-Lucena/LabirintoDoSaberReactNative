@@ -1,0 +1,20 @@
+# Abre o Expo Go no Metro do computador (10.0.2.2 é o computador, visto do emulador).
+appId: host.exp.exponent
+---
+- launchApp:
+    appId: host.exp.exponent
+    clearState: false
+- openLink: exp://10.0.2.2:8081
+- runFlow:
+    when:
+      visible: "Continue" # aviso de boas-vindas do Expo Go, só na primeira abertura
+    commands:
+      - tapOn: "Continue"
+- runFlow:
+    when:
+      visible: "Dismiss" # aviso amarelo (LogBox) cobre a barra inferior
+    commands:
+      - tapOn: "Dismiss"
+- extendedWaitUntil:
+    visible: "Acesse sua conta para continuar" # tela de Login
+    timeout: 120000 # o primeiro bundle pode demorar

@@ -1,0 +1,15 @@
+# Fluxo 2 (AGE-05): Agenda -> visão "Mês" -> trocar de mês e voltar -> "Semana".
+#   maestro test -e EMAIL=... -e SENHA=... .maestro/02-agenda-mensal.yaml
+appId: host.exp.exponent
+---
+- runFlow: subflows/abrir-app.yaml
+- runFlow: subflows/login.yaml
+- tapOn: "Agenda"
+- tapOn: "Mês"
+- assertVisible: "Mês anterior"
+- assertVisible: "Próximo mês"
+- tapOn: "Próximo mês"
+- assertVisible: "Nenhum atendimento neste dia" # dia 1 do mês seguinte, sem atendimento de teste
+- tapOn: "Mês anterior"
+- tapOn: "Semana"
+- assertVisible: "Semana anterior"

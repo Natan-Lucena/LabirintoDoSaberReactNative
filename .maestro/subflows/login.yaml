@@ -1,0 +1,12 @@
+# Entra com a conta de teste. Variáveis: EMAIL e SENHA (nunca no repositório).
+appId: host.exp.exponent
+---
+- tapOn: "Email"
+- inputText: ${EMAIL}
+- tapOn: "Senha"
+- inputText: ${SENHA}
+- hideKeyboard
+- tapOn: "Entrar agora"
+- extendedWaitUntil:
+    visible: "Olá, .*" # AppHeader da Início
+    timeout: 60000 # partida a frio do backend
