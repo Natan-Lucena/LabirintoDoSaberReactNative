@@ -17,6 +17,12 @@ import { PrintablePreview } from "./PrintablePreview";
 
 export interface PrintableScreenProps {
   taskId: string;
+  /**
+   * Veio do botão "Imprimir" do detalhe. Sem isso (cartão do banco), a tela
+   * oferece "Detalhes da atividade": é o único caminho para editar, excluir
+   * ou duplicar um imprimível.
+   */
+  fromDetail?: boolean;
 }
 
 function printableContent(task: Task): PrintableContent | null {
@@ -30,6 +36,7 @@ type Busy = "print" | "share" | null;
 
 export function PrintableScreen({
   taskId,
+  fromDetail = false,
 }: PrintableScreenProps): ReactElement {
   const router = useRouter();
   const toast = useToast();
@@ -115,6 +122,19 @@ export function PrintableScreen({
           disabled={busy !== null}
           fullWidth
         />
+        {fromDetail ? null : (
+          <DsButton
+            label="Detalhes da atividade"
+            variant="ghost"
+            onPress={() =>
+              router.push({
+                pathname: "/content/task/[id]",
+                params: { id: taskId },
+              })
+            }
+            fullWidth
+          />
+        )}
       </ScrollView>
     );
   }

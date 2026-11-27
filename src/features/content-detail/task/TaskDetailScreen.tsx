@@ -28,6 +28,7 @@ import {
 import { AudioPlayer } from "@/components/media/AudioPlayer";
 import { useTaskSkills } from "@/features/activities/useCatalog";
 import { isActivityTypePlayable } from "@/features/activities/engine/registry";
+import { isActivityType } from "@/features/content-create/activity-types/schema";
 import {
   getCategoryLabel,
   getTypeLabel,
@@ -104,7 +105,7 @@ export function TaskDetailScreen({
   function goToPrint() {
     router.push({
       pathname: "/activities/print/[id]",
-      params: { id: taskId },
+      params: { id: taskId, from: "detail" },
     });
   }
   function goToEdit() {
@@ -275,12 +276,15 @@ export function TaskDetailScreen({
             />
           ) : (
             <>
-              <DsButton
-                label="Editar Atividade"
-                onPress={goToEdit}
-                variant="secondary"
-                fullWidth
-              />
+              {/* Tipo desconhecido (versão antiga do app): não há editor. */}
+              {isMultipleChoice(task.type) || isActivityType(task.type) ? (
+                <DsButton
+                  label="Editar Atividade"
+                  onPress={goToEdit}
+                  variant="secondary"
+                  fullWidth
+                />
+              ) : null}
               <DsButton
                 label="Excluir Atividade"
                 onPress={() => setConfirmOpen(true)}

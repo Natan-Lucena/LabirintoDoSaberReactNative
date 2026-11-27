@@ -224,15 +224,19 @@ export function ActivitiesScreen({
     category: "all",
   });
   const [isCreateVisible, setCreateVisible] = useState(false);
-  const [clearedStudentId, setClearedStudentId] = useState<string>();
+  // "✕" no chip desliga o contexto nesta tela, inclusive o automático (próximo
+  // atendimento de hoje); só um novo `studentId` na rota o religa.
+  const [contextCleared, setContextCleared] = useState(false);
+  const [seenStudentParam, setSeenStudentParam] = useState(studentIdParam);
+  if (studentIdParam !== seenStudentParam) {
+    setSeenStudentParam(studentIdParam);
+    if (studentIdParam) setContextCleared(false);
+  }
   const debouncedSearch = useDebouncedValue(filters.search);
 
   const isLegacy = filters.kind === "notebook" || filters.kind === "group";
   const context = useActivityContextStudent(studentIdParam);
-  const contextId =
-    context.studentId && context.studentId !== clearedStudentId
-      ? context.studentId
-      : undefined;
+  const contextId = contextCleared ? undefined : context.studentId;
   const recommended = useRecommendedTasks(isLegacy ? undefined : contextId);
 
   // 404 STUDENT_NOT_FOUND ou 403: o paciente não vale como contexto.
@@ -299,7 +303,7 @@ export function ActivitiesScreen({
   }
 
   function clearContext() {
-    setClearedStudentId(context.studentId);
+    setContextCleared(true);
     router.setParams({ studentId: undefined });
   }
 

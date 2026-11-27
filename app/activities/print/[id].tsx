@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { PrintableScreen } from "@/features/activities/printable/PrintableScreen";
 
 export default function PrintableRoute(): ReactElement {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
 
-  return <PrintableScreen taskId={id ?? ""} />;
+  return <PrintableScreen taskId={id ?? ""} fromDetail={from === "detail"} />;
 }
