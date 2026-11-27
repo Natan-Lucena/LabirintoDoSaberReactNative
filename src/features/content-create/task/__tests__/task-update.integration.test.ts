@@ -57,6 +57,28 @@ describe("updateTask com mockAdapter", () => {
     });
   });
 
+  it("remove a mídia com null e troca para múltipla escolha (FEC-06)", async () => {
+    const task = MOCK_TASKS.find((item) => item.id === "task-2");
+    expect(task).toBeDefined();
+    await updateTask({
+      id: "task-2",
+      type: "multipleChoiceWithMedia",
+      imageFile: "https://bucket.s3.amazonaws.com/image.jpg",
+      audioFile: "https://bucket.s3.amazonaws.com/audio.mp3",
+    });
+    await updateTask({ id: "task-2", imageFile: null });
+    expect(task).not.toHaveProperty("imageFile");
+    expect(task?.audioFile).toBeTruthy();
+
+    await expect(
+      updateTask({ id: "task-2", audioFile: null }),
+    ).rejects.toMatchObject({ code: "MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO" });
+
+    await updateTask({ id: "task-2", audioFile: null, type: "multipleChoice" });
+    expect(task).toMatchObject({ type: "multipleChoice" });
+    expect(task).not.toHaveProperty("audioFile");
+  });
+
   it("rejeita com 404 TASK_NOT_FOUND quando o id não existe", async () => {
     await expect(
       updateTask({ id: "task-inexistente", prompt: "Novo enunciado" }),

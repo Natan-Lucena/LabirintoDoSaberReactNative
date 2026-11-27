@@ -67,6 +67,22 @@ describe("detalhe de planos pelo apiClient (PLN-04)", () => {
     });
   });
 
+  it("apaga a próxima revisão e as notas com null e some da resposta (FEC-06)", async () => {
+    const plan = mockPlans[0];
+    await updatePlan(plan.id, {
+      nextReviewDate: plan.endDate,
+      professionalNotes: "Notas de teste",
+    });
+    expect(mockPlans[0]).toMatchObject({ professionalNotes: "Notas de teste" });
+    const cleared = await updatePlan(plan.id, {
+      nextReviewDate: null,
+      professionalNotes: null,
+    });
+    expect(cleared).not.toHaveProperty("nextReviewDate");
+    expect(cleared).not.toHaveProperty("professionalNotes");
+    expect(mockPlans[0]).not.toHaveProperty("professionalNotes");
+  });
+
   it("valida IDs duplicados, ausentes, datas e limites de metas", async () => {
     const id = "mock-plan-1";
     const goal = mockPlans[0].goals[0];
