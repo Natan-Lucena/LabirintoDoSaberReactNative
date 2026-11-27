@@ -20,6 +20,10 @@ vi.mock("expo-router", () => ({
   useLocalSearchParams: () => mockParams,
 }));
 
+vi.mock("@/api/endpoints/student-status", () => ({
+  listStudentsByStatus: vi.fn(),
+}));
+
 vi.mock("@/api/endpoints/student", () => ({
   listStudents: vi.fn(),
 }));

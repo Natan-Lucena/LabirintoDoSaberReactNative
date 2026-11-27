@@ -4,6 +4,7 @@ import {
   MOCK_APPOINTMENTS,
   MOCK_EDUCATOR,
 } from "@/mocks/fixtures";
+import { isMockStudentIdArchived } from "@/mocks/mock-student-status-state";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
@@ -26,6 +27,31 @@ export function completeMockAppointment(id: string): void {
   if (appointment?.status === "PENDING") {
     appointment.status = "COMPLETED";
   }
+}
+
+/** Atendimentos `PENDING` do paciente que ainda vão acontecer (PAC-11, PA-02). */
+function futurePendingOf(studentId: string): Appointment[] {
+  const now = Date.now();
+  return appointments.filter(
+    (appointment) =>
+      appointment.studentId === studentId &&
+      appointment.status === "PENDING" &&
+      new Date(appointment.scheduledAt).getTime() > now,
+  );
+}
+
+export function countFutureMockAppointments(studentId: string): number {
+  return futurePendingOf(studentId).length;
+}
+
+/** Ao arquivar com a opção, o backend cancela os futuros; reativar não os devolve (PA-05). */
+export function cancelFutureMockAppointments(studentId: string): void {
+  const ids = new Set(futurePendingOf(studentId).map(({ id }) => id));
+  appointments = appointments.map((appointment) =>
+    ids.has(appointment.id)
+      ? { ...appointment, status: "CANCELLED" as const }
+      : appointment,
+  );
 }
 
 registerMockHandler({ method: "get", path: "/appointment/" }, () => {
@@ -101,6 +127,9 @@ registerMockHandler({ method: "post", path: "/appointment/" }, ({ body }) => {
     type?: string;
     durationMinutes?: number;
   };
+  if (isMockStudentIdArchived(input.studentId)) {
+    return { status: 409, data: { message: "STUDENT_ARCHIVED" } };
+  }
   const durationMinutes = input.durationMinutes ?? 50;
   const conflicting = findConflict({
     scheduledAt: input.scheduledAt,

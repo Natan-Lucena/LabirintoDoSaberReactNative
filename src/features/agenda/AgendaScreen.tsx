@@ -146,7 +146,8 @@ export function AgendaScreen(): ReactElement {
   const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
   const [view, setView] = useState<AgendaView>("week");
   const appointmentsQuery = useAppointments();
-  const studentsQuery = useStudents();
+  // `ALL`: atendimentos de paciente arquivado continuam com o nome (PAC-11).
+  const studentsQuery = useStudents({ status: "ALL" });
   const now = useNow();
   const today = dayKey(now);
   const start = weekStart(selectedDay);

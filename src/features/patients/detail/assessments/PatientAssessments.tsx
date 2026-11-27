@@ -19,8 +19,11 @@ import { color, typography } from "@/theme";
 
 export function PatientAssessments({
   patientId,
+  archived = false,
 }: {
   patientId: string;
+  /** Paciente arquivado: só leitura, sem nova avaliação (PAC-11). */
+  archived?: boolean;
 }): ReactElement {
   const router = useRouter();
   const applicationsQuery = useRecentApplications(patientId);
@@ -107,16 +110,18 @@ export function PatientAssessments({
         <Text style={styles.copy}>Nenhuma anamnese</Text>
       )}
 
-      <DsButton
-        label="Nova avaliação"
-        fullWidth
-        onPress={() =>
-          router.push({
-            pathname: ASSESSMENTS_ROUTE,
-            params: { studentId: patientId },
-          })
-        }
-      />
+      {archived ? null : (
+        <DsButton
+          label="Nova avaliação"
+          fullWidth
+          onPress={() =>
+            router.push({
+              pathname: ASSESSMENTS_ROUTE,
+              params: { studentId: patientId },
+            })
+          }
+        />
+      )}
     </View>
   );
 }
