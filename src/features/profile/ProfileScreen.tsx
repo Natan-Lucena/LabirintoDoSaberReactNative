@@ -31,6 +31,7 @@ import {
 } from "@/components/ds";
 import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { homeQueryKeys } from "@/features/home/useHomeData";
+import { unregisterPushOnLogout } from "@/features/notifications/push/unregisterOnLogout";
 import { professionAndRole } from "@/features/team/roles";
 import { useAuthStore } from "@/stores/auth";
 import { color, typography, semanticColor } from "@/theme";
@@ -146,6 +147,7 @@ function ProfileContents({ onLoggedOut }: { onLoggedOut: () => void }) {
   async function leave() {
     setLoggingOut(true);
     try {
+      await unregisterPushOnLogout();
       await useAuthStore.getState().logout();
       onLoggedOut();
     } catch (error) {
@@ -260,6 +262,12 @@ function ProfileContents({ onLoggedOut }: { onLoggedOut: () => void }) {
             variant="secondary"
             fullWidth
             onPress={() => router.push("/profile/change-password")}
+          />
+          <DsButton
+            label="Notificações"
+            variant="secondary"
+            fullWidth
+            onPress={() => router.push("/profile/notifications")}
           />
           {!educator.clinic ? (
             <DsButton

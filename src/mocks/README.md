@@ -608,7 +608,7 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
 - **Séries:** `mock-series-1` (semanal, 5 ocorrências: concluída, cancelada, concluída, 2 pendentes),
   `mock-series-ended` (quinzenal com `endedAt`), `mock-series-foreign` (`403 UNAUTHORIZED`); outro id,
   `404 SERIES_NOT_FOUND`.
-- **Push:** padrão tudo ligado; `setMockNotificationPreferences(...)` (de `handlers/push`) troca.
+- **Push:** padrão tudo ligado; `setMockNotificationPreferences(...)` (de `handlers/push`) troca. NOT-02: `POST`/`DELETE /notification/push-token` (token inválido → 400 `INVALID_PUSH_TOKEN`, delete idempotente; `getMockPushTokens()`) e `PUT /notification/preferences` (parcial, estado em memória).
 - **Ajuda:** 4 tutoriais (um em destaque; com vídeo MP4, com HLS, só com passos);
   `setMockHelpScenario("empty")` (de `handlers/help`) devolve `[]`.
 
