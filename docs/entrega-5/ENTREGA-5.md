@@ -184,8 +184,10 @@ resultado de jogo recusado (403/404) e `LAST_ADMIN` no backend real; Maestro (QA
   e push), QA-02, QA-03 e QA-04.
 - **28 PRs das pilhas mergeados** (8 da pilha A, 20 da pilha B) mais o #222 (contrato real); o PR de
   integração #219 foi fechado sem merge.
-- **Testes:** **1796 testes em 276 arquivos** na suíte do PR de integração (a `main` tinha 1561
-  depois da EVO-03); o total atual da `main` não foi recontado aqui.
+- **Testes:** com o #225 mergeado, a suíte completa tem **281 arquivos e 1829 testes** passando
+  (rodada em 2026-11-27, Windows, `EXPO_PUBLIC_APP_ENV=development npx vitest run --maxWorkers=2`).
+  Antes, o PR de integração #219 tinha 1796 testes em 276 arquivos e a `main` tinha 1561 depois da
+  EVO-03.
 
 ## 10. Como rodar
 
