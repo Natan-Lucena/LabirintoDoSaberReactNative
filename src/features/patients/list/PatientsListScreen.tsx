@@ -161,7 +161,11 @@ export function PatientsListScreen(): ReactElement {
   );
 
   const activePatients = activeQuery.data ?? [];
-  const patients = archivedMode ? (archivedQuery.data ?? []) : activePatients;
+  const patients = archivedMode
+    ? (archivedQuery.data ?? []).filter(
+        (p) => (p.status ?? "ACTIVE") === "ARCHIVED",
+      )
+    : activePatients;
   const appointments = appointmentsQuery.data ?? [];
   const isInitialLoading =
     (activeQuery.isPending && !activeQuery.data) ||

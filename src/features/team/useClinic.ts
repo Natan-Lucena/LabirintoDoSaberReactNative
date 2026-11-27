@@ -34,6 +34,10 @@ async function getClinicOrNull(): Promise<ClinicView | null> {
     if (error instanceof ApiError && error.code === "NOT_IN_CLINIC") {
       return null;
     }
+    // Backend sem a rota /clinic/ (404 sem code): sem equipe, não erro.
+    if (error instanceof ApiError && error.status === 404 && !error.code) {
+      return null;
+    }
     throw error;
   }
 }

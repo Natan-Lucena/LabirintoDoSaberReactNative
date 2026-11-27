@@ -276,6 +276,26 @@ describe("AppointmentFormScreen — este e os seguintes (AGE-06)", () => {
     expect(updateAppointment).not.toHaveBeenCalled();
   });
 
+  it("só apagar a observação não envia a série e mostra a dica", async () => {
+    await render(
+      <AppointmentFormScreen
+        appointmentId="appt-3"
+        mode="edit"
+        scope="following"
+      />,
+    );
+
+    await fireEvent.changeText(await screen.findByLabelText("Observação"), "");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "Salvar alterações" }),
+    );
+
+    expect(
+      await screen.findByText("Para apagar a observação, use Só este."),
+    ).toBeTruthy();
+    expect(updateAppointmentSeries).not.toHaveBeenCalled();
+  });
+
   it("AC-AGE-06-03 sem scope usa PUT /appointment/:id (só este)", async () => {
     updateAppointment.mockResolvedValue(appointment());
     await render(<AppointmentFormScreen appointmentId="appt-3" mode="edit" />);

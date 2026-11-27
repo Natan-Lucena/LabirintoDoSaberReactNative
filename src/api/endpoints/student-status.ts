@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 
 import { apiClient } from "@/api/client";
 import { ApiError, normalizeApiError } from "@/api/errors";
+import { listStudents } from "@/api/endpoints/student";
 import { withQuery } from "@/api/endpoints/query";
 import type {
   PatientOverview,
@@ -43,7 +44,16 @@ export async function listStudentsByStatus(
       ({ educators: _educators, ...student }) => student,
     );
   } catch (error) {
-    throw normalizeApiError(error);
+    const normalized = normalizeApiError(error);
+    // Backend sem o filtro: rejeita a query com 400. Ativos e "todos" caem
+    // para a lista sem query (o que o backend atual devolve).
+    if (
+      normalized.status === 400 &&
+      (status === "ALL" || status === "ACTIVE")
+    ) {
+      return listStudents();
+    }
+    throw normalized;
   }
 }
 

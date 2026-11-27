@@ -12,7 +12,7 @@ import {
   listStudentSnapshots,
 } from "@/api/endpoints/session-analysis";
 import { listAnamneseTemplates } from "@/api/endpoints/anamnese";
-import { listStudents } from "@/api/endpoints/student";
+import { listStudentsByStatus } from "@/api/endpoints/student-status";
 import type { AnamneseTemplate, Student } from "@/api/types";
 import { createQueryClient } from "@/api/query-client";
 import { render } from "@/test-utils/render";
@@ -104,7 +104,7 @@ async function generate() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(listStudents).mockResolvedValue([ANA]);
+  vi.mocked(listStudentsByStatus).mockResolvedValue([ANA]);
   vi.mocked(getStudentAnalysis).mockResolvedValue(ANALYSIS);
   vi.mocked(listStudentSnapshots).mockResolvedValue([]);
   vi.mocked(createStudentSnapshot).mockResolvedValue(SNAPSHOT);

@@ -76,7 +76,7 @@ function questionsLabel(total: number): string {
 export function StudentReportsScreen(): ReactElement {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const students = useStudents();
+  const students = useStudents({ status: "ALL" });
   const [studentId, setStudentId] = useState<string | null>(null);
   const [mode, setMode] = useState<PeriodMode>("last");
   const [limit, setLimit] = useState("6");
