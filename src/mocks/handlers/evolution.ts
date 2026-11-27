@@ -87,6 +87,7 @@ function finishedSession(
       selectedAlternativeId: `alternative-${index + 1}`,
       isCorrect,
       timeToAnswer: 10,
+      timeToAnswerMs: 10000,
       answeredAt: new Date(
         startedAt.getTime() + (index + 1) * 60_000,
       ).toISOString(),

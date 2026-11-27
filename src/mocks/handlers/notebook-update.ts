@@ -15,7 +15,7 @@ registerMockHandler(
     const entry = MOCK_TASK_NOTEBOOKS.find(
       ({ notebook }) => notebook.id === input.taskNotebookId,
     );
-    if (!entry) throw new MockApiError(500, "TASK_NOTEBOOK_NOT_FOUND");
+    if (!entry) throw new MockApiError(404, "TASK_NOTEBOOK_NOT_FOUND");
     if (typeof input.description === "string")
       entry.notebook.description = input.description;
     if (typeof input.category === "string")

@@ -17,7 +17,7 @@ registerMockHandler({ method: "put", path: "/task/update" }, ({ body }) => {
   const input = body as UpdateTaskBody;
   const task = MOCK_TASKS.find((item) => item.id === input.id);
   if (!task) {
-    throw new MockApiError(500, "TASK_NOT_FOUND");
+    throw new MockApiError(404, "TASK_NOT_FOUND");
   }
   if (typeof input.prompt === "string") task.prompt = input.prompt;
   if (typeof input.category === "string") {

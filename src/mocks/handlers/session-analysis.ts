@@ -35,6 +35,7 @@ const analysisSessions: TaskNotebookSession[] = [
         selectedAlternativeId: "alternative-1",
         isCorrect: true,
         timeToAnswer: 12,
+        timeToAnswerMs: 12000,
         answeredAt: "2026-10-01T10:02:00-03:00",
       },
       {
@@ -42,6 +43,7 @@ const analysisSessions: TaskNotebookSession[] = [
         selectedAlternativeId: "alternative-2",
         isCorrect: false,
         timeToAnswer: 15,
+        timeToAnswerMs: 15000,
         answeredAt: "2026-10-01T10:04:00-03:00",
       },
     ],
@@ -62,6 +64,7 @@ const analysisSessions: TaskNotebookSession[] = [
         selectedAlternativeId: "alternative-3",
         isCorrect: true,
         timeToAnswer: 11,
+        timeToAnswerMs: 11000,
         answeredAt: "2026-10-03T10:02:00-03:00",
       },
     ],
@@ -211,6 +214,7 @@ registerMockHandler(
             // O contrato retorna este campo na sessão atualizada; o player não o revela.
             isCorrect: false,
             timeToAnswer: input.timeToAnswer,
+            timeToAnswerMs: input.timeToAnswer * 1000,
             answeredAt: "2026-10-07T10:01:00-03:00",
           },
         ],

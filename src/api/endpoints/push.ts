@@ -1,5 +1,5 @@
-// Push: preferências (API-07, leva 4) e escritas da NOT-02. Contrato PROPOSTO em
-// docs/entrega-5/CONTRATOS-BACKEND.md §6.2 a §6.5 (mock-first).
+// Push: preferências (API-07, leva 4) e escritas da NOT-02. Contrato publicado em
+// 2026-11-26 (BACKEND-ENTREGUE-E5 §3.6; CONTRATOS-BACKEND §6.2 a §6.5).
 import { apiClient } from "@/api/client";
 import { normalizeApiError } from "@/api/errors";
 import type {

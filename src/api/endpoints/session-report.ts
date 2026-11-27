@@ -5,7 +5,7 @@ export interface SessionReport {
   sessionName: string;
   totalTimeSession: number;
   totalQuestions: number;
-  averageTimePerQuestion: number;
+  averageTimePerQuestion: number | null;
   averageCorrectTime: number | null;
   averageIncorrectTime: number | null;
   percentageByCategory: Record<string, number | null>;

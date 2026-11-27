@@ -9,7 +9,7 @@ registerMockHandler(
       ({ notebook }) => notebook.id === params.taskNotebookId,
     );
     if (index === -1) {
-      throw new MockApiError(500, "TASK_NOTEBOOK_NOT_FOUND");
+      throw new MockApiError(404, "TASK_NOTEBOOK_NOT_FOUND");
     }
     MOCK_TASK_NOTEBOOKS.splice(index, 1);
 

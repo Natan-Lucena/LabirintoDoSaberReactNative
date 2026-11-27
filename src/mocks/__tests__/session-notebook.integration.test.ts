@@ -90,6 +90,6 @@ describe("sessão ligada ao caderno nos mocks (SES-05)", () => {
 
     await expect(
       answerSession(answerInput(session.id, "task-fora-do-caderno")),
-    ).rejects.toThrow("TASK_NOT_IN_NOTEBOOK");
+    ).rejects.toMatchObject({ code: "TASK_NOT_IN_NOTEBOOK" });
   });
 });

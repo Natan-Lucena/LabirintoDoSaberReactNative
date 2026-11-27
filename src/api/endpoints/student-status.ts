@@ -1,10 +1,9 @@
 // Status do paciente: leitura (API-07, leva 3) e escrita (PAC-11). Contrato
-// PROPOSTO em docs/entrega-5/CONTRATOS-BACKEND.md §2.4 e §5.2 a §5.4 (mock-first).
+// publicado em 2026-11-26 (BACKEND-ENTREGUE-E5 §3.4; CONTRATOS-BACKEND §2.4 e §5.2 a §5.4).
 import { AxiosError } from "axios";
 
 import { apiClient } from "@/api/client";
 import { ApiError, normalizeApiError } from "@/api/errors";
-import { listStudents } from "@/api/endpoints/student";
 import { withQuery } from "@/api/endpoints/query";
 import type {
   PatientOverview,
@@ -22,7 +21,7 @@ export const studentStatusQueryKeys = {
   detail: (studentId: string) => ["student", "detail", studentId] as const,
 };
 
-/** Ausente = ativo (PA-01): campo novo, o backend atual ainda não o manda. */
+/** Ausente = ativo (PA-01): defesa para cadastros sem o campo. */
 export function studentStatus(student: Pick<Student, "status">): StudentStatus {
   return student.status ?? "ACTIVE";
 }
@@ -44,16 +43,7 @@ export async function listStudentsByStatus(
       ({ educators: _educators, ...student }) => student,
     );
   } catch (error) {
-    const normalized = normalizeApiError(error);
-    // Backend sem o filtro: rejeita a query com 400. Ativos e "todos" caem
-    // para a lista sem query (o que o backend atual devolve).
-    if (
-      normalized.status === 400 &&
-      (status === "ALL" || status === "ACTIVE")
-    ) {
-      return listStudents();
-    }
-    throw normalized;
+    throw normalizeApiError(error);
   }
 }
 
