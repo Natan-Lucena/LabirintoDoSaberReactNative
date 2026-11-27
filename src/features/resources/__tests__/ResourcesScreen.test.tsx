@@ -53,7 +53,7 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     );
   });
 
-  it("navega para os destinos existentes e para Em breve nos demais recursos", async () => {
+  it("navega para os destinos reais de todos os itens", async () => {
     await render(<ResourcesScreen />);
 
     await fireEvent.press(screen.getByRole("button", { name: "Perfil" }));

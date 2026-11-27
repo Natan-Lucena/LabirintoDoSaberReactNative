@@ -13,7 +13,7 @@ type ResourceItem = {
   title: string;
   subtitle: string;
   icon: "sparkles" | "chart" | "clipboard" | "book" | "file" | "users" | "play";
-  destination?:
+  destination:
     | "/activities"
     | "/reports/new"
     | "/anamnese/templates"
@@ -141,9 +141,6 @@ export function ResourcesScreen(): ReactElement {
   const { educator } = useHomeData();
   const educatorName = educator?.name ?? "Educador(a)";
 
-  const openComingSoon = (title: string) =>
-    router.push({ pathname: "/shell/coming-soon", params: { title } });
-
   return (
     <View style={styles.screen}>
       <AppHeader title="Recursos" subtitle="Tudo em um só lugar" />
@@ -184,11 +181,7 @@ export function ResourcesScreen(): ReactElement {
                   icon={item.icon}
                   title={item.title}
                   subtitle={item.subtitle}
-                  onPress={() =>
-                    item.destination
-                      ? router.push(item.destination)
-                      : openComingSoon(item.title)
-                  }
+                  onPress={() => router.push(item.destination)}
                 />
               ))}
             </View>

@@ -87,7 +87,7 @@ describe("useSessionGuard (AC-402-01)", () => {
   it.each([
     ["/session/student", ["session", "student"]],
     ["/appointments", ["(tabs)", "appointments"]],
-    ["/shell/coming-soon", ["shell", "coming-soon"]],
+    ["/notifications", ["notifications"]],
   ])(
     "does not redirect an authenticated user within %s",
     async (currentPath, currentSegments) => {
