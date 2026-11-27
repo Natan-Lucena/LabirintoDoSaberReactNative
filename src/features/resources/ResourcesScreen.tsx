@@ -20,7 +20,8 @@ type ResourceItem = {
     | "/plans"
     | "/evolution"
     | "/assessments"
-    | "/team";
+    | "/team"
+    | "/help";
 };
 
 const featureGroups: readonly {
@@ -92,6 +93,7 @@ const featureGroups: readonly {
         title: "Central de ajuda",
         subtitle: "Tire dúvidas e veja como usar o app",
         icon: "play",
+        destination: "/help",
       },
     ],
   },
