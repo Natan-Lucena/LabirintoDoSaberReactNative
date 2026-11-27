@@ -168,7 +168,7 @@ export function useLeaveTeam(): UseMutationResult<void, Error, string> {
   });
 }
 
-/** O convite fica no estado da tela: não toca o cache de consultas. */
+/** O convite criado fica no estado da tela; a lista de ativos é refeita pelo cache. */
 export function useCreateInvite(): UseMutationResult<
   ClinicInvite,
   Error,
@@ -177,6 +177,9 @@ export function useCreateInvite(): UseMutationResult<
   const client = useQueryClient();
   return useMutation({
     mutationFn: withOfflineGuard(createClinicInvite),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: clinicQueryKeys.invites });
+    },
     onError: async (error) => {
       if (error instanceof ApiError && error.code === "FORBIDDEN_ROLE") {
         await client.invalidateQueries({ queryKey: clinicQueryKeys.view });

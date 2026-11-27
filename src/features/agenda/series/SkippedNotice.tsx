@@ -31,14 +31,19 @@ export function SkippedNotice({
   onOpen,
   onDone,
 }: SkippedNoticeProps): ReactElement {
-  const verb = doneLabel === "alterados" ? "alterados" : "criados";
+  const edited = doneLabel === "alterados";
+  const doneText = doneCount === 1 ? doneLabel.slice(0, -1) : doneLabel;
+  const skippedText =
+    skipped.length === 1
+      ? `não foi ${edited ? "alterado" : "criado"}`
+      : `não foram ${edited ? "alterados" : "criados"}`;
 
   return (
     <View style={styles.container}>
       <InfoCard
         icon="calendar"
-        title={`${doneCount} ${doneLabel}`}
-        description={`${skipped.length} não foram ${verb} porque o horário já estava ocupado:`}
+        title={`${doneCount} ${doneText}`}
+        description={`${skipped.length} ${skippedText} porque o horário já estava ocupado:`}
       />
       {skipped.map((item) => {
         const date = new Date(item.scheduledAt);
