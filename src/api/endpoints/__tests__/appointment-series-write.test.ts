@@ -152,7 +152,7 @@ describe("escritas de série pelo apiClient (AGE-06)", () => {
     ).toEqual(["2031-06-03", "2031-06-10", "2031-06-17", "2031-06-24"]);
   });
 
-  it("alterar sem nenhum campo: 400; ocorrência de outra série: 404", async () => {
+  it("alterar sem nenhum campo: 400; ocorrência de outra série: 400", async () => {
     const { series, created } = await createAppointmentSeries({
       studentId: "student-1",
       scheduledAt: "2031-07-01T17:00:00.000Z",
@@ -168,13 +168,78 @@ describe("escritas de série pelo apiClient (AGE-06)", () => {
         fromAppointmentId: "outra",
         durationMinutes: 60,
       }),
-    ).rejects.toMatchObject({ status: 404, code: "APPOINTMENT_NOT_FOUND" });
+    ).rejects.toMatchObject({ status: 400, code: "APPOINTMENT_NOT_IN_SERIES" });
     await expect(
       updateAppointmentSeries("nao-existe", {
         fromAppointmentId: "x",
         durationMinutes: 60,
       }),
     ).rejects.toMatchObject({ status: 404, code: "SERIES_NOT_FOUND" });
+  });
+
+  it("M-03 quinzenal acima de 13 → 400 SERIES_TOO_LONG", async () => {
+    await expect(
+      createAppointmentSeries({
+        studentId: "student-1",
+        scheduledAt: FIRST,
+        frequency: "BIWEEKLY",
+        occurrences: 14,
+      }),
+    ).rejects.toMatchObject({ status: 400, code: "SERIES_TOO_LONG" });
+  });
+
+  it("D-03 conflito com atendimento alheio devolve um id fora da agenda", async () => {
+    const result = await createAppointmentSeries({
+      studentId: "student-1",
+      scheduledAt: "2032-01-06T17:00:00.000Z",
+      frequency: "WEEKLY",
+      occurrences: 3,
+      type: "Conflito alheio",
+    });
+    const own = new Set((await listAppointments()).map(({ id }) => id));
+
+    expect(result.created).toHaveLength(2);
+    expect(result.skipped).toHaveLength(1);
+    expect(own.has(result.skipped[0]!.conflictingAppointmentId)).toBe(false);
+  });
+
+  it("D-04 e D-11 PUT apaga a observação com null e devolve appointmentId nas puladas", async () => {
+    const { series, created } = await createAppointmentSeries({
+      studentId: "student-1",
+      scheduledAt: "2031-10-07T17:00:00.000Z",
+      frequency: "WEEKLY",
+      occurrences: 2,
+      observation: "Antiga",
+    });
+
+    const cleared = await updateAppointmentSeries(series.id, {
+      fromAppointmentId: created[0]!.id,
+      observation: null,
+    });
+    expect(cleared.created.map(({ observation }) => observation)).toEqual([
+      null,
+      null,
+    ]);
+
+    await createAppointment({
+      studentId: "student-1",
+      scheduledAt: "2031-10-14T18:00:00.000Z",
+    });
+    const clash = await updateAppointmentSeries(series.id, {
+      fromAppointmentId: created[0]!.id,
+      durationMinutes: 70,
+    });
+    expect(clash.skipped).toEqual([
+      expect.objectContaining({ appointmentId: created[1]!.id }),
+    ]);
+  });
+
+  it("D-06 GET /appointment/ filtra por studentId", async () => {
+    const list = await listAppointments({ studentId: "student-1" });
+
+    expect(list.length).toBeGreaterThan(0);
+    expect(list.every(({ studentId }) => studentId === "student-1")).toBe(true);
+    expect(list.length).toBeLessThan((await listAppointments()).length);
   });
 
   it("cancelar este e os seguintes encerra a série; repetir é seguro", async () => {

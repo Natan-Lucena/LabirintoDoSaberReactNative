@@ -30,7 +30,7 @@ export function appointmentErrorMessage(error: unknown): string {
       return CONFLICT_MESSAGE;
     }
     if (error.code === "APPOINTMENT_NOT_EDITABLE") {
-      return "Este atendimento não permite alterar horário, tipo ou duração.";
+      return "Este atendimento não permite alterar horário, tipo ou duração, ou o novo horário já passou.";
     }
     if (error.code === "STUDENT_ARCHIVED") {
       return ARCHIVED_MESSAGE;

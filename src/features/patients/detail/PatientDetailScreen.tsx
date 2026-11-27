@@ -139,7 +139,7 @@ export function PatientDetailScreen({
     onToast: toast.show,
     onNotFound: () => router.replace("/(tabs)/patients"),
   });
-  const appointmentsQuery = useAppointments();
+  const appointmentsQuery = useAppointments(patientId);
   const evolutionsQuery = usePatientEvolutions(patientId);
   const pendingQuery = usePendingEvolutions();
   const { query: overviewQuery, byId: overviewById } = usePatientOverview();
@@ -221,10 +221,10 @@ export function PatientDetailScreen({
   // Reserva (§6 item 5): sem overview o bloco "Registrar evolução" continua.
   const overview = overviewById.get(patient.id);
   const useFallback = !overview && !overviewQuery.isPending;
-  const nextAppointment = findNextAppointment(
-    appointmentsQuery.data ?? [],
-    patient.id,
-  );
+  // O resumo do servidor tem prioridade; sem ele, a lista filtrada pelo paciente (D-06).
+  const nextAppointment =
+    overview?.nextAppointment ??
+    findNextAppointment(appointmentsQuery.data ?? [], patient.id);
   // O servidor devolve da mais recente para a mais antiga: as duas primeiras.
   const pendingEvolutions = pendingForStudent(pendingQuery.data, patient.id);
   const latestEvolutions = (evolutionsQuery.data ?? []).slice(0, 2);

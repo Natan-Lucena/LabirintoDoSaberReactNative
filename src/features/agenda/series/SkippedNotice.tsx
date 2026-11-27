@@ -13,6 +13,11 @@ export interface SkippedNoticeProps {
   /** "agendados" na criação, "alterados" na edição da série. */
   doneLabel: "agendados" | "alterados";
   skipped: SeriesResult["skipped"];
+  /**
+   * Ids de atendimentos da própria agenda. O conflito pode ser de um atendimento de
+   * outro educador (BACKEND-ENTREGUE-E5 §3.5): sem o id aqui, não há link (D-03).
+   */
+  ownAppointmentIds: ReadonlySet<string>;
   onOpen: (appointmentId: string) => void;
   onDone: () => void;
 }
@@ -22,6 +27,7 @@ export function SkippedNotice({
   doneCount,
   doneLabel,
   skipped,
+  ownAppointmentIds,
   onOpen,
   onDone,
 }: SkippedNoticeProps): ReactElement {
@@ -41,12 +47,16 @@ export function SkippedNotice({
         return (
           <View key={item.scheduledAt} style={styles.row}>
             <Text style={styles.rowText}>{label}</Text>
-            <DsButton
-              label="Ver atendimento"
-              accessibilityLabel={`Ver atendimento de ${label}`}
-              variant="ghost"
-              onPress={() => onOpen(item.conflictingAppointmentId)}
-            />
+            {ownAppointmentIds.has(item.conflictingAppointmentId) ? (
+              <DsButton
+                label="Ver atendimento"
+                accessibilityLabel={`Ver atendimento de ${label}`}
+                variant="ghost"
+                onPress={() => onOpen(item.conflictingAppointmentId)}
+              />
+            ) : (
+              <Text style={styles.busyText}>Horário ocupado</Text>
+            )}
           </View>
         );
       })}
@@ -68,5 +78,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: color.border,
   },
+  busyText: { ...typography.body, color: color.textSecondary },
   rowText: { ...typography.body, color: color.text, flexShrink: 1 },
 });

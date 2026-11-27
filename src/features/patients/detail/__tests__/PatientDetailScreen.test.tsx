@@ -355,6 +355,28 @@ describe("PatientDetailScreen (PAC-03)", () => {
     expect(screen.getByText("Nenhuma sessão agendada")).toBeTruthy();
   });
 
+  it("D-06 usa overview.nextAppointment quando o resumo traz o próximo atendimento", async () => {
+    overviewState.query.data = [
+      {
+        studentId: patient.id,
+        primaryStatus: "ACTIVE",
+        nextAppointment: { id: "next-1", scheduledAt: "2031-10-08T14:00:00Z" },
+        pendings: [],
+      },
+    ] as never;
+    overviewState.query.isError = false;
+
+    try {
+      await render(<PatientDetailScreen patientId={patient.id} />);
+
+      expect(screen.getByText("Atendimento agendado")).toBeTruthy();
+      expect(screen.queryByText("Nenhuma sessão agendada")).toBeNull();
+    } finally {
+      overviewState.query.data = undefined;
+      overviewState.query.isError = true;
+    }
+  });
+
   it("AC-EVO-02-01: a seção 'Evolução recente' mostra as duas últimas evoluções, a mais recente no topo", async () => {
     await render(<PatientDetailScreen patientId={patient.id} />);
 

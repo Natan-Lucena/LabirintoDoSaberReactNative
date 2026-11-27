@@ -109,6 +109,14 @@ export const MOCK_STUDENT_SHARES: Record<string, StudentShare[]> = {
       sharedAt: "2026-11-02T12:00:00.000Z",
     },
   ],
+  // D-02: o backend pode não mandar `role`; a ficha mostra só a data.
+  [MOCK_STUDENTS[2]!.id]: [
+    {
+      educatorId: MOCK_COLLEAGUE_ID,
+      name: MOCK_COLLEAGUE_NAME,
+      sharedAt: "2026-11-02T12:00:00.000Z",
+    },
+  ],
 };
 
 // --- Série de atendimentos (leva 3) -----------------------------------------

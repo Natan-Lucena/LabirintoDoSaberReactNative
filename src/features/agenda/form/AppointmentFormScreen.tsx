@@ -55,6 +55,7 @@ import {
   useUpdateAppointmentMutation,
   useUpdateSeriesMutation,
 } from "@/features/appointments/mutations";
+import { useAppointments } from "@/features/appointments/useAppointments";
 import { useStudents } from "@/features/students/useStudents";
 import { color, fontFamilies, semanticColor } from "@/theme";
 import { dayKey } from "@/utils/date";
@@ -191,6 +192,7 @@ function AppointmentForm({
   const router = useRouter();
   const toast = useToast();
   const studentsQuery = useStudents();
+  const appointmentsQuery = useAppointments();
   const createMutation = useCreateAppointmentMutation();
   const updateMutation = useUpdateAppointmentMutation();
   const createSeries = useCreateSeriesMutation();
@@ -251,6 +253,9 @@ function AppointmentForm({
   const conflictId = frequency
     ? undefined
     : conflictingAppointmentId(mutation.error);
+  const ownAppointmentIds = new Set(
+    (appointmentsQuery.data ?? []).map(({ id }) => id),
+  );
   const watchedDate = useWatch({ control, name: "date" });
   const watchedTime = useWatch({ control, name: "time" });
   const occurrencesCount = Number(occurrences);
@@ -366,13 +371,11 @@ function AppointmentForm({
         ...(input.durationMinutes === undefined
           ? {}
           : { durationMinutes: input.durationMinutes }),
-        ...(input.observation ? { observation: input.observation } : {}),
+        // `null` apaga a observação das ocorrências seguintes (§3.5).
+        ...(input.observation === undefined
+          ? {}
+          : { observation: input.observation }),
       };
-      // Só apagou a observação: o PUT da série exige ao menos um campo (400).
-      if (Object.keys(seriesChanges).length === 0) {
-        toast.show("Para apagar a observação, use Só este.");
-        return;
-      }
       updateSeries.mutate(
         {
           seriesId: appointment.seriesId,
@@ -404,6 +407,7 @@ function AppointmentForm({
             doneCount={skippedResult.result.created.length}
             doneLabel={skippedResult.label}
             skipped={skippedResult.result.skipped}
+            ownAppointmentIds={ownAppointmentIds}
             onOpen={(id) => router.push(`/agenda/${id}`)}
             onDone={router.back}
           />
@@ -484,7 +488,7 @@ function AppointmentForm({
           />
         </FieldGrid>
         {following ? <Text style={styles.hint}>{DATE_LOCKED_HINT}</Text> : null}
-        {conflictId ? (
+        {conflictId && ownAppointmentIds.has(conflictId) ? (
           <DsButton
             label="Ver atendimento"
             variant="ghost"

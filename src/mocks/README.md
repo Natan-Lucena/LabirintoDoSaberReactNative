@@ -566,7 +566,11 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
 - Escritas de série (AGE-06, em memória): `POST /appointment/series` (2 a 26 ocorrências, quinzenal até 13;
   conflito pula a ocorrência e a lista em `skipped`; todas em conflito → `409 APPOINTMENT_CONFLICT`;
   paciente arquivado → `409 STUDENT_ARCHIVED`), `PUT /appointment/series/:id` (só a hora vale; `fromAppointmentId`)
-  e `POST /appointment/series/:id/cancel`. As séries criadas aparecem em `GET /appointment/` com `seriesId`
+  e `POST /appointment/series/:id/cancel`. `fromAppointmentId` fora da série → `400 APPOINTMENT_NOT_IN_SERIES`;
+  quinzenal acima de 13 ocorrências → `400 SERIES_TOO_LONG`; o PUT aceita `observation: null` (apaga) e devolve
+  `appointmentId` em `skipped`. `type` "Conflito alheio" (POST de atendimento ou de série) simula conflito com um
+  atendimento de outro educador, cujo id não está em `GET /appointment/` (o app mostra "Horário ocupado", sem link).
+  `GET /appointment/?studentId=` filtra por paciente. As séries criadas aparecem em `GET /appointment/` com `seriesId`
   (e na visão mensal); as séries das fixtures continuam só de leitura.
 - `GET /notification/preferences` e `GET /help/tutorials`.
 
