@@ -123,7 +123,7 @@ Detalhes em [GATES](../entrega-1/GATES.md).
 | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | Seeds da biblioteca e da ajuda em produção | Não rodados; biblioteca e tutoriais vazios em produção                                     |
 | PR #44 do backend                          | Aberto: troca a carta COELHO por GATO no seed do jogo da memória (COELHO quebrava a linha) |
-| PR de correções do teste no emulador       | Aberto: os defeitos 1 a 4 do §8                                                            |
+| #225                                       | Aberto: os defeitos 1 a 4 do §8                                                            |
 | Voltar de "Atividades para {paciente}"     | Leva à aba Início em vez da ficha (P3); não corrigido                                      |
 | Leva 5 (G-71, G-72, PP-08, PP-10, PP-11)   | Só backend; o app não muda                                                                 |
 | Maestro (QA-02)                            | Fluxos escritos em `.maestro/`; falta autorizar a instalação e rodar no emulador           |
@@ -161,7 +161,7 @@ ficam guardadas fora do repositório (pasta prints-entrega-5). Resultado caso a 
    ainda não faz parte de uma equipe") e Ajuda ("Os tutoriais ainda não foram publicados")
    respondem.
 
-**Defeitos encontrados** (os quatro primeiros estão no PR de correções do teste no emulador):
+**Defeitos encontrados** (os quatro primeiros estão no #225):
 
 | #   | Defeito                                                                                          |
 | --- | ------------------------------------------------------------------------------------------------ |
