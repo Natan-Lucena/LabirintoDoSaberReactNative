@@ -14,6 +14,7 @@ import {
   getMockTeamScenario,
   setMockTeamScenario,
 } from "@/mocks/mock-team-state";
+import { setMockInviteGateway } from "@/mocks/mock-invite-state";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
@@ -25,11 +26,14 @@ const SEEDED_INVITES = 2;
 let createdClinic: ClinicView | null = null;
 let createdInvites: ClinicInvite[] = [];
 let inviteSeq = 0;
+// Convites de uso único (EQ-06): consumidos pelo cadastro ou pelo accept.
+let usedInviteCodes = new Set<string>();
 
 export function resetMockClinicState(): void {
   createdClinic = null;
   createdInvites = [];
   inviteSeq = 0;
+  usedInviteCodes = new Set();
 }
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -100,6 +104,37 @@ function activeInvites(): ClinicInvite[] {
   ];
 }
 
+function findActiveInvite(code: string): ClinicInvite | undefined {
+  const normalized = normalizeInviteCode(code);
+  if (usedInviteCodes.has(normalized)) return undefined;
+  return activeInvites().find((item) => item.code === normalized);
+}
+
+/**
+ * Consome o convite (uso único) e liga o cenário de equipe com o papel dele.
+ * Usado pelo `accept` e pelo `register` com `inviteCode`. `INVITE_INVALID` se o
+ * código não existe ou já foi usado.
+ */
+function consumeMockInvite(code: unknown): TeamRole {
+  const invite = typeof code === "string" ? findActiveInvite(code) : undefined;
+  if (!invite) {
+    throw new MockApiError(404, "INVITE_INVALID");
+  }
+  usedInviteCodes.add(invite.code);
+  setMockTeamScenario(invite.role === "ADMIN" ? "admin" : "professional");
+  return invite.role;
+}
+
+/** O código existe e ainda não foi usado (sem consumi-lo). */
+function isMockInviteValid(code: unknown): boolean {
+  return typeof code === "string" && findActiveInvite(code) !== undefined;
+}
+
+setMockInviteGateway({
+  isValid: isMockInviteValid,
+  consume: consumeMockInvite,
+});
+
 function requireClinic(): "ADMIN" | "PROFESSIONAL" {
   const scenario = getMockTeamScenario();
   if (scenario === "none") {
@@ -133,17 +168,18 @@ registerMockHandler(
   { method: "get", path: "/clinic/invites/preview/:code" },
   ({ params }) => {
     const code = normalizeInviteCode(params.code ?? "");
-    if (code === MOCK_INVITE_RATE_LIMITED_CODE) {
+    // LIMITE22 tem "I" (formato inválido no app): TENTAT22 chega à prévia.
+    if (code === MOCK_INVITE_RATE_LIMITED_CODE || code === "TENTAT22") {
       throw new MockApiError(429, "TOO_MANY_REQUESTS");
     }
-    const invite = activeInvites().find((item) => item.code === code);
+    const invite = findActiveInvite(code);
     if (!invite) {
       throw new MockApiError(404, "INVITE_INVALID");
     }
     return {
       status: 200,
       data: {
-        clinicName: MOCK_CLINIC.name,
+        clinicName: clinicName(),
         role: invite.role,
         expiresAt: invite.expiresAt,
       },
@@ -203,5 +239,25 @@ registerMockHandler({ method: "post", path: "/clinic/invites" }, ({ body }) => {
   createdInvites = [invite, ...createdInvites];
   return { status: 201, data: invite };
 });
+
+registerMockHandler(
+  { method: "post", path: "/clinic/invites/accept" },
+  ({ body }) => {
+    const code = (body as { code?: unknown } | null)?.code;
+    if (typeof code !== "string" || code.trim() === "") {
+      throw new MockApiError(400, "VALIDATION_ERROR");
+    }
+    if (getMockTeamScenario() !== "none") {
+      throw new MockApiError(409, "ALREADY_IN_CLINIC");
+    }
+    const role = consumeMockInvite(code);
+    const view: ClinicView = {
+      clinic: createdClinic?.clinic ?? { ...MOCK_CLINIC },
+      myRole: role,
+      members: buildMockClinicMembers(role),
+    };
+    return { status: 200, data: view };
+  },
+);
 
 export const clinicMockHandlersRegistered = true;

@@ -565,8 +565,14 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
   cenário `admin`; `POST /clinic/invites` (só `ADMIN`, `403` no `professional`) devolve um convite novo com código
   de 8 caracteres e `shareMessage` do formato EQ-05, que passa a aparecer em `GET /clinic/invites`; a partir de 20
   convites ativos, `409 TOO_MANY_INVITES`. `resetMockClinicState()` limpa esse estado (testes).
+- **Cadastro e aceite pelo convite (EQP-03)**, em `handlers/clinic.ts` e `handlers/educator.ts`: convite de uso
+  único (usado, passa a `404 INVITE_INVALID`; recarregar o app o restaura). `POST /clinic/invites/accept`
+  `{ code }` devolve a `ClinicView` e liga o cenário com o papel do convite (`409 ALREADY_IN_CLINIC` se já há
+  equipe). `POST /educator/register` (`name`, `email`, `password`, `inviteCode?`): `400 EDUCATOR_ALREADY_EXISTS`
+  para `educadora.mock@labirinto.test` e e-mails já cadastrados; `404 INVITE_INVALID` sem criar a conta; a conta
+  nova passa a valer no `sign-in` mockado (qualquer senha) e `/educator/me` devolve o educador fictício de sempre.
 - **Prévia do convite:** `AB3K7MPQ` (profissional) e `KM4W9RTD` (administrador) valem; qualquer outro
-  código, `404 INVITE_INVALID`; `LIMITE22` responde `429 TOO_MANY_REQUESTS`.
+  código, `404 INVITE_INVALID`; `LIMITE22` e `TENTAT22` respondem `429 TOO_MANY_REQUESTS` (o app recusa `LIMITE22` antes, pelo "I" no formato; use `TENTAT22` na tela).
 - **Status:** `GET /student/` sem `status` devolve só os 5 pacientes de sempre, sem os campos novos
   (como o backend atual); com `status` os itens trazem `access` e `status`. "Paciente Teste Arquivado"
   só aparece em `ARCHIVED` e `ALL`. `status` fora do enum responde `400`.
