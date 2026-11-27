@@ -7,7 +7,8 @@
 > [ENTREGA-4 §7](../entrega-4/ENTREGA-4.md#7-o-que-fica-fora-e-próximos-passos). As tarefas estão
 > no [BACKLOG](BACKLOG.md), o progresso no [TRACKING](TRACKING.md) e o que o backend precisa
 > construir na [ESPECIFICACAO-BACKEND](ESPECIFICACAO-BACKEND.md) (resumo em
-> [PEDIDOS-BACKEND](PEDIDOS-BACKEND.md)). Este documento não marca nenhuma implementação como
+> [PEDIDOS-BACKEND](PEDIDOS-BACKEND.md); contrato rota a rota em
+> [CONTRATOS-BACKEND](CONTRATOS-BACKEND.md)). Este documento não marca nenhuma implementação como
 > pronta. **As decisões G-61 a G-72 são propostas até o usuário confirmar.**
 >
 > **Refino (2026-11-24):** o [PLANO](PLANO.md) traz a sequência, o paralelismo, as estimativas,
