@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Appointment } from "@/api/types";
 import {
+  selectAppointmentCountsByDay,
   selectAppointmentDayKeys,
   selectAppointmentsForDay,
   selectDaySummary,
@@ -35,6 +36,21 @@ describe("seletores da Agenda (AC-901-01, G-13)", () => {
     expect(selectAppointmentDayKeys(appointments, 2026, 3)).toEqual([
       "2026-04-02",
     ]);
+  });
+
+  it("conta por dia de Sao Paulo, sem cancelados e dentro do intervalo (AC-AGE-05-01/02)", () => {
+    const list = [
+      appointment("a", "2026-04-02T12:00:00.000Z"),
+      appointment("b", "2026-04-02T15:00:00.000Z", "COMPLETED"),
+      appointment("c", "2026-04-03T01:30:00.000Z"), // 22:30 de 02/04 em SP
+      appointment("d", "2026-04-04T12:00:00.000Z", "CANCELLED"),
+      appointment("e", "2026-05-10T12:00:00.000Z"),
+    ];
+    expect(
+      selectAppointmentCountsByDay(list, "2026-03-30", "2026-05-03"),
+    ).toEqual({
+      "2026-04-02": 3,
+    });
   });
 
   it("lista o dia em ordem de horario e mantem cancelados", () => {
