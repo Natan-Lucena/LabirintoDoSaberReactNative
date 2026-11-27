@@ -202,11 +202,9 @@ describe("AppointmentFormScreen — repetir (AGE-06)", () => {
       screen.getByRole("button", { name: "Agendar 8 atendimentos" }),
     );
 
-    expect(await screen.findByText("1 agendados")).toBeTruthy();
+    expect(await screen.findByText("1 agendado")).toBeTruthy();
     expect(
-      screen.getByText(
-        "1 não foram criados porque o horário já estava ocupado:",
-      ),
+      screen.getByText("1 não foi criado porque o horário já estava ocupado:"),
     ).toBeTruthy();
     expect(screen.getByText("18/04 (sábado) às 15:30")).toBeTruthy();
     expect(routerBack).not.toHaveBeenCalled();

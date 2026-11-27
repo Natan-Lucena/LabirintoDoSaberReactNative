@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Calendar, type DateData } from "react-native-calendars";
 
 import { color, shape, typography } from "../../../theme";
+import "./calendarLocale";
 
 interface DayCellProps {
   date?: DateData;
