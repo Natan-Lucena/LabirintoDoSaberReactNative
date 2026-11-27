@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -30,6 +30,7 @@ import { ManageMemberDialog } from "@/features/team/components/ManageMemberDialo
 import { MemberRow } from "@/features/team/components/MemberRow";
 import { RenameClinicDialog } from "@/features/team/components/RenameClinicDialog";
 import { teamErrorMessage } from "@/features/team/messages";
+import { consumeTeamNotice } from "@/features/team/notice";
 import { teamRoleLabel } from "@/features/team/roles";
 import {
   useClinic,
@@ -119,6 +120,11 @@ export function TeamScreen(): ReactElement {
   const [managing, setManaging] = useState<ClinicMember | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const showToast = toast.show;
+  useEffect(() => {
+    const notice = consumeTeamNotice();
+    if (notice) showToast(notice);
+  }, [showToast]);
   const busy =
     updateRole.isPending || removeMember.isPending || leaveTeam.isPending;
 
@@ -170,7 +176,16 @@ export function TeamScreen(): ReactElement {
   );
 
   let body: ReactElement;
-  if (query.isPending) {
+  if (query.isPending && !online) {
+    body = (
+      <ScrollView contentContainerStyle={styles.content}>
+        <PendingBanner message="Sem conexão" />
+        <Text style={styles.stateText}>
+          Sem conexão e sem dados salvos da equipe. Conecte-se para carregar.
+        </Text>
+      </ScrollView>
+    );
+  } else if (query.isPending) {
     body = (
       <View style={styles.state}>
         <ActivityIndicator accessibilityLabel="Carregando a equipe" />

@@ -23,7 +23,9 @@ export function inviteErrorMessage(error: unknown): string {
   if (error instanceof OfflineError) return NETWORK_MESSAGE;
   const apiError = normalizeApiError(error);
   if (apiError.isNetworkError || apiError.isTimeout) return NETWORK_MESSAGE;
-  if (apiError.code === "INVITE_INVALID") return INVITE_INVALID_MESSAGE;
+  if (apiError.code === "INVITE_INVALID" || apiError.status === 404) {
+    return INVITE_INVALID_MESSAGE;
+  }
   if (apiError.code === "TOO_MANY_REQUESTS" || apiError.status === 429) {
     return INVITE_RATE_LIMIT_MESSAGE;
   }

@@ -18,6 +18,7 @@ vi.mock("@/config/env", () => ({
 }));
 
 const { JoinTeamScreen } = await import("../JoinTeamScreen");
+const { consumeTeamNotice } = await import("@/features/team/notice");
 
 async function enterCode(code: string) {
   await fireEvent.changeText(screen.getByLabelText("Código do convite"), code);
@@ -44,6 +45,8 @@ describe("JoinTeamScreen (EQP-03)", () => {
     );
 
     await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/team"));
+    // O aviso vai para a tela da equipe (o toast daqui sumiria com a navegação).
+    expect(consumeTeamNotice()).toMatch(/^Você entrou na equipe /);
   });
 
   it("conta que já está numa equipe vê ALREADY_IN_CLINIC (AC-EQP-03-02)", async () => {

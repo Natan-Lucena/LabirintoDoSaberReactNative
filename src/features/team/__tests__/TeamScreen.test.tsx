@@ -20,9 +20,11 @@ vi.mock("expo-router", () => ({
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
 }));
-vi.mock("@/hooks/useOnline", () => ({ useOnline: () => true }));
+let mockOnline = true;
+vi.mock("@/hooks/useOnline", () => ({ useOnline: () => mockOnline }));
 
 const { TeamScreen } = await import("../TeamScreen");
+const { setTeamNotice } = await import("../notice");
 
 describe("TeamScreen (EQP-01)", () => {
   beforeEach(() => {
@@ -30,6 +32,7 @@ describe("TeamScreen (EQP-01)", () => {
     setMockSession(MOCK_TOKEN);
     resetMockClinicState();
     resetMockTeamScenario();
+    mockOnline = true;
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -47,6 +50,27 @@ describe("TeamScreen (EQP-01)", () => {
     expect(
       screen.queryByText("Não foi possível carregar a equipe."),
     ).toBeNull();
+  });
+
+  it("mostra o aviso deixado por outra tela (entrada na equipe)", async () => {
+    setMockTeamScenario("admin");
+    setTeamNotice("Você entrou na equipe Clínica Teste");
+    await render(<TeamScreen />);
+
+    expect(
+      await screen.findByText("Você entrou na equipe Clínica Teste"),
+    ).toBeTruthy();
+  });
+
+  it("offline sem cache mostra o estado offline em vez de carregar para sempre", async () => {
+    mockOnline = false;
+    apiClient.defaults.adapter = () => new Promise(() => {});
+    await render(<TeamScreen />);
+
+    expect(
+      await screen.findByText(/Sem conexão e sem dados salvos da equipe/),
+    ).toBeTruthy();
+    expect(screen.queryByText("Carregando a equipe")).toBeNull();
   });
 
   it("valida o nome e cria a equipe", async () => {

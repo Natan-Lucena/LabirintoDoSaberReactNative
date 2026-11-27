@@ -26,16 +26,16 @@ export default function RegisterScreen(): ReactElement {
       <RegisterForm
         isSubmitting={isSubmitting}
         onSubmit={(values) => submit(values, code)}
-        onGoToLogin={() => router.replace(AUTH_DESTINATION)}
+        onGoToLogin={() => router.dismissTo(AUTH_DESTINATION)}
         onOutcome={(outcome) => {
           if (outcome.status === "signed-in") {
             router.replace(APP_DESTINATION);
           } else if (outcome.status === "login-failed") {
             setLoginInviteNotice({ kind: "registered" });
-            router.replace(AUTH_DESTINATION);
+            router.dismissTo(AUTH_DESTINATION);
           } else if (outcome.status === "invite-invalid") {
             setInviteScreenError(outcome.message);
-            router.replace("/(auth)/invite");
+            router.dismissTo("/(auth)/invite");
           }
         }}
       />

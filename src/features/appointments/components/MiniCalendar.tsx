@@ -170,6 +170,7 @@ export function MiniCalendar({
         </Pressable>
       </View>
       <Calendar
+        key={toDayKey(year, month)}
         current={toDayKey(year, month)}
         firstDay={1}
         hideArrows
