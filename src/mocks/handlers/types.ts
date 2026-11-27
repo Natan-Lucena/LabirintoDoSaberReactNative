@@ -20,12 +20,20 @@ export class MockNetworkError extends Error {
 export class MockApiError extends Error {
   readonly status: number;
   readonly code: string;
+  /** Erros de campo (`errors[]` do corpo): `{ field, message }`. */
+  readonly errors: readonly { field: string; message: string }[];
 
-  constructor(status: number, code: string, message?: string) {
+  constructor(
+    status: number,
+    code: string,
+    message?: string,
+    errors: readonly { field: string; message: string }[] = [],
+  ) {
     super(message ?? code);
     this.name = "MockApiError";
     this.status = status;
     this.code = code;
+    this.errors = errors;
   }
 }
 
