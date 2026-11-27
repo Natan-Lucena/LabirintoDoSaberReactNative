@@ -64,10 +64,10 @@ describe("WhoFollowsSection (EQP-04)", () => {
     expect(onToast).toHaveBeenCalledWith("Paciente compartilhado");
 
     await fireEvent.press(
-      screen.getByRole("button", { name: "Remover acesso" }),
+      screen.getByRole("button", { name: /^Remover acesso de / }),
     );
     await fireEvent.press(
-      screen.getAllByRole("button", { name: "Remover acesso" })[1],
+      screen.getAllByRole("button", { name: /^Remover acesso$/ })[0],
     );
 
     expect(
@@ -84,7 +84,9 @@ describe("WhoFollowsSection (EQP-04)", () => {
     expect(await screen.findByText("Profissional Teste Dois")).toBeTruthy();
     expect(await screen.findByText("Você")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Compartilhar" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Remover acesso" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /^Remover acesso/ }),
+    ).toBeNull();
   });
 
   it("sem equipe, orienta a entrar numa equipe", async () => {

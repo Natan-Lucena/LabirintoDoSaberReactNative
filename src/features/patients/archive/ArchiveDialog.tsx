@@ -44,7 +44,7 @@ export function ArchiveDialog({
         <View style={dialogStyles.dialog}>
           {second ? (
             <>
-              <Text style={dialogStyles.title}>
+              <Text style={dialogStyles.title} accessibilityRole="header">
                 {`Cancelar atendimentos de ${patientName}?`}
               </Text>
               <Text style={dialogStyles.message}>
@@ -57,6 +57,7 @@ export function ArchiveDialog({
             <>
               <Text
                 style={dialogStyles.title}
+                accessibilityRole="header"
               >{`Arquivar ${patientName}?`}</Text>
               <Text style={dialogStyles.message}>
                 O paciente sai da lista, da contagem e das notificações. Os
@@ -77,6 +78,7 @@ export function ArchiveDialog({
               disabled={loading}
             />
             <DsButton
+              testID="patient-archive-confirm"
               label={second ? "Cancelar atendimentos e arquivar" : "Arquivar"}
               onPress={second ? onArchiveAndCancel : onArchive}
               loading={loading}

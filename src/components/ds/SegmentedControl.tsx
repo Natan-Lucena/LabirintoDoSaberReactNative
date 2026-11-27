@@ -9,6 +9,8 @@ import { color, fontFamilies, shape } from "../../theme";
 export interface SegmentedOption {
   key: string;
   label: string;
+  /** Identificador para os fluxos Maestro (QA-02). */
+  testID?: string;
 }
 
 export interface SegmentedControlProps {
@@ -60,6 +62,7 @@ export function SegmentedControl({
   return (
     <View
       style={[styles.track, disabled ? styles.disabled : null]}
+      accessibilityRole="radiogroup"
       accessibilityLabel={accessibilityLabel}
     >
       {options.map((option) => {
@@ -67,6 +70,7 @@ export function SegmentedControl({
         return (
           <Pressable
             key={option.key}
+            testID={option.testID}
             onPress={() => !disabled && onChange(option.key)}
             accessibilityRole="radio"
             hitSlop={hitSlopToMinTarget(Infinity, 40)}

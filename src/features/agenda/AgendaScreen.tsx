@@ -33,8 +33,8 @@ import { dayKey, formatTime } from "@/utils/date";
 
 type AgendaView = "week" | "month";
 const viewOptions = [
-  { key: "week", label: "Semana" },
-  { key: "month", label: "Mês" },
+  { key: "week", label: "Semana", testID: "agenda-view-week" },
+  { key: "month", label: "Mês", testID: "agenda-view-month" },
 ];
 const weekDays = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"];
 const monthFormatter = new Intl.DateTimeFormat("pt-BR", {

@@ -71,6 +71,21 @@ function PatientCard({
     <StaticPressable
       accessibilityRole="button"
       accessibilityLabel={`Abrir ficha de ${patient.name}`}
+      accessibilityHint={[
+        isPatientOwner(patient)
+          ? null
+          : patient.ownerName
+            ? `Compartilhado por ${patient.ownerName}`
+            : "Compartilhado",
+        archived
+          ? "Arquivado"
+          : (primaryStatusLabel(overview) ?? learningTopicsSummary(patient)),
+        appointment && !archived
+          ? `Próximo atendimento: ${formatNextAppointment(appointment)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(". ")}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,

@@ -43,6 +43,7 @@ export function SkippedNotice({
             <Text style={styles.rowText}>{label}</Text>
             <DsButton
               label="Ver atendimento"
+              accessibilityLabel={`Ver atendimento de ${label}`}
               variant="ghost"
               onPress={() => onOpen(item.conflictingAppointmentId)}
             />

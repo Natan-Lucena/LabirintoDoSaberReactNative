@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { color } from "../../theme";
+import { hitSlopToMinTarget } from "./touchTarget";
 
 export interface SwitchProps {
   value: boolean;
@@ -47,6 +48,7 @@ export function Switch({
   return (
     <Pressable
       onPress={handlePress}
+      hitSlop={hitSlopToMinTarget(44, 26)}
       accessibilityRole="switch"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ checked: value, disabled }}

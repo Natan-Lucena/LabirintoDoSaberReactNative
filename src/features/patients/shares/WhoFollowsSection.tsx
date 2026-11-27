@@ -162,6 +162,7 @@ export function WhoFollowsSection({
                   owner ? (
                     <DsButton
                       label="Remover acesso"
+                      accessibilityLabel={`Remover acesso de ${item.name}`}
                       variant="secondary"
                       onPress={() => {
                         setError(null);

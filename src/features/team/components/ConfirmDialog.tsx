@@ -68,7 +68,9 @@ export function ConfirmDialog({
     <Modal transparent visible={visible} onRequestClose={onCancel}>
       <View style={dialogStyles.backdrop}>
         <View style={dialogStyles.dialog}>
-          <Text style={dialogStyles.title}>{title}</Text>
+          <Text style={dialogStyles.title} accessibilityRole="header">
+            {title}
+          </Text>
           {message ? <Text style={dialogStyles.message}>{message}</Text> : null}
           {children}
           {error ? (

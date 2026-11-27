@@ -519,6 +519,7 @@ export function PatientDetailScreen({
 
             {owner && !archived ? (
               <DsButton
+                testID="patient-archive"
                 label="Arquivar paciente"
                 variant="ghost"
                 fullWidth
