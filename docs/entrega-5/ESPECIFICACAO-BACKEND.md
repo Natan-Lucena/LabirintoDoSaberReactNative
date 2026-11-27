@@ -1,5 +1,9 @@
 # Entrega 5 — Especificação para o backend
 
+> **Contrato:** o que o backend precisa cumprir rota a rota (formatos, erros, critérios de aceite
+> `BK-*` e decisões das perguntas abertas) está em [CONTRATOS-BACKEND](CONTRATOS-BACKEND.md). Este
+> documento explica as regras de negócio e o porquê de cada domínio.
+
 > O que o app precisa que o backend construa na Entrega 5: entidades, regras de negócio, rotas,
 > erros e critérios de aceite. Escrito em 2026-11-24 pelo planejamento do app, a partir do
 > [BACKLOG da Entrega 2](../entrega-2/BACKLOG.md) (mapa completo do produto), do que ficou fora da

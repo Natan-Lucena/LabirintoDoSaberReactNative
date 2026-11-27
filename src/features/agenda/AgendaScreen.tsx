@@ -10,21 +10,32 @@ import { useRouter } from "expo-router";
 
 import { PendingBanner } from "@/components/PendingBanner";
 import { FigmaIcon } from "@/components/FigmaIcon";
-import { DsButton, IconButton, SectionTitle } from "@/components/ds";
+import {
+  DsButton,
+  IconButton,
+  SectionTitle,
+  SegmentedControl,
+} from "@/components/ds";
 import { StaticPressable } from "@/components/ds/StaticPressable";
 import {
   selectAppointmentsForDay,
-  selectAppointmentDayKeys,
+  selectAppointmentCountsByDay,
   selectDaySummary,
 } from "@/features/appointments/selectors";
 import { useAppointments } from "@/features/appointments/useAppointments";
 import { useStudents } from "@/features/students/useStudents";
+import { MonthView } from "@/features/agenda/month/MonthView";
 import { selectCurrentAppointment } from "@/features/agenda/selectors";
 import { useNow } from "@/hooks/useNow";
 import { useOnline } from "@/hooks/useOnline";
 import { color, semanticColor, typography } from "@/theme";
 import { dayKey, formatTime } from "@/utils/date";
 
+type AgendaView = "week" | "month";
+const viewOptions = [
+  { key: "week", label: "Semana", testID: "agenda-view-week" },
+  { key: "month", label: "Mês", testID: "agenda-view-month" },
+];
 const weekDays = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"];
 const monthFormatter = new Intl.DateTimeFormat("pt-BR", {
   month: "long",
@@ -133,8 +144,10 @@ export function AgendaScreen(): ReactElement {
   const router = useRouter();
   const isOnline = useOnline();
   const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
+  const [view, setView] = useState<AgendaView>("week");
   const appointmentsQuery = useAppointments();
-  const studentsQuery = useStudents();
+  // `ALL`: atendimentos de paciente arquivado continuam com o nome (PAC-11).
+  const studentsQuery = useStudents({ status: "ALL" });
   const now = useNow();
   const today = dayKey(now);
   const start = weekStart(selectedDay);
@@ -146,11 +159,11 @@ export function AgendaScreen(): ReactElement {
   const studentsById = new Map(
     (studentsQuery.data ?? []).map((student) => [student.id, student.name]),
   );
-  // Mantém o seletor de dias compartilhado na mesma fonte da lista do mês.
-  const markedDays = selectAppointmentDayKeys(
+  // Ponto só em dia com atendimento PENDING/COMPLETED (mesma regra do mês).
+  const markedCounts = selectAppointmentCountsByDay(
     allAppointments,
-    keyDate(selectedDay).getUTCFullYear(),
-    keyDate(selectedDay).getUTCMonth(),
+    days[0]!,
+    days[6]!,
   );
   const missingData = !appointmentsQuery.data || !studentsQuery.data;
   const isLoading =
@@ -202,69 +215,84 @@ export function AgendaScreen(): ReactElement {
           </Text>
           <Text style={styles.title}>Agenda</Text>
         </View>
-        <View style={{ gap: 12 }}>
-          <View style={styles.weekNavigation}>
-            <IconButton
-              icon="chevronLeft"
-              accessibilityLabel="Semana anterior"
-              onPress={() => setSelectedDay(shiftKey(selectedDay, -7))}
-            />
-            <Text style={styles.weekRange}>
-              {dateFormatter.format(keyDate(start))} –{" "}
-              {dateFormatter.format(keyDate(days[6]!))}
-            </Text>
-            <IconButton
-              icon="chevron"
-              accessibilityLabel="Próxima semana"
-              onPress={() => setSelectedDay(shiftKey(selectedDay, 7))}
-            />
-          </View>
-          <View style={styles.strip}>
-            {days.map((key, index) => {
-              const selected = key === selectedDay;
-              const label = `${key === today ? "Hoje, " : ""}${dateFormatter.format(keyDate(key))}`;
-              return (
-                <StaticPressable
-                  key={key}
-                  accessibilityRole="button"
-                  accessibilityLabel={label}
-                  accessibilityState={{ selected }}
-                  onPress={() => setSelectedDay(key)}
-                  style={[styles.dateChip, selected && styles.dateChipActive]}
-                >
-                  <Text
-                    style={[
-                      styles.dateLabel,
-                      selected && styles.dateSelectedText,
-                    ]}
+        <SegmentedControl
+          options={viewOptions}
+          value={view}
+          onChange={(key) => setView(key as AgendaView)}
+          accessibilityLabel="Visão da agenda"
+        />
+        {view === "month" ? (
+          <MonthView
+            selectedDay={selectedDay}
+            appointments={allAppointments}
+            todayKey={today}
+            onSelectDay={setSelectedDay}
+          />
+        ) : (
+          <View style={{ gap: 12 }}>
+            <View style={styles.weekNavigation}>
+              <IconButton
+                icon="chevronLeft"
+                accessibilityLabel="Semana anterior"
+                onPress={() => setSelectedDay(shiftKey(selectedDay, -7))}
+              />
+              <Text style={styles.weekRange}>
+                {dateFormatter.format(keyDate(start))} –{" "}
+                {dateFormatter.format(keyDate(days[6]!))}
+              </Text>
+              <IconButton
+                icon="chevron"
+                accessibilityLabel="Próxima semana"
+                onPress={() => setSelectedDay(shiftKey(selectedDay, 7))}
+              />
+            </View>
+            <View style={styles.strip}>
+              {days.map((key, index) => {
+                const selected = key === selectedDay;
+                const label = `${key === today ? "Hoje, " : ""}${dateFormatter.format(keyDate(key))}`;
+                return (
+                  <StaticPressable
+                    key={key}
+                    accessibilityRole="button"
+                    accessibilityLabel={label}
+                    accessibilityState={{ selected }}
+                    onPress={() => setSelectedDay(key)}
+                    style={[styles.dateChip, selected && styles.dateChipActive]}
                   >
-                    {weekDays[index]}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.dateNumber,
-                      selected && styles.dateSelectedText,
-                    ]}
-                  >
-                    {keyDate(key).getUTCDate()}
-                  </Text>
-                  {markedDays.includes(key) ? (
-                    <View
-                      style={{
-                        width: 4,
-                        height: 4,
-                        borderRadius: 2,
-                        backgroundColor: selected
-                          ? color.surface
-                          : color.brand[600],
-                      }}
-                    />
-                  ) : null}
-                </StaticPressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.dateLabel,
+                        selected && styles.dateSelectedText,
+                      ]}
+                    >
+                      {weekDays[index]}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.dateNumber,
+                        selected && styles.dateSelectedText,
+                      ]}
+                    >
+                      {keyDate(key).getUTCDate()}
+                    </Text>
+                    {(markedCounts[key] ?? 0) > 0 ? (
+                      <View
+                        style={{
+                          width: 4,
+                          height: 4,
+                          borderRadius: 2,
+                          backgroundColor: selected
+                            ? color.surface
+                            : color.brand[600],
+                        }}
+                      />
+                    ) : null}
+                  </StaticPressable>
+                );
+              })}
+            </View>
           </View>
-        </View>
+        )}
         <View style={styles.list}>
           <SectionTitle
             title={`${summary.total} ${summary.total === 1 ? "atendimento" : "atendimentos"}`}
@@ -290,7 +318,7 @@ export function AgendaScreen(): ReactElement {
                 <StaticPressable
                   key={appointment.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`${formatTime(new Date(appointment.scheduledAt))}, ${name}, ${details}${completed ? ", Concluído" : cancelled ? ", Cancelado" : ""}`}
+                  accessibilityLabel={`${formatTime(new Date(appointment.scheduledAt))}, ${name}, ${details}${appointment.seriesId ? ", repete" : ""}${completed ? ", Concluído" : cancelled ? ", Cancelado" : ""}`}
                   onPress={() =>
                     router.push({
                       pathname: "/agenda/[id]",
@@ -321,6 +349,9 @@ export function AgendaScreen(): ReactElement {
                       {name}
                     </Text>
                     <Text style={styles.status}>{details}</Text>
+                    {appointment.seriesId ? (
+                      <Text style={styles.status}>Repete</Text>
+                    ) : null}
                     {completed ? (
                       <View style={styles.complete}>
                         <FigmaIcon

@@ -10,7 +10,7 @@ registerMockHandler({ method: "get", path: "/task/:id" }, ({ params }) => {
     ({ id }) => id === params.id,
   );
   if (!task) {
-    throw new MockApiError(500, "TASK_NOT_FOUND");
+    throw new MockApiError(404, "TASK_NOT_FOUND");
   }
 
   return { status: 200, data: task };
@@ -22,7 +22,7 @@ registerMockHandler(
   ({ params }) => {
     const index = MOCK_TASKS.findIndex(({ id }) => id === params.id);
     if (index === -1) {
-      throw new MockApiError(500, "TASK_NOT_FOUND");
+      throw new MockApiError(404, "TASK_NOT_FOUND");
     }
     MOCK_TASKS.splice(index, 1);
 

@@ -75,7 +75,7 @@ export function useHomeData(): HomeData {
   });
   const appointmentsQuery = useQuery({
     queryKey: homeQueryKeys.appointments,
-    queryFn: listAppointments,
+    queryFn: () => listAppointments(),
   });
   const studentsQuery = useQuery({
     queryKey: homeQueryKeys.students,
@@ -95,7 +95,7 @@ export function useHomeQuery(): HomeQueryResult {
   });
   const appointmentsQuery = useQuery({
     queryKey: homeQueryKeys.appointments,
-    queryFn: listAppointments,
+    queryFn: () => listAppointments(),
   });
   const studentsQuery = useQuery({
     queryKey: homeQueryKeys.students,

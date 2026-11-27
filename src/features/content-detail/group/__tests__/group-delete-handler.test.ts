@@ -32,9 +32,9 @@ describe("DELETE /task-group/delete/:taskGroupId (D-05)", () => {
     expect(after.some((group) => group.id === "group-2")).toBe(false);
   });
 
-  it("devolve 500 TASK_GROUP_NOT_FOUND para id inexistente", async () => {
+  it("devolve 404 TASK_GROUP_NOT_FOUND para id inexistente", async () => {
     await expect(deleteTaskGroup("grupo-inexistente")).rejects.toMatchObject({
-      status: 500,
+      status: 404,
       code: "TASK_GROUP_NOT_FOUND",
     });
   });

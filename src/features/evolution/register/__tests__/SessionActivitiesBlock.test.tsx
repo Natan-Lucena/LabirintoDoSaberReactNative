@@ -56,6 +56,28 @@ describe("SessionActivitiesBlock (AC-EVO-03-02)", () => {
     ).toBeTruthy();
   });
 
+  it("sem título usa o rótulo do tipo (D-10)", async () => {
+    await render(
+      <SessionActivitiesBlock
+        results={[
+          {
+            taskId: "task-sem-titulo",
+            taskType: "colorMatch",
+            completed: true,
+            correct: true,
+            attempts: 1,
+            errors: 0,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Associe as cores")).toBeTruthy();
+    expect(
+      screen.getByText("Associe as cores · Concluída · 1 tentativa · 0 erros"),
+    ).toBeTruthy();
+  });
+
   it("é só leitura: não oferece nenhuma ação", async () => {
     await render(<SessionActivitiesBlock results={RESULTS} />);
 

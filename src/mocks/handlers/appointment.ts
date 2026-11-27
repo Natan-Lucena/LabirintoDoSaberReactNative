@@ -4,6 +4,7 @@ import {
   MOCK_APPOINTMENTS,
   MOCK_EDUCATOR,
 } from "@/mocks/fixtures";
+import { isMockStudentIdArchived } from "@/mocks/mock-student-status-state";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
@@ -28,10 +29,64 @@ export function completeMockAppointment(id: string): void {
   }
 }
 
-registerMockHandler({ method: "get", path: "/appointment/" }, () => {
+/** Atendimentos `PENDING` do paciente que ainda vão acontecer (PAC-11, PA-02). */
+function futurePendingOf(studentId: string): Appointment[] {
+  const now = Date.now();
+  return appointments.filter(
+    (appointment) =>
+      appointment.studentId === studentId &&
+      appointment.status === "PENDING" &&
+      new Date(appointment.scheduledAt).getTime() > now,
+  );
+}
+
+export function countFutureMockAppointments(studentId: string): number {
+  return futurePendingOf(studentId).length;
+}
+
+/** Ao arquivar com a opção, o backend cancela os futuros; reativar não os devolve (PA-05). */
+export function cancelFutureMockAppointments(studentId: string): void {
+  const ids = new Set(futurePendingOf(studentId).map(({ id }) => id));
+  appointments = appointments.map((appointment) =>
+    ids.has(appointment.id)
+      ? { ...appointment, status: "CANCELLED" as const }
+      : appointment,
+  );
+}
+
+/** Estado em memória exposto ao mock da série (AGE-06): lista viva de atendimentos. */
+export function getMockAppointments(): Appointment[] {
+  return appointments;
+}
+
+export function addMockAppointments(list: Appointment[]): void {
+  appointments = [...appointments, ...list];
+}
+
+/** Atendimento `PENDING` que ocupa o intervalo (ignora `ignoreId`). */
+export function findMockConflict(
+  candidate: Pick<Appointment, "scheduledAt" | "durationMinutes">,
+  ignoreId?: string,
+): Appointment | undefined {
+  return findConflict(candidate, ignoreId);
+}
+
+/** Atendimento de outro educador que ocupa o horário: não está em `GET /appointment/` (D-03). */
+export const MOCK_FOREIGN_CONFLICT_ID = "mock-appointment-alheio";
+/** `type` que, no mock, provoca conflito com o atendimento alheio. */
+export const MOCK_FOREIGN_CONFLICT_TYPE = "Conflito alheio";
+
+export function nextMockAppointmentId(): string {
+  return `mock-appointment-${nextAppointmentId++}`;
+}
+
+registerMockHandler({ method: "get", path: "/appointment/" }, ({ params }) => {
+  const list = getMockHomeScenario() === "no-appointments" ? [] : appointments;
   return {
     status: 200,
-    data: getMockHomeScenario() === "no-appointments" ? [] : appointments,
+    data: params.studentId
+      ? list.filter(({ studentId }) => studentId === params.studentId)
+      : list,
   };
 });
 
@@ -101,7 +156,13 @@ registerMockHandler({ method: "post", path: "/appointment/" }, ({ body }) => {
     type?: string;
     durationMinutes?: number;
   };
+  if (isMockStudentIdArchived(input.studentId)) {
+    return { status: 409, data: { message: "STUDENT_ARCHIVED" } };
+  }
   const durationMinutes = input.durationMinutes ?? 50;
+  if (input.type === MOCK_FOREIGN_CONFLICT_TYPE) {
+    return conflictResponse("APPOINTMENT_CONFLICT", MOCK_FOREIGN_CONFLICT_ID);
+  }
   const conflicting = findConflict({
     scheduledAt: input.scheduledAt,
     durationMinutes,

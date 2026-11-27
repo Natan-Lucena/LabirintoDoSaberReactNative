@@ -13,7 +13,9 @@ const INVALID_CREDENTIALS_MESSAGE =
 const NETWORK_ERROR_MESSAGE =
   "Não foi possível conectar. Verifique sua internet e tente novamente.";
 
-async function signInAndLoadEducator(values: LoginFormValues): Promise<void> {
+export async function signInAndLoadEducator(
+  values: LoginFormValues,
+): Promise<void> {
   const { token } = await signIn(values);
   const me = await getMe(token);
 

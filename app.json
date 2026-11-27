@@ -42,7 +42,15 @@
           "cameraPermission": "Permita o acesso à câmera para fotografar imagens das atividades."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#208AEF",
+          "defaultChannel": "lembretes"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

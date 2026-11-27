@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/client";
+import { normalizeApiError } from "@/api/errors";
 import type {
   ChangePasswordPayload,
   ChangePasswordResponse,
@@ -27,6 +28,37 @@ export async function signIn(input: SignInInput): Promise<SignInOutput> {
   );
 
   return response.data;
+}
+
+/**
+ * POST /educator/register (pública, EQP-03). Sem `inviteCode` o corpo é o de
+ * sempre; com ele, conta e vínculo à equipe nascem na mesma transação
+ * (`404 INVITE_INVALID` não cria a conta). `200 { id, name }`, sem token: o app
+ * faz o `sign-in` em seguida. Nunca registrar o corpo (senha).
+ */
+export interface RegisterInput {
+  name: string;
+  email: string;
+  password: string;
+  inviteCode?: string;
+}
+
+export interface RegisterOutput {
+  id: string;
+  name: string;
+}
+
+export async function register(input: RegisterInput): Promise<RegisterOutput> {
+  try {
+    const response = await apiClient.post<RegisterOutput>(
+      "/educator/register",
+      input,
+    );
+
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
 }
 
 /**

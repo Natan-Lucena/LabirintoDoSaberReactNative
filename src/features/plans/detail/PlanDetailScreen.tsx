@@ -103,7 +103,7 @@ export function PlanDetailScreen(): ReactElement {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const students = useStudents();
+  const students = useStudents({ status: "ALL" });
   const [mode, setMode] = useState<"view" | "edit" | "review" | "close">(
     "view",
   );
@@ -377,6 +377,9 @@ export function PlanDetailScreen(): ReactElement {
             <Text style={styles.body}>
               Próxima revisão: {displayDate(plan.nextReviewDate)}
             </Text>
+          ) : null}
+          {plan.authorName ? (
+            <Text style={styles.body}>por {plan.authorName}</Text>
           ) : null}
           <SectionTitle title="Objetivo geral" />
           <Text style={styles.body}>{plan.generalObjective}</Text>

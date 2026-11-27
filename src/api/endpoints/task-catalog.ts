@@ -1,6 +1,5 @@
-// Banco de atividades: leitura (API-07, leva 1). Contrato PROPOSTO em
-// docs/entrega-5/ESPECIFICACAO-BACKEND.md §2 (mock-first): o backend real ainda
-// não o publica. Escritas (duplicar, criar/editar, resultado) não entram aqui.
+// Banco de atividades: leitura (API-07, leva 1). Contrato publicado em
+// 2026-11-26 (BACKEND-ENTREGUE-E5 §3.1; ESPECIFICACAO-BACKEND §2). Escritas (duplicar, criar/editar, resultado) não entram aqui.
 import { apiClient } from "@/api/client";
 import { normalizeApiError } from "@/api/errors";
 import type {

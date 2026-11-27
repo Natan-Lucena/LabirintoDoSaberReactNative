@@ -3,6 +3,8 @@ import { Tabs, useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/ds/AppHeader";
 import { BottomNav } from "@/components/ds/BottomNav";
+import { PushPromptDialog } from "@/features/notifications/push/PushPromptDialog";
+import { usePushRegistration } from "@/features/notifications/push/usePushRegistration";
 import { useUnreadNotificationCount } from "@/features/notifications/useNotifications";
 import { TAB_DEFINITIONS, useTabItems } from "@/features/shell/useTabItems";
 
@@ -36,28 +38,33 @@ function TabsHeader({ title }: { title: string }): ReactElement {
 }
 
 export default function TabsLayout(): ReactElement {
+  const push = usePushRegistration();
+
   return (
-    <Tabs
-      tabBar={() => <BottomNavAdapter />}
-      screenOptions={{
-        headerShown: true,
-        header: ({ options }) => <TabsHeader title={options.title ?? ""} />,
-      }}
-    >
-      {TAB_DEFINITIONS.map((tab) => (
-        <Tabs.Screen
-          key={tab.key}
-          name={tab.segment}
-          options={{ title: tab.label }}
-        />
-      ))}
-      {Object.entries(HIDDEN_TAB_TITLES).map(([segment, title]) => (
-        <Tabs.Screen
-          key={segment}
-          name={segment}
-          options={{ title, href: null }}
-        />
-      ))}
-    </Tabs>
+    <>
+      <Tabs
+        tabBar={() => <BottomNavAdapter />}
+        screenOptions={{
+          headerShown: true,
+          header: ({ options }) => <TabsHeader title={options.title ?? ""} />,
+        }}
+      >
+        {TAB_DEFINITIONS.map((tab) => (
+          <Tabs.Screen
+            key={tab.key}
+            name={tab.segment}
+            options={{ title: tab.label }}
+          />
+        ))}
+        {Object.entries(HIDDEN_TAB_TITLES).map(([segment, title]) => (
+          <Tabs.Screen
+            key={segment}
+            name={segment}
+            options={{ title, href: null }}
+          />
+        ))}
+      </Tabs>
+      <PushPromptDialog push={push} />
+    </>
   );
 }

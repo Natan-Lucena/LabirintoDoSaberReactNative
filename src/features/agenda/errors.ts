@@ -2,6 +2,8 @@ import { AppointmentApiError } from "@/api/endpoints/appointment";
 import { ApiError } from "@/api/errors";
 
 export const CONFLICT_MESSAGE = "Já existe um atendimento nesse horário";
+export const ARCHIVED_MESSAGE =
+  "Este paciente está arquivado. Reative-o na ficha para agendar.";
 
 export function isAppointmentNotFound(error: unknown): boolean {
   return (
@@ -28,7 +30,10 @@ export function appointmentErrorMessage(error: unknown): string {
       return CONFLICT_MESSAGE;
     }
     if (error.code === "APPOINTMENT_NOT_EDITABLE") {
-      return "Este atendimento não permite alterar horário, tipo ou duração.";
+      return "Este atendimento não permite alterar horário, tipo ou duração, ou o novo horário já passou.";
+    }
+    if (error.code === "STUDENT_ARCHIVED") {
+      return ARCHIVED_MESSAGE;
     }
     if (error.code === "INVALID_STATUS_TRANSITION") {
       return "Essa mudança de status não é permitida.";

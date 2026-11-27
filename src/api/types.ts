@@ -131,6 +131,8 @@ export interface Educator {
   photoUrl?: string | null;
   contact?: string | null;
   profession?: string | null;
+  /** Ausente = sem clínica (EQ; Entrega 5, mock-first). */
+  clinic?: { id: string; name: string; role: TeamRole };
 }
 
 export interface StudentDocument {
@@ -158,6 +160,14 @@ export interface Student {
   guardianPhone?: string | null;
   guardianRelationship?: string | null;
   educators?: never;
+  /** Relativo a quem lê (EQ-13; Entrega 5, mock-first). Ausente = `OWNER`. */
+  access?: StudentAccess;
+  /** Presente quando `access` = `SHARED`. */
+  ownerName?: string;
+  /** Ausente = `ACTIVE` (PA-01; Entrega 5, mock-first). */
+  status?: StudentStatus;
+  /** Só quando `ARCHIVED`. */
+  archivedAt?: string;
 }
 
 export interface TaskAlternative {
@@ -226,6 +236,8 @@ export interface TaskNotebookSessionAnswer {
   isCorrect: boolean;
   // Unidade não documentada na Parte I; preservada como número puro.
   timeToAnswer: number;
+  /** Tempo de resposta em ms (PP-08, BACKEND-ENTREGUE §3.2): usar sempre este. Opcional no tipo: respostas guardadas offline por versões antigas do app não o têm. */
+  timeToAnswerMs?: number;
   answeredAt: string;
 }
 
@@ -245,6 +257,8 @@ export interface TaskNotebookSession {
   evolutionId?: string;
   /** Resultados dos jogos da sessão (RS-07; Entrega 5, mock-first). */
   activityResults?: ActivityResult[];
+  /** Só quando o autor não é quem lê (EQ-12; Entrega 5, mock-first). */
+  authorName?: string;
 }
 
 export interface Appointment {
@@ -258,6 +272,8 @@ export interface Appointment {
   status: AppointmentStatus;
   notifiedAt?: string | null;
   createdAt: string;
+  /** Presente nas ocorrências de série (RC; Entrega 5, mock-first). */
+  seriesId?: string;
 }
 
 /** GET /educator/get-last-sessions — item da lista (máx. 2). */
@@ -345,6 +361,8 @@ export interface Plan {
   createdAt: string;
   updatedAt: string;
   closedAt?: string;
+  /** Só quando o autor não é quem lê (EQ-12; Entrega 5, mock-first). */
+  authorName?: string;
 }
 
 /** `GET /plan/`: todos os campos do plano, menos `goals`, mais `studentName`. */
@@ -461,6 +479,8 @@ export interface EvolutionGoalUpdate {
 
 export interface SessionEvolution {
   id: string;
+  /** Só quando o autor não é quem lê (EQ-12; Entrega 5, mock-first). */
+  authorName?: string;
   /** Única: uma evolução por sessão (EV-02). */
   sessionId: string;
   studentId: string;
@@ -534,7 +554,8 @@ export interface EvolutionContext {
   /** Jogos da sessão (RS-06; Entrega 5, mock-first). */
   activityResults?: {
     taskId: string;
-    title: string;
+    /** Pode faltar (BACKEND-ENTREGUE §3.2): a tela usa o rótulo do tipo. */
+    title?: string;
     taskType: TaskType;
     completed: boolean;
     correct: boolean;
@@ -755,8 +776,8 @@ export interface AnamneseSummary {
 /**
  * Campos novos da resposta da anamnese (AS-02): `summary` é ausente se nunca gerada.
  * `summaryOutdated` (resposta editada depois da síntese) só vem nos GETs (detalhe e
- * lista) e no POST da síntese (`false`); PUT e POST de resposta NÃO o trazem, então
- * depois de editar o app relê com GET.
+ * lista), no POST da síntese (`false`) e, desde o backend publicado (PP-11,
+ * BACKEND-ENTREGUE §3.8), também no POST e no PUT da resposta: não precisa reler.
  */
 export interface AnamneseSummaryFields {
   summary?: AnamneseSummary;
@@ -843,6 +864,8 @@ export interface ReportShare {
 
 export interface Report {
   id: string;
+  /** Só quando o autor não é quem lê (EQ-12; Entrega 5, mock-first). */
+  authorName?: string;
   studentId: string;
   studentName: string;
   educatorId: string;
@@ -919,4 +942,180 @@ export interface ListNotificationsFilters {
 export interface NotificationsPage {
   items: AppNotification[];
   nextCursor?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Entrega 5, leva 2 (API-07): equipe. CONTRATOS-BACKEND §2.3 e §4. Mock-first.
+// ---------------------------------------------------------------------------
+
+export type TeamRole = "ADMIN" | "PROFESSIONAL";
+
+export type StudentAccess = "OWNER" | "SHARED";
+
+export interface Clinic {
+  id: string;
+  /** 2 a 80 caracteres, sem espaços nas pontas. */
+  name: string;
+  createdAt: string;
+}
+
+export interface ClinicMember {
+  educatorId: string;
+  name: string;
+  email: string;
+  photoUrl?: string;
+  profession?: string;
+  role: TeamRole;
+  joinedAt: string;
+}
+
+export interface ClinicInvite {
+  id: string;
+  /** 8 caracteres de A-Z e 2-9, sem 0, O, 1 e I. */
+  code: string;
+  role: TeamRole;
+  /** `educatorId` de quem criou. */
+  createdBy: string;
+  expiresAt: string;
+  /** Texto pronto para o Share (EQ-05, EQ-17). */
+  shareMessage: string;
+  createdAt: string;
+}
+
+/** `GET /clinic/`: ADMIN primeiro, depois por nome. */
+export interface ClinicView {
+  clinic: Clinic;
+  myRole: TeamRole;
+  members: ClinicMember[];
+}
+
+/** `GET /clinic/invites/preview/:code` (pública). */
+export interface InvitePreview {
+  clinicName: string;
+  role: TeamRole;
+  expiresAt: string;
+}
+
+/** `GET /student/:id/shares` (sem o dono). */
+export interface StudentShare {
+  educatorId: string;
+  name: string;
+  /** Pode faltar no backend publicado (BACKEND-ENTREGUE §3.3). */
+  role?: TeamRole;
+  sharedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Leva 3 (API-07): status do paciente e recorrência. CONTRATOS-BACKEND §2.4,
+// §2.5 e §5. Mock-first.
+// ---------------------------------------------------------------------------
+
+export type StudentStatus = "ACTIVE" | "ARCHIVED";
+
+/** Filtro de `GET /student/` e `GET /student/overview` (padrão `ACTIVE`). */
+export type StudentStatusFilter = StudentStatus | "ALL";
+
+export type PatientPrimaryStatus =
+  "PDI_ACTIVE" | "ASSESSMENT_PENDING" | "PLAN_REVIEW" | "NO_PLAN";
+
+export type PatientPendingKind =
+  "EVOLUTION_PENDING" | "PLAN_REVIEW_DUE" | "SCALE_DRAFT" | "ANAMNESIS_MISSING";
+
+export interface PatientOverview {
+  studentId: string;
+  primaryStatus: PatientPrimaryStatus;
+  activePlan?: {
+    id: string;
+    type: "PDI" | "PE";
+    title: string;
+    /** Inteiro de 0 a 100. */
+    percent: number;
+  };
+  nextAppointment?: { id: string; scheduledAt: string };
+  /** `[]` = sem pendência. `targetId` só quando `count` = 1 e nunca em `ANAMNESIS_MISSING` (PA-09). */
+  pendings: { kind: PatientPendingKind; count: number; targetId?: string }[];
+}
+
+export type RecurrenceFrequency = "WEEKLY" | "BIWEEKLY";
+
+export interface AppointmentSeries {
+  id: string;
+  studentId: string;
+  educatorId: string;
+  frequency: RecurrenceFrequency;
+  /** ISO UTC; o dia da semana e a hora de São Paulo vêm daqui. */
+  firstScheduledAt: string;
+  /** Pedidas na criação (2 a 26). */
+  occurrences: number;
+  type?: string;
+  durationMinutes: number;
+  observation?: string;
+  /** Série encerrada por "cancelar este e os seguintes". */
+  endedAt?: string;
+  createdAt: string;
+}
+
+/** `GET /appointment/series/:id`: todas as ocorrências, por `scheduledAt` (RC-10). */
+export interface AppointmentSeriesDetail extends AppointmentSeries {
+  appointments: Appointment[];
+}
+
+/** Resposta de criar, alterar e cancelar série (as escritas entram com as telas). */
+export interface SeriesResult {
+  series: AppointmentSeries;
+  created: Appointment[];
+  skipped: {
+    /** Só no PUT da série (BACKEND-ENTREGUE §3.5). */
+    appointmentId?: string;
+    scheduledAt: string;
+    reason: "CONFLICT";
+    conflictingAppointmentId: string;
+  }[];
+}
+
+// ---------------------------------------------------------------------------
+// Leva 4 (API-07): push e central de ajuda. CONTRATOS-BACKEND §2.6, §2.7 e §6.
+// Mock-first.
+// ---------------------------------------------------------------------------
+
+export interface PushToken {
+  /** `ExponentPushToken[...]` ou `ExpoPushToken[...]`. */
+  token: string;
+  platform: "android" | "ios";
+  createdAt: string;
+  lastSeenAt: string;
+}
+
+export interface NotificationPreferences {
+  /** Padrão `true`. */
+  pushEnabled: boolean;
+  /** Sempre com as quatro chaves; padrão tudo `true`. Só desliga o push, não a lista. */
+  kinds: Record<NotificationKind, boolean>;
+}
+
+/** `data` do push enviado pela API da Expo (PU-04). */
+export interface PushData {
+  notificationIds: string[];
+  /** Só quando `notificationIds` tem um item. */
+  target?: AppNotification["target"];
+}
+
+/** Tutorial da central de ajuda (G-69). */
+export interface HelpTutorial {
+  id: string;
+  /** Inteiro, único, crescente. */
+  order: number;
+  /** Até 80. */
+  title: string;
+  /** Até 200. */
+  description: string;
+  /** Inteiro > 0. */
+  durationSeconds: number;
+  /** "Comece por aqui"; no máximo um `true`. */
+  featured: boolean;
+  /** https, MP4 ou HLS. */
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  /** Até 10 passos de até 200 caracteres; obrigatório sem `videoUrl`. */
+  steps?: string[];
 }

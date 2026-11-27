@@ -8,6 +8,10 @@ import {
   MOCK_STUDENTS,
   MOCK_TASK_NOTEBOOKS,
 } from "@/mocks/fixtures";
+import {
+  MOCK_ARCHIVED_STUDENT_ID,
+  MOCK_SHARED_STUDENT_ID,
+} from "@/mocks/fixtures-e5";
 import { MOCK_LIBRARY_TASKS } from "@/mocks/fixtures-task-catalog";
 import { completeMockAppointment, mockAppointmentExists } from "./appointment";
 import { MOCK_TASKS } from "./content";
@@ -31,6 +35,7 @@ const analysisSessions: TaskNotebookSession[] = [
         selectedAlternativeId: "alternative-1",
         isCorrect: true,
         timeToAnswer: 12,
+        timeToAnswerMs: 12000,
         answeredAt: "2026-10-01T10:02:00-03:00",
       },
       {
@@ -38,6 +43,7 @@ const analysisSessions: TaskNotebookSession[] = [
         selectedAlternativeId: "alternative-2",
         isCorrect: false,
         timeToAnswer: 15,
+        timeToAnswerMs: 15000,
         answeredAt: "2026-10-01T10:04:00-03:00",
       },
     ],
@@ -58,6 +64,7 @@ const analysisSessions: TaskNotebookSession[] = [
         selectedAlternativeId: "alternative-3",
         isCorrect: true,
         timeToAnswer: 11,
+        timeToAnswerMs: 11000,
         answeredAt: "2026-10-03T10:02:00-03:00",
       },
     ],
@@ -147,7 +154,12 @@ function analysisFor(
 registerMockHandler(
   { method: "get", path: "/task-notebook-session/student/:studentId" },
   ({ params }) => {
-    if (!MOCK_STUDENTS.some((student) => student.id === params.studentId)) {
+    // O compartilhado (EQP-04) e o arquivado (PAC-11) também são legíveis, sem sessões próprias.
+    if (
+      params.studentId !== MOCK_SHARED_STUDENT_ID &&
+      params.studentId !== MOCK_ARCHIVED_STUDENT_ID &&
+      !MOCK_STUDENTS.some((student) => student.id === params.studentId)
+    ) {
       throw new MockApiError(400, "INVALID_STUDENT_ID");
     }
     return { status: 200, data: sessionsForStudent(params.studentId) };
@@ -202,6 +214,7 @@ registerMockHandler(
             // O contrato retorna este campo na sessão atualizada; o player não o revela.
             isCorrect: false,
             timeToAnswer: input.timeToAnswer,
+            timeToAnswerMs: input.timeToAnswer * 1000,
             answeredAt: "2026-10-07T10:01:00-03:00",
           },
         ],

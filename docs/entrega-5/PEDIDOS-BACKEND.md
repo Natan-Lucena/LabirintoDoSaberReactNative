@@ -1,5 +1,8 @@
 # Entrega 5 — Pedidos ao backend
 
+> **Contrato detalhado:** [CONTRATOS-BACKEND](CONTRATOS-BACKEND.md), com cada rota, corpo,
+> resposta, erros, critérios de aceite e as decisões das perguntas do §2.
+
 > Resumo do que o app precisa do backend na Entrega 5. **Não é contrato**: as rotas, os nomes e
 > os formatos são decididos pelo backend e registrados no [PROJECT.md](../PROJECT.md) pela
 > API-06 ([BACKLOG](BACKLOG.md)). Escrito em 2026-11-24. **A versão detalhada, com entidades,

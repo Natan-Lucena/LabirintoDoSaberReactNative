@@ -1,21 +1,25 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { Appointment, Student } from "@/api/types";
+import type { Appointment, PatientOverview, Student } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
 import {
   Avatar,
+  Badge,
   DsButton,
   Fab,
-  FilterChip,
   FilterRow,
   SearchField,
 } from "@/components/ds";
 import { useAppointments } from "@/features/appointments/useAppointments";
+import { formatArchivedShortDate } from "@/features/patients/archive/ArchivedBanner";
+import { primaryStatusLabel } from "@/features/patients/overview/labels";
+import { usePatientOverview } from "@/features/patients/overview/usePatientOverview";
+import { isPatientOwner } from "@/features/patients/shares/access";
 import { useStudents } from "@/features/students/useStudents";
 import { color, getContentPadding, shape, typography } from "@/theme";
 
@@ -32,6 +36,8 @@ import { StaticPressable } from "@/components/ds/StaticPressable";
 const filterOptions = [
   { key: "all", label: "Todos" },
   { key: "today", label: "Com sessão hoje" },
+  { key: "pendings", label: "Pendências" },
+  { key: "archived", label: "Arquivados" },
 ];
 
 function navigate(
@@ -50,16 +56,36 @@ function learningTopicsSummary(patient: Student): string {
 function PatientCard({
   patient,
   appointment,
+  overview,
+  archived = false,
   onPress,
 }: {
   patient: Student;
   appointment: Appointment | undefined;
+  overview: PatientOverview | undefined;
+  /** Cartão da lista "Arquivados": sem status nem próximo atendimento (PAC-11). */
+  archived?: boolean;
   onPress: () => void;
 }): ReactElement {
   return (
     <StaticPressable
       accessibilityRole="button"
       accessibilityLabel={`Abrir ficha de ${patient.name}`}
+      accessibilityHint={[
+        isPatientOwner(patient)
+          ? null
+          : patient.ownerName
+            ? `Compartilhado por ${patient.ownerName}`
+            : "Compartilhado",
+        archived
+          ? "Arquivado"
+          : (primaryStatusLabel(overview) ?? learningTopicsSummary(patient)),
+        appointment && !archived
+          ? `Próximo atendimento: ${formatNextAppointment(appointment)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(". ")}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -75,10 +101,24 @@ function PatientCard({
         <Text style={styles.patientName} numberOfLines={1}>
           {patient.name}
         </Text>
+        {!isPatientOwner(patient) ? (
+          <Badge
+            label={
+              patient.ownerName
+                ? `Compartilhado por ${patient.ownerName}`
+                : "Compartilhado"
+            }
+          />
+        ) : null}
         <Text style={styles.patientMeta} numberOfLines={1}>
-          {patient.age} anos · {learningTopicsSummary(patient)}
+          {patient.age} anos ·{" "}
+          {archived
+            ? patient.archivedAt
+              ? `Arquivado em ${formatArchivedShortDate(patient.archivedAt)}`
+              : "Arquivado"
+            : (primaryStatusLabel(overview) ?? learningTopicsSummary(patient))}
         </Text>
-        {appointment ? (
+        {appointment && !archived ? (
           <View style={styles.appointmentLine}>
             <FigmaIcon name="clock" size={15} color={color.ink[500]} />
             <Text style={styles.appointmentText} numberOfLines={1}>
@@ -116,23 +156,54 @@ function StatePanel({
 export function PatientsListScreen(): ReactElement {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const studentsQuery = useStudents();
+  const activeQuery = useStudents();
   const appointmentsQuery = useAppointments();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<PatientFilter>("all");
+  const archivedMode = filter === "archived";
+  const archivedQuery = useStudents({
+    status: "ARCHIVED",
+    enabled: archivedMode,
+  });
 
-  const patients = studentsQuery.data ?? [];
+  const { query: overviewQuery, byId: overviewById } = usePatientOverview();
+  const { refetch: refetchOverview } = overviewQuery;
+  // O overview muda ao registrar evolução, salvar plano etc.: refaz ao voltar à aba.
+  useFocusEffect(
+    useCallback(() => {
+      void refetchOverview();
+    }, [refetchOverview]),
+  );
+
+  const activePatients = activeQuery.data ?? [];
+  const patients = archivedMode
+    ? (archivedQuery.data ?? []).filter(
+        (p) => (p.status ?? "ACTIVE") === "ARCHIVED",
+      )
+    : activePatients;
   const appointments = appointmentsQuery.data ?? [];
   const isInitialLoading =
-    (studentsQuery.isPending && !studentsQuery.data) ||
+    (activeQuery.isPending && !activeQuery.data) ||
     (appointmentsQuery.isPending && !appointmentsQuery.data);
   const isInitialError =
-    (!studentsQuery.data && studentsQuery.isError) ||
+    (!activeQuery.data && activeQuery.isError) ||
     (!appointmentsQuery.data && appointmentsQuery.isError);
   const visiblePatients = sortPatientsByName(
-    filterPatients(patients, appointments, search, filter),
+    filterPatients(
+      patients,
+      appointments,
+      search,
+      archivedMode ? "all" : filter,
+      new Date(),
+      overviewById,
+    ),
   );
   const appointmentsByPatient = nextAppointmentByStudentId(appointments);
+
+  const pendingsUnavailable =
+    filter === "pendings" && !overviewQuery.data && overviewQuery.isError;
+  const pendingsLoading =
+    filter === "pendings" && !overviewQuery.data && !overviewQuery.isError;
 
   if (isInitialLoading) {
     return (
@@ -150,7 +221,7 @@ export function PatientsListScreen(): ReactElement {
           title="Não foi possível carregar os pacientes"
           message="Tente novamente em instantes."
           retry={() => {
-            void studentsQuery.refetch();
+            void activeQuery.refetch();
             void appointmentsQuery.refetch();
           }}
         />
@@ -161,7 +232,11 @@ export function PatientsListScreen(): ReactElement {
   return (
     <View style={styles.screen}>
       <View style={[styles.controls, { paddingTop: 20 + insets.top }]}>
-        <Text style={styles.eyebrow}>{patients.length} pacientes ativos</Text>
+        <Text style={styles.eyebrow}>
+          {activePatients.length === 1
+            ? "1 paciente ativo"
+            : `${activePatients.length} pacientes ativos`}
+        </Text>
         <Text style={styles.title} accessibilityRole="header">
           Pacientes
         </Text>
@@ -177,21 +252,50 @@ export function PatientsListScreen(): ReactElement {
             value={filter}
             onChange={(value) => setFilter(value as PatientFilter)}
           />
-          <FilterChip
-            label="Pendências · Em breve"
-            onPress={() => undefined}
-            disabled
-          />
         </View>
       </View>
-      {visiblePatients.length === 0 ? (
+      {archivedMode && !archivedQuery.data && archivedQuery.isError ? (
         <View style={styles.emptyList}>
           <StatePanel
-            title="Nenhum paciente encontrado"
+            title="Não foi possível carregar os arquivados."
+            message="Tente novamente em instantes."
+            retry={() => void archivedQuery.refetch()}
+          />
+        </View>
+      ) : archivedMode && !archivedQuery.data ? (
+        <View style={styles.emptyList}>
+          <Text style={styles.stateMessage}>Carregando arquivados</Text>
+        </View>
+      ) : pendingsUnavailable ? (
+        <View style={styles.emptyList}>
+          <StatePanel
+            title="Não foi possível carregar as pendências."
+            message="Tente novamente em instantes."
+            retry={() => void refetchOverview()}
+          />
+        </View>
+      ) : pendingsLoading ? (
+        <View style={styles.emptyList}>
+          <Text style={styles.stateMessage}>Carregando pendências</Text>
+        </View>
+      ) : visiblePatients.length === 0 ? (
+        <View style={styles.emptyList}>
+          <StatePanel
+            title={
+              archivedMode && !search
+                ? "Nenhum paciente arquivado"
+                : filter === "pendings"
+                  ? "Nenhum paciente com pendência"
+                  : "Nenhum paciente encontrado"
+            }
             message={
               search
                 ? "Ajuste a busca para encontrar outro paciente."
-                : "Cadastre um paciente para começar."
+                : archivedMode
+                  ? "Quem você arquivar aparece aqui e pode ser reativado."
+                  : filter === "pendings"
+                    ? "Nada precisa de atenção agora."
+                    : "Cadastre um paciente para começar."
             }
           />
         </View>
@@ -203,6 +307,8 @@ export function PatientsListScreen(): ReactElement {
             <PatientCard
               patient={item}
               appointment={appointmentsByPatient.get(item.id)}
+              overview={overviewById.get(item.id)}
+              archived={archivedMode}
               onPress={() => navigate(router, `/patients/${item.id}`)}
             />
           )}

@@ -119,6 +119,48 @@ describe("AgendaScreen (AGE-01)", () => {
     expect(screen.getByText("Bia")).toBeTruthy();
   });
 
+  it("AGE-05: alterna para o mês, marca só dias não cancelados e troca o dia (AC-AGE-05-02/03)", async () => {
+    appointments = [
+      ...appointments!,
+      appointment("eva", "2026-04-04", 10, "CANCELLED"),
+    ];
+    students = [...students!, student("eva", "Eva")];
+    await render(<AgendaScreen />);
+    // Semana: dia só com cancelado não ganha ponto; dia com atendimento ganha.
+    const chip = (name: string) =>
+      screen.getByRole("button", { name }).children.length;
+    expect(chip("3 de abril")).toBeGreaterThan(chip("4 de abril"));
+
+    await fireEvent.press(screen.getByRole("radio", { name: "Mês" }));
+    expect(
+      screen.queryByRole("button", { name: "Semana anterior" }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "2 de abril, 2 agendamentos" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "4 de abril" })).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole("button", { name: "3 de abril, 1 agendamento" }),
+    );
+    expect(screen.getByText("Bia")).toBeTruthy();
+    expect(screen.queryByText("Lia")).toBeNull();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Próximo mês" }));
+    expect(screen.getByText("maio de 2026")).toBeTruthy();
+    expect(screen.getByText("Nenhum atendimento neste dia")).toBeTruthy();
+    // A grade acompanha o título: maio tem 31 dias e abril some.
+    expect(screen.getByRole("button", { name: "31 de maio" })).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "2 de abril, 2 agendamentos" }),
+    ).toBeNull();
+
+    await fireEvent.press(screen.getByRole("radio", { name: "Semana" }));
+    expect(
+      screen.getByRole("button", { name: "Semana anterior" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "1 de maio" })).toBeTruthy();
+  });
+
   it("AGE-01: a seta de semana anterior aponta para a esquerda e a próxima para a direita", async () => {
     await render(<AgendaScreen />);
     const tree = JSON.stringify(screen.toJSON());

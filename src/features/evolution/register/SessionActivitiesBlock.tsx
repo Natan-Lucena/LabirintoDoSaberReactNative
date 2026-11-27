@@ -43,7 +43,7 @@ export function SessionActivitiesBlock({
         <InfoCard
           key={result.taskId}
           icon="play"
-          title={result.title}
+          title={result.title ?? getTypeLabel(result.taskType)}
           description={resultLine(result)}
         />
       ))}

@@ -33,7 +33,8 @@ export function formatSessionDuration(value: number | null): string {
 
 /**
  * G-07: as médias por resposta (`averageTimePerQuestion`, `averageCorrectTime`,
- * `averageIncorrectTime`) vêm em milissegundos, a mesma unidade de `timeToAnswer`.
+ * `averageIncorrectTime`) vêm em milissegundos normalizados e podem ser `null` (PP-08, BACKEND-ENTREGUE §3.2);
+ * a unidade das respostas é `timeToAnswerMs`.
  */
 export function formatAnswerDuration(milliseconds: number | null): string {
   if (milliseconds === null) {
