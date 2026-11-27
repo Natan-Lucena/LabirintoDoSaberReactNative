@@ -17,6 +17,7 @@ const routerReplace = vi.fn();
 
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: routerReplace }),
+  useFocusEffect: () => undefined,
 }));
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",

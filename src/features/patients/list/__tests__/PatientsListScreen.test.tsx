@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup } from "@testing-library/react-native";
 
-import type { Appointment, Student } from "@/api/types";
+import type { Appointment, PatientOverview, Student } from "@/api/types";
 import { fireEvent, render, screen } from "@/test-utils/render";
 
 const routerPush = vi.fn();
@@ -24,7 +24,22 @@ vi.mock("@/features/students/useStudents", () => ({
 vi.mock("@/features/appointments/useAppointments", () => ({
   useAppointments: () => appointmentsQuery,
 }));
-vi.mock("expo-router", () => ({ useRouter: () => ({ push: routerPush }) }));
+vi.mock("expo-router", () => ({
+  useRouter: () => ({ push: routerPush }),
+  useFocusEffect: () => undefined,
+}));
+let overviewQuery: {
+  data: PatientOverview[] | undefined;
+  isPending: boolean;
+  isError: boolean;
+  refetch: () => void;
+};
+vi.mock("@/features/patients/overview/usePatientOverview", () => ({
+  usePatientOverview: () => ({
+    query: overviewQuery,
+    byId: new Map(overviewQuery.data?.map((item) => [item.studentId, item])),
+  }),
+}));
 
 const { PatientsListScreen, ListSeparator } =
   await import("@/features/patients/list/PatientsListScreen");
@@ -59,6 +74,12 @@ const patients = [
 ];
 
 function setQueries(): void {
+  overviewQuery = {
+    data: undefined,
+    isPending: true,
+    isError: false,
+    refetch: vi.fn(),
+  };
   studentsQuery = {
     data: patients,
     isPending: false,
@@ -81,16 +102,74 @@ describe("PatientsListScreen", () => {
     setQueries();
   });
 
-  it("exibe pacientes em ordem alfabética, dados disponíveis e pendências desabilitado", async () => {
+  it("exibe pacientes em ordem alfabética, com as dificuldades enquanto o overview não chega (AC-PAC-10-04)", async () => {
     await render(<PatientsListScreen />);
 
     expect(screen.getByText("2 pacientes ativos")).toBeTruthy();
     expect(screen.getByText("Ágata Souza")).toBeTruthy();
     expect(screen.getByText("8 anos · Leitura, Escrita")).toBeTruthy();
+    expect(screen.queryByText(/Em breve/)).toBeNull();
+  });
+
+  it("mostra o status do servidor no cartão (AC-PAC-10-01)", async () => {
+    overviewQuery = {
+      ...overviewQuery,
+      isPending: false,
+      data: [
+        { studentId: "1", primaryStatus: "NO_PLAN", pendings: [] },
+        {
+          studentId: "2",
+          primaryStatus: "PLAN_REVIEW",
+          activePlan: { id: "p", type: "PE", title: "PE", percent: 10 },
+          pendings: [{ kind: "ANAMNESIS_MISSING", count: 1 }],
+        },
+      ],
+    };
+    await render(<PatientsListScreen />);
+    expect(screen.getByText("8 anos · PE em revisão")).toBeTruthy();
+    expect(screen.getByText("9 anos · Sem plano")).toBeTruthy();
+  });
+
+  it("filtra por Pendências junto com a busca (AC-PAC-10-02)", async () => {
+    overviewQuery = {
+      ...overviewQuery,
+      isPending: false,
+      data: [
+        { studentId: "1", primaryStatus: "NO_PLAN", pendings: [] },
+        {
+          studentId: "2",
+          primaryStatus: "NO_PLAN",
+          pendings: [{ kind: "ANAMNESIS_MISSING", count: 1 }],
+        },
+      ],
+    };
+    await render(<PatientsListScreen />);
+    await fireEvent.press(screen.getByLabelText("Pendências"));
+    expect(screen.getByText("Ágata Souza")).toBeTruthy();
+    expect(screen.queryByText("Zeca Alves")).toBeNull();
+    await fireEvent.changeText(
+      screen.getByPlaceholderText("Buscar paciente"),
+      "zeca",
+    );
+    expect(screen.getByText("Nenhum paciente com pendência")).toBeTruthy();
+  });
+
+  it("erro do overview: lista funciona e o filtro oferece tentar de novo", async () => {
+    const refetch = vi.fn();
+    overviewQuery = {
+      data: undefined,
+      isPending: false,
+      isError: true,
+      refetch,
+    };
+    await render(<PatientsListScreen />);
+    expect(screen.getByText("Ágata Souza")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Pendências"));
     expect(
-      screen.getByLabelText("Pendências · Em breve").props.accessibilityState
-        .disabled,
-    ).toBe(true);
+      screen.getByText("Não foi possível carregar as pendências."),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Tentar novamente"));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it("mostra a foto do paciente no cartão", async () => {
