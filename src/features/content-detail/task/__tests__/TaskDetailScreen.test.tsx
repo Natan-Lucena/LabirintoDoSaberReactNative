@@ -8,6 +8,7 @@ import { registerMockHandler } from "@/mocks/handlers/registry";
 import { MockApiError, MockNetworkError } from "@/mocks/handlers/types";
 import "@/mocks/handlers/content";
 import "@/mocks/handlers/task-delete";
+import "@/mocks/handlers/task-catalog";
 
 vi.mock("@/config/env", () => ({
   getRuntimeApiBaseUrl: () => "http://mock.local",
@@ -15,9 +16,14 @@ vi.mock("@/config/env", () => ({
 
 const routerPush = vi.fn();
 const routerBack = vi.fn();
+const routerReplace = vi.fn();
 
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ push: routerPush, back: routerBack }),
+  useRouter: () => ({
+    push: routerPush,
+    back: routerBack,
+    replace: routerReplace,
+  }),
 }));
 
 vi.mock("@/components/media/AudioPlayer", () => ({
@@ -39,6 +45,7 @@ describe("TaskDetailScreen (UX5-A)", () => {
   beforeEach(() => {
     routerPush.mockClear();
     routerBack.mockClear();
+    routerReplace.mockClear();
     apiClient.defaults.adapter = mockAdapter;
   });
 
@@ -213,5 +220,73 @@ describe("TaskDetailScreen (UX5-A)", () => {
 
     await screen.findByRole("alert");
     expect(routerBack).not.toHaveBeenCalled();
+  });
+  it("ATV-09: atividade da biblioteca não mostra Editar nem Excluir (AC-ATV-09-03)", async () => {
+    await render(<TaskDetailScreen taskId="lib-word-bola" />, {
+      queryClient: noRetryClient(),
+    });
+
+    expect(
+      await screen.findByRole("button", { name: "Duplicar para editar" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Editar Atividade" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Excluir Atividade" }),
+    ).toBeNull();
+    expect(screen.queryByText("Alternativas")).toBeNull();
+    expect(screen.getByText("Interativa")).toBeTruthy();
+    expect(await screen.findByText("Reconhecimento de letras")).toBeTruthy();
+  });
+
+  it("ATV-09: duplicar abre o detalhe da cópia (AC-ATV-09-03)", async () => {
+    await render(<TaskDetailScreen taskId="lib-word-bola" />, {
+      queryClient: noRetryClient(),
+    });
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Duplicar para editar" }),
+    );
+
+    await waitFor(() => expect(routerReplace).toHaveBeenCalledTimes(1));
+    const target = routerReplace.mock.calls[0]![0] as {
+      pathname: string;
+      params: { id: string; copied: string };
+    };
+    expect(target.pathname).toBe("/content/task/[id]");
+    expect(target.params.id).not.toBe("lib-word-bola");
+    expect(target.params.copied).toBe("1");
+  });
+
+  it("ATV-09: erro ao duplicar mostra a mensagem", async () => {
+    registerMockHandler(
+      { method: "post", path: "/task/lib-mc-1/duplicate" },
+      () => {
+        throw new MockApiError(403, "Forbidden");
+      },
+    );
+    await render(<TaskDetailScreen taskId="lib-mc-1" />, {
+      queryClient: noRetryClient(),
+    });
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "Duplicar para editar" }),
+    );
+
+    expect(
+      await screen.findByText("Você não tem acesso a esta atividade."),
+    ).toBeTruthy();
+    expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("ATV-09: a cópia recém-criada avisa com um toast", async () => {
+    await render(<TaskDetailScreen taskId="task-1" justCopied />, {
+      queryClient: noRetryClient(),
+    });
+
+    expect(
+      await screen.findByText("Cópia criada. Agora você pode editá-la."),
+    ).toBeTruthy();
   });
 });

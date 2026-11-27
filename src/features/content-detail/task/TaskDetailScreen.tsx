@@ -1,13 +1,19 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Image, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { getTaskById } from "@/api/endpoints/content";
+import {
+  duplicateTask,
+  isMultipleChoice,
+  taskFormat,
+  taskSource,
+} from "@/api/endpoints/task-catalog";
 import { deleteTask } from "@/api/endpoints/task-delete";
 import { ApiError } from "@/api/errors";
-import { withOfflineGuard } from "@/api/query-client";
+import { OfflineError, withOfflineGuard } from "@/api/query-client";
 import type { Task } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
 import {
@@ -16,8 +22,11 @@ import {
   DsButton,
   InfoCard,
   SectionTitle,
+  Toast,
+  useToast,
 } from "@/components/ds";
 import { AudioPlayer } from "@/components/media/AudioPlayer";
+import { useTaskSkills } from "@/features/activities/useCatalog";
 import { isActivityTypePlayable } from "@/features/activities/engine/registry";
 import {
   getCategoryLabel,
@@ -32,6 +41,17 @@ export const taskQueryKeys = {
 
 export interface TaskDetailScreenProps {
   taskId: string;
+  /** Veio de "Duplicar para editar": mostra o aviso de cópia criada. */
+  justCopied?: boolean;
+}
+
+function duplicateErrorMessage(error: unknown): string {
+  if (error instanceof OfflineError) return "Sem conexão";
+  if (error instanceof ApiError) {
+    if (error.status === 403) return "Você não tem acesso a esta atividade.";
+    if (error.code === "TASK_NOT_FOUND") return "Atividade não encontrada.";
+  }
+  return "Não foi possível duplicar. Tente novamente.";
 }
 
 function fileName(url: string): string {
@@ -41,8 +61,11 @@ function fileName(url: string): string {
 
 export function TaskDetailScreen({
   taskId,
+  justCopied = false,
 }: TaskDetailScreenProps): ReactElement {
   const router = useRouter();
+  const toast = useToast();
+  const skills = useTaskSkills();
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const query = useQuery({
@@ -58,6 +81,22 @@ export function TaskDetailScreen({
       router.back();
     },
   });
+
+  const duplicateMutation = useMutation<Task, Error, void>({
+    mutationFn: withOfflineGuard(() => duplicateTask(taskId)),
+    onSuccess: async (copy) => {
+      await queryClient.invalidateQueries({ queryKey: taskQueryKeys.list });
+      router.replace({
+        pathname: "/content/task/[id]",
+        params: { id: copy.id, copied: "1" },
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (justCopied) toast.show("Cópia criada. Agora você pode editá-la.");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [justCopied]);
 
   function goToPlay() {
     router.push({ pathname: "/activities/[id]", params: { id: taskId } });
@@ -105,6 +144,11 @@ export function TaskDetailScreen({
     );
   } else {
     const task: Task = query.data!;
+    const isLibrary = taskSource(task) === "LIBRARY";
+    const skillLabels = (task.skills ?? []).map(
+      (code) =>
+        skills.data?.find((skill) => skill.code === code)?.label ?? code,
+    );
     content = (
       <View style={styles.content}>
         <View style={styles.intro}>
@@ -114,6 +158,15 @@ export function TaskDetailScreen({
           <View style={styles.badges}>
             <Badge label={getCategoryLabel(task.category)} />
             <Badge label={getTypeLabel(task.type)} />
+            <Badge
+              label={
+                taskFormat(task) === "PRINTABLE" ? "Imprimível" : "Interativa"
+              }
+            />
+            {skillLabels.map((label) => (
+              <Badge key={label} label={label} />
+            ))}
+            {task.theme ? <Badge label={task.theme} /> : null}
           </View>
         </View>
 
@@ -122,22 +175,24 @@ export function TaskDetailScreen({
           <InfoCard icon="file" title="Enunciado" description={task.prompt} />
         </View>
 
-        <View style={styles.section}>
-          <SectionTitle title="Alternativas" />
-          {task.alternatives.map((alternative) => (
-            <View key={alternative.id} style={styles.alternative}>
-              <View style={styles.alternativeIcon}>
-                <FigmaIcon
-                  name={alternative.isCorrect ? "check" : "chevron"}
-                  size={17}
-                  color={color.brand[700]}
-                />
+        {isMultipleChoice(task.type) ? (
+          <View style={styles.section}>
+            <SectionTitle title="Alternativas" />
+            {task.alternatives.map((alternative) => (
+              <View key={alternative.id} style={styles.alternative}>
+                <View style={styles.alternativeIcon}>
+                  <FigmaIcon
+                    name={alternative.isCorrect ? "check" : "chevron"}
+                    size={17}
+                    color={color.brand[700]}
+                  />
+                </View>
+                <Text style={styles.alternativeText}>{alternative.text}</Text>
+                {alternative.isCorrect ? <Badge label="Correta" /> : null}
               </View>
-              <Text style={styles.alternativeText}>{alternative.text}</Text>
-              {alternative.isCorrect ? <Badge label="Correta" /> : null}
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <SectionTitle title="Material de apoio" />
@@ -183,22 +238,46 @@ export function TaskDetailScreen({
             Não foi possível excluir a atividade.
           </Text>
         ) : null}
+        {duplicateMutation.isError ? (
+          <Text
+            style={styles.deleteError}
+            accessible
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {duplicateErrorMessage(duplicateMutation.error)}
+          </Text>
+        ) : null}
         <View style={styles.actions}>
           {isActivityTypePlayable(task.type) ? (
             <DsButton label="Jogar" icon="play" onPress={goToPlay} fullWidth />
           ) : null}
-          <DsButton
-            label="Editar Atividade"
-            onPress={goToEdit}
-            variant="secondary"
-            fullWidth
-          />
-          <DsButton
-            label="Excluir Atividade"
-            onPress={() => setConfirmOpen(true)}
-            variant="secondary"
-            fullWidth
-          />
+          {isLibrary ? (
+            <DsButton
+              label="Duplicar para editar"
+              onPress={() => duplicateMutation.mutate()}
+              loading={duplicateMutation.isPending}
+              variant="secondary"
+              fullWidth
+            />
+          ) : (
+            <>
+              {isMultipleChoice(task.type) ? (
+                <DsButton
+                  label="Editar Atividade"
+                  onPress={goToEdit}
+                  variant="secondary"
+                  fullWidth
+                />
+              ) : null}
+              <DsButton
+                label="Excluir Atividade"
+                onPress={() => setConfirmOpen(true)}
+                variant="secondary"
+                fullWidth
+              />
+            </>
+          )}
         </View>
       </View>
     );
@@ -238,6 +317,7 @@ export function TaskDetailScreen({
           </View>
         </View>
       </Modal>
+      <Toast message={toast.message} onHide={toast.hide} />
     </View>
   );
 }
