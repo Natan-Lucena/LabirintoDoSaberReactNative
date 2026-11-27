@@ -92,7 +92,7 @@ describe("createTask com mockAdapter", () => {
     });
   });
 
-  it("rejeita quando nenhuma alternativa é marcada como correta com 500", async () => {
+  it("rejeita quando nenhuma alternativa é marcada como correta com 400", async () => {
     await expect(
       createTask({
         category: "reading",
@@ -103,7 +103,7 @@ describe("createTask com mockAdapter", () => {
         ],
       }),
     ).rejects.toMatchObject({
-      status: 500,
+      status: 400,
       code: "AT_LEAST_ONE_ALTERNATIVE_MUST_BE_CORRECT",
     });
   });

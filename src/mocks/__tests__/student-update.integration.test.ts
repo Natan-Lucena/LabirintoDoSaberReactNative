@@ -30,9 +30,9 @@ describe("PUT /student/update/:id pelo apiClient", () => {
       });
       apiClient.defaults.adapter = (config) => {
         const data = config.data as FormData;
-        expect(data.get("guardianName")).toBe("");
-        expect(data.get("guardianPhone")).toBe("");
-        expect(data.get("guardianRelationship")).toBe("");
+        expect(data.get("guardianName")).toBe("null");
+        expect(data.get("guardianPhone")).toBe("null");
+        expect(data.get("guardianRelationship")).toBe("null");
         return mockAdapter(config);
       };
       const updated = await updateStudent(student.id, {

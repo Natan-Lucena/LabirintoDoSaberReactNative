@@ -96,8 +96,8 @@ registerMockHandler(
     ] as const) {
       const value = input[key];
       if (value == null) continue;
-      if (value === "") {
-        // PP-05 (Q8): string vazia no multipart apaga o campo.
+      if (value === "null") {
+        // D-01: o texto "null" no multipart apaga o campo (backend publicado).
         delete patch[key];
         cleared.push(key);
         continue;
