@@ -4,7 +4,7 @@
 > discovery, seja no Claude Code, seja no OpenCode. A fonte canônica do progresso é o
 > [TRACKING da Entrega 3](entrega-3/TRACKING.md). A metodologia está no [AGENTS.md](../AGENTS.md).
 >
-> **2026-11-26:** o backend publicou as 5 levas da Entrega 5 ([BACKEND-ENTREGUE](entrega-5/BACKEND-ENTREGUE.md)); os PRs empilhados do app estão sendo alinhados (PR de correção #220 na pilha A e outro na pilha B).
+> **2026-11-27:** o backend publicou as levas da Entrega 5 ([BACKEND-ENTREGUE](entrega-5/BACKEND-ENTREGUE.md)) e as duas pilhas de PRs do app estão na `main`; a rodada no emulador está em [ENTREGA-5 §8](entrega-5/ENTREGA-5.md#8-validação-no-emulador-2026-11-2627) e o que falta no [TRACKING](entrega-5/TRACKING.md).
 
 ## 1. Onde estamos
 

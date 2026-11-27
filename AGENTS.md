@@ -40,10 +40,16 @@ convites e paciente compartilhado), o status e o arquivamento dos pacientes, a a
 recorrente, o push (com development build) e a central de ajuda, mais a QA pendente. Tem 25
 tarefas e depende muito do backend. Leia o [Roadmap](docs/entrega-5/ROADMAP.md), o
 [Backlog](docs/entrega-5/BACKLOG.md), o [Tracking](docs/entrega-5/TRACKING.md) e a
-[Especificação para o backend](docs/entrega-5/ESPECIFICACAO-BACKEND.md). **As decisões G-61 a
-G-72 são propostas** até o usuário confirmar; nenhum dispatch que dependa delas antes disso.
-
-**Atualização de 2026-11-26:** o backend publicou as 5 levas da Entrega 5 (PRs #35 a #42 dele); o contrato real está em [BACKEND-ENTREGUE](docs/entrega-5/BACKEND-ENTREGUE.md) e no [PROJECT.md](docs/PROJECT.md). Os PRs empilhados do app estão sendo alinhados a ele (PR de correção #220 na pilha A e outro na pilha B).
+[Especificação para o backend](docs/entrega-5/ESPECIFICACAO-BACKEND.md). As decisões G-61 a
+G-72 foram resolvidas em 2026-11-25. Em 2026-11-27 o código das 25 tarefas está na `main`: as
+duas pilhas de PRs foram mergeadas, junto com o contrato real do backend (API-06, #222), e o
+backend publicou as levas (a produção responde às rotas da Entrega 5; os seeds da biblioteca e
+da ajuda ainda não foram rodados). Três rodadas no emulador Android (mocks, backend local e
+produção) validaram a maior parte dos fluxos. Faltam o development build e o push (BLD-01,
+NOT-02), Maestro, TalkBack e aparelhos (QA-02, QA-03, QA-04) e os vídeos da ajuda. O contrato real
+está em [BACKEND-ENTREGUE](docs/entrega-5/BACKEND-ENTREGUE.md) e no
+[PROJECT.md](docs/PROJECT.md); o guia das pilhas ([PILHAS](docs/entrega-5/PILHAS.md)) é
+histórico; resumo em [ENTREGA-5](docs/entrega-5/ENTREGA-5.md).
 
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
