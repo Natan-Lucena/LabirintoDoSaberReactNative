@@ -6,6 +6,7 @@ import { FigmaIcon } from "@/components/FigmaIcon";
 import { AppHeader, Avatar, FeatureRow, SectionTitle } from "@/components/ds";
 import { StaticPressable } from "@/components/ds/StaticPressable";
 import { useHomeData } from "@/features/home/useHomeData";
+import { professionAndRole } from "@/features/team/roles";
 import { color, fontFamilies, shape } from "@/theme";
 
 type ResourceItem = {
@@ -164,7 +165,7 @@ export function ResourcesScreen(): ReactElement {
             <Text style={styles.profileName}>{educatorName}</Text>
             {educator?.profession || educator?.email ? (
               <Text style={styles.profileRole}>
-                {educator.profession || educator.email}
+                {professionAndRole(educator)}
               </Text>
             ) : null}
           </View>

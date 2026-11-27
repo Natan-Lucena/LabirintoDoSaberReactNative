@@ -31,6 +31,7 @@ import {
 } from "@/components/ds";
 import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { homeQueryKeys } from "@/features/home/useHomeData";
+import { professionAndRole } from "@/features/team/roles";
 import { useAuthStore } from "@/stores/auth";
 import { color, typography, semanticColor } from "@/theme";
 
@@ -188,7 +189,7 @@ function ProfileContents({ onLoggedOut }: { onLoggedOut: () => void }) {
             <View style={styles.photoCopy}>
               <Text style={styles.name}>{educator.name}</Text>
               <Text style={styles.secondary}>
-                {educator.profession || educator.email}
+                {professionAndRole(educator)}
               </Text>
             </View>
           </View>

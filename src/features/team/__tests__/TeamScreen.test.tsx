@@ -3,7 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/api/client";
 import { mockAdapter } from "@/mocks/adapter";
+import "@/mocks/handlers/educator";
+import "@/mocks/handlers/educator-update";
+import { MOCK_TOKEN } from "@/mocks/fixtures";
 import { resetMockClinicState } from "@/mocks/handlers/clinic";
+import { clearMockSession, setMockSession } from "@/mocks/mock-auth-state";
 import {
   resetMockTeamScenario,
   setMockTeamScenario,
@@ -23,11 +27,13 @@ const { TeamScreen } = await import("../TeamScreen");
 describe("TeamScreen (EQP-01)", () => {
   beforeEach(() => {
     apiClient.defaults.adapter = mockAdapter;
+    setMockSession(MOCK_TOKEN);
     resetMockClinicState();
     resetMockTeamScenario();
   });
   afterEach(() => {
     vi.restoreAllMocks();
+    clearMockSession();
     resetMockClinicState();
     resetMockTeamScenario();
   });
@@ -61,7 +67,7 @@ describe("TeamScreen (EQP-01)", () => {
     expect(await screen.findByText("Profissionais ativos · 1")).toBeTruthy();
     expect(screen.getByText("Clínica Teste")).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: "Compartilhar convite" }),
+      await screen.findByRole("button", { name: "Compartilhar convite" }),
     ).toBeTruthy();
   });
 
@@ -74,7 +80,7 @@ describe("TeamScreen (EQP-01)", () => {
 
     expect(await screen.findByText("Profissionais ativos · 3")).toBeTruthy();
     await fireEvent.press(
-      screen.getByRole("button", { name: "Compartilhar convite" }),
+      await screen.findByRole("button", { name: "Compartilhar convite" }),
     );
 
     expect(await screen.findByText(/^Vale até \d{2}\/\d{2}$/)).toBeTruthy();

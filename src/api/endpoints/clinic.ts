@@ -113,6 +113,61 @@ export async function createClinicInvite(
   }
 }
 
+/** PUT /clinic/ — só ADMIN. `400`, `403 FORBIDDEN_ROLE`, `404 NOT_IN_CLINIC`. */
+export async function renameClinic(input: {
+  name: string;
+}): Promise<ClinicView> {
+  try {
+    const response = await apiClient.put<ClinicView>("/clinic/", {
+      name: input.name.trim(),
+    });
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}
+
+/** DELETE /clinic/invites/:id — só ADMIN. `204`; `404 INVITE_NOT_FOUND`. */
+export async function revokeClinicInvite(inviteId: string): Promise<void> {
+  try {
+    await apiClient.delete(`/clinic/invites/${encodeURIComponent(inviteId)}`);
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}
+
+export interface UpdateClinicMemberRoleInput {
+  educatorId: string;
+  role: TeamRole;
+}
+
+/** PUT /clinic/members/:educatorId — só ADMIN. `404 MEMBER_NOT_FOUND`, `409 LAST_ADMIN`. */
+export async function updateClinicMemberRole(
+  input: UpdateClinicMemberRoleInput,
+): Promise<ClinicView> {
+  try {
+    const response = await apiClient.put<ClinicView>(
+      `/clinic/members/${encodeURIComponent(input.educatorId)}`,
+      { role: input.role },
+    );
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}
+
+/**
+ * DELETE /clinic/members/:educatorId — ADMIN remove outro; o próprio membro sai
+ * (com o próprio id). `204`; `403 FORBIDDEN_ROLE`, `404 MEMBER_NOT_FOUND`, `409 LAST_ADMIN`.
+ */
+export async function removeClinicMember(educatorId: string): Promise<void> {
+  try {
+    await apiClient.delete(`/clinic/members/${encodeURIComponent(educatorId)}`);
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}
+
 export interface AcceptClinicInviteInput {
   code: string;
 }

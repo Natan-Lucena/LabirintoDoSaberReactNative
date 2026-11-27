@@ -565,6 +565,12 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
   cenário `admin`; `POST /clinic/invites` (só `ADMIN`, `403` no `professional`) devolve um convite novo com código
   de 8 caracteres e `shareMessage` do formato EQ-05, que passa a aparecer em `GET /clinic/invites`; a partir de 20
   convites ativos, `409 TOO_MANY_INVITES`. `resetMockClinicState()` limpa esse estado (testes).
+- **Gestão da equipe (EQP-02)**, também em `handlers/clinic.ts`, com estado em memória: `PUT /clinic/` (renomeia;
+  só `ADMIN`), `DELETE /clinic/invites/:id` (revoga; `404 INVITE_NOT_FOUND` se já revogado),
+  `PUT /clinic/members/:educatorId` `{ role }` e `DELETE /clinic/members/:educatorId` (o próprio id = sair da
+  equipe, volta ao cenário `none`). `PROFESSIONAL` removendo outro: `403 FORBIDDEN_ROLE`. Um `ADMIN` pode remover
+  outro (Q12); o último `ADMIN` não vira profissional nem sai: `409 LAST_ADMIN`. No cenário `admin` há um só
+  `ADMIN`, então promova "Profissional Teste Dois" para poder trocar o próprio papel.
 - **Cadastro e aceite pelo convite (EQP-03)**, em `handlers/clinic.ts` e `handlers/educator.ts`: convite de uso
   único (usado, passa a `404 INVITE_INVALID`; recarregar o app o restaura). `POST /clinic/invites/accept`
   `{ code }` devolve a `ClinicView` e liga o cenário com o papel do convite (`409 ALREADY_IN_CLINIC` se já há

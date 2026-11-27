@@ -2,7 +2,12 @@
 // ativos e da prévia pública. Contrato PROPOSTO, mock-first. O cenário vem de
 // `mock-team-state` (padrão: sem clínica).
 import { normalizeInviteCode } from "@/api/endpoints/clinic";
-import type { ClinicInvite, ClinicView, TeamRole } from "@/api/types";
+import type {
+  ClinicInvite,
+  ClinicMember,
+  ClinicView,
+  TeamRole,
+} from "@/api/types";
 import {
   MOCK_CLINIC,
   MOCK_INVITE_CODE,
@@ -20,7 +25,6 @@ import { MockApiError } from "./types";
 
 const DAY_MS = 86_400_000;
 const MAX_ACTIVE_INVITES = 20;
-const SEEDED_INVITES = 2;
 
 // Estado em memória das escritas (EQP-01): clínica criada pelo app e convites novos.
 let createdClinic: ClinicView | null = null;
@@ -28,12 +32,25 @@ let createdInvites: ClinicInvite[] = [];
 let inviteSeq = 0;
 // Convites de uso único (EQ-06): consumidos pelo cadastro ou pelo accept.
 let usedInviteCodes = new Set<string>();
+// Gestão (EQP-02): nome novo, papéis alterados, membros removidos e convites revogados.
+let renamedClinic: string | null = null;
+let roleOverrides = new Map<string, TeamRole>();
+let removedMembers = new Set<string>();
+let revokedInviteIds = new Set<string>();
 
 export function resetMockClinicState(): void {
   createdClinic = null;
   createdInvites = [];
   inviteSeq = 0;
   usedInviteCodes = new Set();
+  resetManagementState();
+}
+
+function resetManagementState(): void {
+  renamedClinic = null;
+  roleOverrides = new Map();
+  removedMembers = new Set();
+  revokedInviteIds = new Set();
 }
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -51,7 +68,50 @@ function nextInviteCode(): string {
 }
 
 function clinicName(): string {
-  return createdClinic?.clinic.name ?? MOCK_CLINIC.name;
+  return renamedClinic ?? createdClinic?.clinic.name ?? MOCK_CLINIC.name;
+}
+
+function sortMembers(members: ClinicMember[]): ClinicMember[] {
+  // ADMIN primeiro, depois por nome (mesma ordem de `buildMockClinicMembers`).
+  return members.sort((a, b) =>
+    a.role !== b.role
+      ? a.role === "ADMIN"
+        ? -1
+        : 1
+      : a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
+  );
+}
+
+/** Membros atuais: base do cenário + papéis alterados − removidos. */
+function currentMembers(myRole: TeamRole): ClinicMember[] {
+  const base = createdClinic
+    ? createdClinic.members
+    : buildMockClinicMembers(myRole);
+  return sortMembers(
+    base
+      .filter((member) => !removedMembers.has(member.educatorId))
+      .map((member) => {
+        const override = roleOverrides.get(member.educatorId);
+        return override && member.educatorId !== MOCK_EDUCATOR.id
+          ? { ...member, role: override }
+          : { ...member };
+      }),
+  );
+}
+
+function currentView(myRole: TeamRole): ClinicView {
+  const clinic = createdClinic?.clinic ?? { ...MOCK_CLINIC };
+  return {
+    clinic: { ...clinic, name: clinicName() },
+    myRole,
+    members: currentMembers(myRole),
+  };
+}
+
+function requireAdmin(): void {
+  if (requireClinic() !== "ADMIN") {
+    throw new MockApiError(403, "FORBIDDEN_ROLE");
+  }
 }
 
 /** "dd/mm" no fuso de São Paulo (EQ-17). */
@@ -101,7 +161,7 @@ function activeInvites(): ClinicInvite[] {
       "PROFESSIONAL",
       new Date(now - DAY_MS),
     ),
-  ];
+  ].filter((invite) => !revokedInviteIds.has(invite.id));
 }
 
 function findActiveInvite(code: string): ClinicInvite | undefined {
@@ -144,16 +204,7 @@ function requireClinic(): "ADMIN" | "PROFESSIONAL" {
 }
 
 registerMockHandler({ method: "get", path: "/clinic/" }, () => {
-  const myRole = requireClinic();
-  if (createdClinic) {
-    return { status: 200, data: createdClinic };
-  }
-  const view: ClinicView = {
-    clinic: { ...MOCK_CLINIC },
-    myRole,
-    members: buildMockClinicMembers(myRole),
-  };
-  return { status: 200, data: view };
+  return { status: 200, data: currentView(requireClinic()) };
 });
 
 registerMockHandler({ method: "get", path: "/clinic/invites" }, () => {
@@ -163,6 +214,98 @@ registerMockHandler({ method: "get", path: "/clinic/invites" }, () => {
   }
   return { status: 200, data: activeInvites() };
 });
+
+registerMockHandler({ method: "put", path: "/clinic/" }, ({ body }) => {
+  requireAdmin();
+  const name =
+    typeof (body as { name?: unknown } | null)?.name === "string"
+      ? (body as { name: string }).name.trim()
+      : "";
+  if (name.length < 2 || name.length > 80) {
+    throw new MockApiError(400, "VALIDATION_ERROR");
+  }
+  renamedClinic = name;
+  return { status: 200, data: currentView("ADMIN") };
+});
+
+registerMockHandler(
+  { method: "delete", path: "/clinic/invites/:id" },
+  ({ params }) => {
+    requireAdmin();
+    const exists = activeInvites().some((item) => item.id === params.id);
+    if (!exists) {
+      throw new MockApiError(404, "INVITE_NOT_FOUND");
+    }
+    revokedInviteIds.add(params.id ?? "");
+    return { status: 204, data: undefined };
+  },
+);
+
+function adminCount(myRole: TeamRole): number {
+  return currentMembers(myRole).filter((member) => member.role === "ADMIN")
+    .length;
+}
+
+registerMockHandler(
+  { method: "put", path: "/clinic/members/:educatorId" },
+  ({ params, body }) => {
+    requireAdmin();
+    const role = (body as { role?: unknown } | null)?.role;
+    if (role !== "ADMIN" && role !== "PROFESSIONAL") {
+      throw new MockApiError(400, "VALIDATION_ERROR");
+    }
+    const target = currentMembers("ADMIN").find(
+      (member) => member.educatorId === params.educatorId,
+    );
+    if (!target) {
+      throw new MockApiError(404, "MEMBER_NOT_FOUND");
+    }
+    if (
+      target.role === "ADMIN" &&
+      role === "PROFESSIONAL" &&
+      adminCount("ADMIN") <= 1
+    ) {
+      throw new MockApiError(409, "LAST_ADMIN");
+    }
+    if (target.educatorId === MOCK_EDUCATOR.id) {
+      // Mudar o próprio papel muda o cenário: de ADMIN para PROFESSIONAL.
+      setMockTeamScenario(role === "ADMIN" ? "admin" : "professional");
+      return { status: 200, data: currentView(role) };
+    }
+    roleOverrides.set(target.educatorId, role);
+    return { status: 200, data: currentView("ADMIN") };
+  },
+);
+
+registerMockHandler(
+  { method: "delete", path: "/clinic/members/:educatorId" },
+  ({ params }) => {
+    const myRole = requireClinic();
+    const isSelf = params.educatorId === MOCK_EDUCATOR.id;
+    if (!isSelf && myRole !== "ADMIN") {
+      throw new MockApiError(403, "FORBIDDEN_ROLE");
+    }
+    const target = currentMembers(myRole).find(
+      (member) => member.educatorId === params.educatorId,
+    );
+    if (!target) {
+      throw new MockApiError(404, "MEMBER_NOT_FOUND");
+    }
+    if (target.role === "ADMIN" && adminCount(myRole) <= 1) {
+      throw new MockApiError(409, "LAST_ADMIN");
+    }
+    if (isSelf) {
+      // Sair da equipe: volta ao cenário "sem equipe".
+      createdClinic = null;
+      createdInvites = [];
+      resetManagementState();
+      setMockTeamScenario("none");
+    } else {
+      removedMembers.add(target.educatorId);
+    }
+    return { status: 204, data: undefined };
+  },
+);
 
 registerMockHandler(
   { method: "get", path: "/clinic/invites/preview/:code" },
@@ -227,7 +370,7 @@ registerMockHandler({ method: "post", path: "/clinic/invites" }, ({ body }) => {
   if (role !== "ADMIN" && role !== "PROFESSIONAL") {
     throw new MockApiError(400, "VALIDATION_ERROR");
   }
-  if (SEEDED_INVITES + createdInvites.length >= MAX_ACTIVE_INVITES) {
+  if (activeInvites().length >= MAX_ACTIVE_INVITES) {
     throw new MockApiError(409, "TOO_MANY_INVITES");
   }
   const invite = buildInvite(
