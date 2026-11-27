@@ -20,6 +20,10 @@ import {
   setMockTeamScenario,
 } from "@/mocks/mock-team-state";
 import { setMockInviteGateway } from "@/mocks/mock-invite-state";
+import {
+  markMockMemberRemoved,
+  resetMockShareState,
+} from "@/mocks/mock-share-state";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
@@ -44,6 +48,7 @@ export function resetMockClinicState(): void {
   inviteSeq = 0;
   usedInviteCodes = new Set();
   resetManagementState();
+  resetMockShareState();
 }
 
 function resetManagementState(): void {
@@ -302,6 +307,7 @@ registerMockHandler(
       setMockTeamScenario("none");
     } else {
       removedMembers.add(target.educatorId);
+      markMockMemberRemoved(target.educatorId);
     }
     return { status: 204, data: undefined };
   },

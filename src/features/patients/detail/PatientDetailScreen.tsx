@@ -9,11 +9,13 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 
+import { ApiError } from "@/api/errors";
 import type { Appointment } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
 import {
   AppHeader,
   Avatar,
+  Badge,
   DsButton,
   FeatureRow,
   IconButton,
@@ -37,6 +39,8 @@ import {
   evolutionRoute,
   patientRecordRoute,
 } from "@/features/evolution/register/routes";
+import { isPatientOwner } from "@/features/patients/shares/access";
+import { WhoFollowsSection } from "@/features/patients/shares/WhoFollowsSection";
 import { useStudents } from "@/features/students/useStudents";
 import { color, getContentPadding, shape, typography } from "@/theme";
 import { formatTime } from "@/utils/date";
@@ -111,6 +115,10 @@ function StatePanel({
   );
 }
 
+function isForbidden(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403;
+}
+
 export function PatientDetailScreen({
   patientId,
 }: PatientDetailScreenProps): ReactElement {
@@ -127,6 +135,25 @@ export function PatientDetailScreen({
   const patient = studentsQuery.data?.find(
     (student) => student.id === patientId,
   );
+
+  // Acesso perdido (EQP-04): a ficha já foi vista e some da lista depois de um
+  // refetch, ou uma leitura dela devolve 403. No primeiro carregamento, ausente
+  // continua sendo "Paciente não encontrado".
+  const [seenPatient, setSeenPatient] = useState(false);
+  if (patient && !seenPatient) setSeenPatient(true);
+  const lostAccess =
+    isForbidden(sessionsQuery.error) ||
+    isForbidden(evolutionsQuery.error) ||
+    (seenPatient && !patient && !studentsQuery.isPending);
+  if (lostAccess) {
+    return (
+      <StatePanel
+        title="Você não acompanha mais este paciente."
+        retry={() => router.replace("/(tabs)/patients")}
+        actionLabel="Voltar para a lista"
+      />
+    );
+  }
 
   if (studentsQuery.isPending && !studentsQuery.data) {
     return <StatePanel title="Carregando paciente" />;
@@ -165,6 +192,7 @@ export function PatientDetailScreen({
     );
   }
 
+  const owner = isPatientOwner(patient);
   const nextAppointment = findNextAppointment(
     appointmentsQuery.data ?? [],
     patient.id,
@@ -236,6 +264,15 @@ export function PatientDetailScreen({
             </Text>
           ) : null}
         </View>
+        {!owner ? (
+          <Badge
+            label={
+              patient.ownerName
+                ? `Compartilhado por ${patient.ownerName}`
+                : "Compartilhado"
+            }
+          />
+        ) : null}
 
         <Tabs
           options={[
@@ -254,6 +291,8 @@ export function PatientDetailScreen({
           <PatientAssessments patientId={patient.id} />
         ) : (
           <>
+            <WhoFollowsSection patient={patient} onToast={toast.show} />
+
             <ActivePdi patientId={patient.id} />
 
             <View style={styles.section}>
@@ -286,12 +325,15 @@ export function PatientDetailScreen({
             <View style={styles.section}>
               <SectionTitle
                 title="Dificuldades mapeadas"
-                actionLabel="Editar"
-                onActionPress={() =>
-                  router.push({
-                    pathname: "/patients/[id]/edit",
-                    params: { id: patient.id },
-                  })
+                actionLabel={owner ? "Editar" : undefined}
+                onActionPress={
+                  owner
+                    ? () =>
+                        router.push({
+                          pathname: "/patients/[id]/edit",
+                          params: { id: patient.id },
+                        })
+                    : undefined
                 }
               />
               {patient.learningTopics.length ? (

@@ -348,6 +348,13 @@ evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito 
   evolução (inclusive após `PUT`) e, para uma sessão finalizada criada pelo fluxo do app, o
   relatório é montado com o nome e as respostas da sessão.
 
+- **Paciente compartilhado (EQP-04)**, com estado em memória (`mock-share-state.ts`, `handlers/student-shares.ts`):
+  `POST /student/:id/shares` (só o dono; `400 NOT_IN_SAME_CLINIC` fora da equipe; idempotente) e
+  `DELETE /student/:id/shares/:educatorId` (`404 SHARE_NOT_FOUND` na segunda vez) mudam a lista de
+  `GET /student/:id/shares`. Para o "Paciente Teste Compartilhado" (a colega lê, EQ-19) a lista traz quem lê;
+  `403 UNAUTHORIZED` se a colega tentar escrever. Remover "Profissional Teste Dois" em Equipe (como `admin`) faz o
+  compartilhado sumir da lista e a ficha mostrar "Você não acompanha mais este paciente.".
+
 ### Lacunas dos mocks da leva 1
 
 - **`evolutionId` (§3.9):** o mock o preenche em `report/:sessionId`, mas não em
@@ -595,7 +602,7 @@ criar série, registrar token, `PUT` das preferências) entram com as telas. Dad
 
 ### Lacunas
 
-- Sem escritas (exceto as da equipe, acima): nada muda depois de uma chamada; o estado vem só dos cenários.
+- Sem escritas (exceto as da equipe e do compartilhamento, acima): nada muda depois de uma chamada; o estado vem só dos cenários.
 - As ocorrências da série não entram em `GET /appointment/` e os atendimentos dos mocks não têm `seriesId`.
 - Os pacientes compartilhado e arquivado não têm sessões, planos nem evoluções nos mocks.
 - `authorName` (EQ-12) existe nos tipos, mas nenhum mock o preenche ainda.

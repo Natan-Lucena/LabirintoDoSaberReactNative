@@ -1,10 +1,11 @@
 import type { Student, StudentStatusFilter } from "@/api/types";
 import {
   MOCK_ARCHIVED_STUDENT,
+  MOCK_COLLEAGUE_ID,
   MOCK_SHARED_STUDENT,
-  MOCK_STUDENT_SHARES,
 } from "@/mocks/fixtures-e5";
 import { MOCK_STUDENTS } from "@/mocks/fixtures";
+import { isMockMemberRemoved } from "@/mocks/mock-share-state";
 import { getMockTeamScenario } from "@/mocks/mock-team-state";
 import { MOCK_FOREIGN_STUDENT_ID } from "./plans";
 import { registerMockHandler } from "./registry";
@@ -17,15 +18,20 @@ function decorate(student: Student): Student {
   return { access: "OWNER", status: "ACTIVE", ...student };
 }
 
+/** O compartilhado só existe com equipe e enquanto o dono segue nela (EQ-09). */
+function sharedWithMe(): Student[] {
+  return getMockTeamScenario() === "none" ||
+    isMockMemberRemoved(MOCK_COLLEAGUE_ID)
+    ? []
+    : [MOCK_SHARED_STUDENT];
+}
+
 /**
  * Pacientes visíveis para o filtro, na ordem de `GET /student/` (compartilhado
  * depois dos próprios). O compartilhado só existe com o cenário de equipe ligado.
  */
 export function listMockStudents(status: StudentStatusFilter): Student[] {
-  const active: Student[] = [
-    ...MOCK_STUDENTS.map(decorate),
-    ...(getMockTeamScenario() === "none" ? [] : [MOCK_SHARED_STUDENT]),
-  ];
+  const active: Student[] = [...MOCK_STUDENTS.map(decorate), ...sharedWithMe()];
   const archived = [MOCK_ARCHIVED_STUDENT];
 
   if (status === "ARCHIVED") return archived;
@@ -48,10 +54,7 @@ registerMockHandler({ method: "get", path: "/student/" }, ({ params }) => {
   if (params.status === undefined) {
     return {
       status: 200,
-      data:
-        getMockTeamScenario() === "none"
-          ? MOCK_STUDENTS
-          : [...MOCK_STUDENTS, MOCK_SHARED_STUDENT],
+      data: [...MOCK_STUDENTS, ...sharedWithMe()],
     };
   }
   return {
@@ -76,16 +79,5 @@ registerMockHandler({ method: "get", path: "/student/:id" }, ({ params }) => ({
   status: 200,
   data: findMockAccessibleStudent(params.id),
 }));
-
-registerMockHandler(
-  { method: "get", path: "/student/:id/shares" },
-  ({ params }) => {
-    findMockAccessibleStudent(params.id);
-    return {
-      status: 200,
-      data: structuredClone(MOCK_STUDENT_SHARES[params.id] ?? []),
-    };
-  },
-);
 
 export const studentMockHandlersRegistered = true;
