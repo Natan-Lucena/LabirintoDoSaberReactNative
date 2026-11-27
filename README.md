@@ -23,6 +23,15 @@ pnpm run typecheck  # tsc --noEmit
 pnpm run lint       # eslint .
 ```
 
+### Development build (opcional, BLD-01)
+
+`pnpm start` abre sempre no Expo Go (`expo start --go`). O push remoto no Android (NOT-02) exige
+um development build gerado no EAS (`eas build --profile development --platform android`); depois
+de instalar o APK, use `pnpm run start:dev`. O passo a passo para criar a conta Expo/Firebase e
+gerar o build está em
+[`docs/bootstrap/COMPATIBILIDADE.md` §9.7](docs/bootstrap/COMPATIBILIDADE.md). O
+`google-services.json` nunca vai para o Git.
+
 Um development build (EAS, T-108) continua disponível, mas é **opcional**: só é
 necessário para recursos nativos fora do Expo Go do SDK 57. A lista de
 dependências auditadas contra o Expo Go está em
