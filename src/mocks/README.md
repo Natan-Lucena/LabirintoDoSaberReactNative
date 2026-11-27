@@ -533,3 +533,51 @@ Contrato **proposto** (`docs/entrega-5/ESPECIFICACAO-BACKEND.md` §3), mock-firs
   seção "Atividades da sessão" e sem o resumo "Atividades jogadas".
 - Nenhum caderno dos mocks contém um jogo; para jogar numa sessão pelos mocks, escolha a atividade avulsa
   ("Forme a palavra" do educador).
+
+## Equipe, status, recorrência, push e ajuda (API-07, levas 2 a 4)
+
+Contrato **proposto** (`docs/entrega-5/CONTRATOS-BACKEND.md` §2.3 a §2.7, §4 a §6), mock-first: o backend
+real ainda não o publica. Só leituras; as escritas (criar clínica, convites, compartilhar, arquivar,
+criar série, registrar token, `PUT` das preferências) entram com as telas. Dados em `fixtures-e5.ts`.
+
+### Rotas
+
+- `GET /clinic/` (`ClinicView`, ADMIN primeiro), `GET /clinic/invites` (2 convites ativos; só ADMIN),
+  `GET /clinic/invites/preview/:code` (pública; aceita minúsculas e hífen, EQ-16).
+- `GET /student/:id/shares` (só `student-1` tem um compartilhamento; os demais, `[]`).
+- `GET /student/?status=ACTIVE|ARCHIVED|ALL`, `GET /student/:id` (também arquivado e compartilhado) e
+  `GET /student/overview?status=` (um item por paciente da lista, na mesma ordem, sem nome; handlers em
+  `handlers/student.ts` e `handlers/student-status.ts`).
+- `GET /appointment/series/:id` (`AppointmentSeriesDetail` com todas as ocorrências).
+- `GET /notification/preferences` e `GET /help/tutorials`.
+
+### Cenários
+
+- **Equipe** (`setMockTeamScenario("none" | "admin" | "professional")`, de `mock-team-state`): padrão
+  `"none"`, e então `GET /clinic/` responde `404 NOT_IN_CLINIC`, `GET /educator/me` não traz `clinic` e a
+  lista de pacientes não muda. Com `"admin"` ou `"professional"`, `/educator/me` traz `clinic` e
+  `GET /student/` inclui "Paciente Teste Compartilhado" (`access: "SHARED"`, `ownerName`). Como
+  `professional`, `GET /clinic/invites` responde `403 FORBIDDEN_ROLE`.
+- **Prévia do convite:** `AB3K7MPQ` (profissional) e `KM4W9RTD` (administrador) valem; qualquer outro
+  código, `404 INVITE_INVALID`; `LIMITE22` responde `429 TOO_MANY_REQUESTS`.
+- **Status:** `GET /student/` sem `status` devolve só os 5 pacientes de sempre, sem os campos novos
+  (como o backend atual); com `status` os itens trazem `access` e `status`. "Paciente Teste Arquivado"
+  só aparece em `ARCHIVED` e `ALL`. `status` fora do enum responde `400`.
+- **Overview:** `student-1` `PLAN_REVIEW` (plano com revisão vencida, duas pendências com `targetId`),
+  `student-2` `ASSESSMENT_PENDING` (rascunho de escala), `student-3` e `student-5` `NO_PLAN`
+  (`student-5` com 2 evoluções pendentes, sem `targetId`), `student-4` `ASSESSMENT_PENDING`
+  (`ANAMNESIS_MISSING`). O compartilhado é `PDI_ACTIVE` com plano fictício que não existe em `/plan/`.
+- **Séries:** `mock-series-1` (semanal, 5 ocorrências: concluída, cancelada, concluída, 2 pendentes),
+  `mock-series-ended` (quinzenal com `endedAt`), `mock-series-foreign` (`403 UNAUTHORIZED`); outro id,
+  `404 SERIES_NOT_FOUND`.
+- **Push:** padrão tudo ligado; `setMockNotificationPreferences(...)` (de `handlers/push`) troca.
+- **Ajuda:** 4 tutoriais (um em destaque; com vídeo MP4, com HLS, só com passos);
+  `setMockHelpScenario("empty")` (de `handlers/help`) devolve `[]`.
+
+### Lacunas
+
+- Sem escritas: nada muda depois de uma chamada; o estado vem só dos cenários acima.
+- As ocorrências da série não entram em `GET /appointment/` e os atendimentos dos mocks não têm `seriesId`.
+- Os pacientes compartilhado e arquivado não têm sessões, planos nem evoluções nos mocks.
+- `authorName` (EQ-12) existe nos tipos, mas nenhum mock o preenche ainda.
+- `TOO_MANY_REQUESTS` reaproveita o texto do código de senha ("Muitas solicitações de código…").
