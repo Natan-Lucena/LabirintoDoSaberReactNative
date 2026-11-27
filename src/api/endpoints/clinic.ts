@@ -8,6 +8,7 @@ import type {
   ClinicView,
   InvitePreview,
   StudentShare,
+  TeamRole,
 } from "@/api/types";
 
 /** EQ-16: maiúsculas, sem espaços e hífens (`"ab3k-7mpq"` = `"AB3K7MPQ"`). */
@@ -69,6 +70,43 @@ export async function listStudentShares(
     const response = await apiClient.get<StudentShare[]>(
       `/student/${encodeURIComponent(studentId)}/shares`,
     );
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}
+
+export interface CreateClinicInput {
+  /** 2–80 caracteres depois do `trim`. */
+  name: string;
+}
+
+/** POST /clinic/ — o criador vira ADMIN. `409 ALREADY_IN_CLINIC`. */
+export async function createClinic(
+  input: CreateClinicInput,
+): Promise<ClinicView> {
+  try {
+    const response = await apiClient.post<ClinicView>("/clinic/", {
+      name: input.name.trim(),
+    });
+    return response.data;
+  } catch (error) {
+    throw normalizeApiError(error);
+  }
+}
+
+export interface CreateClinicInviteInput {
+  role: TeamRole;
+}
+
+/** POST /clinic/invites — só ADMIN. `403 FORBIDDEN_ROLE`, `409 TOO_MANY_INVITES`. */
+export async function createClinicInvite(
+  input: CreateClinicInviteInput,
+): Promise<ClinicInvite> {
+  try {
+    const response = await apiClient.post<ClinicInvite>("/clinic/invites", {
+      role: input.role,
+    });
     return response.data;
   } catch (error) {
     throw normalizeApiError(error);

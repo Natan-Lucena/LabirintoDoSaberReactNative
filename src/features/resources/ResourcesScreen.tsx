@@ -18,7 +18,8 @@ type ResourceItem = {
     | "/anamnese/templates"
     | "/plans"
     | "/evolution"
-    | "/assessments";
+    | "/assessments"
+    | "/team";
 };
 
 const featureGroups: readonly {
@@ -84,6 +85,7 @@ const featureGroups: readonly {
         title: "Equipe e convites",
         subtitle: "Gerencie a equipe e seus acessos",
         icon: "users",
+        destination: "/team",
       },
       {
         title: "Central de ajuda",

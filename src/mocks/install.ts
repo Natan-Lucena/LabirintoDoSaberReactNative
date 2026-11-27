@@ -3,6 +3,10 @@
 import { apiClient } from "@/api/client";
 import { getRuntimeUseMocks } from "@/config/env";
 import { mockAdapter } from "@/mocks/adapter";
+import {
+  setMockTeamScenario,
+  type MockTeamScenario,
+} from "@/mocks/mock-team-state";
 import "@/mocks/handlers/educator";
 import "@/mocks/handlers/educator-update";
 import "@/mocks/handlers/appointment";
@@ -42,10 +46,23 @@ import "@/mocks/handlers/help";
 
 let installed = false;
 
+/**
+ * Uso manual da equipe (E5): `EXPO_PUBLIC_MOCK_TEAM=none|admin|professional`
+ * escolhe o cenário inicial dos mocks (padrão: `none`, sem clínica).
+ */
+function applyMockTeamFromEnv(): void {
+  const raw = process.env.EXPO_PUBLIC_MOCK_TEAM?.trim().toLowerCase();
+  if (raw === "none" || raw === "admin" || raw === "professional") {
+    setMockTeamScenario(raw as MockTeamScenario);
+  }
+}
+
 export function installApiMocks(): void {
   if (installed || !getRuntimeUseMocks()) {
     return;
   }
+
+  applyMockTeamFromEnv();
 
   apiClient.defaults.adapter = mockAdapter;
   installed = true;
