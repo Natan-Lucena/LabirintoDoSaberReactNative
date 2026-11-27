@@ -53,7 +53,7 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     );
   });
 
-  it("navega para os destinos existentes e para Em breve nos demais recursos", async () => {
+  it("navega para os destinos reais de todos os itens", async () => {
     await render(<ResourcesScreen />);
 
     await fireEvent.press(screen.getByRole("button", { name: "Perfil" }));
@@ -90,14 +90,8 @@ describe("ResourcesScreen (AC-REC-01-01..02)", () => {
     expect(routerPush).toHaveBeenCalledWith("/plans");
     expect(routerPush).toHaveBeenCalledWith("/evolution");
     expect(routerPush).toHaveBeenCalledWith("/assessments");
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Equipe e convites" },
-    });
-    expect(routerPush).toHaveBeenCalledWith({
-      pathname: "/shell/coming-soon",
-      params: { title: "Central de ajuda" },
-    });
+    expect(routerPush).toHaveBeenCalledWith("/team");
+    expect(routerPush).toHaveBeenCalledWith("/help");
   });
 
   it("mostra profissão e foto quando disponíveis no banner", async () => {

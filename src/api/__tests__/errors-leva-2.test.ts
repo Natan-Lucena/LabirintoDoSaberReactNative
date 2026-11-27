@@ -59,7 +59,7 @@ describe("normalizeApiError: códigos das escalas (API-05, leva 2)", () => {
     expect(normalizeApiError(failure(404, "RESPONSE_NOT_FOUND")).message).toBe(
       "RESPONSE_NOT_FOUND",
     );
-    expect(normalizeApiError(failure(403, "UNAUTHORIZED")).message).toBe(
+    expect(normalizeApiError(failure(403, "UNAUTHORIZED")).code).toBe(
       "UNAUTHORIZED",
     );
   });

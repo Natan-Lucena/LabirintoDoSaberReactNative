@@ -12,7 +12,7 @@ pnpm start
 
 Escaneie o QR Code exibido com o Expo Go (Android: pelo app; iOS: pela câmera).
 `pnpm run android` / `pnpm run ios` abrem o Metro já direcionado para cada
-plataforma (`expo start --android` / `--ios`), mas ainda pelo Expo Go — não é
+plataforma (`expo start --go --android` / `--go --ios`), mas ainda pelo Expo Go — não é
 preciso development build nem Android Studio/Xcode para isso (G-41/EXPO-01).
 
 Outros comandos:
@@ -22,6 +22,15 @@ pnpm run test       # vitest run
 pnpm run typecheck  # tsc --noEmit
 pnpm run lint       # eslint .
 ```
+
+### Development build (opcional, BLD-01)
+
+`pnpm start` abre sempre no Expo Go (`expo start --go`). O push remoto no Android (NOT-02) exige
+um development build gerado no EAS (`eas build --profile development --platform android`); depois
+de instalar o APK, use `pnpm run start:dev`. O passo a passo para criar a conta Expo/Firebase e
+gerar o build está em
+[`docs/bootstrap/COMPATIBILIDADE.md` §9.7](docs/bootstrap/COMPATIBILIDADE.md). O
+`google-services.json` nunca vai para o Git.
 
 Um development build (EAS, T-108) continua disponível, mas é **opcional**: só é
 necessário para recursos nativos fora do Expo Go do SDK 57. A lista de

@@ -70,8 +70,11 @@ function PlanItem({ plan }: { plan: PlanSummary }): ReactElement {
 
 export function PatientPlans({
   patientId,
+  archived = false,
 }: {
   patientId: string;
+  /** Paciente arquivado: só leitura, sem criar plano (PAC-11). */
+  archived?: boolean;
 }): ReactElement {
   const router = useRouter();
   const query = usePatientPlans(patientId);
@@ -105,16 +108,24 @@ export function PatientPlans({
       ) : (
         <Text style={styles.copy}>Nenhum plano para este paciente</Text>
       )}
-      <DsButton
-        label="Criar novo plano"
-        fullWidth
-        onPress={() => router.push(planCreationRoute(patientId))}
-      />
+      {archived ? null : (
+        <DsButton
+          label="Criar novo plano"
+          fullWidth
+          onPress={() => router.push(planCreationRoute(patientId))}
+        />
+      )}
     </View>
   );
 }
 
-export function ActivePdi({ patientId }: { patientId: string }): ReactElement {
+export function ActivePdi({
+  patientId,
+  archived = false,
+}: {
+  patientId: string;
+  archived?: boolean;
+}): ReactElement {
   const router = useRouter();
   const query = useActivePdi(patientId);
   const plan = query.data?.[0];
@@ -160,11 +171,13 @@ export function ActivePdi({ patientId }: { patientId: string }): ReactElement {
       ) : (
         <View style={styles.section}>
           <Text style={styles.copy}>Nenhum PDI ativo</Text>
-          <DsButton
-            label="Criar PDI"
-            variant="secondary"
-            onPress={() => router.push(planCreationRoute(patientId))}
-          />
+          {archived ? null : (
+            <DsButton
+              label="Criar PDI"
+              variant="secondary"
+              onPress={() => router.push(planCreationRoute(patientId))}
+            />
+          )}
         </View>
       )}
     </View>

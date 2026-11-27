@@ -125,7 +125,7 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   REPORT_NOT_FOUND: "Relatório não encontrado.",
   NOTIFICATION_NOT_FOUND: "Notificação não encontrada.",
   INVALID_CURSOR: "Não foi possível carregar mais itens. Atualize a lista.",
-  // Entrega 5, banco de atividades (API-07, leva 1), contrato PROPOSTO.
+  // Entrega 5, banco de atividades (API-07, leva 1), contrato publicado em 2026-11-26.
   // TASK_NOT_FOUND, STUDENT_NOT_FOUND e SESSION_NOT_FOUND seguem SEM tradução.
   INVALID_CONTENT:
     "O conteúdo da atividade é inválido. Revise os campos marcados.",
@@ -143,6 +143,41 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   RESULT_ALREADY_EXISTS: "O resultado desta atividade já foi registrado.",
   SESSION_ALREADY_FINISHED:
     "A sessão já foi encerrada; o resultado não foi registrado.",
+  // Entrega 5, equipe, status e push (API-07, levas 2 a 4), contrato publicado em 2026-11-26.
+  // STUDENT_NOT_FOUND, APPOINTMENT_NOT_FOUND, APPOINTMENT_CONFLICT e
+  // APPOINTMENT_NOT_EDITABLE seguem SEM tradução: as telas os tratam pelo `code`.
+  // TOO_MANY_REQUESTS (prévia do convite) reaproveita o texto do código de senha.
+  NOT_IN_SAME_CLINIC: "Esta pessoa não faz parte da sua equipe.",
+  FORBIDDEN_ROLE: "Apenas administradores da equipe podem fazer isso.",
+  NOT_IN_CLINIC: "Você ainda não faz parte de uma equipe.",
+  INVITE_NOT_FOUND: "Convite não encontrado. Atualize a lista.",
+  INVITE_INVALID:
+    "Código de convite inválido, vencido ou já usado. Peça um novo à equipe.",
+  MEMBER_NOT_FOUND: "Esta pessoa não faz parte da equipe.",
+  SHARE_NOT_FOUND: "Este compartilhamento não existe mais.",
+  ALREADY_IN_CLINIC: "Você já faz parte de uma equipe.",
+  TOO_MANY_INVITES:
+    "Há convites demais ativos. Revogue algum antes de criar outro.",
+  LAST_ADMIN:
+    "A equipe precisa de ao menos um administrador. Promova outra pessoa antes.",
+  HAS_FUTURE_APPOINTMENTS:
+    "Este paciente tem atendimentos futuros. Cancele-os ou escolha cancelar ao arquivar.",
+  STUDENT_ARCHIVED:
+    "Este paciente está arquivado. Reative-o para criar novos registros.",
+  SERIES_NOT_FOUND: "Série de atendimentos não encontrada.",
+  // Backend publicado (BACKEND-ENTREGUE-E5 §2, §3.1, §3.2 e §3.5). `UNAUTHORIZED`
+  // aqui é o 403 de acesso (a sessão expirada é 401, outro caminho).
+  UNAUTHORIZED: "Você não tem acesso a este item.",
+  SERIES_TOO_LONG:
+    "A série passa de 6 meses. Reduza o número de atendimentos ou a frequência.",
+  APPOINTMENT_NOT_IN_SERIES: "Este atendimento não faz parte desta série.",
+  USE_ACTIVITY_RESULT_ROUTE:
+    "Este jogo registra o resultado da atividade, não uma resposta.",
+  STUDENT_NOT_ASSIGNED_TO_CURRENT_EDUCATOR:
+    "Este paciente não está sob os seus cuidados.",
+  NEW_EDUCATOR_NOT_FOUND: "O novo responsável não foi encontrado.",
+  TASK_NOT_IN_NOTEBOOK: "Esta atividade não faz parte do caderno da sessão.",
+  INVALID_PUSH_TOKEN: "Não foi possível ativar os avisos neste aparelho.",
 };
 
 export function normalizeApiError(error: unknown): ApiError {

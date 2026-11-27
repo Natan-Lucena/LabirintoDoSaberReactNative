@@ -23,6 +23,7 @@ export interface DsButtonProps {
   loading?: boolean;
   disabled?: boolean;
   accessibilityLabel?: string;
+  testID?: string;
 }
 
 const variantTextColor: Record<DsButtonVariant, string> = {
@@ -94,6 +95,7 @@ export function DsButton({
   loading = false,
   disabled = false,
   accessibilityLabel,
+  testID,
 }: DsButtonProps): ReactElement {
   const reduceMotion = useReduceMotion();
   const [pressed, setPressed] = useState(false);
@@ -112,6 +114,7 @@ export function DsButton({
       onPress={handlePress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isBlocked, busy: loading }}

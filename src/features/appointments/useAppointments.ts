@@ -7,13 +7,20 @@ export const appointmentQueryKeys = {
   all: ["appointment"] as const,
 };
 
-export async function loadAppointments(): Promise<Appointment[]> {
-  return listAppointments();
+export async function loadAppointments(
+  studentId?: string,
+): Promise<Appointment[]> {
+  return listAppointments(studentId ? { studentId } : {});
 }
 
-export function useAppointments(): UseQueryResult<Appointment[]> {
+/** Sem `studentId`, a agenda toda; com ele, só os atendimentos do paciente (§8.2). */
+export function useAppointments(
+  studentId?: string,
+): UseQueryResult<Appointment[]> {
   return useQuery({
-    queryKey: appointmentQueryKeys.all,
-    queryFn: loadAppointments,
+    queryKey: studentId
+      ? [...appointmentQueryKeys.all, { studentId }]
+      : appointmentQueryKeys.all,
+    queryFn: () => loadAppointments(studentId),
   });
 }

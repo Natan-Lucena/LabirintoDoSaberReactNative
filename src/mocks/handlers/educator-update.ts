@@ -1,6 +1,8 @@
 import type { Educator } from "@/api/types";
 import { MOCK_EDUCATOR, MOCK_TOKEN } from "@/mocks/fixtures";
+import { MOCK_CLINIC } from "@/mocks/fixtures-e5";
 import { getMockSession } from "@/mocks/mock-auth-state";
+import { getMockTeamScenario } from "@/mocks/mock-team-state";
 import { registerMockHandler } from "./registry";
 import { MockApiError } from "./types";
 
@@ -12,7 +14,20 @@ export function getUpdatedMockEducator(): Educator {
 registerMockHandler({ method: "get", path: "/educator/me" }, () => {
   if (getMockSession() !== MOCK_TOKEN)
     throw new MockApiError(401, "UNAUTHORIZED");
-  return { status: 200, data: educator };
+  // Entrega 5 (API-07, leva 2): `clinic` só com o cenário de equipe ligado.
+  const team = getMockTeamScenario();
+  if (team === "none") return { status: 200, data: educator };
+  return {
+    status: 200,
+    data: {
+      ...educator,
+      clinic: {
+        id: MOCK_CLINIC.id,
+        name: MOCK_CLINIC.name,
+        role: team === "admin" ? "ADMIN" : "PROFESSIONAL",
+      },
+    },
+  };
 });
 
 registerMockHandler(

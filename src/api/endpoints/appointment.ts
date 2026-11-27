@@ -1,12 +1,17 @@
 import type { AxiosResponse } from "axios";
 
 import { apiClient } from "@/api/client";
+import { withQuery } from "@/api/endpoints/query";
 import { ApiError } from "@/api/errors";
 import type { Appointment, AppointmentStatus } from "@/api/types";
 
-/** GET /appointment/ */
-export async function listAppointments(): Promise<Appointment[]> {
-  const response = await apiClient.get<Appointment[]>("/appointment/");
+/** GET /appointment/ — `studentId` filtra por paciente (BACKEND-ENTREGUE-E5 §8.2). */
+export async function listAppointments(
+  params: { studentId?: string } = {},
+): Promise<Appointment[]> {
+  const response = await apiClient.get<Appointment[]>(
+    withQuery("/appointment/", { studentId: params.studentId }),
+  );
 
   return response.data;
 }
@@ -38,12 +43,12 @@ export class AppointmentApiError extends ApiError {
   }
 }
 
-const acceptConflict = {
+export const acceptConflict = {
   validateStatus: (status: number) =>
     (status >= 200 && status < 300) || status === 409,
 };
 
-function throwOnConflict(response: AxiosResponse<unknown>): void {
+export function throwOnConflict(response: AxiosResponse<unknown>): void {
   if (response.status !== 409) {
     return;
   }

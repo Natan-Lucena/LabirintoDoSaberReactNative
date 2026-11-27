@@ -19,6 +19,13 @@ vi.mock("@/api/endpoints/appointment", () => ({
   deleteAppointment: (...args: unknown[]) => deleteAppointmentMock(...args),
 }));
 
+// As mutações de série (AGE-06) importam esse módulo; aqui só carregam o arquivo.
+vi.mock("@/api/endpoints/appointment-series", () => ({
+  createAppointmentSeries: vi.fn(),
+  updateAppointmentSeries: vi.fn(),
+  cancelAppointmentSeries: vi.fn(),
+}));
+
 function queryClient(): QueryClient {
   return {
     invalidateQueries: vi.fn(),

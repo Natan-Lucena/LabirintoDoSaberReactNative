@@ -6,19 +6,22 @@ import { FigmaIcon } from "@/components/FigmaIcon";
 import { AppHeader, Avatar, FeatureRow, SectionTitle } from "@/components/ds";
 import { StaticPressable } from "@/components/ds/StaticPressable";
 import { useHomeData } from "@/features/home/useHomeData";
+import { professionAndRole } from "@/features/team/roles";
 import { color, fontFamilies, shape } from "@/theme";
 
 type ResourceItem = {
   title: string;
   subtitle: string;
   icon: "sparkles" | "chart" | "clipboard" | "book" | "file" | "users" | "play";
-  destination?:
+  destination:
     | "/activities"
     | "/reports/new"
     | "/anamnese/templates"
     | "/plans"
     | "/evolution"
-    | "/assessments";
+    | "/assessments"
+    | "/team"
+    | "/help";
 };
 
 const featureGroups: readonly {
@@ -84,11 +87,13 @@ const featureGroups: readonly {
         title: "Equipe e convites",
         subtitle: "Gerencie a equipe e seus acessos",
         icon: "users",
+        destination: "/team",
       },
       {
         title: "Central de ajuda",
         subtitle: "Tire dúvidas e veja como usar o app",
         icon: "play",
+        destination: "/help",
       },
     ],
   },
@@ -136,9 +141,6 @@ export function ResourcesScreen(): ReactElement {
   const { educator } = useHomeData();
   const educatorName = educator?.name ?? "Educador(a)";
 
-  const openComingSoon = (title: string) =>
-    router.push({ pathname: "/shell/coming-soon", params: { title } });
-
   return (
     <View style={styles.screen}>
       <AppHeader title="Recursos" subtitle="Tudo em um só lugar" />
@@ -162,7 +164,7 @@ export function ResourcesScreen(): ReactElement {
             <Text style={styles.profileName}>{educatorName}</Text>
             {educator?.profession || educator?.email ? (
               <Text style={styles.profileRole}>
-                {educator.profession || educator.email}
+                {professionAndRole(educator)}
               </Text>
             ) : null}
           </View>
@@ -179,11 +181,7 @@ export function ResourcesScreen(): ReactElement {
                   icon={item.icon}
                   title={item.title}
                   subtitle={item.subtitle}
-                  onPress={() =>
-                    item.destination
-                      ? router.push(item.destination)
-                      : openComingSoon(item.title)
-                  }
+                  onPress={() => router.push(item.destination)}
                 />
               ))}
             </View>

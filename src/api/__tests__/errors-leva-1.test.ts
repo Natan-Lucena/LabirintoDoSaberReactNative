@@ -56,8 +56,9 @@ describe("normalizeApiError: códigos da senha e da evolução (API-05, leva 1)"
     expect(normalizeApiError(failure(400, "Validation error")).message).toBe(
       "Validation error",
     );
+    // UNAUTHORIZED (403) passou a ter tradução no backend publicado (D-13).
     expect(normalizeApiError(failure(403, "UNAUTHORIZED")).message).toBe(
-      "UNAUTHORIZED",
+      "Você não tem acesso a este item.",
     );
     // Já existem no contrato da observação/relatório e telas/testes leem a mensagem crua.
     expect(normalizeApiError(failure(404, "SESSION_NOT_FOUND")).message).toBe(

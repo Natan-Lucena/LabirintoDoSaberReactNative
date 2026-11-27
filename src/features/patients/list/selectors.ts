@@ -1,8 +1,8 @@
-import type { Appointment, Student } from "@/api/types";
+import type { Appointment, PatientOverview, Student } from "@/api/types";
 import type { AvatarTone } from "@/components/ds";
 import { dayKey, getTodayKey } from "@/utils/date";
 
-export type PatientFilter = "all" | "today";
+export type PatientFilter = "all" | "today" | "pendings" | "archived";
 
 const AVATAR_TONES: AvatarTone[] = ["mint", "peach", "lavender"];
 
@@ -46,12 +46,23 @@ function patientIdsWithAppointmentToday(
   );
 }
 
+/** Só quem tem pendência segundo o servidor; sem entrada no overview fica de fora. */
+export function filterByPendings(
+  patients: Student[],
+  overviewById: ReadonlyMap<string, PatientOverview>,
+): Student[] {
+  return patients.filter(
+    (patient) => (overviewById.get(patient.id)?.pendings.length ?? 0) > 0,
+  );
+}
+
 export function filterPatients(
   patients: Student[],
   appointments: Appointment[],
   query: string,
   filter: PatientFilter,
   now: Date = new Date(),
+  overviewById: ReadonlyMap<string, PatientOverview> = new Map(),
 ): Student[] {
   const normalizedQuery = normalizePatientText(query);
   const todayPatientIds =
@@ -59,7 +70,10 @@ export function filterPatients(
       ? patientIdsWithAppointmentToday(appointments, now)
       : null;
 
-  return patients.filter(
+  const candidates =
+    filter === "pendings" ? filterByPendings(patients, overviewById) : patients;
+
+  return candidates.filter(
     (patient) =>
       (!normalizedQuery ||
         normalizePatientText(patient.name).includes(normalizedQuery)) &&

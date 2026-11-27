@@ -23,6 +23,7 @@ const GENERIC_MESSAGE =
   "Não foi possível registrar o resultado. Tente reenviar.";
 const NOT_IN_NOTEBOOK_MESSAGE =
   "Esta atividade não faz parte do caderno da sessão.";
+const NOT_FOUND_MESSAGE = "Esta atividade não está mais disponível.";
 const FINISHED_MESSAGE =
   "A sessão já foi encerrada; o resultado não foi registrado.";
 
@@ -31,7 +32,19 @@ const REJECTED_CODES = new Set([
   "TASK_NOT_IN_NOTEBOOK",
   "USE_ANSWER_ROUTE",
   "PRINTABLE_NOT_PLAYABLE",
+  // 404 do backend publicado: o recurso não existe mais, reenviar não muda nada.
+  "TASK_NOT_FOUND",
+  "NOTEBOOK_NOT_FOUND",
+  "STUDENT_NOT_FOUND",
 ]);
+
+/** `403 UNAUTHORIZED` (sem acesso ao paciente ou à tarefa) também é definitivo. */
+function isRejected(apiError: ReturnType<typeof normalizeApiError>): boolean {
+  return (
+    apiError.status === 403 ||
+    (apiError.code !== undefined && REJECTED_CODES.has(apiError.code))
+  );
+}
 
 type Status =
   | "playing"
@@ -147,13 +160,15 @@ export function GameStep({
         setStatus("sessionFinished");
         return;
       }
-      if (apiError.code && REJECTED_CODES.has(apiError.code)) {
+      if (isRejected(apiError)) {
         await dropPersistedPending();
         setRetryBody(null);
         setMessage(
           apiError.code === "TASK_NOT_IN_NOTEBOOK"
             ? NOT_IN_NOTEBOOK_MESSAGE
-            : apiError.message,
+            : apiError.status === 404
+              ? NOT_FOUND_MESSAGE
+              : apiError.message,
         );
         setStatus("rejected");
         return;

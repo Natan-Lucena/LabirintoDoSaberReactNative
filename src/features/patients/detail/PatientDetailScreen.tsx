@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from "react";
+import { useCallback, useState, type ReactElement } from "react";
 import {
   Linking,
   Pressable,
@@ -7,13 +7,15 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
+import { ApiError } from "@/api/errors";
 import type { Appointment } from "@/api/types";
 import { FigmaIcon } from "@/components/FigmaIcon";
 import {
   AppHeader,
   Avatar,
+  Badge,
   DsButton,
   FeatureRow,
   IconButton,
@@ -37,7 +39,15 @@ import {
   evolutionRoute,
   patientRecordRoute,
 } from "@/features/evolution/register/routes";
+import { PendingsSection } from "@/features/patients/overview/PendingsSection";
+import { usePatientOverview } from "@/features/patients/overview/usePatientOverview";
+import { ArchiveDialog } from "@/features/patients/archive/ArchiveDialog";
+import { ArchivedBanner } from "@/features/patients/archive/ArchivedBanner";
+import { useArchivePatient } from "@/features/patients/archive/useArchivePatient";
+import { isPatientOwner } from "@/features/patients/shares/access";
+import { WhoFollowsSection } from "@/features/patients/shares/WhoFollowsSection";
 import { useStudents } from "@/features/students/useStudents";
+import { isSharedStudent, studentStatus } from "@/api/endpoints/student-status";
 import { color, getContentPadding, shape, typography } from "@/theme";
 import { formatTime } from "@/utils/date";
 import {
@@ -111,6 +121,10 @@ function StatePanel({
   );
 }
 
+function isForbidden(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403;
+}
+
 export function PatientDetailScreen({
   patientId,
 }: PatientDetailScreenProps): ReactElement {
@@ -118,15 +132,52 @@ export function PatientDetailScreen({
   const toast = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const { educator } = useHomeData();
-  const studentsQuery = useStudents();
-  const appointmentsQuery = useAppointments();
+  // `ALL`: a ficha também abre o paciente arquivado (PAC-11).
+  const studentsQuery = useStudents({ status: "ALL" });
+  const archive = useArchivePatient({
+    studentId: patientId,
+    onToast: toast.show,
+    onNotFound: () => router.replace("/(tabs)/patients"),
+  });
+  const appointmentsQuery = useAppointments(patientId);
   const evolutionsQuery = usePatientEvolutions(patientId);
   const pendingQuery = usePendingEvolutions();
+  const { query: overviewQuery, byId: overviewById } = usePatientOverview();
+  const { refetch: refetchOverview } = overviewQuery;
+  // As pendências mudam ao registrar evolução, concluir escala etc.: refaz ao voltar à ficha.
+  useFocusEffect(
+    useCallback(() => {
+      void refetchOverview();
+    }, [refetchOverview]),
+  );
   const sessionsQuery = useStudentSessions(patientId);
   const anamneseQuery = useAnamneseResponses(patientId);
   const patient = studentsQuery.data?.find(
     (student) => student.id === patientId,
   );
+
+  // Acesso perdido (EQP-04): a ficha já foi vista e some da lista depois de um
+  // refetch, ou uma leitura dela devolve 403. No primeiro carregamento, ausente
+  // continua sendo "Paciente não encontrado".
+  const [seenPatient, setSeenPatient] = useState(false);
+  if (patient && !seenPatient) setSeenPatient(true);
+  const lostAccess =
+    isForbidden(sessionsQuery.error) ||
+    isForbidden(evolutionsQuery.error) ||
+    (seenPatient && !patient && !studentsQuery.isPending) ||
+    // Paciente da colega arquivado pelo dono (PAC-11 §6.6).
+    (patient !== undefined &&
+      isSharedStudent(patient) &&
+      studentStatus(patient) === "ARCHIVED");
+  if (lostAccess) {
+    return (
+      <StatePanel
+        title="Você não acompanha mais este paciente."
+        retry={() => router.replace("/(tabs)/patients")}
+        actionLabel="Voltar para a lista"
+      />
+    );
+  }
 
   if (studentsQuery.isPending && !studentsQuery.data) {
     return <StatePanel title="Carregando paciente" />;
@@ -165,10 +216,15 @@ export function PatientDetailScreen({
     );
   }
 
-  const nextAppointment = findNextAppointment(
-    appointmentsQuery.data ?? [],
-    patient.id,
-  );
+  const owner = isPatientOwner(patient);
+  const archived = studentStatus(patient) === "ARCHIVED";
+  // Reserva (§6 item 5): sem overview o bloco "Registrar evolução" continua.
+  const overview = overviewById.get(patient.id);
+  const useFallback = !overview && !overviewQuery.isPending;
+  // O resumo do servidor tem prioridade; sem ele, a lista filtrada pelo paciente (D-06).
+  const nextAppointment =
+    overview?.nextAppointment ??
+    findNextAppointment(appointmentsQuery.data ?? [], patient.id);
   // O servidor devolve da mais recente para a mais antiga: as duas primeiras.
   const pendingEvolutions = pendingForStudent(pendingQuery.data, patient.id);
   const latestEvolutions = (evolutionsQuery.data ?? []).slice(0, 2);
@@ -203,10 +259,17 @@ export function PatientDetailScreen({
     <View style={styles.screen}>
       <AppHeader
         title={patient.name}
-        subtitle={`${patient.age} anos · Ativo`}
+        subtitle={`${patient.age} anos · ${archived ? "Arquivado" : "Ativo"}`}
         onBack={router.back}
       />
       <ScrollView contentContainerStyle={styles.content}>
+        {archived ? (
+          <ArchivedBanner
+            archivedAt={patient.archivedAt}
+            onReactivate={owner ? archive.reactivate : undefined}
+            loading={archive.loading}
+          />
+        ) : null}
         <View style={styles.patientSummary}>
           <Avatar name={patient.name} size={58} photoUrl={patient.photoUrl} />
           <View style={styles.summaryCopy}>
@@ -236,6 +299,15 @@ export function PatientDetailScreen({
             </Text>
           ) : null}
         </View>
+        {!owner ? (
+          <Badge
+            label={
+              patient.ownerName
+                ? `Compartilhado por ${patient.ownerName}`
+                : "Compartilhado"
+            }
+          />
+        ) : null}
 
         <Tabs
           options={[
@@ -249,12 +321,14 @@ export function PatientDetailScreen({
         />
 
         {activeTab === "plans" ? (
-          <PatientPlans patientId={patient.id} />
+          <PatientPlans patientId={patient.id} archived={archived} />
         ) : activeTab === "assessments" ? (
-          <PatientAssessments patientId={patient.id} />
+          <PatientAssessments patientId={patient.id} archived={archived} />
         ) : (
           <>
-            <ActivePdi patientId={patient.id} />
+            <WhoFollowsSection patient={patient} onToast={toast.show} />
+
+            <ActivePdi patientId={patient.id} archived={archived} />
 
             <View style={styles.section}>
               <SectionTitle title="Próxima sessão" />
@@ -286,12 +360,15 @@ export function PatientDetailScreen({
             <View style={styles.section}>
               <SectionTitle
                 title="Dificuldades mapeadas"
-                actionLabel="Editar"
-                onActionPress={() =>
-                  router.push({
-                    pathname: "/patients/[id]/edit",
-                    params: { id: patient.id },
-                  })
+                actionLabel={owner ? "Editar" : undefined}
+                onActionPress={
+                  owner
+                    ? () =>
+                        router.push({
+                          pathname: "/patients/[id]/edit",
+                          params: { id: patient.id },
+                        })
+                    : undefined
                 }
               />
               {patient.learningTopics.length ? (
@@ -309,7 +386,16 @@ export function PatientDetailScreen({
               )}
             </View>
 
-            {pendingEvolutions[0] ? (
+            {overview ? (
+              <PendingsSection
+                studentId={patient.id}
+                overview={overview}
+                onSelectTab={setActiveTab}
+                onToast={toast.show}
+              />
+            ) : null}
+
+            {useFallback && pendingEvolutions[0] ? (
               <View style={styles.section}>
                 {pendingEvolutions.length > 1 ? (
                   <Text style={styles.emptyText}>
@@ -417,31 +503,55 @@ export function PatientDetailScreen({
               }
             />
 
-            <DsButton
-              label="Iniciar sessão"
-              icon="play"
-              fullWidth
-              onPress={() =>
-                router.push({
-                  pathname: "/session/student",
-                  params: { studentId: patient.id },
-                })
-              }
-            />
-            <DsButton
-              label={`Atividades para ${patient.name.trim().split(/\s+/)[0]}`}
-              variant="secondary"
-              fullWidth
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/activities",
-                  params: { studentId: patient.id },
-                })
-              }
-            />
+            {archived ? null : (
+              <DsButton
+                label="Iniciar sessão"
+                icon="play"
+                fullWidth
+                onPress={() =>
+                  router.push({
+                    pathname: "/session/student",
+                    params: { studentId: patient.id },
+                  })
+                }
+              />
+            )}
+
+            {archived ? null : (
+              <DsButton
+                label={`Atividades para ${patient.name.trim().split(/\s+/)[0]}`}
+                variant="secondary"
+                fullWidth
+                onPress={() =>
+                  router.push({
+                    pathname: "/(tabs)/activities",
+                    params: { studentId: patient.id },
+                  })
+                }
+              />
+            )}
+
+            {owner && !archived ? (
+              <DsButton
+                testID="patient-archive"
+                label="Arquivar paciente"
+                variant="ghost"
+                fullWidth
+                onPress={archive.open}
+              />
+            ) : null}
           </>
         )}
       </ScrollView>
+      <ArchiveDialog
+        step={archive.step}
+        patientName={patient.name}
+        loading={archive.loading}
+        error={archive.error}
+        onKeep={archive.keep}
+        onArchive={archive.archive}
+        onArchiveAndCancel={archive.archiveAndCancel}
+      />
       <Toast message={toast.message} onHide={toast.hide} />
     </View>
   );

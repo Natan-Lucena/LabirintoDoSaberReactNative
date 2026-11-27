@@ -114,13 +114,16 @@ export function MiniCalendar({
     const count = appointmentCounts[dayKey] ?? 0;
     const isSelected = dayKey === selectedDayKey;
     const isOtherMonth = state === "disabled" || state === "inactive";
+    const base = `${date.day} de ${monthName(date.year, date.month - 1, date.day)}`;
+    const today = state === "today" ? ", hoje" : "";
     const label =
       count > 0
-        ? `${date.day} de ${monthName(date.year, date.month - 1, date.day)}, ${count} agendamento${count === 1 ? "" : "s"}`
-        : `${date.day} de ${monthName(date.year, date.month - 1, date.day)}`;
+        ? `${base}${today}, ${count} agendamento${count === 1 ? "" : "s"}`
+        : `${base}${today}`;
 
     return (
       <Pressable
+        testID={`calendar-day-${dayKey}`}
         onPress={() => onSelectDate(dayKey)}
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -157,7 +160,11 @@ export function MiniCalendar({
         >
           <Text style={styles.arrowText}>‹</Text>
         </Pressable>
-        <Text style={styles.monthTitle}>
+        <Text
+          style={styles.monthTitle}
+          accessibilityRole="header"
+          accessibilityLiveRegion="polite"
+        >
           {monthName(year, month, 1)} {year}
         </Text>
         <Pressable
@@ -170,7 +177,9 @@ export function MiniCalendar({
         </Pressable>
       </View>
       <Calendar
+        key={toDayKey(year, month)}
         current={toDayKey(year, month)}
+        firstDay={1}
         hideArrows
         renderHeader={() => null}
         dayComponent={DayCell}

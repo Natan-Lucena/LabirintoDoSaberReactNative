@@ -23,7 +23,7 @@ export function PatientRecordsScreen({
   patientId,
 }: PatientRecordsScreenProps): ReactElement {
   const router = useRouter();
-  const studentsQuery = useStudents();
+  const studentsQuery = useStudents({ status: "ALL" });
   const evolutionsQuery = usePatientEvolutions(patientId);
   const patientName = studentsQuery.data?.find(
     (student) => student.id === patientId,

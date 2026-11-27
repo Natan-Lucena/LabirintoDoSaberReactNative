@@ -70,7 +70,7 @@ wrap("get", "/anamnese/responses/:responseId", (data) =>
 );
 wrap("put", "/anamnese/responses/:responseId", (data) => {
   // Resposta editada depois da síntese: a síntese fica desatualizada (AS-02).
-  // O PUT devolve `summary`, mas não `summaryOutdated` (só os GETs trazem).
+  // O PUT devolve `summary` e `summaryOutdated` como o GET (PP-11).
   const response = data as AnamneseResponse;
   const stored = summaries.get(response.id);
   if (!stored) return response;
@@ -78,6 +78,7 @@ wrap("put", "/anamnese/responses/:responseId", (data) => {
   return {
     ...response,
     summary: { text: stored.text, generatedAt: stored.generatedAt },
+    summaryOutdated: true,
   };
 });
 

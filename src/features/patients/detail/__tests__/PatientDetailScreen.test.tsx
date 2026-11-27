@@ -12,6 +12,15 @@ const routerPush = vi.fn();
 const routerBack = vi.fn();
 const openURL = vi.fn();
 
+const overviewState = vi.hoisted(() => ({
+  query: {
+    data: undefined as import("@/api/types").PatientOverview[] | undefined,
+    isPending: false,
+    isError: true,
+    refetch: () => undefined,
+  },
+}));
+
 const pendingState = vi.hoisted(() => ({
   data: [] as {
     sessionId: string;
@@ -66,6 +75,15 @@ vi.mock("@/features/patients/detail/plans/usePatientPlans", () => ({
 }));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: routerPush, back: routerBack }),
+  useFocusEffect: () => undefined,
+}));
+vi.mock("@/features/patients/overview/usePatientOverview", () => ({
+  usePatientOverview: () => ({
+    query: overviewState.query,
+    byId: new Map(
+      overviewState.query.data?.map((item) => [item.studentId, item]),
+    ),
+  }),
 }));
 vi.mock("react-native", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-native")>()),
@@ -335,6 +353,28 @@ describe("PatientDetailScreen (PAC-03)", () => {
     expect(screen.getByText("Sem evolução registrada")).toBeTruthy();
     expect(screen.getByText("Nenhuma sessão registrada")).toBeTruthy();
     expect(screen.getByText("Nenhuma sessão agendada")).toBeTruthy();
+  });
+
+  it("D-06 usa overview.nextAppointment quando o resumo traz o próximo atendimento", async () => {
+    overviewState.query.data = [
+      {
+        studentId: patient.id,
+        primaryStatus: "ACTIVE",
+        nextAppointment: { id: "next-1", scheduledAt: "2031-10-08T14:00:00Z" },
+        pendings: [],
+      },
+    ] as never;
+    overviewState.query.isError = false;
+
+    try {
+      await render(<PatientDetailScreen patientId={patient.id} />);
+
+      expect(screen.getByText("Atendimento agendado")).toBeTruthy();
+      expect(screen.queryByText("Nenhuma sessão agendada")).toBeNull();
+    } finally {
+      overviewState.query.data = undefined;
+      overviewState.query.isError = true;
+    }
   });
 
   it("AC-EVO-02-01: a seção 'Evolução recente' mostra as duas últimas evoluções, a mais recente no topo", async () => {

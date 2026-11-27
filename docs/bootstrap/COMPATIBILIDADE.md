@@ -394,3 +394,40 @@ Limitações do Expo Go que afetam o código (não são dependências):
 - **Texto do botão:** o Android guardava a largura medida durante o "carregando"; o `DsButton`
   remonta o rótulo quando o estado muda.
 - **Metro:** reinicie com `--clear` ao trocar de branch e depois de `pnpm install`.
+
+### 9.7 Development build Android (BLD-01, Entrega 5)
+
+O push remoto não chega ao Expo Go no Android desde o SDK 53; a NOT-02 e a QA-04 (aparelho)
+precisam de um development build, gerado na nuvem pelo EAS (o build local no Windows falhou várias
+vezes, ver T-108). O dia a dia continua no Expo Go (G-41).
+
+Estado desta tarefa: configuração pronta e verificada por `expo-doctor` e `expo export`; **o build
+ainda não foi gerado** (depende da conta Expo e do projeto Firebase do dono).
+
+| Item                   | Valor                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `expo-dev-client`      | ~57.0.22 (via `npx expo install`)                                                                                         |
+| `eas.json`             | perfil `development`: `developmentClient`, `distribution: internal`, `android.buildType: apk`                             |
+| `pnpm start`           | `expo start --go` (Expo Go, QR)                                                                                           |
+| `pnpm start:dev`       | `expo start --dev-client` (abre o APK do development build)                                                               |
+| `google-services.json` | lido de `GOOGLE_SERVICES_JSON` (variável de arquivo do EAS) ou de `./google-services.json`, fora do Git (`app.config.ts`) |
+
+Passo a passo para o dono da conta Expo/Firebase (nenhuma senha, chave ou token vai para o repositório):
+
+1. Instale o CLI fora do projeto e entre na conta: `npm install --global eas-cli` e `eas login`.
+2. Na raiz do repositório, rode `eas init` (cria o projeto no EAS e grava `extra.eas.projectId` e
+   `owner` no `app.json`; commite só essa alteração).
+3. No console do Firebase, crie o projeto, adicione um app Android com o pacote
+   `com.labirintodosaber.app` e baixe o `google-services.json`.
+4. Ainda no Firebase, gere a chave privada da conta de serviço (FCM V1) e suba-a com
+   `eas credentials` (Android, Google Service Account Key for FCM V1).
+5. Suba o `google-services.json` como variável de ambiente do EAS do tipo arquivo, de nome
+   `GOOGLE_SERVICES_JSON` (`eas env:create`). Para builds locais, basta deixar o arquivo na raiz
+   (está no `.gitignore`).
+6. Gere o build na nuvem: `eas build --profile development --platform android`.
+7. Baixe e instale o APK no aparelho ou em um emulador **com Google Play** (ex.: `Pixel_3a_API_34`).
+8. No computador, rode `pnpm start:dev`, abra o app "Labirinto do Saber" no aparelho e escolha o
+   servidor listado. O backend vem do `.env` local, como no Expo Go.
+
+Cada mudança de plugin ou dependência nativa exige um novo build (planejar BLD-01, NOT-02 e AJD-01
+juntos, por causa da cota do EAS gratuito). iOS, produção e OTA ficam fora.

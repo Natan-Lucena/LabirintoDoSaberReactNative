@@ -3,6 +3,8 @@
 > Este arquivo resume o que não está óbvio nos outros documentos, para retomar sem refazer o
 > discovery, seja no Claude Code, seja no OpenCode. A fonte canônica do progresso é o
 > [TRACKING da Entrega 3](entrega-3/TRACKING.md). A metodologia está no [AGENTS.md](../AGENTS.md).
+>
+> **2026-11-26:** o backend publicou as 5 levas da Entrega 5 ([BACKEND-ENTREGUE](entrega-5/BACKEND-ENTREGUE.md)); os PRs empilhados do app estão sendo alinhados (PR de correção #220 na pilha A e outro na pilha B).
 
 ## 1. Onde estamos
 

@@ -348,6 +348,20 @@ evolutionId }` como **resposta** (não erro lançado), como o `409` de conflito 
   evolução (inclusive após `PUT`) e, para uma sessão finalizada criada pelo fluxo do app, o
   relatório é montado com o nome e as respostas da sessão.
 
+- **Paciente compartilhado (EQP-04)**, com estado em memória (`mock-share-state.ts`, `handlers/student-shares.ts`):
+  `POST /student/:id/shares` (só o dono; `400 NOT_IN_SAME_CLINIC` fora da equipe; idempotente) e
+  `DELETE /student/:id/shares/:educatorId` (`404 SHARE_NOT_FOUND` na segunda vez) mudam a lista de
+  `GET /student/:id/shares`. Para o "Paciente Teste Compartilhado" (a colega lê, EQ-19) a lista traz quem lê;
+  `403 UNAUTHORIZED` se a colega tentar escrever. Remover "Profissional Teste Dois" em Equipe (como `admin`) faz o
+  compartilhado sumir da lista e a ficha mostrar "Você não acompanha mais este paciente.".
+
+- **Arquivar e reativar (PAC-11)**, com estado em memória (`mock-student-status-state.ts`,
+  `handlers/student-status.ts`): `PUT /student/:id/status { status, cancelFutureAppointments? }` (só o dono;
+  `403` para o compartilhado). Arquivar com atendimento `PENDING` futuro (crie um pelo app) e sem a opção dá
+  `409 { message: "HAS_FUTURE_APPOINTMENTS", count }`; com `cancelFutureAppointments: true` cancela os futuros
+  (reativar não os devolve). O arquivado sai de `GET /student/` e do overview e entra em `?status=ARCHIVED`;
+  `POST /appointment/` para arquivado dá `409 STUDENT_ARCHIVED`. "Paciente Teste Arquivado" pode ser reativado.
+
 ### Lacunas dos mocks da leva 1
 
 - **`evolutionId` (§3.9):** o mock o preenche em `report/:sessionId`, mas não em
@@ -508,7 +522,7 @@ ainda não o publica. Só leituras; dados em `src/mocks/fixtures-task-catalog.ts
 - Sem escritas (`duplicate`, `create`/`update` de tipos novos); entram com as telas. O `activity-result` entrou na EVO-03 (seção abaixo).
 - `Task` não tem `educatorId`; a biblioteca é distinguida só por `source: "LIBRARY"`.
 - `TaskNotebookSession.activityResults` (RS-07): só as sessões que receberam `activity-result` na execução atual o enviam (EVO-03); as sessões fixas (`mock-session-1`, `mock-session-2`) não.
-- `GET /task/:id` desconhecido segue `500 TASK_NOT_FOUND` (comportamento atual; o contrato proposto pede `404`).
+- `GET /task/:id`, `PUT /task/update`, `DELETE /task/delete/:id` e as rotas de grupo e caderno com id desconhecido (ou que não é UUID) respondem `404` com o código do recurso (`TASK_NOT_FOUND`, `TASK_GROUP_NOT_FOUND`, `TASK_NOTEBOOK_NOT_FOUND`), como o backend publicado em 2026-11-26.
 - A recomendação não olha sessões recentes (AT-08): é só por `learningTopics`.
 
 ## Resultado de jogo na sessão (EVO-03)
@@ -535,3 +549,79 @@ Contrato **proposto** (`docs/entrega-5/ESPECIFICACAO-BACKEND.md` §3), mock-firs
   seção "Atividades da sessão" e sem o resumo "Atividades jogadas".
 - Nenhum caderno dos mocks contém um jogo; para jogar numa sessão pelos mocks, escolha a atividade avulsa
   ("Forme a palavra" do educador).
+
+## Equipe, status, recorrência, push e ajuda (API-07, levas 2 a 4)
+
+Contrato **proposto** (`docs/entrega-5/CONTRATOS-BACKEND.md` §2.3 a §2.7, §4 a §6), mock-first: o backend
+real ainda não o publica. Só leituras; as escritas (criar clínica, convites, compartilhar, arquivar,
+criar série, registrar token, `PUT` das preferências) entram com as telas. Dados em `fixtures-e5.ts`.
+
+### Rotas
+
+- `GET /clinic/` (`ClinicView`, ADMIN primeiro), `GET /clinic/invites` (2 convites ativos; só ADMIN),
+  `GET /clinic/invites/preview/:code` (pública; aceita minúsculas e hífen, EQ-16).
+- `GET /student/:id/shares` (só `student-1` tem um compartilhamento; os demais, `[]`).
+- `GET /student/?status=ACTIVE|ARCHIVED|ALL`, `GET /student/:id` (também arquivado e compartilhado) e
+  `GET /student/overview?status=` (um item por paciente da lista, na mesma ordem, sem nome; handlers em
+  `handlers/student.ts` e `handlers/student-status.ts`).
+- `GET /appointment/series/:id` (`AppointmentSeriesDetail` com todas as ocorrências).
+- Escritas de série (AGE-06, em memória): `POST /appointment/series` (2 a 26 ocorrências, quinzenal até 13;
+  conflito pula a ocorrência e a lista em `skipped`; todas em conflito → `409 APPOINTMENT_CONFLICT`;
+  paciente arquivado → `409 STUDENT_ARCHIVED`), `PUT /appointment/series/:id` (só a hora vale; `fromAppointmentId`)
+  e `POST /appointment/series/:id/cancel`. `fromAppointmentId` fora da série → `400 APPOINTMENT_NOT_IN_SERIES`;
+  quinzenal acima de 13 ocorrências → `400 SERIES_TOO_LONG`; o PUT aceita `observation: null` (apaga) e devolve
+  `appointmentId` em `skipped`. `type` "Conflito alheio" (POST de atendimento ou de série) simula conflito com um
+  atendimento de outro educador, cujo id não está em `GET /appointment/` (o app mostra "Horário ocupado", sem link).
+  `GET /appointment/?studentId=` filtra por paciente. As séries criadas aparecem em `GET /appointment/` com `seriesId`
+  (e na visão mensal); as séries das fixtures continuam só de leitura.
+- `GET /notification/preferences` e `GET /help/tutorials`.
+
+### Cenários
+
+- **Equipe** (`setMockTeamScenario("none" | "admin" | "professional")`, de `mock-team-state`): padrão
+  `"none"`, e então `GET /clinic/` responde `404 NOT_IN_CLINIC`, `GET /educator/me` não traz `clinic` e a
+  lista de pacientes não muda. Com `"admin"` ou `"professional"`, `/educator/me` traz `clinic` e
+  `GET /student/` inclui "Paciente Teste Compartilhado" (`access: "SHARED"`, `ownerName`). Como
+  `professional`, `GET /clinic/invites` responde `403 FORBIDDEN_ROLE`.
+  **Uso manual:** `EXPO_PUBLIC_MOCK_TEAM=admin pnpm start` (com `EXPO_PUBLIC_USE_MOCKS=true`) escolhe o
+  cenário inicial sem tocar no código (`none`, `admin` ou `professional`).
+- **Escritas da equipe (EQP-01)**, com estado em memória em `handlers/clinic.ts`: `POST /clinic/` (nome 2–80;
+  `409 ALREADY_IN_CLINIC` se o cenário não for `none`) cria a clínica com o educador como único `ADMIN` e liga o
+  cenário `admin`; `POST /clinic/invites` (só `ADMIN`, `403` no `professional`) devolve um convite novo com código
+  de 8 caracteres e `shareMessage` do formato EQ-05, que passa a aparecer em `GET /clinic/invites`; a partir de 20
+  convites ativos, `409 TOO_MANY_INVITES`. `resetMockClinicState()` limpa esse estado (testes).
+- **Gestão da equipe (EQP-02)**, também em `handlers/clinic.ts`, com estado em memória: `PUT /clinic/` (renomeia;
+  só `ADMIN`), `DELETE /clinic/invites/:id` (revoga; `404 INVITE_NOT_FOUND` se já revogado),
+  `PUT /clinic/members/:educatorId` `{ role }` e `DELETE /clinic/members/:educatorId` (o próprio id = sair da
+  equipe, volta ao cenário `none`). `PROFESSIONAL` removendo outro: `403 FORBIDDEN_ROLE`. Um `ADMIN` pode remover
+  outro (Q12); o último `ADMIN` não vira profissional nem sai: `409 LAST_ADMIN`. No cenário `admin` há um só
+  `ADMIN`, então promova "Profissional Teste Dois" para poder trocar o próprio papel.
+- **Cadastro e aceite pelo convite (EQP-03)**, em `handlers/clinic.ts` e `handlers/educator.ts`: convite de uso
+  único (usado, passa a `404 INVITE_INVALID`; recarregar o app o restaura). `POST /clinic/invites/accept`
+  `{ code }` devolve a `ClinicView` e liga o cenário com o papel do convite (`409 ALREADY_IN_CLINIC` se já há
+  equipe). `POST /educator/register` (`name`, `email`, `password`, `inviteCode?`): `400 EDUCATOR_ALREADY_EXISTS`
+  para `educadora.mock@labirinto.test` e e-mails já cadastrados; `404 INVITE_INVALID` sem criar a conta; a conta
+  nova passa a valer no `sign-in` mockado (qualquer senha) e `/educator/me` devolve o educador fictício de sempre.
+- **Prévia do convite:** `AB3K7MPQ` (profissional) e `KM4W9RTD` (administrador) valem; qualquer outro
+  código, `404 INVITE_INVALID`; `LIMITE22` e `TENTAT22` respondem `429 TOO_MANY_REQUESTS` (o app recusa `LIMITE22` antes, pelo "I" no formato; use `TENTAT22` na tela).
+- **Status:** `GET /student/` sem `status` devolve só os 5 pacientes de sempre, sem os campos novos
+  (como o backend atual); com `status` os itens trazem `access` e `status`. "Paciente Teste Arquivado"
+  só aparece em `ARCHIVED` e `ALL`. `status` fora do enum responde `400`.
+- **Overview:** `student-1` `PLAN_REVIEW` (plano com revisão vencida, duas pendências com `targetId`),
+  `student-2` `ASSESSMENT_PENDING` (rascunho de escala), `student-3` e `student-5` `NO_PLAN`
+  (`student-5` com 2 evoluções pendentes, sem `targetId`), `student-4` `ASSESSMENT_PENDING`
+  (`ANAMNESIS_MISSING`). O compartilhado é `PDI_ACTIVE` com plano fictício que não existe em `/plan/`.
+- **Séries:** `mock-series-1` (semanal, 5 ocorrências: concluída, cancelada, concluída, 2 pendentes),
+  `mock-series-ended` (quinzenal com `endedAt`), `mock-series-foreign` (`403 UNAUTHORIZED`); outro id,
+  `404 SERIES_NOT_FOUND`.
+- **Push:** padrão tudo ligado; `setMockNotificationPreferences(...)` (de `handlers/push`) troca. NOT-02: `POST`/`DELETE /notification/push-token` (token inválido → 400 `INVALID_PUSH_TOKEN`, delete idempotente; `getMockPushTokens()`) e `PUT /notification/preferences` (parcial, estado em memória).
+- **Ajuda:** 4 tutoriais (um em destaque; com vídeo MP4, com HLS, só com passos);
+  `setMockHelpScenario("empty")` (de `handlers/help`) devolve `[]`.
+
+### Lacunas
+
+- Sem escritas (exceto as da equipe e do compartilhamento, acima): nada muda depois de uma chamada; o estado vem só dos cenários.
+- As ocorrências das séries das fixtures (`mock-series-*`) não entram em `GET /appointment/`; só as séries criadas pelo app (AGE-06) entram.
+- Os pacientes compartilhado e arquivado não têm sessões, planos nem evoluções nos mocks.
+- `authorName` (EQ-12) existe nos tipos, mas nenhum mock o preenche ainda.
+- `TOO_MANY_REQUESTS` reaproveita o texto do código de senha ("Muitas solicitações de código…").

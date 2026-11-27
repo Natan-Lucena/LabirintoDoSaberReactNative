@@ -35,6 +35,13 @@ vi.mock("@/features/notifications/useNotifications", () => ({
   useUnreadNotificationCount: () => ({ data: 3 }),
 }));
 
+vi.mock("@/features/notifications/push/usePushRegistration", () => ({
+  usePushRegistration: () => ({}),
+}));
+vi.mock("@/features/notifications/push/PushPromptDialog", () => ({
+  PushPromptDialog: () => null,
+}));
+
 const { default: TabsLayout } = await import("../../../../app/(tabs)/_layout");
 
 // NAV-01/NAV-02: casca nova (BottomNav + AppHeader) composta no layout das abas.

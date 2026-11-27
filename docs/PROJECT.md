@@ -35,6 +35,7 @@
     - [Appointment — 7 rotas](#appointment--7-rotas)
     - [Planos (PDI e PE) e sugestões da IA — 13 rotas](#planos-pdi-e-pe-e-sugestões-da-ia--13-rotas)
   - [Entrega 4 — Senha, evolução, escalas, relatórios e notificações](#entrega-4--senha-evolução-escalas-relatórios-e-notificações)
+  - [Entrega 5 — Banco de atividades, clínica, pacientes, agenda, push e ajuda](#entrega-5--banco-de-atividades-clínica-pacientes-agenda-push-e-ajuda)
 - [Apêndice — Tabela consolidada dos 55 endpoints](#apêndice--tabela-consolidada-dos-55-endpoints)
 - [Limitações desta documentação](#limitações-desta-documentação)
 
@@ -397,10 +398,11 @@ grafia literal, pois o cliente pode precisar comparar strings):
 
 - **Qualquer endpoint pode retornar 500** por causa de blocos try/catch
   genéricos no backend, mesmo quando não listado explicitamente abaixo.
-- Alguns erros que são conceitualmente "não encontrado" são retornados como
-  **500, não 404**, no backend real: `TASK_NOT_FOUND`, `TASK_GROUP_NOT_FOUND` e
-  `TASK_NOTEBOOK_NOT_FOUND` (nas operações de update/delete). Esta documentação
-  preserva esse comportamento como está, sem reclassificar os códigos.
+- **Mudou em 2026-11-26 (Entrega 5):** `TASK_NOT_FOUND`, `TASK_GROUP_NOT_FOUND` e
+  `TASK_NOTEBOOK_NOT_FOUND` agora respondem **404**, inclusive para id que não é UUID (antes `500`).
+  Os códigos `INVALID_TASK_GROUP_ID` e `INVALID_TASK_NOTEBOOK_ID` (`400`) deixaram de existir.
+  Os blocos de rota abaixo que ainda citam `500` para esses códigos descrevem o contrato antigo;
+  vale o que está em [Entrega 5](#entrega-5--banco-de-atividades-clínica-pacientes-agenda-push-e-ajuda).
 
 ## Uploads
 
@@ -755,10 +757,12 @@ Todas as rotas deste módulo exigem **Bearer**.
   `audioFile?: arquivo` (10 MB).
 - **Regras:** uma tarefa de texto não pode ter mídia; uma tarefa do tipo com
   mídia exige imagem ou áudio; pelo menos uma alternativa deve ser correta.
-- **Resposta:** `201` vazio.
+- **Resposta (E5):** `201 Task` (antes `201` vazio). Campos novos: `content`, `skills`, `theme`, `tone`
+  e os tipos `wordBuilder`, `colorMatch`, `memoryGame` e `printable`.
 - **Erros:** `400 INVALID_ALTERNATIVES_FORMAT` / validação / `INVALID_TASK_DATA`;
-  `500 TEXT_TASK_CANNOT_HAVE_MEDIA` / `MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO` /
-  `AT_LEAST_ONE_ALTERNATIVE_MUST_BE_CORRECT`.
+  `400 TEXT_TASK_CANNOT_HAVE_MEDIA` / `MEDIA_TASK_REQUIRES_IMAGE_OR_AUDIO` /
+  `AT_LEAST_ONE_ALTERNATIVE_MUST_BE_CORRECT` (eram `500` antes da E5); novos `400 INVALID_CONTENT`
+  (com `errors[]`), `INVALID_MEDIA_URL`, `ALTERNATIVES_NOT_ALLOWED`, `INVALID_SKILL`.
 
 #### `POST /task/batch`
 
@@ -793,7 +797,8 @@ Todas as rotas deste módulo exigem **Bearer**.
 
 - **Query:** `id?: string` (uuid), `category?: TaskCategory`, `type?: TaskType`,
   `promptContains?: string` (mínimo 1).
-- **Resposta:** `200 Task[]`.
+- **Resposta:** `200 Task[]`. **E5:** só as tarefas que o educador pode usar (as dele, as antigas sem dono de
+  caderno/grupo dele e as antigas avulsas); a biblioteca fica em `GET /task/catalog`. `type` aceita os tipos novos.
 - **Erros:** `400` validação; `500 LIST_TASKS_FAILED`.
 - **Nota:** o caminho é `/task/`, com barra final.
 
@@ -801,8 +806,7 @@ Todas as rotas deste módulo exigem **Bearer**.
 
 - **Path:** `id` (uuid).
 - **Resposta:** `200 Task`.
-- **Erros:** `400` validação; `500 TASK_ID_REQUIRED` / `INVALID_TASK_ID` /
-  `TASK_NOT_FOUND` / `GET_TASK_FAILED`.
+- **Erros:** `400` validação; `404 TASK_NOT_FOUND` (inexistente ou id não-UUID; antes `500`).
 
 #### `PUT /task/update`
 
@@ -811,15 +815,17 @@ Todas as rotas deste módulo exigem **Bearer**.
   `alternatives?: { text: string, isCorrect: boolean }[]`, `imageFile?: string`,
   `audioFile?: string`.
 - **Resposta:** `200` vazio.
-- **Erros:** `400` validação; `500 INVALID_TASK_ID` / `TASK_NOT_FOUND` /
-  `INVALID_TASK_DATA`.
+- **E5:** responde `200 Task`; `content` substitui inteiro; `imageFile`/`audioFile` aceitam `null` para apagar;
+  `type` só troca entre as duas múltiplas escolhas.
+- **Erros:** `400` validação / `INVALID_TASK_DATA` / `TYPE_CHANGE_NOT_ALLOWED` e os de `create`;
+  `403 LIBRARY_TASK_READ_ONLY` / `UNAUTHORIZED`; `404 TASK_NOT_FOUND`.
 
 #### `DELETE /task/delete/:id`
 
 - **Path:** `id` (uuid).
 - **Resposta:** `200 null`.
-- **Erros:** `400` validação; `500 TASK_ID_REQUIRED` / `INVALID_TASK_ID` /
-  `TASK_NOT_FOUND` / `DELETE_TASK_FAILED`.
+- **Erros:** `400` validação; `403 LIBRARY_TASK_READ_ONLY` / `UNAUTHORIZED`; `404 TASK_NOT_FOUND`
+  (antes `500`); `500 DELETE_TASK_FAILED`.
 
 ### AI Task — 1 rota
 
@@ -864,15 +870,15 @@ Todas as rotas deste módulo exigem **Bearer**.
   `tasksIds?: string[]` (uuids), `educatorId?: string` (uuid),
   `category?: TaskCategory`.
 - **Resposta:** `200` vazio.
-- **Erros:** `400` validação; `500 INVALID_TASK_GROUP_ID` /
-  `TASK_GROUP_NOT_FOUND` / `INVALID_TASK_GROUP_DATA` / `UPDATE_TASK_GROUP_FAILED`.
+- **Erros:** `400` validação; `404 TASK_GROUP_NOT_FOUND` (inclui id não-UUID; `INVALID_TASK_GROUP_ID` não existe
+  mais); `403 UNAUTHORIZED` (tarefa de outro educador); `400 PRINTABLE_NOT_PLAYABLE`; `500 INVALID_TASK_GROUP_DATA` /
+  `UPDATE_TASK_GROUP_FAILED`.
 
 #### `DELETE /task-group/delete/:taskGroupId`
 
 - **Path:** `taskGroupId` (uuid).
 - **Resposta:** `200 null`.
-- **Erros:** `400` validação; `500 TASK_GROUP_ID_REQUIRED` /
-  `INVALID_TASK_GROUP_ID` / `TASK_GROUP_NOT_FOUND` / `DELETE_TASK_GROUP_FAILED`.
+- **Erros:** `400` validação; `404 TASK_GROUP_NOT_FOUND` (inclui id não-UUID); `500 DELETE_TASK_GROUP_FAILED`.
 
 ### Task Notebook — 4 rotas
 
@@ -900,16 +906,14 @@ Todas as rotas deste módulo exigem **Bearer**.
   `category?: TaskCategory`, `description?: string` (1–500),
   `taskGroupsIds?: string[]` (uuids).
 - **Resposta:** `200` vazio.
-- **Erros:** `400` validação; `500 INVALID_TASK_NOTEBOOK_ID` /
-  `TASK_NOTEBOOK_NOT_FOUND` / `INVALID_TASK_NOTEBOOK_DATA`.
+- **Erros:** `400` validação; `404 TASK_NOTEBOOK_NOT_FOUND` (inclui id não-UUID; `INVALID_TASK_NOTEBOOK_ID` não
+  existe mais); `500 INVALID_TASK_NOTEBOOK_DATA`.
 
 #### `DELETE /task-notebook/delete/:taskNotebookId`
 
 - **Path:** `taskNotebookId` (uuid).
 - **Resposta:** `200 null`.
-- **Erros:** `400` validação; `500 TASK_NOTEBOOK_ID_REQUIRED` /
-  `INVALID_TASK_NOTEBOOK_ID` / `TASK_NOTEBOOK_NOT_FOUND` /
-  `DELETE_TASK_NOTEBOOK_FAILED`.
+- **Erros:** `400` validação; `404 TASK_NOTEBOOK_NOT_FOUND` (inclui id não-UUID); `500 DELETE_TASK_NOTEBOOK_FAILED`.
 
 ### Task Notebook Session — 10 rotas
 
@@ -967,7 +971,7 @@ Todas as rotas deste módulo exigem **Bearer**.
   sessionName: string;
   totalTimeSession: number;
   totalQuestions: number;
-  averageTimePerQuestion: number;
+  averageTimePerQuestion: number | null; // E5: ms normalizados, pode vir null
   averageCorrectTime: number | null;
   averageIncorrectTime: number | null;
   percentageByCategory: { [category: string]: number | null };
@@ -976,7 +980,9 @@ Todas as rotas deste módulo exigem **Bearer**.
 }
 ```
 
-- **Erros:** `400` validação; `404 SESSION_NOT_FOUND`; `500`.
+- **E5:** as três médias de tempo vêm em **ms normalizados** e podem ser `null`; ganha `activitySummary` e
+  `activityResults` (jogos, fora de `accuracy`/`totalQuestions`); `authorName` quando o autor não é quem lê.
+- **Erros:** `400` validação; `404 SESSION_NOT_FOUND` (inclui id não-UUID); `500`.
 
 #### `GET /task-notebook-session/analysis/student/:studentId`
 
@@ -1629,6 +1635,94 @@ Rotas `/notification`, geradas por um job diário (06:00, São Paulo). Tipos (`A
 - **`GET /task-notebook-session/student/:studentId`:** cada sessão ganha `evolutionId?`.
 - **Planos:** a sugestão `REWRITE_GOAL` repetida é descartada pelo servidor.
 
+## Entrega 5 — Banco de atividades, clínica, pacientes, agenda, push e ajuda
+
+> **Procedência:** o backend publicou estas rotas em 2026-11-26 (PRs #35 a #42 dele, commit `945af87`). Os
+> tipos TypeScript, as tabelas de erro e as regras de negócio completas estão em
+> [BACKEND-ENTREGUE](entrega-5/BACKEND-ENTREGUE.md); este bloco resume o que mudou e lista as rotas. O que o
+> app integra está em `src/api/endpoints/` e `src/api/types.ts`. Pedido original:
+> [ESPECIFICACAO-BACKEND](entrega-5/ESPECIFICACAO-BACKEND.md). Este bloco fecha a API-06.
+
+**Convenções novas:** acesso ao paciente em dois modos, **clínico** (dono ou compartilhado: sessões, jogos,
+evolução, planos, escalas, anamnese, relatórios, atendimentos, séries) e **dono** (editar cadastro e documentos,
+compartilhar, transferir, arquivar); fora do alcance `403 UNAUTHORIZED`. Paciente arquivado não recebe
+atendimento, série, sessão, plano nem escala novos: `409 STUDENT_ARCHIVED`. Id de path que não é UUID responde
+`404` com o código do recurso. Rotas de convite têm limite por IP: `429 TOO_MANY_REQUESTS`.
+
+### Mudanças em rotas existentes
+
+| Rota                                                                                    | Mudança                                                                                                                                                                                                                                                      |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /task/`                                                                            | só as tarefas que o educador pode usar; a biblioteca está em `GET /task/catalog`; `type` aceita os tipos novos                                                                                                                                               |
+| `POST /task/create`                                                                     | `201 Task` (antes vazio); `content`, `skills`, `theme`, `tone`; tipos `wordBuilder`, `colorMatch`, `memoryGame`, `printable`                                                                                                                                 |
+| `GET /task/:id`, `DELETE /task/delete/:id`                                              | `404 TASK_NOT_FOUND` (antes `500`)                                                                                                                                                                                                                           |
+| task-group (get/update/delete), task-notebook (update/delete)                           | id não-UUID: `404 TASK_GROUP_NOT_FOUND` / `TASK_NOTEBOOK_NOT_FOUND`; `INVALID_TASK_GROUP_ID` e `INVALID_TASK_NOTEBOOK_ID` não existem mais                                                                                                                   |
+| tarefa de outro educador em caderno, grupo ou sessão                                    | `403 UNAUTHORIZED`; biblioteca: todos usam, ninguém edita ou exclui (`403 LIBRARY_TASK_READ_ONLY`); imprimível em caderno/grupo: `400 PRINTABLE_NOT_PLAYABLE`                                                                                                |
+| `POST /task-notebook-session/answer`                                                    | tipo jogável novo: `400 USE_ACTIVITY_RESULT_ROUTE`; imprimível: `400 PRINTABLE_NOT_PLAYABLE`                                                                                                                                                                 |
+| `POST /task-notebook-session/start`                                                     | acesso clínico; arquivado: `409 STUDENT_ARCHIVED`                                                                                                                                                                                                            |
+| respostas de sessão (`answers[]`)                                                       | campo novo `timeToAnswerMs` (usar sempre este); `timeToAnswer` fica como gravado                                                                                                                                                                             |
+| `GET /task-notebook-session/report/:sessionId`                                          | `averageTimePerQuestion`, `averageCorrectTime`, `averageIncorrectTime` em ms, **podem ser `null`**; `activitySummary { total, completed, correct }` e `activityResults[]`                                                                                    |
+| `GET /task-notebook-session/student/:studentId`                                         | cada sessão traz `activityResults` (vazio sem jogos)                                                                                                                                                                                                         |
+| `GET /session-evolution/context/:sessionId`                                             | ganha `activityResults` (`taskId`, `title?`, `taskType`, `completed`, `correct`, `attempts`, `errors`)                                                                                                                                                       |
+| `GET /student/`                                                                         | `?status=ACTIVE\|ARCHIVED\|ALL` (padrão `ACTIVE`); traz compartilhados; itens com `status`, `archivedAt?`, `access: "OWNER" \| "SHARED"` e `ownerName?`                                                                                                      |
+| `POST /student/assign-educator`                                                         | `404 STUDENT_NOT_FOUND` e `404 NEW_EDUCATOR_NOT_FOUND` (antes `400`); só o dono (compartilhado: `400 STUDENT_NOT_ASSIGNED_TO_CURRENT_EDUCATOR`); troca o dono e apaga os compartilhamentos; dono em clínica só transfere a membro (`400 NOT_IN_SAME_CLINIC`) |
+| `POST /educator/register`                                                               | aceita `inviteCode?`; `404 INVITE_INVALID` (nenhuma conta criada); `429`                                                                                                                                                                                     |
+| `GET /educator/me`                                                                      | ganha `clinic?: { id, name, role }`                                                                                                                                                                                                                          |
+| `GET /appointment/`                                                                     | query nova `studentId` (atendimentos do paciente de qualquer educador); atendimento ganha `seriesId?`                                                                                                                                                        |
+| `POST /appointment/`, `PUT /appointment/:id`                                            | acesso clínico; `403 UNAUTHORIZED`, `404 STUDENT_NOT_FOUND`, `409 STUDENT_ARCHIVED`                                                                                                                                                                          |
+| `POST /anamnese/templates/:templateId/responses`, `PUT /anamnese/responses/:responseId` | a resposta traz `summary` e `summaryOutdated` (não precisa reler com `GET`)                                                                                                                                                                                  |
+| `GET /report`, `GET /report/:id`, `POST /report`                                        | audiência `SCHOOL`: `studentName` e `content.patient.displayName` abreviados ("Paciente S."); texto livre não é filtrado                                                                                                                                     |
+| sessões, evoluções, planos, relatórios                                                  | `authorName` só quando o autor não é quem lê                                                                                                                                                                                                                 |
+| `POST /plan/`, `POST /plan/generate`, `POST /scale-application/`                        | `409 STUDENT_ARCHIVED`                                                                                                                                                                                                                                       |
+| `GET /plan/` sem `studentId`                                                            | inclui planos de pacientes compartilhados                                                                                                                                                                                                                    |
+| `POST /plan/:id/suggestions/generate`                                                   | limite de 3 pendentes por plano e educador                                                                                                                                                                                                                   |
+| notificações de pendência                                                               | uma por pendência (não repetem por dia); só `APPOINTMENTS_TODAY` é diária                                                                                                                                                                                    |
+
+### `null` apaga o campo
+
+Ausente mantém o valor atual; `null` apaga. O campo apagado some do JSON (responsáveis voltam `null`).
+
+| Rota                                  | Campos                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------- |
+| `PUT /student/update/:id` (multipart) | `guardianName`, `guardianPhone`, `guardianRelationship` (enviar o texto `null`) |
+| `PUT /plan/:id`                       | `professionalNotes`, `nextReviewDate` (não `notes`/`nextReviewAt`)              |
+| `PUT /task/update`                    | `imageFile`, `audioFile`                                                        |
+| `PUT /appointment/series/:id`         | `observation`                                                                   |
+
+### Rotas novas (resumo)
+
+- **Banco de atividades:** `GET /task/catalog` (busca e cursor, `limit` 1–50; `400 INVALID_CURSOR`),
+  `GET /task/skills`, `GET /task/recommended?studentId=` (até 6, por regra; arquivado ou sem match: `200 []`),
+  `POST /task/:id/duplicate` (`201 Task`, cópia do educador). Tipos e conteúdo em
+  [BACKEND-ENTREGUE §3.1](entrega-5/BACKEND-ENTREGUE.md#31-banco-de-atividades-task-bearer).
+- **Resultado do jogo:** `POST /task-notebook-session/activity-result` (`201`). Erros: `400 TASK_NOT_IN_NOTEBOOK`,
+  `USE_ANSWER_ROUTE`, `PRINTABLE_NOT_PLAYABLE`; `403 UNAUTHORIZED`; `404`; `409 SESSION_ALREADY_FINISHED`;
+  `409 RESULT_ALREADY_EXISTS` com `resultId` (o app trata como sucesso).
+- **Clínica e convites:** `/clinic` (`POST`, `GET`, `PUT`), `/clinic/invites` (`POST`, `GET`, `DELETE /:id`),
+  `GET /clinic/invites/preview/:code` (público), `POST /clinic/invites/accept`, `PUT` e `DELETE /clinic/members/:educatorId`.
+  Papéis `ADMIN` e `PROFESSIONAL`; erros `NOT_IN_CLINIC`, `ALREADY_IN_CLINIC`, `FORBIDDEN_ROLE`, `INVITE_INVALID`,
+  `LAST_ADMIN`, `TOO_MANY_INVITES`, `MEMBER_NOT_FOUND`, `INVITE_NOT_FOUND`. Detalhes em
+  [BACKEND-ENTREGUE §3.3](entrega-5/BACKEND-ENTREGUE.md#33-clínica-convites-e-compartilhamento).
+- **Compartilhamento:** `GET`, `POST` e `DELETE /student/:id/shares[/:educatorId]` (`StudentShare` com `role?`).
+  Erros: `400 NOT_IN_SAME_CLINIC`, `403 UNAUTHORIZED`, `404 STUDENT_NOT_FOUND` / `SHARE_NOT_FOUND`.
+- **Status e visão geral:** `GET /student/:id` (`StudentListItem`), `PUT /student/:id/status`
+  (`{ status, cancelFutureAppointments? }`; `409 { message: "HAS_FUTURE_APPOINTMENTS", count }` até confirmar),
+  `GET /student/overview?status=` (`PatientOverview[]`).
+- **Agenda recorrente:** `POST /appointment/series` (`201 SeriesResult`; `400 SERIES_TOO_LONG`;
+  `409 APPOINTMENT_CONFLICT` quando todas colidem), `GET /appointment/series/:id`, `PUT /appointment/series/:id`
+  (`fromAppointmentId`; `400 APPOINTMENT_NOT_IN_SERIES`; `409 APPOINTMENT_NOT_EDITABLE`, também quando o novo horário
+  já passou), `POST /appointment/series/:id/cancel`. Conflitos viram `skipped[]` (`appointmentId?` só no `PUT`); o
+  atendimento em conflito pode ser de outro educador (tratar como "horário ocupado").
+- **Push e preferências:** `POST` e `DELETE /notification/push-token` (`{ token, platform }`; `400 INVALID_PUSH_TOKEN`),
+  `GET` e `PUT /notification/preferences` (`pushEnabled` e `kinds`). No logout, chamar o `DELETE` antes de descartar o JWT.
+- **Ajuda:** `GET /help/tutorials` (`HelpTutorial[]` por `order`; hoje sem `videoUrl`, só `steps`).
+
+### Pendências conhecidas do backend
+
+Texto livre do relatório `SCHOOL` não filtrado; `GET/PUT/DELETE /appointment/:id` com id não-UUID dá `500` e sem
+acesso dá `400 NOT_FOUND`; tutoriais sem vídeo; conteúdo da biblioteca e dos tutoriais a revisar. Lista completa em
+[BACKEND-ENTREGUE §8](entrega-5/BACKEND-ENTREGUE.md#8-pendências-conhecidas).
+
 ## Apêndice — Tabela consolidada dos 55 endpoints
 
 O healthcheck (`GET /`) e o Swagger (`GET /api-docs`) são recursos de visão
@@ -1692,7 +1786,8 @@ geral da API e **não contam** entre os 55 endpoints de domínio listados abaixo
 | 54  | PUT    | `/appointment/:id`                                            | Bearer          | Atualiza um agendamento                    |
 | 55  | DELETE | `/appointment/:id`                                            | Bearer          | Remove um agendamento                      |
 
-**Total: 55 endpoints.**
+**Total: 55 endpoints.** Somados às 13 rotas de planos (E3), às 29 da Entrega 4 e às 30 da Entrega 5, o app
+conhece **127** rotas de domínio (contagem do app; o backend pode contar de outra forma).
 
 ### Rotas de planos (Entrega 3)
 
@@ -1749,6 +1844,45 @@ Não entram na contagem dos 55 acima. Detalhes em [Entrega 4](#entrega-4--senha-
 | GET    | `/notification/unread-count`                 | Contagem de não lidas                   |
 | POST   | `/notification/:id/read`                     | Marca como lida                         |
 | POST   | `/notification/read-all`                     | Marca todas como lidas                  |
+
+### Rotas da Entrega 5
+
+Não entram na contagem dos 55 acima: são **30 rotas novas**. Detalhes em
+[Entrega 5](#entrega-5--banco-de-atividades-clínica-pacientes-agenda-push-e-ajuda). Todas exigem Bearer, exceto
+`GET /clinic/invites/preview/:code`.
+
+| Método | Caminho                                  | Descrição                                  |
+| ------ | ---------------------------------------- | ------------------------------------------ |
+| GET    | `/task/catalog`                          | Biblioteca com busca e cursor              |
+| GET    | `/task/skills`                           | Habilidades                                |
+| GET    | `/task/recommended`                      | Recomendadas para o paciente (`studentId`) |
+| POST   | `/task/:id/duplicate`                    | Duplica a tarefa para o educador           |
+| POST   | `/task-notebook-session/activity-result` | Resultado de jogo na sessão                |
+| POST   | `/clinic/`                               | Cria a clínica                             |
+| GET    | `/clinic/`                               | Clínica e membros                          |
+| PUT    | `/clinic/`                               | Renomeia a clínica                         |
+| POST   | `/clinic/invites`                        | Cria convite                               |
+| GET    | `/clinic/invites`                        | Lista convites ativos                      |
+| DELETE | `/clinic/invites/:id`                    | Revoga convite                             |
+| GET    | `/clinic/invites/preview/:code`          | Prévia do convite (público)                |
+| POST   | `/clinic/invites/accept`                 | Aceita convite                             |
+| PUT    | `/clinic/members/:educatorId`            | Muda o papel do membro                     |
+| DELETE | `/clinic/members/:educatorId`            | Remove membro ou sai                       |
+| GET    | `/student/overview`                      | Visão geral dos pacientes                  |
+| GET    | `/student/:id`                           | Detalha o paciente                         |
+| PUT    | `/student/:id/status`                    | Arquiva ou reativa                         |
+| GET    | `/student/:id/shares`                    | Lista compartilhamentos                    |
+| POST   | `/student/:id/shares`                    | Compartilha com colega                     |
+| DELETE | `/student/:id/shares/:educatorId`        | Desfaz o compartilhamento                  |
+| POST   | `/appointment/series`                    | Cria série recorrente                      |
+| GET    | `/appointment/series/:id`                | Detalha a série                            |
+| PUT    | `/appointment/series/:id`                | Altera este e os seguintes                 |
+| POST   | `/appointment/series/:id/cancel`         | Cancela este e os seguintes                |
+| POST   | `/notification/push-token`               | Registra o token de push                   |
+| DELETE | `/notification/push-token`               | Remove o token de push                     |
+| GET    | `/notification/preferences`              | Lê as preferências de notificação          |
+| PUT    | `/notification/preferences`              | Atualiza as preferências                   |
+| GET    | `/help/tutorials`                        | Tutoriais da central de ajuda              |
 
 ## Limitações desta documentação
 

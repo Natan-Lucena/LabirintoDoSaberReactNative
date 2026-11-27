@@ -43,6 +43,8 @@ tarefas e depende muito do backend. Leia o [Roadmap](docs/entrega-5/ROADMAP.md),
 [Especificação para o backend](docs/entrega-5/ESPECIFICACAO-BACKEND.md). **As decisões G-61 a
 G-72 são propostas** até o usuário confirmar; nenhum dispatch que dependa delas antes disso.
 
+**Atualização de 2026-11-26:** o backend publicou as 5 levas da Entrega 5 (PRs #35 a #42 dele); o contrato real está em [BACKEND-ENTREGUE](docs/entrega-5/BACKEND-ENTREGUE.md) e no [PROJECT.md](docs/PROJECT.md). Os PRs empilhados do app estão sendo alinhados a ele (PR de correção #220 na pilha A e outro na pilha B).
+
 - A stack definida inclui Expo, Expo Router, TypeScript strict, TanStack Query,
   Zustand, Axios, React Hook Form/Zod, NativeWind e SecureStore. O cache persistido
   (TanStack Query e fluxo de sessão) fica em `expo-sqlite/kv-store`, cifrado em
