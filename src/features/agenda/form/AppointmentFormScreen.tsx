@@ -1,5 +1,5 @@
-import { useEffect, type ReactElement } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useState, type ReactElement } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import {
@@ -17,7 +17,8 @@ import type {
   CreateAppointmentInput,
   UpdateAppointmentInput,
 } from "@/api/endpoints/appointment";
-import type { Appointment } from "@/api/types";
+import { ApiError } from "@/api/errors";
+import type { Appointment, SeriesResult } from "@/api/types";
 import {
   AppHeader,
   DateField,
@@ -42,8 +43,17 @@ import {
   dateFromKey,
 } from "@/features/agenda/form/datetime";
 import {
+  RepeatField,
+  repeatOccurrencesError,
+  type RepeatValue,
+} from "@/features/agenda/series/RepeatField";
+import { previewSeries, previewText } from "@/features/agenda/series/preview";
+import { SkippedNotice } from "@/features/agenda/series/SkippedNotice";
+import {
   useCreateAppointmentMutation,
+  useCreateSeriesMutation,
   useUpdateAppointmentMutation,
+  useUpdateSeriesMutation,
 } from "@/features/appointments/mutations";
 import { useStudents } from "@/features/students/useStudents";
 import { color, fontFamilies, semanticColor } from "@/theme";
@@ -61,7 +71,15 @@ export interface AppointmentFormScreenProps {
   studentId?: string;
   /** Pré-preenche o dia, AAAA-MM-DD (só na criação). */
   date?: string;
+  /** `following`: altera este e os seguintes da série (AGE-06). */
+  scope?: string;
 }
+
+export const ALL_CONFLICT_MESSAGE =
+  "Todos os horários desta série já estão ocupados. Escolha outro horário.";
+const DATE_LOCKED_HINT =
+  "Para mudar o dia, cancele os seguintes e crie uma série nova.";
+const DEFAULT_OCCURRENCES = "8";
 
 const typeSuggestions = [
   { key: "Psicopedagogia", label: "Psicopedagogia" },
@@ -159,6 +177,8 @@ interface FormProps {
   mode: AppointmentFormMode;
   studentId?: string;
   date?: string;
+  /** Altera a série a partir deste atendimento (data travada). */
+  following?: boolean;
 }
 
 function AppointmentForm({
@@ -166,14 +186,31 @@ function AppointmentForm({
   mode,
   studentId,
   date,
+  following = false,
 }: FormProps): ReactElement {
   const router = useRouter();
   const toast = useToast();
   const studentsQuery = useStudents();
   const createMutation = useCreateAppointmentMutation();
   const updateMutation = useUpdateAppointmentMutation();
-  const mutation = mode === "create" ? createMutation : updateMutation;
+  const createSeries = useCreateSeriesMutation();
+  const updateSeries = useUpdateSeriesMutation();
+  const [repeat, setRepeat] = useState<RepeatValue>("NONE");
+  const [occurrences, setOccurrences] = useState(DEFAULT_OCCURRENCES);
+  const [skippedResult, setSkippedResult] = useState<{
+    result: SeriesResult;
+    label: "agendados" | "alterados";
+  } | null>(null);
+  const frequency = mode === "create" && repeat !== "NONE" ? repeat : null;
+  const mutation = following
+    ? updateSeries
+    : frequency
+      ? createSeries
+      : mode === "create"
+        ? createMutation
+        : updateMutation;
   const scheduleLocked = mode === "observation";
+  const dateLocked = scheduleLocked || following;
   const detailsLocked =
     mode === "reschedule" || mode === "observation" || mode === "reactivate";
   const observationLocked = mode === "reschedule";
@@ -210,10 +247,54 @@ function AppointmentForm({
     label: student.name,
     value: student.id,
   }));
-  const conflictId = conflictingAppointmentId(mutation.error);
+  // Série criada: o conflito total tem frase própria e não aponta um atendimento.
+  const conflictId = frequency
+    ? undefined
+    : conflictingAppointmentId(mutation.error);
+  const watchedDate = useWatch({ control, name: "date" });
+  const watchedTime = useWatch({ control, name: "time" });
+  const occurrencesCount = Number(occurrences);
+  const occurrencesInvalid = Boolean(
+    frequency && repeatOccurrencesError(frequency, occurrences),
+  );
+  const preview =
+    frequency && watchedDate && watchedTime && !occurrencesInvalid
+      ? previewSeries({
+          first: combineDateAndTime(watchedDate, watchedTime),
+          frequency,
+          occurrences: occurrencesCount,
+        })
+      : null;
+  const submitLabel = frequency
+    ? occurrencesInvalid
+      ? "Agendar atendimentos"
+      : `Agendar ${occurrencesCount} atendimentos`
+    : copy[mode].submit;
+  const errorMessage =
+    frequency &&
+    mutation.error instanceof ApiError &&
+    mutation.error.code === "APPOINTMENT_CONFLICT"
+      ? ALL_CONFLICT_MESSAGE
+      : mutation.error
+        ? appointmentErrorMessage(mutation.error)
+        : null;
 
   function onSaved() {
     toast.show(copy[mode].toast);
+  }
+
+  function onSeriesSaved(label: "agendados" | "alterados") {
+    return (result: SeriesResult) => {
+      if (result.skipped.length > 0) {
+        setSkippedResult({ result, label });
+        return;
+      }
+      toast.show(
+        label === "agendados"
+          ? `${result.created.length} atendimentos agendados`
+          : copy[mode].toast,
+      );
+    };
   }
 
   function submit(values: FormValues) {
@@ -221,6 +302,22 @@ function AppointmentForm({
     const duration = values.duration.trim();
     const observation = values.observation.trim();
     const scheduledAt = combineDateAndTime(values.date, values.time);
+
+    if (!appointment && frequency) {
+      createSeries.mutate(
+        {
+          studentId: values.studentId,
+          scheduledAt: scheduledAt.toISOString(),
+          frequency,
+          occurrences: occurrencesCount,
+          ...(type ? { type } : {}),
+          ...(duration ? { durationMinutes: Number(duration) } : {}),
+          ...(observation ? { observation } : {}),
+        },
+        { onSuccess: onSeriesSaved("agendados") },
+      );
+      return;
+    }
 
     if (!appointment) {
       const input: CreateAppointmentInput = {
@@ -259,13 +356,56 @@ function AppointmentForm({
       router.back();
       return;
     }
+    if (following && appointment.seriesId) {
+      // RC-05: a rota da série usa só a hora; sem campo para limpar a observação.
+      updateSeries.mutate(
+        {
+          seriesId: appointment.seriesId,
+          input: {
+            fromAppointmentId: appointment.id,
+            ...(input.scheduledAt === undefined
+              ? {}
+              : { scheduledAt: input.scheduledAt }),
+            ...(input.type === undefined ? {} : { type: input.type }),
+            ...(input.durationMinutes === undefined
+              ? {}
+              : { durationMinutes: input.durationMinutes }),
+            ...(input.observation ? { observation: input.observation } : {}),
+          },
+        },
+        { onSuccess: onSeriesSaved("alterados") },
+      );
+      return;
+    }
     updateMutation.mutate(
       { id: appointment.id, input },
       { onSuccess: onSaved },
     );
   }
 
-  const canSubmit = isValid && !mutation.isPending && !toast.message;
+  const canSubmit =
+    isValid && !occurrencesInvalid && !mutation.isPending && !toast.message;
+
+  if (skippedResult) {
+    return (
+      <View style={styles.screen}>
+        <AppHeader
+          title={copy[mode].title}
+          subtitle="Agendamento"
+          onBack={router.back}
+        />
+        <ScrollView contentContainerStyle={styles.content}>
+          <SkippedNotice
+            doneCount={skippedResult.result.created.length}
+            doneLabel={skippedResult.label}
+            skipped={skippedResult.result.skipped}
+            onOpen={(id) => router.push(`/agenda/${id}`)}
+            onDone={router.back}
+          />
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -315,7 +455,7 @@ function AppointmentForm({
                   }
                   mutation.reset();
                 }}
-                disabled={scheduleLocked}
+                disabled={dateLocked}
                 error={errors.date?.message}
               />
             )}
@@ -338,6 +478,7 @@ function AppointmentForm({
             )}
           />
         </FieldGrid>
+        {following ? <Text style={styles.hint}>{DATE_LOCKED_HINT}</Text> : null}
         {conflictId ? (
           <DsButton
             label="Ver atendimento"
@@ -402,13 +543,32 @@ function AppointmentForm({
           )}
         />
 
-        {mutation.error && !conflictId ? (
+        {mode === "create" ? (
+          <RepeatField
+            repeat={repeat}
+            occurrences={occurrences}
+            previewText={
+              preview && frequency ? previewText(preview, frequency) : ""
+            }
+            disabled={mutation.isPending}
+            onRepeatChange={(next) => {
+              setRepeat(next);
+              mutation.reset();
+            }}
+            onOccurrencesChange={(next) => {
+              setOccurrences(next);
+              mutation.reset();
+            }}
+          />
+        ) : null}
+
+        {errorMessage && !conflictId ? (
           <Text style={styles.error} accessibilityRole="alert">
-            {appointmentErrorMessage(mutation.error)}
+            {errorMessage}
           </Text>
         ) : null}
         <DsButton
-          label={copy[mode].submit}
+          label={submitLabel}
           icon="arrow"
           fullWidth
           onPress={handleSubmit(submit)}
@@ -426,6 +586,7 @@ export function AppointmentFormScreen({
   mode,
   studentId,
   date,
+  scope,
 }: AppointmentFormScreenProps): ReactElement {
   const router = useRouter();
   const query = useAppointment(appointmentId ?? "");
@@ -440,6 +601,11 @@ export function AppointmentFormScreen({
         key={query.data.id}
         appointment={query.data}
         mode={resolveMode(mode, query.data)}
+        following={
+          scope === "following" &&
+          Boolean(query.data.seriesId) &&
+          query.data.status === "PENDING"
+        }
       />
     );
   }
@@ -476,6 +642,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.surfaceSoft },
   content: { gap: 18, padding: 20, paddingBottom: 36 },
   group: { gap: 10 },
+  hint: {
+    color: color.textSecondary,
+    fontFamily: fontFamilies.nunito.regular,
+    fontSize: 12,
+    lineHeight: 16,
+  },
   error: {
     color: semanticColor.dangerTextOnSurface,
     fontFamily: fontFamilies.nunito.regular,

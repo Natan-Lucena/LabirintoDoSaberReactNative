@@ -38,12 +38,12 @@ export class AppointmentApiError extends ApiError {
   }
 }
 
-const acceptConflict = {
+export const acceptConflict = {
   validateStatus: (status: number) =>
     (status >= 200 && status < 300) || status === 409,
 };
 
-function throwOnConflict(response: AxiosResponse<unknown>): void {
+export function throwOnConflict(response: AxiosResponse<unknown>): void {
   if (response.status !== 409) {
     return;
   }

@@ -6,6 +6,13 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  cancelAppointmentSeries,
+  createAppointmentSeries,
+  type CreateAppointmentSeriesInput,
+  updateAppointmentSeries,
+  type UpdateAppointmentSeriesInput,
+} from "@/api/endpoints/appointment-series";
+import {
   createAppointment,
   deleteAppointment,
   type CreateAppointmentInput,
@@ -14,7 +21,7 @@ import {
 } from "@/api/endpoints/appointment";
 import { ApiError } from "@/api/errors";
 import { withOfflineGuard } from "@/api/query-client";
-import type { Appointment } from "@/api/types";
+import type { Appointment, SeriesResult } from "@/api/types";
 import { appointmentQueryKeys } from "@/features/appointments/useAppointments";
 
 export interface UpdateAppointmentVariables {
@@ -123,4 +130,69 @@ export function useDeleteAppointmentMutation(): UseMutationResult<
   string
 > {
   return useMutation(deleteAppointmentMutationOptions(useQueryClient()));
+}
+
+export interface UpdateSeriesVariables {
+  seriesId: string;
+  input: UpdateAppointmentSeriesInput;
+}
+
+export interface CancelSeriesVariables {
+  seriesId: string;
+  fromAppointmentId: string;
+}
+
+export function createSeriesMutationOptions(
+  _client: QueryClient,
+): AppointmentMutationOptions<CreateAppointmentSeriesInput, SeriesResult> {
+  return {
+    mutationFn: withOfflineGuard(createAppointmentSeries),
+    onSuccess: () => invalidateAppointments(_client),
+  };
+}
+
+export function updateSeriesMutationOptions(
+  _client: QueryClient,
+): AppointmentMutationOptions<UpdateSeriesVariables, SeriesResult> {
+  return {
+    mutationFn: withOfflineGuard(({ seriesId, input }) =>
+      updateAppointmentSeries(seriesId, input),
+    ),
+    onSuccess: () => invalidateAppointments(_client),
+  };
+}
+
+export function cancelSeriesMutationOptions(
+  _client: QueryClient,
+): AppointmentMutationOptions<CancelSeriesVariables, SeriesResult> {
+  return {
+    mutationFn: withOfflineGuard(({ seriesId, fromAppointmentId }) =>
+      cancelAppointmentSeries(seriesId, fromAppointmentId),
+    ),
+    onSuccess: () => invalidateAppointments(_client),
+  };
+}
+
+export function useCreateSeriesMutation(): UseMutationResult<
+  SeriesResult,
+  Error,
+  CreateAppointmentSeriesInput
+> {
+  return useMutation(createSeriesMutationOptions(useQueryClient()));
+}
+
+export function useUpdateSeriesMutation(): UseMutationResult<
+  SeriesResult,
+  Error,
+  UpdateSeriesVariables
+> {
+  return useMutation(updateSeriesMutationOptions(useQueryClient()));
+}
+
+export function useCancelSeriesMutation(): UseMutationResult<
+  SeriesResult,
+  Error,
+  CancelSeriesVariables
+> {
+  return useMutation(cancelSeriesMutationOptions(useQueryClient()));
 }
