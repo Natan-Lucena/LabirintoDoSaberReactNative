@@ -84,8 +84,10 @@ export function CatalogTaskCard({
   return (
     <Pressable
       onPress={onPress}
+      testID={`activity-card-${item.id}`}
       accessibilityRole="button"
       accessibilityLabel={item.title}
+      accessibilityHint={taskMetadata(item)}
       style={[styles.card, compact ? styles.compact : null]}
     >
       <View style={[styles.thumbnail, { backgroundColor: tone.background }]}>

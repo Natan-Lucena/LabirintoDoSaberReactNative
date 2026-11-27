@@ -32,7 +32,7 @@ Ver [`.maestro/README.md`](../../../.maestro/README.md). Evidência (fora do rep
 do `maestro test` com código 0, relatório `--format=junit` e a gravação (`maestro record`);
 commit e AVD no PR.
 
-## 3. `testID` que faltam (nenhum foi acrescentado; código intocado)
+## 3. `testID` que faltam (login, cartão de atividade e jogo "Forme a palavra" entraram na QA-03; os demais seguem pendentes)
 
 Os fluxos usam texto e `accessibilityLabel`. Pontos frágeis, onde um `testID` estabilizaria:
 

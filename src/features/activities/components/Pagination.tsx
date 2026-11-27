@@ -9,6 +9,9 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
+// Itens de 32: o hitSlop leva o alvo de toque a 44 (QA-03).
+const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
@@ -42,12 +45,14 @@ export function Pagination({
   const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   return (
-    <View style={styles.row} accessibilityRole="tablist">
+    <View style={styles.row}>
       <Pressable
         onPress={() => onPageChange(page - 1)}
         disabled={page <= 1}
+        hitSlop={HIT_SLOP}
         accessibilityRole="button"
         accessibilityLabel="Página anterior"
+        accessibilityState={{ disabled: page <= 1 }}
         style={styles.item}
       >
         <Text style={[styles.label, page <= 1 ? styles.labelDisabled : null]}>
@@ -58,6 +63,7 @@ export function Pagination({
         <Pressable
           key={pageNumber}
           onPress={() => onPageChange(pageNumber)}
+          hitSlop={HIT_SLOP}
           accessibilityRole="button"
           accessibilityLabel={`Página ${pageNumber}`}
           accessibilityState={{ selected: pageNumber === page }}
@@ -72,8 +78,10 @@ export function Pagination({
       <Pressable
         onPress={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
+        hitSlop={HIT_SLOP}
         accessibilityRole="button"
         accessibilityLabel="Próxima página"
+        accessibilityState={{ disabled: page >= totalPages }}
         style={styles.item}
       >
         <Text

@@ -51,8 +51,10 @@ export function CreateContentSheet({
       <Pressable
         style={styles.backdrop}
         onPress={onClose}
-        accessibilityRole="button"
-        accessibilityLabel="Fechar"
+        // Fora da árvore de acessibilidade: se fosse um só botão, o TalkBack
+        // não alcançaria as opções dentro dele. O "Fechar" fica abaixo.
+        accessible={false}
+        importantForAccessibility="no"
       >
         <View style={styles.sheet} onStartShouldSetResponder={() => true}>
           <Text style={styles.title}>Criar conteúdo</Text>
@@ -64,6 +66,7 @@ export function CreateContentSheet({
               onPress={option.onPress}
             />
           ))}
+          <DsButton label="Fechar" variant="ghost" onPress={onClose} />
         </View>
       </Pressable>
     </Modal>

@@ -27,7 +27,12 @@ function ItemView({
       {layout === "LIST" ? <Text style={styles.text}>{index + 1}.</Text> : null}
       <View style={styles.itemBody}>
         {item.imageUrl ? (
-          <Image source={{ uri: item.imageUrl }} style={styles.image} />
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.image}
+            accessibilityLabel={`Imagem do item ${index + 1}`}
+            accessibilityIgnoresInvertColors
+          />
         ) : null}
         {item.text ? <Text style={styles.text}>{item.text}</Text> : null}
         {Array.from({ length: lines }, (_, i) => (
